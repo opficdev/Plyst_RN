@@ -1,2 +1,0 @@
-app_identifier("opfic.Plyst")
-team_id(ENV["APP_STORE_TEAM_ID"])
