@@ -1,0 +1,31 @@
+## AI
+docs/superpowers
+
+# macOS
+.DS_Store
+
+# Auth
+*.p8
+*.p12
+*.env
+
+# Xcode
+Config.xcconfig
+xcuserdata/
+*.xcuserstate
+UserInterfaceState.xcuserstate
+Breakpoints_v2.xcbkptlist
+**/Derived/
+**/build/
+
+# Swift Package Manager
+.package.resolved
+.spm/
+
+# Build artifacts
+*.ipa
+*.dSYM.zip
+.home/
+.module-cache/
+.swift-module-cache/
+.tmp/
