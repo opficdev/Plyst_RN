@@ -1,0 +1,48 @@
+name: iOS Release
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    runs-on: xcode-27
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout merge commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Read release version
+        id: release_version
+        run: |
+          version=$(xcodebuild -project Plyst/Plyst.xcodeproj -target Plyst -configuration Release -showBuildSettings | awk '$1 == "MARKETING_VERSION" { print $3; exit }')
+          if [ -z "$version" ]; then
+            echo "MARKETING_VERSION not found" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.release_version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Release already exists for ${{ steps.release_version.outputs.tag }}"
+            exit 0
+          fi
+
+          gh release create "${{ steps.release_version.outputs.tag }}" \
+            --target "${{ github.event.pull_request.merge_commit_sha }}" \
+            --title "${{ steps.release_version.outputs.tag }}" \
+            --generate-notes

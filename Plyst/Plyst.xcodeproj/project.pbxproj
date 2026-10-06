@@ -1,0 +1,1019 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00005306A4A9700115D10 /* ReactorKit */; };
+		DFA00002306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00006306A4A9700115D10 /* RxSwift */; };
+		DFA00003306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00007306A4A9700115D10 /* ReactorKit */; };
+		DFA00004306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00008306A4A9700115D10 /* RxSwift */; };
+		DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0000D306A4A9700115D10 /* SQLiteData */; };
+		DFA0000C306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0000E306A4A9700115D10 /* SQLiteData */; };
+		DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00011306A4A9700115D10 /* StructuredQueriesSQLite */; };
+		DFA00013306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00015306A4A9700115D10 /* GRDB */; };
+		DFA00014306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00016306A4A9700115D10 /* GRDB */; };
+		DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFC00002306A4A9700115D10 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFD00002306A4A9700115D10 /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DFD00020306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00010306A4A9700115D10 /* ReactorKit */; };
+		DFD00021306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00011306A4A9700115D10 /* RxSwift */; };
+		DFD00022306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00012306A4A9700115D10 /* SQLiteData */; };
+		DFD00023306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */; };
+		DFD00024306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00014306A4A9700115D10 /* GRDB */; };
+		DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00018306A4A9700115D10 /* ReactorKit */; };
+		DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00019306A4A9700115D10 /* RxSwift */; };
+		DFA0001F306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001A306A4A9700115D10 /* SQLiteData */; };
+		DFA00020306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */; };
+		DFA00021306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001C306A4A9700115D10 /* GRDB */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFEB0A20306A4A9500115D10;
+			remoteInfo = Plyst;
+		};
+		DFC0000B306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFC00001306A4A9700115D10;
+			remoteInfo = ShareExtension;
+		};
+		DFD0000B306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFD00001306A4A9700115D10;
+			remoteInfo = WidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DFC0000D306A4A9700115D10 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */,
+				DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		DFEB0A21306A4A9500115D10 /* Plyst.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plyst.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFEB0A37306A4A9700115D10 /* PlystTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlystTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFC00002306A4A9700115D10 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFD00002306A4A9700115D10 /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				Plyst.entitlements,
+			);
+			target = DFEB0A20306A4A9500115D10 /* Plyst */;
+		};
+		DFC00004306A4A9700115D10 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				ShareExtension.entitlements,
+			);
+			target = DFC00001306A4A9700115D10 /* ShareExtension */;
+		};
+		DFD00004306A4A9700115D10 /* Exceptions for "WidgetExtension" folder in "WidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		DFEB0A23306A4A9500115D10 /* Plyst */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */,
+			);
+			path = Plyst;
+			sourceTree = "<group>";
+		};
+		DFC00003306A4A9700115D10 /* ShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFC00004306A4A9700115D10 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		DFD00003306A4A9700115D10 /* WidgetExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFD00004306A4A9700115D10 /* Exceptions for "WidgetExtension" folder in "WidgetExtension" target */,
+			);
+			path = WidgetExtension;
+			sourceTree = "<group>";
+		};
+		DFEB0A3A306A4A9700115D10 /* PlystTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PlystTests;
+			sourceTree = "<group>";
+		};
+		DFE00001306A4A9700115D10 /* Common */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Common;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFA00002306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */,
+				DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
+				DFA00013306A4A9700115D10 /* GRDB in Frameworks */,
+			);
+		};
+		DFEB0A34306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA00003306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFA00004306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFA0000C306A4A9700115D10 /* SQLiteData in Frameworks */,
+				DFA00014306A4A9700115D10 /* GRDB in Frameworks */,
+			);
+		};
+		DFC00006306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFA0001F306A4A9700115D10 /* SQLiteData in Frameworks */,
+				DFA00020306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
+				DFA00021306A4A9700115D10 /* GRDB in Frameworks */,
+			);
+		};
+		DFD00006306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFD00020306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFD00021306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFD00022306A4A9700115D10 /* SQLiteData in Frameworks */,
+				DFD00023306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
+				DFD00024306A4A9700115D10 /* GRDB in Frameworks */,
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DFEB0A18306A4A9500115D10 = {
+			isa = PBXGroup;
+			children = (
+				DFEB0A23306A4A9500115D10 /* Plyst */,
+				DFC00003306A4A9700115D10 /* ShareExtension */,
+				DFD00003306A4A9700115D10 /* WidgetExtension */,
+				DFEB0A3A306A4A9700115D10 /* PlystTests */,
+				DFE00001306A4A9700115D10 /* Common */,
+				DFEB0A22306A4A9500115D10 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DFEB0A22306A4A9500115D10 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DFEB0A21306A4A9500115D10 /* Plyst.app */,
+				DFEB0A37306A4A9700115D10 /* PlystTests.xctest */,
+				DFC00002306A4A9700115D10 /* ShareExtension.appex */,
+				DFD00002306A4A9700115D10 /* WidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DFEB0A20306A4A9500115D10 /* Plyst */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFEB0A48306A4A9700115D10 /* Build configuration list for PBXNativeTarget "Plyst" */;
+			buildPhases = (
+				DFEB0A1D306A4A9500115D10 /* Sources */,
+				DFEB0A1E306A4A9500115D10 /* Frameworks */,
+				DFEB0A1F306A4A9500115D10 /* Resources */,
+				DFC0000D306A4A9700115D10 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DFC0000C306A4A9700115D10 /* PBXTargetDependency */,
+				DFD0000C306A4A9700115D10 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DFEB0A23306A4A9500115D10 /* Plyst */,
+				DFE00001306A4A9700115D10 /* Common */,
+			);
+			name = Plyst;
+			packageProductDependencies = (
+				DFA00005306A4A9700115D10 /* ReactorKit */,
+				DFA00006306A4A9700115D10 /* RxSwift */,
+				DFA0000D306A4A9700115D10 /* SQLiteData */,
+				DFA00011306A4A9700115D10 /* StructuredQueriesSQLite */,
+				DFA00015306A4A9700115D10 /* GRDB */,
+			);
+			productName = Plyst;
+			productReference = DFEB0A21306A4A9500115D10 /* Plyst.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DFEB0A36306A4A9700115D10 /* PlystTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFEB0A4D306A4A9700115D10 /* Build configuration list for PBXNativeTarget "PlystTests" */;
+			buildPhases = (
+				DFEB0A33306A4A9700115D10 /* Sources */,
+				DFEB0A34306A4A9700115D10 /* Frameworks */,
+				DFEB0A35306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DFEB0A39306A4A9700115D10 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DFEB0A3A306A4A9700115D10 /* PlystTests */,
+			);
+			name = PlystTests;
+			packageProductDependencies = (
+				DFA00007306A4A9700115D10 /* ReactorKit */,
+				DFA00008306A4A9700115D10 /* RxSwift */,
+				DFA0000E306A4A9700115D10 /* SQLiteData */,
+				DFA00016306A4A9700115D10 /* GRDB */,
+			);
+			productName = PlystTests;
+			productReference = DFEB0A37306A4A9700115D10 /* PlystTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		DFC00001306A4A9700115D10 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				DFC00005306A4A9700115D10 /* Sources */,
+				DFC00006306A4A9700115D10 /* Frameworks */,
+				DFC00007306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFC00003306A4A9700115D10 /* ShareExtension */,
+				DFE00001306A4A9700115D10 /* Common */,
+			);
+			name = ShareExtension;
+			packageProductDependencies = (
+				DFA00018306A4A9700115D10 /* ReactorKit */,
+				DFA00019306A4A9700115D10 /* RxSwift */,
+				DFA0001A306A4A9700115D10 /* SQLiteData */,
+				DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */,
+				DFA0001C306A4A9700115D10 /* GRDB */,
+			);
+			productName = ShareExtension;
+			productReference = DFC00002306A4A9700115D10 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DFD00001306A4A9700115D10 /* WidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */;
+			buildPhases = (
+				DFD00005306A4A9700115D10 /* Sources */,
+				DFD00006306A4A9700115D10 /* Frameworks */,
+				DFD00007306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFD00003306A4A9700115D10 /* WidgetExtension */,
+				DFE00001306A4A9700115D10 /* Common */,
+			);
+			name = WidgetExtension;
+			packageProductDependencies = (
+				DFD00010306A4A9700115D10 /* ReactorKit */,
+				DFD00011306A4A9700115D10 /* RxSwift */,
+				DFD00012306A4A9700115D10 /* SQLiteData */,
+				DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */,
+				DFD00014306A4A9700115D10 /* GRDB */,
+			);
+			productName = WidgetExtension;
+			productReference = DFD00002306A4A9700115D10 /* WidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DFEB0A19306A4A9500115D10 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					DFEB0A20306A4A9500115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					DFEB0A36306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = DFEB0A20306A4A9500115D10;
+					};
+					DFC00001306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					DFD00001306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = DFEB0A1C306A4A9500115D10 /* Build configuration list for PBXProject "Plyst" */;
+			developmentRegion = ko;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ko,
+				Base,
+			);
+			mainGroup = DFEB0A18306A4A9500115D10;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */,
+				DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */,
+				DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */,
+				DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */,
+				DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = DFEB0A22306A4A9500115D10 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DFEB0A20306A4A9500115D10 /* Plyst */,
+				DFEB0A36306A4A9700115D10 /* PlystTests */,
+				DFC00001306A4A9700115D10 /* ShareExtension */,
+				DFD00001306A4A9700115D10 /* WidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DFEB0A1F306A4A9500115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A35306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		DFC00007306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		DFD00007306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DFEB0A1D306A4A9500115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A33306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		DFC00005306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		DFD00005306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DFEB0A39306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFEB0A20306A4A9500115D10 /* Plyst */;
+			targetProxy = DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
+		DFC0000C306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFC00001306A4A9700115D10 /* ShareExtension */;
+			targetProxy = DFC0000B306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
+		DFD0000C306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
+			targetProxy = DFD0000B306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		DFEB0A49306A4A9700115D10 /* Debug configuration for PBXNativeTarget "Plyst" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Plyst/Plyst.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Plyst/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "저장한 이미지를 사진 앱에 추가합니다.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFEB0A4A306A4A9700115D10 /* Release configuration for PBXNativeTarget "Plyst" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Plyst/Plyst.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Plyst/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "저장한 이미지를 사진 앱에 추가합니다.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DFEB0A4B306A4A9700115D10 /* Debug configuration for PBXProject "Plyst" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		DFEB0A4C306A4A9700115D10 /* Release configuration for PBXProject "Plyst" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DFEB0A4E306A4A9700115D10 /* Debug configuration for PBXNativeTarget "PlystTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plyst.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plyst";
+			};
+			name = Debug;
+		};
+		DFEB0A4F306A4A9700115D10 /* Release configuration for PBXNativeTarget "PlystTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plyst.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plyst";
+			};
+			name = Release;
+		};
+		DFC00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFC0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DFD00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.WidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFD0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.WidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DFEB0A1C306A4A9500115D10 /* Build configuration list for PBXProject "Plyst" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFEB0A4B306A4A9700115D10 /* Debug configuration for PBXProject "Plyst" */,
+				DFEB0A4C306A4A9700115D10 /* Release configuration for PBXProject "Plyst" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFEB0A48306A4A9700115D10 /* Build configuration list for PBXNativeTarget "Plyst" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFEB0A49306A4A9700115D10 /* Debug configuration for PBXNativeTarget "Plyst" */,
+				DFEB0A4A306A4A9700115D10 /* Release configuration for PBXNativeTarget "Plyst" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFEB0A4D306A4A9700115D10 /* Build configuration list for PBXNativeTarget "PlystTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFEB0A4E306A4A9700115D10 /* Debug configuration for PBXNativeTarget "PlystTests" */,
+				DFEB0A4F306A4A9700115D10 /* Release configuration for PBXNativeTarget "PlystTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFC00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "ShareExtension" */,
+				DFC0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "ShareExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFD00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "WidgetExtension" */,
+				DFD0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "WidgetExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactorKit/ReactorKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.2.0;
+			};
+		};
+		DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.10.2;
+			};
+		};
+		DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/sqlite-data";
+			requirement = {
+				kind = exactVersion;
+				version = 1.12.0;
+			};
+		};
+		DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-structured-queries";
+			requirement = {
+				kind = exactVersion;
+				version = 0.39.2;
+			};
+		};
+		DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 7.11.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DFA00005306A4A9700115D10 /* ReactorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
+			productName = ReactorKit;
+		};
+		DFA00006306A4A9700115D10 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		DFA00007306A4A9700115D10 /* ReactorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
+			productName = ReactorKit;
+		};
+		DFA00008306A4A9700115D10 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		DFA0000D306A4A9700115D10 /* SQLiteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */;
+			productName = SQLiteData;
+		};
+		DFA0000E306A4A9700115D10 /* SQLiteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */;
+			productName = SQLiteData;
+		};
+		DFA00011306A4A9700115D10 /* StructuredQueriesSQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */;
+			productName = StructuredQueriesSQLite;
+		};
+		DFA00015306A4A9700115D10 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+		DFA00016306A4A9700115D10 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+		DFA00018306A4A9700115D10 /* ReactorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
+			productName = ReactorKit;
+		};
+		DFA00019306A4A9700115D10 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		DFA0001A306A4A9700115D10 /* SQLiteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */;
+			productName = SQLiteData;
+		};
+		DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */;
+			productName = StructuredQueriesSQLite;
+		};
+		DFA0001C306A4A9700115D10 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+		DFD00010306A4A9700115D10 /* ReactorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
+			productName = ReactorKit;
+		};
+		DFD00011306A4A9700115D10 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		DFD00012306A4A9700115D10 /* SQLiteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */;
+			productName = SQLiteData;
+		};
+		DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */;
+			productName = StructuredQueriesSQLite;
+		};
+		DFD00014306A4A9700115D10 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DFEB0A19306A4A9500115D10 /* Project object */;
+	validationLevel = 1;
+}

@@ -1,0 +1,308 @@
+XCODE_PROJ = "Plyst/Plyst.xcodeproj"
+SCHEME = "Plyst"
+CONFIGURATION = "Release"
+APP_IDENTIFIER = "opfic.Plyst"
+APP_TARGET_NAME = "Plyst"
+APP_PRODUCT_NAME = "Plyst"
+EXTENSION_TARGETS = {
+  "ShareExtension" => "opfic.Plyst.ShareExtension",
+  "WidgetExtension" => "opfic.Plyst.WidgetExtension"
+}
+APP_IDENTIFIERS = [APP_IDENTIFIER, *EXTENSION_TARGETS.values]
+TESTFLIGHT_BUILD_OUTPUT_DIRECTORY = File.expand_path("testflight_build", __dir__)
+TESTFLIGHT_IPA_OUTPUT_PATH = File.join(TESTFLIGHT_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
+APPSTORE_BUILD_OUTPUT_DIRECTORY = File.expand_path("appstore_build", __dir__)
+APPSTORE_IPA_OUTPUT_PATH = File.join(APPSTORE_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
+
+# 앱 타깃의 MARKETING_VERSION을 읽고 App Store 버전 형식을 검증한다.
+def marketing_version_from_project
+  version_number = get_version_number(
+    xcodeproj: XCODE_PROJ,
+    target: APP_TARGET_NAME,
+    configuration: CONFIGURATION
+  ).to_s.strip
+
+  UI.user_error!("Missing MARKETING_VERSION in #{XCODE_PROJ}") if version_number.empty?
+
+  if !version_number.match?(/\A[1-9]\d*(?:\.\d+){0,2}\z/)
+    UI.user_error!(
+      "Invalid MARKETING_VERSION in #{XCODE_PROJ}: #{version_number.inspect}. Expected one to three dot-separated integers beginning with a positive integer."
+    )
+  end
+
+  version_number
+end
+
+default_platform(:ios)
+
+platform :ios do
+  private_lane :fetch_latest_app_store_connect_build_number do |options|
+    require "spaceship"
+
+    api_key = options[:api_key]
+    version_number = options[:version]
+
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(**api_key)
+
+    app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+    UI.user_error!("Could not find app for #{APP_IDENTIFIER}") if app.nil?
+
+    filter = {
+      "state" => "PROCESSING,FAILED,COMPLETE",
+      "cfBundleShortVersionString" => version_number,
+      "platform" => Spaceship::ConnectAPI::Platform.map("ios")
+    }
+
+    build = Spaceship::ConnectAPI.get_build_uploads(
+      app_id: app.id,
+      filter: filter,
+      sort: "-uploadedDate",
+      limit: 1
+    ).first
+
+    next 0 if build.nil?
+
+    next build.cf_build_version.to_i
+  end
+
+  private_lane :asc_api_key do
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"],
+      in_house: false
+    )
+  end
+
+  private_lane :required_plist_value do |options|
+    require "shellwords"
+
+    path = options[:path]
+    source = options[:source]
+    key = options[:key]
+
+    value = begin
+      sh(
+        "/usr/libexec/PlistBuddy -c 'Print :#{key}' #{Shellwords.escape(path)}",
+        log: false
+      ).strip
+    rescue StandardError
+      UI.user_error!("Missing #{key} in #{source} at #{path}")
+    end
+
+    UI.user_error!("Empty #{key} in #{source} at #{path}") if value.empty?
+
+    next value
+  end
+
+  private_lane :verify_plist_value do |options|
+    actual_value = required_plist_value(
+      path: options[:path],
+      source: options[:source],
+      key: options[:key]
+    )
+    expected_value = options[:expected].to_s.strip
+
+    UI.user_error!("Missing expected #{options[:key]}") if expected_value.empty?
+
+    if actual_value != expected_value
+      UI.user_error!(
+        "Unexpected #{options[:key]} in #{options[:source]}: expected #{expected_value}, got #{actual_value}"
+      )
+    end
+
+    UI.message("Verified #{options[:key]} in #{options[:source]}")
+  end
+
+  private_lane :verify_store_info_plist do |options|
+    require "shellwords"
+    require "tmpdir"
+
+    ipa_path = options[:ipa]
+
+    UI.user_error!("Missing IPA path") if ipa_path.to_s.strip.empty?
+    UI.user_error!("Missing built ipa at #{ipa_path}") if !File.exist?(ipa_path)
+
+    Dir.mktmpdir("plyst-ipa") do |tmpdir|
+      sh("unzip -q #{Shellwords.escape(ipa_path)} -d #{Shellwords.escape(tmpdir)}")
+
+      app_path = File.join(tmpdir, "Payload", "#{APP_PRODUCT_NAME}.app")
+      plist_path = File.join(app_path, "Info.plist")
+      UI.user_error!("Missing app Info.plist in ipa") if !File.exist?(plist_path)
+
+      verify_plist_value(
+        path: plist_path,
+        source: "app Info.plist",
+        key: "CFBundleIdentifier",
+        expected: APP_IDENTIFIER
+      )
+
+      EXTENSION_TARGETS.each do |target_name, bundle_identifier|
+        extension_plist_path = File.join(app_path, "PlugIns", "#{target_name}.appex", "Info.plist")
+        UI.user_error!("Missing #{target_name} Info.plist in ipa") if !File.exist?(extension_plist_path)
+
+        verify_plist_value(
+          path: extension_plist_path,
+          source: "#{target_name} Info.plist",
+          key: "CFBundleIdentifier",
+          expected: bundle_identifier
+        )
+      end
+    end
+  end
+
+  private_lane :build_for_store do |options|
+    output_directory = options[:output_directory] || TESTFLIGHT_BUILD_OUTPUT_DIRECTORY
+
+    if ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"].to_s.strip.empty?
+      ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "30"
+    end
+
+    if ENV["FASTLANE_XCODEBUILD_SETTINGS_RETRIES"].to_s.strip.empty?
+      ENV["FASTLANE_XCODEBUILD_SETTINGS_RETRIES"] = "5"
+    end
+
+    api_key = asc_api_key
+
+    version_number = marketing_version_from_project
+
+    latest_build_number = fetch_latest_app_store_connect_build_number(
+      api_key: api_key,
+      version: version_number
+    )
+
+    setup_ci if ENV["CI"]
+
+    next_build_number = latest_build_number + 1
+
+    match(
+      api_key: api_key,
+      type: "appstore",
+      app_identifier: APP_IDENTIFIERS,
+      readonly: ENV["CI"] == "true"
+    )
+
+    if ENV["CI"] == "true"
+      profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
+      signing_targets = {
+        APP_TARGET_NAME => APP_IDENTIFIER,
+        **EXTENSION_TARGETS
+      }
+
+      signing_targets.each do |target_name, app_identifier|
+        provisioning_profile_specifier = profile_mapping[app_identifier].to_s
+        UI.user_error!("Missing App Store provisioning profile mapping for #{app_identifier}") if provisioning_profile_specifier.empty?
+
+        update_code_signing_settings(
+          use_automatic_signing: false,
+          path: XCODE_PROJ,
+          sdk: "iphoneos*",
+          team_id: ENV["APP_STORE_TEAM_ID"],
+          targets: [target_name],
+          build_configurations: [CONFIGURATION],
+          code_sign_identity: "Apple Distribution",
+          profile_name: provisioning_profile_specifier
+        )
+      end
+    end
+
+    # 빌드 번호는 프로젝트 파일을 수정하지 않고 앱과 확장 타깃 전체에 빌드 설정으로 주입한다.
+    build_app(
+      project: XCODE_PROJ,
+      scheme: SCHEME,
+      configuration: CONFIGURATION,
+      export_method: "app-store",
+      output_directory: output_directory,
+      output_name: "#{APP_PRODUCT_NAME}.ipa",
+      include_symbols: true,
+      xcargs: "CURRENT_PROJECT_VERSION=#{next_build_number} DEBUG_INFORMATION_FORMAT=dwarf-with-dsym -skipPackagePluginValidation -skipMacroValidation"
+    )
+
+    ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
+    ipa_output_path = File.join(output_directory, "#{APP_PRODUCT_NAME}.ipa") if ipa_output_path.empty?
+
+    verify_store_info_plist(ipa: ipa_output_path)
+
+    dsym_output_path = lane_context[SharedValues::DSYM_OUTPUT_PATH]
+    archive_path = lane_context[SharedValues::XCODEBUILD_ARCHIVE]
+    UI.message("dSYM output path: #{dsym_output_path}") unless dsym_output_path.to_s.empty?
+    UI.message("Xcode archive path: #{archive_path}") unless archive_path.to_s.empty?
+
+    next api_key
+  end
+
+  lane :deploy_testflight do
+    build_for_store(output_directory: TESTFLIGHT_BUILD_OUTPUT_DIRECTORY)
+
+    upload_testflight_build
+  end
+
+  lane :testflight_build_only do
+    build_for_store(output_directory: TESTFLIGHT_BUILD_OUTPUT_DIRECTORY)
+  end
+
+  lane :appstore_build_only do
+    build_for_store(output_directory: APPSTORE_BUILD_OUTPUT_DIRECTORY)
+  end
+
+  lane :deploy_appstore do
+    build_for_store(output_directory: APPSTORE_BUILD_OUTPUT_DIRECTORY)
+
+    upload_appstore_build
+  end
+
+  lane :sync_appstore_profiles do
+    api_key = asc_api_key
+    match_force = ENV.fetch("MATCH_FORCE", "false") == "true"
+
+    setup_ci if ENV["CI"]
+
+    match(
+      api_key: api_key,
+      type: "appstore",
+      app_identifier: APP_IDENTIFIERS,
+      force: match_force,
+      readonly: false
+    )
+  end
+
+  lane :upload_testflight_build do
+    api_key = asc_api_key
+    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용한다.
+    ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
+    ipa_output_path = TESTFLIGHT_IPA_OUTPUT_PATH if ipa_output_path.empty?
+
+    UI.user_error!("Missing built ipa at #{ipa_output_path}") if !File.exist?(ipa_output_path)
+
+    verify_store_info_plist(ipa: ipa_output_path)
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: ipa_output_path,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  lane :upload_appstore_build do
+    api_key = asc_api_key
+    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용한다.
+    ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
+    ipa_output_path = APPSTORE_IPA_OUTPUT_PATH if ipa_output_path.empty?
+
+    UI.user_error!("Missing built ipa at #{ipa_output_path}") if !File.exist?(ipa_output_path)
+
+    verify_store_info_plist(ipa: ipa_output_path)
+
+    upload_to_app_store(
+      api_key: api_key,
+      ipa: ipa_output_path,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      force: true
+    )
+  end
+
+end

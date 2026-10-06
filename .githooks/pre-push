@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+
+hook_dir=$(dirname "$0")
+
+if runtime=$(git config --get plyst.reviewRuntime); then
+	:
+else
+	status=$?
+	if [ "$status" -ne 1 ]; then
+		printf '%s\n' 'plyst.reviewRuntime 설정을 읽지 못하여 푸시를 중단합니다.' >&2
+		exit 1
+	fi
+	runtime=codex
+fi
+
+case "$runtime" in
+	codex|claude)
+		exec sh "$hook_dir/pre-push.$runtime" "$@"
+		;;
+	*)
+		printf '%s\n' "plyst.reviewRuntime 값이 올바르지 않습니다: '$runtime'" >&2
+		printf '%s\n' 'git config plyst.reviewRuntime codex 또는 git config plyst.reviewRuntime claude 로 설정하세요. 설정이 없으면 codex를 사용합니다.' >&2
+		exit 1
+		;;
+esac

@@ -1,0 +1,16 @@
+git_url(ENV["MATCH_GIT_URL"])
+
+storage_mode("git")
+git_branch("iOS")
+type("appstore")
+app_identifier([
+  "opfic.Plyst",
+  "opfic.Plyst.ShareExtension",
+  "opfic.Plyst.WidgetExtension"
+])
+team_id(ENV["APP_STORE_TEAM_ID"])
+readonly(ENV["CI"] == "true")
+
+if ENV["MATCH_GIT_BASIC_AUTHORIZATION"]
+  git_basic_authorization(ENV["MATCH_GIT_BASIC_AUTHORIZATION"])
+end

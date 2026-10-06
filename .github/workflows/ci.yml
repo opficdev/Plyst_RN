@@ -1,0 +1,87 @@
+name: iOS CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: xcode-27
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up SwiftLint
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+
+      - name: Lint
+        run: make lint
+
+  xcode:
+    # fail-fast로 한쪽이 실패하면 진행 중인 나머지 잡을 즉시 취소합니다. 잡 이름은 필수 상태 체크 이름과 같아야 합니다.
+    name: ${{ matrix.name }}
+    runs-on: xcode-27
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: Build
+            target: build
+            timeout: 20
+          - name: Test
+            target: test
+            timeout: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build
+        if: matrix.target == 'build'
+        run: make build XCODEBUILD_FLAGS=-skipMacroValidation
+
+      - name: Select simulator
+        if: matrix.target == 'test'
+        timeout-minutes: 2
+        run: echo "TEST_DEVICE_ID=$(make -s test-device-id)" >> "$GITHUB_ENV"
+
+      # 시뮬레이터를 빌드와 겹쳐 기동했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 기동합니다.
+      - name: Build for testing
+        if: matrix.target == 'test'
+        timeout-minutes: 12
+        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID" XCODEBUILD_FLAGS=-skipMacroValidation
+
+      - name: Boot simulator
+        if: matrix.target == 'test'
+        timeout-minutes: 5
+        run: |
+          xcrun simctl boot "$TEST_DEVICE_ID"
+          xcrun simctl bootstatus "$TEST_DEVICE_ID" -b
+
+      # 병렬 테스트는 복제 시뮬레이터 기동 지연과 멈춤의 원인으로 의심되어 CI에서만 끕니다.
+      - name: Test
+        if: matrix.target == 'test'
+        timeout-minutes: 9
+        run: make test-without-building XCODEBUILD_FLAGS="-skipMacroValidation -parallel-testing-enabled NO -skipPackageUpdates -disableAutomaticPackageResolution"
+
+      - name: Test summary
+        if: always() && matrix.target == 'test'
+        timeout-minutes: 2
+        run: |
+          if [ -f /tmp/plyst-test-results.xcresult/Info.plist ]; then
+            xcrun xcresulttool get test-results summary --path /tmp/plyst-test-results.xcresult
+          fi
+
+      - name: Simulator diagnostics
+        if: failure() && matrix.target == 'test'
+        timeout-minutes: 3
+        run: |
+          xcrun simctl list devices
+          xcrun simctl spawn "$TEST_DEVICE_ID" log show --last 15m --style compact \
+            --predicate 'process == "testmanagerd" OR process == "launchd_sim" OR subsystem CONTAINS "XCTest"' | tail -n 200 || true
+          ls -l ~/Library/Logs/DiagnosticReports || true
