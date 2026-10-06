@@ -13,12 +13,12 @@ final class AppLinkTests: XCTestCase {
     func testSaveClipboardURLRoundTrips() throws {
         let url = try XCTUnwrap(AppLink.saveClipboard.url)
 
-        XCTAssertEqual(url.absoluteString, "plyst://clipboard/save")
+        XCTAssertEqual(url.absoluteString, "plystrn://clipboard/save")
         XCTAssertEqual(AppLink(url: url), .saveClipboard)
     }
 
     func testUnknownURLsAreRejected() throws {
-        let urls = ["https://clipboard/save", "plyst://clipboard/other", "plyst://other/save", "plyst://clipboard"]
+        let urls = ["https://clipboard/save", "plystrn://clipboard/other", "plystrn://other/save", "plystrn://clipboard"]
 
         for string in urls {
             let url = try XCTUnwrap(URL(string: string))

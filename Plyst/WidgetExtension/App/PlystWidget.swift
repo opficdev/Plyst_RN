@@ -10,7 +10,7 @@ import WidgetKit
 
 @main
 struct PlystWidget: Widget {
-    private static let kind = "opfic.Plyst.Widget"
+    private static let kind = "opfic.PlystRN.Widget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: WidgetProvider()) { _ in

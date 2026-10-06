@@ -13,7 +13,7 @@ import UIKit
 @MainActor
 final class ShareViewController: UIViewController {
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "opfic.Plyst.ShareExtension",
+        subsystem: Bundle.main.bundleIdentifier ?? "opfic.PlystRN.ShareExtension",
         category: String(describing: ShareViewController.self)
     )
 

@@ -11,7 +11,7 @@ import Foundation
 enum AppLink: Equatable, Sendable {
     case saveClipboard
 
-    private static let scheme = "plyst"
+    private static let scheme = "plystrn"
 
     var url: URL? {
         var components = URLComponents()

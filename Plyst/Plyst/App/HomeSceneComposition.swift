@@ -13,7 +13,7 @@ import UIKit
 @MainActor
 final class HomeSceneComposition {
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "opfic.Plyst",
+        subsystem: Bundle.main.bundleIdentifier ?? "opfic.PlystRN",
         category: String(describing: HomeSceneComposition.self)
     )
 
