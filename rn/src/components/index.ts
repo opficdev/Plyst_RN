@@ -5,3 +5,4 @@ export type { ClipCardProps } from './ClipCard/ClipCardProps';
 export { SectionTitle } from './SectionTitle';
 export { HomeEmptyState } from './HomeEmptyState';
 export { HomeTitleHeader } from './HomeTitleHeader';
+export { SearchTermChip } from './SearchTermChip';
