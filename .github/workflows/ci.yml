@@ -19,13 +19,60 @@ jobs:
         with:
           install: true
           cache: true
+          install_args: aqua:realm/SwiftLint
 
       - name: Lint
+        env:
+          MISE_AUTO_INSTALL: 0
         run: make lint
+
+  xcframework:
+    name: XCFramework
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up tools
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+
+      - name: Read Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache XCFrameworks
+        id: xcframework-cache
+        uses: actions/cache@v4
+        with:
+          path: Plyst/Packages/PlystReactNative/Frameworks
+          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('rn/package-lock.json', 'rn/app.json', 'rn/index.ts', 'rn/App.tsx', 'scripts/build-rn-xcframework.sh', 'Plyst/Packages/PlystReactNative/Package.swift', '.mise.toml') }}
+
+      - name: Build XCFrameworks
+        if: steps.xcframework-cache.outputs.cache-hit != 'true'
+        run: make rn-xcframework
+
+      - name: Archive XCFrameworks
+        run: tar -C Plyst/Packages/PlystReactNative -cf frameworks.tar Frameworks
+
+      - name: Upload XCFrameworks
+        uses: actions/upload-artifact@v4
+        with:
+          name: rn-xcframeworks
+          path: frameworks.tar
 
   xcode:
     # fail-fast로 한쪽이 실패하면 진행 중인 나머지 잡을 즉시 취소합니다. 잡 이름은 필수 상태 체크 이름과 같아야 합니다.
     name: ${{ matrix.name }}
+    needs: xcframework
     runs-on: xcode-27
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
@@ -40,6 +87,15 @@ jobs:
             timeout: 25
     steps:
       - uses: actions/checkout@v5
+
+      - name: Download XCFrameworks
+        uses: actions/download-artifact@v4
+        with:
+          name: rn-xcframeworks
+          path: /tmp/rn-xcframeworks
+
+      - name: Extract XCFrameworks
+        run: tar -C Plyst/Packages/PlystReactNative -xf /tmp/rn-xcframeworks/frameworks.tar
 
       - name: Build
         if: matrix.target == 'build'
