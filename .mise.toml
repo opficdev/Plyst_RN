@@ -1,2 +1,3 @@
 [tools]
 "aqua:realm/SwiftLint" = "0.63.3"
+node = "22.21.1"

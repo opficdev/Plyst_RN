@@ -29,3 +29,10 @@ Breakpoints_v2.xcbkptlist
 .module-cache/
 .swift-module-cache/
 .tmp/
+
+# React Native
+rn/node_modules/
+rn/ios/
+rn/android/
+rn/.expo/
+Plyst/Packages/PlystReactNative/Frameworks/

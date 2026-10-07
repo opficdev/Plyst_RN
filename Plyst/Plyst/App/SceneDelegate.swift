@@ -19,6 +19,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var toastWindow: ToastWindow?
     private var composition: HomeSceneComposition?
     private var isClipboardSaveRequested = false
+    #if DEBUG
+    private var isReactNativeDebugRequested = false
+    #endif
 
     func scene(
         _ scene: UIScene,
@@ -40,12 +43,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         openURLContexts contexts: Set<UIOpenURLContext>
     ) {
         request(from: contexts)
-        if scene.activationState == .foregroundActive { saveClipboardIfRequested() }
+        if scene.activationState == .foregroundActive {
+            saveClipboardIfRequested()
+            #if DEBUG
+            presentReactNativeDebugScreenIfRequested()
+            #endif
+        }
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         composition?.importSharedClips()
         saveClipboardIfRequested()
+        #if DEBUG
+        presentReactNativeDebugScreenIfRequested()
+        #endif
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -59,6 +70,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if contexts.contains(where: { AppLink(url: $0.url) == .saveClipboard }) {
             isClipboardSaveRequested = true
         }
+        #if DEBUG
+        if contexts.contains(where: { isReactNativeDebugURL($0.url) }) {
+            isReactNativeDebugRequested = true
+        }
+        #endif
     }
 
     /// 클립보드 읽기는 앱이 활성 상태일 때만 가능하므로 활성화된 뒤에 요청을 처리합니다.
@@ -68,6 +84,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         isClipboardSaveRequested = false
         composition?.saveCurrentClipboard()
     }
+
+    #if DEBUG
+    private func isReactNativeDebugURL(_ url: URL) -> Bool {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return false }
+        return components.scheme == "plystrn"
+            && components.host == "debug"
+            && components.path == "/react-native"
+    }
+
+    private func presentReactNativeDebugScreenIfRequested() {
+        guard isReactNativeDebugRequested else { return }
+        isReactNativeDebugRequested = false
+        guard let rootViewController = window?.rootViewController,
+              rootViewController.presentedViewController == nil else { return }
+        rootViewController.present(ReactNativeRuntime.makeDebugViewController(), animated: true)
+    }
+    #endif
 
     private func configureRoot(in window: UIWindow) {
         guard let toastWindow else { return }

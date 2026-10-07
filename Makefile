@@ -1,6 +1,7 @@
 PROJECT := Plyst/Plyst.xcodeproj
 SCHEME := Plyst
 CONFIGURATION ?= Debug
+RN_CONFIGURATION ?= Release
 DESTINATION ?= generic/platform=iOS Simulator
 TEST_DEVICE_ID ?= $(shell xcrun simctl list devices available iPhone | grep -Eo '[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}' | tail -1)
 TEST_DESTINATION ?= platform=iOS Simulator,id=$(TEST_DEVICE_ID)
@@ -11,7 +12,7 @@ TEST_FLAGS ?= -test-timeouts-enabled YES \
 DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 
-.PHONY: lint build test-build test-device-id test-without-building test verify
+.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-start
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -60,3 +61,9 @@ test:
 	$(MAKE) test-without-building
 
 verify: lint build test-build
+
+rn-xcframework:
+	RN_CONFIGURATION="$(RN_CONFIGURATION)" scripts/build-rn-xcframework.sh
+
+rn-start:
+	cd rn && npx expo start
