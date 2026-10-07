@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Plyst/Packages/PlystReactNative/Frameworks
-          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('rn/package-lock.json', 'rn/app.json', 'rn/index.ts', 'rn/App.tsx', 'scripts/build-rn-xcframework.sh', 'Plyst/Packages/PlystReactNative/Package.swift', '.mise.toml') }}
+          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('rn/package-lock.json', 'rn/app.json', 'rn/modules/**', 'rn/index.ts', 'rn/App.tsx', 'scripts/build-rn-xcframework.sh', 'Plyst/Packages/PlystReactNative/Package.swift', '.mise.toml') }}
 
       - name: Build XCFrameworks
         if: steps.xcframework-cache.outputs.cache-hit != 'true'
