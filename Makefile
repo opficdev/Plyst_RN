@@ -12,7 +12,7 @@ TEST_FLAGS ?= -test-timeouts-enabled YES \
 DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 
-.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-start
+.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-start
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -64,6 +64,17 @@ verify: lint build test-build
 
 rn-xcframework:
 	RN_CONFIGURATION="$(RN_CONFIGURATION)" scripts/build-rn-xcframework.sh
+
+rn-typecheck:
+	cd rn && mise exec -- npm run typecheck
+
+rn-lint:
+	cd rn && mise exec -- npm run lint
+
+rn-test:
+	cd rn && mise exec -- npm test
+
+rn-verify: rn-typecheck rn-lint rn-test
 
 rn-start:
 	cd rn && npx expo start

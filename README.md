@@ -37,12 +37,22 @@ git config core.hooksPath .githooks
 
 ## 검증
 
+React Native 의존성을 처음 설치할 때:
+
+```sh
+cd rn && npm ci
+```
+
 ```sh
 make lint
 make rn-xcframework
 make build
 make test-build
 make test
+make rn-typecheck
+make rn-lint
+make rn-test
+make rn-verify
 ```
 
 ## AI 작업 흐름
