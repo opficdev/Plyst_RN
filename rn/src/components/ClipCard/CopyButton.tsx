@@ -23,5 +23,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: { fontSize: 13, fontWeight: '600', color: colors.PrimaryText },
+  // 원본 HomeCopyButton 아이콘(pointSize 13)의 화면 실측 크기는 약 18pt다.
+  // contain은 글리프를 박스에 맞춰 확대하므로 실측 크기에 맞게 박스 크기를 23으로 정했다.
+  icon: {
+    width: 23,
+    height: 23,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.PrimaryText,
+  },
 });

@@ -63,5 +63,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchIcon: { fontSize: 17, fontWeight: '600', color: colors.PrimaryText },
+  // 원본 헤더 검색 아이콘(pointSize 17)의 화면 실측 크기는 약 22pt다.
+  // contain은 글리프를 박스에 맞춰 확대하므로 실측 크기에 맞게 박스 크기를 28로 정했다.
+  searchIcon: {
+    width: 28,
+    height: 28,
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.PrimaryText,
+  },
 });

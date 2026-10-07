@@ -54,5 +54,13 @@ const styles = StyleSheet.create({
     paddingLeft: 6,
     paddingRight: 11,
   },
-  removeIcon: { fontSize: 10, fontWeight: '700', color: colors.SecondaryText },
+  // xmark의 박스 크기 15는 pointSize 10에 다른 아이콘과 같은 비율을 적용한 값이다.
+  // 원본 화면과 비교해 측정하지는 않았다.
+  removeIcon: {
+    width: 15,
+    height: 15,
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.SecondaryText,
+  },
 });
