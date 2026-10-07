@@ -22,19 +22,24 @@
 - Xcode 27.0
 - iOS 17.0 이상
 - mise
+- Node (mise로 설치)
 - SwiftLint
 
 ## 설정
 
 ```sh
 mise install
+make rn-xcframework
 git config core.hooksPath .githooks
 ```
+
+앱과 테스트 및 확장 빌드 전에 XCFramework 생성 필요
 
 ## 검증
 
 ```sh
 make lint
+make rn-xcframework
 make build
 make test-build
 make test
