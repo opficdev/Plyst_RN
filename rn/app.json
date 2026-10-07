@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "PlystRN",
+    "slug": "PlystRN",
+    "version": "1.0.0",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.PlystRN"
+    },
+    "plugins": [
+      "@callstack/react-native-brownfield",
+      "expo-image"
+    ]
+  }
+}
