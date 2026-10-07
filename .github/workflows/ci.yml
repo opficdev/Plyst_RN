@@ -26,6 +26,45 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make lint
 
+  js:
+    name: JS
+    runs-on: xcode-27
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+          install_args: node
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+
+      - name: Install dependencies
+        working-directory: rn
+        run: mise exec -- npm ci
+
+      - name: Type check
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-typecheck
+
+      - name: Lint
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-lint
+
+      - name: Test
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-test
+
   xcframework:
     name: XCFramework
     runs-on: xcode-27
