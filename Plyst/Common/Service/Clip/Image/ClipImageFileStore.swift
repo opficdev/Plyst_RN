@@ -85,22 +85,7 @@ struct ClipImageFileStore: Sendable {
     ) throws -> Data {
         try Task.checkCancellation()
         guard 0 < maximumPixelDimension else { throw ClipImageFileError.readFailed }
-        guard let directory = try directory(for: image.fileID) else {
-            throw ClipImageFileError.notFound(image.fileID)
-        }
-        let original = directory.appendingPathComponent("original")
-        guard let attributes = try attributes(at: original) else {
-            throw ClipImageFileError.notFound(image.fileID)
-        }
-        guard original.resolvingSymlinksInPath().standardizedFileURL == original.standardizedFileURL else {
-            throw ClipImageFileError.unsafePath
-        }
-        guard attributes[.type] as? FileAttributeType == .typeRegular else {
-            throw ClipImageFileError.unsafePath
-        }
-        guard attributes[.size] as? Int == image.byteCount else {
-            throw ClipImageFileError.corruptedImage(image.fileID)
-        }
+        let original = try validatedOriginalURL(image: image)
         let options = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let source = CGImageSourceCreateWithURL(original as CFURL, options),
               CGImageSourceGetType(source) as String? == image.contentType,
@@ -130,6 +115,33 @@ struct ClipImageFileStore: Sendable {
         CGImageDestinationAddImage(destination, thumbnail, nil)
         guard CGImageDestinationFinalize(destination) else { throw ClipImageFileError.readFailed }
         return output as Data
+    }
+
+    /// 반환 URL은 `delete(fileID:)` 전까지만 유효한 읽기 전용 참조입니다. 호출부는 파일을 쓰거나 옮기지 않아야 합니다.
+    /// 이후 읽기에 실패하면 파일이 삭제된 것으로 처리해야 합니다.
+    func fileURL(image: ClipImageMetadata) throws -> URL {
+        try Task.checkCancellation()
+        return try validatedOriginalURL(image: image)
+    }
+
+    private func validatedOriginalURL(image: ClipImageMetadata) throws -> URL {
+        guard let directory = try directory(for: image.fileID) else {
+            throw ClipImageFileError.notFound(image.fileID)
+        }
+        let original = directory.appendingPathComponent("original")
+        guard let attributes = try attributes(at: original) else {
+            throw ClipImageFileError.notFound(image.fileID)
+        }
+        guard original.resolvingSymlinksInPath().standardizedFileURL == original.standardizedFileURL else {
+            throw ClipImageFileError.unsafePath
+        }
+        guard attributes[.type] as? FileAttributeType == .typeRegular else {
+            throw ClipImageFileError.unsafePath
+        }
+        guard attributes[.size] as? Int == image.byteCount else {
+            throw ClipImageFileError.corruptedImage(image.fileID)
+        }
+        return original
     }
 
     /// 이미 존재하지 않는 파일은 삭제된 것으로 처리합니다.

@@ -39,6 +39,104 @@ if ! [ -d "$1" ]; then
 	exit 1
 fi
 
+# PlystBridge pod는 BrownfieldLib에 정적으로 링크되어 심볼도 BrownfieldLib에서 제공합니다.
+# 중복 링크를 피하면서 import할 수 있도록 모듈과 헤더만 담고 빈 정적 라이브러리를 사용합니다.
+bridge_directory=$(mktemp -d)
+expected_frameworks_file=
+actual_frameworks_file=
+trap 'rm -rf "$bridge_directory"; rm -f "$expected_frameworks_file" "$actual_frameworks_file"' EXIT HUP INT TERM
+
+bridge_header=$repository_root/rn/modules/plyst-bridge/ios/PlystClipModule.h
+if ! [ -f "$bridge_header" ]; then
+	printf '오류: PlystBridge 공개 헤더가 없습니다: %s\n' "$bridge_header" >&2
+	exit 1
+fi
+
+for platform in iphoneos iphonesimulator; do
+	products=$repository_root/rn/ios/.brownfield/build/Build/Products/$configuration-$platform/PlystBridge
+	for directory in "$products" "$products/PlystBridge.swiftmodule"; do
+		if ! [ -d "$directory" ]; then
+			printf '오류: PlystBridge 빌드 산출물 디렉터리가 없습니다: %s\n' "$directory" >&2
+			exit 1
+		fi
+	done
+	for header in "$products/PlystBridge-umbrella.h" "$products/Swift Compatibility Header/PlystBridge-Swift.h"; do
+		if ! [ -f "$header" ]; then
+			printf '오류: PlystBridge 빌드 헤더가 없습니다: %s\n' "$header" >&2
+			exit 1
+		fi
+	done
+
+	architectures=arm64
+	suffix=
+	if [ "$platform" = iphonesimulator ]; then
+		architectures='arm64 x86_64'
+		suffix=-simulator
+	fi
+	for architecture in $architectures; do
+		for extension in swiftmodule swiftdoc; do
+			module=$products/PlystBridge.swiftmodule/$architecture-apple-ios$suffix.$extension
+			if ! [ -f "$module" ]; then
+				printf '오류: PlystBridge Swift 모듈 파일이 없습니다: %s\n' "$module" >&2
+				exit 1
+			fi
+		done
+	done
+
+	framework=$bridge_directory/$platform/PlystBridge.framework
+	mkdir -p "$framework/Headers" "$framework/Modules"
+	cp "$bridge_header" "$products/PlystBridge-umbrella.h" \
+		"$products/Swift Compatibility Header/PlystBridge-Swift.h" "$framework/Headers/"
+	cp -R "$products/PlystBridge.swiftmodule" "$framework/Modules/"
+	cat > "$framework/Modules/module.modulemap" <<'EOF'
+framework module PlystBridge {
+  umbrella header "PlystBridge-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module PlystBridge.Swift {
+  header "PlystBridge-Swift.h"
+  requires objc
+}
+EOF
+	cat > "$framework/Info.plist" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key><string>PlystBridge</string>
+	<key>CFBundleIdentifier</key><string>org.cocoapods.PlystBridge</string>
+	<key>CFBundleName</key><string>PlystBridge</string>
+	<key>CFBundlePackageType</key><string>FMWK</string>
+	<key>CFBundleShortVersionString</key><string>1.0.0</string>
+	<key>CFBundleVersion</key><string>1.0.0</string>
+	<key>MinimumOSVersion</key><string>15.1</string>
+</dict>
+</plist>
+EOF
+	set --
+	for architecture in $architectures; do
+		object=$bridge_directory/$platform/$architecture.o
+		library=$bridge_directory/$platform/$architecture.a
+		printf '\n' | xcrun clang -x c -c - -o "$object" -target "$architecture-apple-ios15.1$suffix"
+		xcrun libtool -static -o "$library" "$object"
+		set -- "$@" "$library"
+	done
+	if [ "$platform" = iphonesimulator ]; then
+		xcrun lipo -create "$@" -output "$framework/PlystBridge"
+	else
+		cp "$1" "$framework/PlystBridge"
+	fi
+done
+
+rm -rf "$build_directory/PlystBridge.xcframework"
+xcodebuild -create-xcframework \
+	-framework "$bridge_directory/iphoneos/PlystBridge.framework" \
+	-framework "$bridge_directory/iphonesimulator/PlystBridge.framework" \
+	-output "$build_directory/PlystBridge.xcframework"
+
 destination=$repository_root/Plyst/Packages/PlystReactNative/Frameworks
 mkdir -p "$destination"
 rsync -aL --delete --delete-excluded \
@@ -72,7 +170,6 @@ fi
 package_manifest=$repository_root/Plyst/Packages/PlystReactNative/Package.swift
 expected_frameworks_file=$(mktemp)
 actual_frameworks_file=$(mktemp)
-trap 'rm -f "$expected_frameworks_file" "$actual_frameworks_file"' EXIT HUP INT TERM
 
 sed -n '/^let frameworkNames = \[$/,/^\]$/p' "$package_manifest" \
 	| sed -n 's/^[[:space:]]*"\([^"]*\)",[[:space:]]*$/\1/p' \
