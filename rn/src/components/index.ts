@@ -8,3 +8,5 @@ export { HomeTitleHeader } from './HomeTitleHeader';
 export { SearchTermChip } from './SearchTermChip';
 export { ClipDetailDates } from './ClipDetailDates';
 export { ClipDetailActionBar } from './ClipDetailActionBar';
+export { ActionSheet } from './ActionSheet/ActionSheet';
+export type { ActionSheetProps } from './ActionSheet/ActionSheet';
