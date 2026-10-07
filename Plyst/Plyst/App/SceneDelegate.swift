@@ -6,6 +6,7 @@
 //
 
 import OSLog
+import RNBrownfield
 import UIKit
 
 @MainActor
@@ -32,6 +33,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         toastWindow = ToastWindow(windowScene: windowScene)
         configureRoot(in: window)
         window.makeKeyAndVisible()
+        if ProcessInfo.processInfo.arguments.contains("-RNSpike"),
+           let root = window.rootViewController {
+            root.present(RNBrownfieldHost.makeViewController(moduleName: "main"), animated: false)
+        }
         request(from: connectionOptions.urlContexts)
     }
 

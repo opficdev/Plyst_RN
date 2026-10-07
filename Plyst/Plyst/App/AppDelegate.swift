@@ -5,13 +5,14 @@
 //  Created by opfic on 9/28/26.
 //
 
+import RNBrownfield
 import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        RNBrownfieldHost.start()
         return true
     }
 

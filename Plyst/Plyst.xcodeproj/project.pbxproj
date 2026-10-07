@@ -28,6 +28,7 @@
 		DFA0001F306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001A306A4A9700115D10 /* SQLiteData */; };
 		DFA00020306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */; };
 		DFA00021306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001C306A4A9700115D10 /* GRDB */; };
+		DFB00001306A4A9700115D10 /* RNBrownfield in Frameworks */ = {isa = PBXBuildFile; productRef = DFB00002306A4A9700115D10 /* RNBrownfield */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -143,6 +144,7 @@
 		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				DFB00001306A4A9700115D10 /* RNBrownfield in Frameworks */,
 				DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */,
 				DFA00002306A4A9700115D10 /* RxSwift in Frameworks */,
 				DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */,
@@ -229,6 +231,7 @@
 			);
 			name = Plyst;
 			packageProductDependencies = (
+				DFB00002306A4A9700115D10 /* RNBrownfield */,
 				DFA00005306A4A9700115D10 /* ReactorKit */,
 				DFA00006306A4A9700115D10 /* RxSwift */,
 				DFA0000D306A4A9700115D10 /* SQLiteData */,
@@ -357,6 +360,7 @@
 			mainGroup = DFEB0A18306A4A9500115D10;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				DFB00003306A4A9700115D10 /* XCLocalSwiftPackageReference "RNBrownfield" */,
 				DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */,
 				DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */,
 				DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */,
@@ -873,6 +877,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		DFB00003306A4A9700115D10 /* XCLocalSwiftPackageReference "RNBrownfield" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = RNBrownfield;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -917,6 +928,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DFB00002306A4A9700115D10 /* RNBrownfield */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFB00003306A4A9700115D10 /* XCLocalSwiftPackageReference "RNBrownfield" */;
+			productName = RNBrownfield;
+		};
 		DFA00005306A4A9700115D10 /* ReactorKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
