@@ -7,3 +7,4 @@ export { HomeEmptyState } from './HomeEmptyState';
 export { HomeTitleHeader } from './HomeTitleHeader';
 export { SearchTermChip } from './SearchTermChip';
 export { ClipDetailDates } from './ClipDetailDates';
+export { ClipDetailActionBar } from './ClipDetailActionBar';
