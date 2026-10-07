@@ -18,6 +18,7 @@ export function ClipImageCard({
         <Text
           style={[styles.name, name === null && styles.unnamed]}
           numberOfLines={2}
+          lineBreakStrategyIOS="standard"
         >
           {name ?? '이름 없는 이미지'}
         </Text>

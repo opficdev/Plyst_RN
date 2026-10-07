@@ -20,7 +20,11 @@ export function ClipTextCard({
         <Text style={styles.quote}>“</Text>
       )}
       {name !== null && (
-        <Text style={styles.name} numberOfLines={2}>
+        <Text
+          style={styles.name}
+          numberOfLines={2}
+          lineBreakStrategyIOS="standard"
+        >
           {name}
         </Text>
       )}
@@ -30,6 +34,7 @@ export function ClipTextCard({
           name === null ? styles.unnamedBody : styles.namedBody,
         ]}
         numberOfLines={name === null ? 3 : 2}
+        lineBreakStrategyIOS="standard"
       >
         {body}
       </Text>
