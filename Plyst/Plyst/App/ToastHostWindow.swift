@@ -55,7 +55,7 @@ final class ToastHostWindow: UIWindow {
     }
 
     private func configureAppearance() {
-        windowLevel = .normal + 2
+        windowLevel = .normal + 1
         backgroundColor = .clear
         rootViewController?.view.backgroundColor = .clear
         rootViewController?.view.isOpaque = false
