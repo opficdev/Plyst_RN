@@ -17,7 +17,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     )
 
     var window: UIWindow?
-    private var toastWindow: ToastWindow?
     private var toastHostWindow: ToastHostWindow?
     private var composition: HomeSceneComposition?
     private var isClipboardSaveRequested = false
@@ -34,7 +33,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: windowScene)
         self.window = window
-        toastWindow = ToastWindow(windowScene: windowScene)
         configureRoot(in: window)
         window.makeKeyAndVisible()
         toastHostWindow = ToastHostWindow(windowScene: windowScene)
@@ -66,8 +64,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidDisconnect(_ scene: UIScene) {
         toastHostWindow?.isHidden = true
         toastHostWindow = nil
-        toastWindow?.hide()
-        toastWindow = nil
         window = nil
         ClipBridge.unregister()
         composition = nil
@@ -110,9 +106,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     #endif
 
     private func configureRoot(in window: UIWindow) {
-        guard let toastWindow else { return }
         do {
-            let composition = try HomeSceneComposition(toastWindow: toastWindow)
+            let composition = try HomeSceneComposition()
             let root = composition.makeRootViewController()
             self.composition = composition
             ClipBridge.register(ClipBridgeAdapter(storage: composition.storage, images: composition.images))

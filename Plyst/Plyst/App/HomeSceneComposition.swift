@@ -6,6 +6,7 @@
 //
 
 import OSLog
+import PlystBridge
 import ReactorKit
 import RxSwift
 import UIKit
@@ -17,7 +18,6 @@ final class HomeSceneComposition {
         category: String(describing: HomeSceneComposition.self)
     )
 
-    private let toastWindow: ToastWindow
     let storage: SQLiteClipStorageService
     let images: ClipImageService
     private let clipboard: ClipboardService
@@ -31,8 +31,7 @@ final class HomeSceneComposition {
         importTask?.cancel()
     }
 
-    init(toastWindow: ToastWindow) throws {
-        self.toastWindow = toastWindow
+    init() throws {
         var directory = try FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,
@@ -75,8 +74,11 @@ final class HomeSceneComposition {
     }
 
     func makeRootViewController() -> UIViewController {
+        let showToast: @MainActor (String, Bool) -> Void = {
+            ToastBridge.show(message: $0, isSuccess: $1)
+        }
         // 상세 화면은 같은 저장소와 서비스 인스턴스를 공유합니다.
-        let makeDetail: @MainActor (Clip) -> UIViewController = { [storage, clipboard, images, photos, toastWindow] clip in
+        let makeDetail: @MainActor (Clip) -> UIViewController = { [storage, clipboard, images, photos, showToast] clip in
             switch clip.content {
             case .text:
                 TextDetailViewController(clipID: clip.id)
@@ -89,7 +91,7 @@ final class HomeSceneComposition {
                         images: images,
                         photos: photos
                     ),
-                    toastWindow: toastWindow,
+                    showToast: showToast,
                     makeImageDetailView: { ImageDetailView(frame: .zero, send: $0) }
                 )
             }
@@ -99,12 +101,12 @@ final class HomeSceneComposition {
             clipboard: clipboard,
             images: images
         )
-        // 검색 화면은 같은 저장소와 서비스 및 토스트 창을 공유합니다. 클로저는 Composition을 캡처하지 않습니다.
+        // 검색 화면은 같은 저장소와 서비스 및 토스트 표시 클로저를 공유합니다. 클로저는 Composition을 캡처하지 않습니다.
         let controller = HomeViewController(
             reactor: reactor,
-            toastWindow: toastWindow,
+            showToast: showToast,
             makeHomeView: { HomeView(frame: .zero, send: $0) },
-            makeSearchViewController: { [storage, clipboard, images, makeDetail, toastWindow] cancel in
+            makeSearchViewController: { [storage, clipboard, images, makeDetail, showToast] cancel in
                 SearchViewController(
                     reactor: SearchReactor(
                         storage: storage,
@@ -112,7 +114,7 @@ final class HomeSceneComposition {
                         clipboard: clipboard,
                         images: images
                     ),
-                    toastWindow: toastWindow,
+                    showToast: showToast,
                     makeSearchView: { SearchView(frame: .zero, send: $0) },
                     makeDetailViewController: makeDetail,
                     cancel: cancel
