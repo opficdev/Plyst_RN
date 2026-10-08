@@ -15,13 +15,20 @@ RCT_EXPORT_MODULE(PlystClip);
 - (instancetype)init {
   self = [super init];
   if (self) {
-    _implementation = [ClipBridgeModuleImpl new];
+    __weak PlystClipModule *weakSelf = self;
+    _implementation = [[ClipBridgeModuleImpl alloc] initWithEmit:^(NSString *kind, NSString *identifier) {
+      [weakSelf emitOnClipChange:@{@"kind": kind, @"id": identifier}];
+    }];
   }
   return self;
 }
 
 + (BOOL)requiresMainQueueSetup {
   return NO;
+}
+
+RCT_EXPORT_METHOD(ready) {
+  [_implementation ready];
 }
 
 RCT_EXPORT_METHOD(getClip:(NSString *)identifier

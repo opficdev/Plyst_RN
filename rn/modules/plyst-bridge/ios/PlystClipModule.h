@@ -2,6 +2,6 @@
 #import <PlystClipSpec/PlystClipSpec.h>
 #import <React/RCTInvalidating.h>
 
-@interface PlystClipModule : NSObject <NativePlystClipSpec, RCTInvalidating>
+@interface PlystClipModule : NativePlystClipSpecBase <NativePlystClipSpec, RCTInvalidating>
 @end
 #endif

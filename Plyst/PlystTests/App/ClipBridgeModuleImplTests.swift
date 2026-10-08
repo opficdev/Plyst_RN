@@ -29,7 +29,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         await ClipBridge.register(adapter)
         let completion = expectation(description: "조회 완료")
 
-        ClipBridgeModuleImpl().getClip(clip.id.uuidString) { record, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(clip.id.uuidString) { record, code in
             XCTAssertEqual(record?["name"] as? String, "이름")
             XCTAssertEqual(record?["characterCount"] as? Int, 4)
             XCTAssertNil(code)
@@ -44,7 +44,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         await ClipBridge.register(adapter)
         let completion = expectation(description: "조회 완료")
 
-        ClipBridgeModuleImpl().getClip(UUID().uuidString) { record, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(UUID().uuidString) { record, code in
             XCTAssertNil(record)
             XCTAssertNil(code)
             completion.fulfill()
@@ -56,7 +56,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
     func testInvalidIdentifierReturnsCode() async {
         let completion = expectation(description: "조회 완료")
 
-        ClipBridgeModuleImpl().getClip("invalid") { record, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClip("invalid") { record, code in
             XCTAssertNil(record)
             XCTAssertEqual(code, "E_INVALID_ID")
             completion.fulfill()
@@ -69,7 +69,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         await ClipBridge.unregister()
         let completion = expectation(description: "조회 완료")
 
-        ClipBridgeModuleImpl().getClip(UUID().uuidString) { record, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(UUID().uuidString) { record, code in
             XCTAssertNil(record)
             XCTAssertEqual(code, "E_UNAVAILABLE")
             completion.fulfill()

@@ -25,7 +25,7 @@ final class ClipBridgeCopyModuleImplTests: XCTestCase {
             await ClipBridge.register(stub)
             let completion = expectation(description: "복사 결과 전달")
 
-            ClipBridgeModuleImpl().copyClip(id.uuidString) { value, code in
+            ClipBridgeModuleImpl(emit: { _, _ in }).copyClip(id.uuidString) { value, code in
                 XCTAssertEqual(value, result.rawValue)
                 XCTAssertNil(code)
                 completion.fulfill()
@@ -44,7 +44,7 @@ final class ClipBridgeCopyModuleImplTests: XCTestCase {
         await ClipBridge.register(stub)
         let completion = expectation(description: "없는 클립 결과 전달")
 
-        ClipBridgeModuleImpl().copyClip(id.uuidString) { value, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).copyClip(id.uuidString) { value, code in
             XCTAssertNil(value)
             XCTAssertNil(code)
             completion.fulfill()
@@ -60,7 +60,7 @@ final class ClipBridgeCopyModuleImplTests: XCTestCase {
         await ClipBridge.register(stub)
         let completion = expectation(description: "복사 오류 전달")
 
-        ClipBridgeModuleImpl().copyClip(UUID().uuidString) { value, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).copyClip(UUID().uuidString) { value, code in
             XCTAssertNil(value)
             XCTAssertEqual(code, "E_COPY_FAILED")
             completion.fulfill()
@@ -77,7 +77,7 @@ final class ClipBridgeCopyModuleImplTests: XCTestCase {
         await ClipBridge.register(stub)
         let completion = expectation(description: "식별자 오류 전달")
 
-        ClipBridgeModuleImpl().copyClip("invalid") { value, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).copyClip("invalid") { value, code in
             XCTAssertNil(value)
             XCTAssertEqual(code, "E_INVALID_ID")
             completion.fulfill()
@@ -90,7 +90,7 @@ final class ClipBridgeCopyModuleImplTests: XCTestCase {
         await ClipBridge.unregister()
         let completion = expectation(description: "제공자 등록 오류 전달")
 
-        ClipBridgeModuleImpl().copyClip(UUID().uuidString) { value, code in
+        ClipBridgeModuleImpl(emit: { _, _ in }).copyClip(UUID().uuidString) { value, code in
             XCTAssertNil(value)
             XCTAssertEqual(code, "E_UNAVAILABLE")
             completion.fulfill()
@@ -116,7 +116,7 @@ final class ClipBridgeCopyModuleImplTests: XCTestCase {
             return .copied
         }
         await ClipBridge.register(stub)
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
 
         module.copyClip(UUID().uuidString) { _, _ in
             completion.fulfill()
@@ -136,6 +136,10 @@ private enum ClipBridgeCopyProviderTestError: Error {
 
 private struct ClipBridgeCopyProviderStub: ClipBridgeProvider {
     let copy: @Sendable (UUID) async throws -> ClipBridgeCopyResult?
+
+    func changes() async -> AsyncStream<ClipBridgeChange> {
+        AsyncStream { $0.finish() }
+    }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
 

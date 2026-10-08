@@ -18,7 +18,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testUpdateSuccessDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { receivedID, name, memo, isPinned in
                 XCTAssertEqual(receivedID, id)
@@ -62,7 +62,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testUpdateMissingDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { _, _, _, _ in
                 return nil
@@ -90,7 +90,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testUpdateWriteFailureDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { _, _, _, _ in
                 throw ClipBridgeProviderTestError.failed
@@ -118,7 +118,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testUpdateInvalidIdentifierDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { _, _, _, _ in
                 return nil
@@ -146,7 +146,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testUpdateUnavailableDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         await ClipBridge.unregister()
         let completion = expectation(description: "요청 완료")
 
@@ -191,7 +191,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
             }
         )
         await ClipBridge.register(stub)
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
 
         module.updateClip(
             UUID().uuidString,
@@ -211,7 +211,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testDeleteSuccessDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { _, _, _, _ in
                 return nil
@@ -233,7 +233,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testDeleteWriteFailureDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { _, _, _, _ in
                 throw ClipBridgeProviderTestError.failed
@@ -255,7 +255,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testDeleteInvalidIdentifierDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         let stub = ClipBridgeProviderStub(
             update: { _, _, _, _ in
                 return nil
@@ -277,7 +277,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
 
     func testDeleteUnavailableDelivery() async {
         let id = UUID()
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
         await ClipBridge.unregister()
         let completion = expectation(description: "요청 완료")
 
@@ -316,7 +316,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
             }
         )
         await ClipBridge.register(stub)
-        let module = ClipBridgeModuleImpl()
+        let module = ClipBridgeModuleImpl(emit: { _, _ in })
 
         module.deleteClip(UUID().uuidString) { _ in
             completion.fulfill()
@@ -337,6 +337,10 @@ private enum ClipBridgeProviderTestError: Error {
 private struct ClipBridgeProviderStub: ClipBridgeProvider {
     let update: @Sendable (UUID, String?, String?, Bool) async throws -> ClipBridgeRecord?
     let delete: @Sendable (UUID) async throws -> Void
+
+    func changes() async -> AsyncStream<ClipBridgeChange> {
+        AsyncStream { $0.finish() }
+    }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
 

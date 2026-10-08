@@ -1,4 +1,4 @@
-import type { TurboModule } from 'react-native';
+import type { CodegenTypes, TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 export type ClipImageRecord = {
@@ -24,7 +24,15 @@ export type ClipRecord = {
   lastUsedAt: number | null;
 };
 
+export type ClipChange = {
+  // kind는 updated 또는 deleted입니다.
+  kind: string;
+  id: string;
+};
+
 export interface Spec extends TurboModule {
+  readonly onClipChange: CodegenTypes.EventEmitter<ClipChange>;
+  ready(): void;
   // 클립이 없으면 null입니다. 실패하면 E_INVALID_ID, E_UNAVAILABLE,
   // E_READ_FAILED, E_CORRUPTED_DATA, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
   getClip(id: string): Promise<ClipRecord | null>;

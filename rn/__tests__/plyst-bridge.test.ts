@@ -3,6 +3,7 @@ import {
   copyClip,
   deleteClip,
   getClip,
+  subscribeClipChanges,
   subscribeToastRequests,
   updateClip,
 } from 'plyst-bridge';
@@ -20,6 +21,8 @@ jest.mock('../modules/plyst-bridge/src/NativePlystToast', () => ({
 jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
   __esModule: true,
   default: {
+    onClipChange: jest.fn(),
+    ready: jest.fn(),
     getClip: jest.fn(),
     updateClip: jest.fn(),
     deleteClip: jest.fn(),
@@ -183,4 +186,28 @@ test('없는 클립의 복사는 null을 반환한다', async () => {
 
   await expect(copyClip('missing')).resolves.toBeNull();
   expect(native.copyClip).toHaveBeenCalledWith('missing');
+});
+
+test('클립 변경을 구독한 뒤 준비를 알리고 구독 객체를 반환한다', () => {
+  const listener = jest.fn();
+  const subscription = { remove: jest.fn() } as unknown as ReturnType<
+    typeof NativePlystClip.onClipChange
+  >;
+  native.onClipChange.mockImplementation((callback) => {
+    expect(native.ready).not.toHaveBeenCalled();
+    callback({ kind: 'updated', id: 'clip-id' });
+    callback({ kind: 'deleted', id: 'clip-id' });
+    return subscription;
+  });
+  native.ready.mockImplementation(() => {
+    expect(native.onClipChange).toHaveReturnedWith(subscription);
+  });
+
+  expect(subscribeClipChanges(listener)).toBe(subscription);
+  expect(native.onClipChange).toHaveBeenCalledTimes(1);
+  expect(native.ready).toHaveBeenCalledTimes(1);
+  expect(listener.mock.calls).toEqual([
+    [{ kind: 'updated', id: 'clip-id' }],
+    [{ kind: 'deleted', id: 'clip-id' }],
+  ]);
 });

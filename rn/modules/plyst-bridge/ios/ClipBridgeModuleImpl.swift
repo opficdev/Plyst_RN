@@ -9,8 +9,24 @@ import Foundation
 
 @objc(ClipBridgeModuleImpl)
 public final class ClipBridgeModuleImpl: NSObject, Sendable {
+    private let id = UUID()
+    private let emit: @Sendable (String, String) -> Void
     @MainActor private var tasks = [UUID: Task<Void, Never>]()
     @MainActor private var isInvalidated = false
+
+    @objc
+    public init(emit: @escaping @Sendable (String, String) -> Void) {
+        self.emit = emit
+        super.init()
+    }
+
+    @objc
+    public nonisolated func ready() {
+        Task { @MainActor in
+            guard !isInvalidated else { return }
+            ClipBridge.register(id: id, emit: emit)
+        }
+    }
 
     @objc(getClip:completion:)
     public nonisolated func getClip(
@@ -91,6 +107,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
     public nonisolated func invalidate() {
         Task { @MainActor in
             isInvalidated = true
+            ClipBridge.unregister(id: id)
             for task in tasks.values { task.cancel() }
             tasks.removeAll()
         }

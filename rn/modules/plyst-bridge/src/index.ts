@@ -7,6 +7,19 @@ import type { ToastRequest } from './NativePlystToast';
 export type { ClipImageRecord, ClipRecord } from './NativePlystClip';
 export type { ToastRequest } from './NativePlystToast';
 
+export type ClipChange = {
+  kind: 'updated' | 'deleted';
+  id: string;
+};
+
+export function subscribeClipChanges(listener: (change: ClipChange) => void) {
+  const subscription = NativePlystClip.onClipChange((change) => {
+    listener(change as ClipChange);
+  });
+  NativePlystClip.ready();
+  return subscription;
+}
+
 export type ClipCopyResult =
   'copied' | 'copiedWithoutLastUsedAt' | 'writeNotObserved';
 

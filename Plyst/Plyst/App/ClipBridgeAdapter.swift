@@ -13,6 +13,27 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
     let images: ClipImageService
     let clipboard: ClipboardService
 
+    func changes() async -> AsyncStream<ClipBridgeChange> {
+        let changes = await storage.changes()
+        let (stream, continuation) = AsyncStream<ClipBridgeChange>.makeStream()
+        let task = Task {
+            defer { continuation.finish() }
+            for await event in changes {
+                guard !Task.isCancelled else { return }
+                switch event {
+                case .inserted:
+                    continue
+                case .updated(let clip):
+                    continuation.yield(ClipBridgeChange(kind: .updated, id: clip.id))
+                case .deleted(let id):
+                    continuation.yield(ClipBridgeChange(kind: .deleted, id: id))
+                }
+            }
+        }
+        continuation.onTermination = { _ in task.cancel() }
+        return stream
+    }
+
     func clip(id: UUID) async throws -> ClipBridgeRecord? {
         let clip: Clip?
         do {
