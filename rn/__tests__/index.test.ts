@@ -7,6 +7,7 @@ jest.mock('plyst-bridge', () => ({
   closeScreen: jest.fn(),
   setSaveEnabled: jest.fn(),
   subscribeSave: jest.fn(() => ({ remove: jest.fn() })),
+  subscribeClipChanges: jest.fn(() => ({ remove: jest.fn() })),
   updateClip: jest.fn(),
   subscribeToastRequests: jest.fn(),
 }));
