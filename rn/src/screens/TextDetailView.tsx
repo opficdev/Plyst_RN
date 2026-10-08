@@ -360,8 +360,8 @@ const styles = StyleSheet.create({
   },
   fields: { marginTop: 11, marginBottom: 18 },
   field: { paddingVertical: 12, paddingHorizontal: 4, gap: 4 },
-  nameField: { gap: 6.6 },
-  memoField: { gap: 4.9 },
+  nameField: { paddingTop: 11.67, paddingBottom: 12.33, gap: 6.93 },
+  memoField: { paddingTop: 12.67, paddingBottom: 11.67, gap: 5.9 },
   caption: { ...typography.sectionLabel, color: colors.SecondaryText },
   name: {
     fontSize: 17,
