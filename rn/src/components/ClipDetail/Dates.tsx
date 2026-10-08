@@ -16,7 +16,7 @@ export function ClipDetailDates({
           {savedValue}
         </Text>
       </View>
-      <View style={styles.cell}>
+      <View style={[styles.cell, styles.lastUsedCell]}>
         <Text allowFontScaling={false} style={styles.caption} numberOfLines={1}>
           마지막 사용
         </Text>
@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     gap: 4,
   },
+  lastUsedCell: { paddingLeft: 14, paddingRight: 12 },
   caption: { fontSize: 12, color: colors.SecondaryText, flexShrink: 1 },
   value: {
     fontFamily: 'ui-monospace',
