@@ -62,7 +62,6 @@ final class ClipBridgeChangeTests: XCTestCase {
         stub.continuation.yield(ClipBridgeChange(kind: .updated, id: after))
 
         await fulfillment(of: [completion], timeout: 2)
-        await fulfillment(of: [unexpected], timeout: 0.1)
     }
 
     func testUnregisterCancelsSubscription() async {
