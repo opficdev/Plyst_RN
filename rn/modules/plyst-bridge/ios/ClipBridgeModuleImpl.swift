@@ -70,6 +70,23 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(copyClip:completion:)
+    public nonisolated func copyClip(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .copyFailed,
+            operation: { provider, id in
+                try await provider.copyClip(id: id)
+            },
+            completion: { result, code in
+                completion(result?.rawValue, code)
+            }
+        )
+    }
+
     @objc
     public nonisolated func invalidate() {
         Task { @MainActor in

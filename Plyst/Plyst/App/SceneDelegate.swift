@@ -110,7 +110,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let composition = try HomeSceneComposition()
             let root = composition.makeRootViewController()
             self.composition = composition
-            ClipBridge.register(ClipBridgeAdapter(storage: composition.storage, images: composition.images))
+            ClipBridge.register(ClipBridgeAdapter(
+                storage: composition.storage,
+                images: composition.images,
+                clipboard: composition.clipboard
+            ))
             window.rootViewController = root
             composition.startPendingCleanupRecovery()
             // 시작 실패 후 다시 시도해 성공하면 Scene이 이미 활성 상태라 sceneDidBecomeActive가 오지 않습니다.

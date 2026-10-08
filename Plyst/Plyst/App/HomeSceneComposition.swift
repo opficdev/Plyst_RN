@@ -20,7 +20,7 @@ final class HomeSceneComposition {
 
     let storage: SQLiteClipStorageService
     let images: ClipImageService
-    private let clipboard: ClipboardService
+    let clipboard: ClipboardService
     private let photos: ClipPhotoLibraryService
     /// App Group 컨테이너를 찾지 못하면 nil입니다. 본 저장소가 정상이므로 시작은 계속하고 반입만 건너뜁니다.
     private let imports: ClipShareImportService?

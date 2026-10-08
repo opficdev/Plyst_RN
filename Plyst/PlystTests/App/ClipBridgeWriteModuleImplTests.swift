@@ -340,6 +340,8 @@ private struct ClipBridgeProviderStub: ClipBridgeProvider {
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
 
+    func copyClip(id: UUID) async throws -> ClipBridgeCopyResult? { nil }
+
     func updateClip(
         id: UUID,
         name: String?,

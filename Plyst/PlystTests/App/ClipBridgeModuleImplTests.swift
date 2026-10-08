@@ -84,6 +84,11 @@ final class ClipBridgeModuleImplTests: XCTestCase {
 
     private func makeAdapter(storage: SQLiteClipStorageService) throws -> ClipBridgeAdapter {
         let files = try ClipImageFileStore(rootURL: directory.appendingPathComponent("images", isDirectory: true))
-        return ClipBridgeAdapter(storage: storage, images: ClipImageService(storage: storage, files: files))
+        let images = ClipImageService(storage: storage, files: files)
+        return ClipBridgeAdapter(
+            storage: storage,
+            images: images,
+            clipboard: ClipboardService(storage: storage, images: images)
+        )
     }
 }

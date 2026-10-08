@@ -1,5 +1,6 @@
 import {
   closeScreen,
+  copyClip,
   deleteClip,
   getClip,
   subscribeToastRequests,
@@ -22,6 +23,7 @@ jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
     getClip: jest.fn(),
     updateClip: jest.fn(),
     deleteClip: jest.fn(),
+    copyClip: jest.fn(),
   },
 }));
 
@@ -163,4 +165,22 @@ test.each([
 
   await expect(updateClip('id', null, null, false)).rejects.toBe(error);
   await expect(deleteClip('id')).rejects.toBe(error);
+});
+
+test.each(['copied', 'copiedWithoutLastUsedAt', 'writeNotObserved'])(
+  '복사 식별자를 전달하고 %s 결과를 그대로 반환한다',
+  async (result) => {
+    native.copyClip.mockResolvedValue(result);
+
+    await expect(copyClip('clip-id')).resolves.toBe(result);
+    expect(native.copyClip).toHaveBeenCalledWith('clip-id');
+    expect(native.copyClip).toHaveBeenCalledTimes(1);
+  },
+);
+
+test('없는 클립의 복사는 null을 반환한다', async () => {
+  native.copyClip.mockResolvedValue(null);
+
+  await expect(copyClip('missing')).resolves.toBeNull();
+  expect(native.copyClip).toHaveBeenCalledWith('missing');
 });

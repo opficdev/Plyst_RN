@@ -63,6 +63,18 @@ RCT_EXPORT_METHOD(deleteClip:(NSString *)identifier
   }];
 }
 
+RCT_EXPORT_METHOD(copyClip:(NSString *)identifier
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  [_implementation copyClip:identifier completion:^(NSString *result, NSString *code) {
+    if (code) {
+      reject(code, code, nil);
+    } else {
+      resolve(result ?: [NSNull null]);
+    }
+  }];
+}
+
 - (void)invalidate {
   [_implementation invalidate];
 }

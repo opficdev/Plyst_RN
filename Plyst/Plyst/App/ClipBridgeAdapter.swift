@@ -11,6 +11,7 @@ import PlystBridge
 struct ClipBridgeAdapter: ClipBridgeProvider {
     let storage: any ClipStorageService
     let images: ClipImageService
+    let clipboard: ClipboardService
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? {
         let clip: Clip?
@@ -64,6 +65,22 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             throw ClipBridgeError.corruptedData
         } catch {
             throw ClipBridgeError.writeFailed
+        }
+    }
+
+    func copyClip(id: UUID) async throws -> ClipBridgeCopyResult? {
+        do {
+            switch try await clipboard.copy(id: id) {
+            case .copied: return .copied
+            case .copiedWithoutLastUsedAt: return .copiedWithoutLastUsedAt
+            case .writeNotObserved: return .writeNotObserved
+            }
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.notFound {
+            return nil
+        } catch {
+            throw ClipBridgeError.copyFailed
         }
     }
 

@@ -7,6 +7,13 @@ import type { ToastRequest } from './NativePlystToast';
 export type { ClipImageRecord, ClipRecord } from './NativePlystClip';
 export type { ToastRequest } from './NativePlystToast';
 
+export type ClipCopyResult =
+  'copied' | 'copiedWithoutLastUsedAt' | 'writeNotObserved';
+
+export function copyClip(id: string): Promise<ClipCopyResult | null> {
+  return NativePlystClip.copyClip(id) as Promise<ClipCopyResult | null>;
+}
+
 export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }

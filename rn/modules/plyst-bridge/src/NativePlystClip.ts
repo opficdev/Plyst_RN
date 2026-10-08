@@ -39,6 +39,9 @@ export interface Spec extends TurboModule {
   // 삭제했거나 이미 없으면 반환값 없이 성공합니다.
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   deleteClip(id: string): Promise<void>;
+  // 복사 결과는 copied, copiedWithoutLastUsedAt, writeNotObserved 중 하나입니다. 클립이 없으면 null입니다.
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_COPY_FAILED 중 하나로 거부합니다.
+  copyClip(id: string): Promise<string | null>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('PlystClip');
