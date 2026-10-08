@@ -5,8 +5,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { closeScreen } from 'plyst-bridge';
-import { ClipDetailActionBar } from '../components/ClipDetail/ActionBar';
-import { ClipDetailDates } from '../components/ClipDetail/Dates';
+import { ClipDetailActionBar, ClipDetailDates } from '../components/ClipDetail';
 import { colors, radius, spacing, typography } from '../theme';
 import { formatClipDate } from './formatClipDate';
 import { loadTextDetail } from './loadTextDetail';
