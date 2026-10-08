@@ -1,15 +1,32 @@
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { closeScreen } from 'plyst-bridge';
+import { closeScreen, setSaveEnabled, subscribeSave } from 'plyst-bridge';
+import type { ClipRecord } from 'plyst-bridge';
+import { showToast } from '../components';
 import { ClipDetailActionBar, ClipDetailDates } from '../components/ClipDetail';
 import { colors, radius, spacing, typography } from '../theme';
 import { formatClipDate } from './formatClipDate';
 import { loadTextDetail } from './loadTextDetail';
 import type { TextDetailResult } from './loadTextDetail';
+import { saveTextDetail } from './saveTextDetail';
+import { canSave, initialState, reduce } from './textDetailDraft';
 
 type TextDetailViewProps = { clipID: string };
 type State = { status: 'loading' } | TextDetailResult;
@@ -25,7 +42,6 @@ export function TextDetailView({ clipID }: TextDetailViewProps) {
 
 function TextDetailContent({ clipID }: TextDetailViewProps) {
   const [state, setState] = useState<State>({ status: 'loading' });
-  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     let active = true;
@@ -42,7 +58,72 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
   if (state.status === 'missing' || state.status === 'failed') return null;
   if (state.status === 'loading') return <View style={styles.canvas} />;
 
-  const { clip } = state;
+  return <TextDetailEditor clipID={clipID} clip={state.clip} />;
+}
+
+function TextDetailEditor({
+  clipID,
+  clip: initialClip,
+}: TextDetailViewProps & { clip: ClipRecord }) {
+  const [state, dispatch] = useReducer(reduce, initialClip, initialState);
+  const stateRef = useRef(state);
+  const savingRef = useRef(false);
+  const didClose = useRef(false);
+  const insets = useSafeAreaInsets();
+  const isSaveEnabled = canSave(state);
+
+  useLayoutEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    setSaveEnabled(isSaveEnabled);
+  }, [isSaveEnabled]);
+
+  useEffect(() => {
+    if (didClose.current || (!state.isRemoved && !state.isSaved)) return;
+    didClose.current = true;
+    closeScreen();
+  }, [state.isRemoved, state.isSaved]);
+
+  useEffect(() => {
+    let active = true;
+    const subscription = subscribeSave(() => {
+      const current = stateRef.current;
+      if (
+        !active ||
+        didClose.current ||
+        savingRef.current ||
+        !canSave(current)
+      ) {
+        return;
+      }
+      savingRef.current = true;
+      dispatch({ type: 'saveStarted' });
+      void saveTextDetail(clipID, current.draft).then((result) => {
+        savingRef.current = false;
+        switch (result.status) {
+          case 'saved':
+            if (active) dispatch({ type: 'saved', clip: result.clip });
+            showToast('저장했습니다', true);
+            break;
+          case 'removed':
+            if (active) dispatch({ type: 'removed' });
+            break;
+          case 'failed':
+            if (active) dispatch({ type: 'saveFailed' });
+            showToast('저장하지 못했습니다', false);
+            break;
+        }
+      });
+    });
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, [clipID]);
+
+  const { clip, draft } = state;
   return (
     <View style={styles.canvas}>
       <ScrollView
@@ -63,38 +144,44 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
             <Text allowFontScaling={false} style={styles.caption}>
               이름
             </Text>
-            <Text
+            <TextInput
               allowFontScaling={false}
-              style={[styles.name, !clip.name && styles.placeholder]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {clip.name || '이름 없음'}
-            </Text>
+              style={styles.name}
+              value={draft.name}
+              placeholder="이름 없음"
+              placeholderTextColor={colors.Placeholder}
+              returnKeyType="done"
+              onChangeText={(name) => dispatch({ type: 'nameChanged', name })}
+            />
           </View>
           <View style={styles.divider} />
           <View style={styles.pin}>
             <Text allowFontScaling={false} style={styles.pinLabel}>
               고정
             </Text>
-            <View pointerEvents="none">
-              <Switch
-                value={clip.isPinned}
-                trackColor={{ true: colors.SwitchOn }}
-              />
-            </View>
+            <Switch
+              value={draft.isPinned}
+              onValueChange={(isPinned) =>
+                dispatch({ type: 'pinnedChanged', isPinned })
+              }
+              trackColor={{ true: colors.SwitchOn }}
+            />
           </View>
           <View style={styles.divider} />
           <View style={[styles.field, styles.memoField]}>
             <Text allowFontScaling={false} style={styles.caption}>
               메모
             </Text>
-            <Text
+            <TextInput
               allowFontScaling={false}
-              style={[styles.memo, !clip.memo && styles.placeholder]}
-            >
-              {clip.memo || '이 내용을 언제 쓰는지 적어 두세요'}
-            </Text>
+              style={styles.memo}
+              value={draft.memo}
+              placeholder="이 내용을 언제 쓰는지 적어 두세요"
+              placeholderTextColor={colors.Placeholder}
+              multiline
+              scrollEnabled={false}
+              onChangeText={(memo) => dispatch({ type: 'memoChanged', memo })}
+            />
           </View>
           <View style={styles.divider} />
         </View>
@@ -153,8 +240,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.PrimaryText,
     flexShrink: 1,
+    padding: 0,
   },
-  placeholder: { color: colors.Placeholder },
   divider: { height: 1, backgroundColor: colors.Outline },
   pin: {
     flexDirection: 'row',
@@ -169,5 +256,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.PrimaryText,
   },
-  memo: { minHeight: 64, fontSize: 16, color: colors.PrimaryText },
+  memo: {
+    minHeight: 64,
+    fontSize: 16,
+    color: colors.PrimaryText,
+    textAlignVertical: 'top',
+    padding: 0,
+  },
 });

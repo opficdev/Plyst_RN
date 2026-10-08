@@ -3,6 +3,9 @@ import { AppRegistry } from 'react-native';
 jest.mock('plyst-bridge', () => ({
   getClip: jest.fn(),
   closeScreen: jest.fn(),
+  setSaveEnabled: jest.fn(),
+  subscribeSave: jest.fn(() => ({ remove: jest.fn() })),
+  updateClip: jest.fn(),
   subscribeToastRequests: jest.fn(),
 }));
 
