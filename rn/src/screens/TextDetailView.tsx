@@ -60,13 +60,15 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
           </Text>
         </View>
         <View style={styles.fields}>
-          <View style={styles.field}>
+          <View style={[styles.field, styles.nameField]}>
             <Text allowFontScaling={false} style={styles.caption}>
               이름
             </Text>
             <Text
               allowFontScaling={false}
               style={[styles.name, !clip.name && styles.placeholder]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {clip.name || '이름 없음'}
             </Text>
@@ -84,7 +86,7 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
             </View>
           </View>
           <View style={styles.divider} />
-          <View style={styles.field}>
+          <View style={[styles.field, styles.memoField]}>
             <Text allowFontScaling={false} style={styles.caption}>
               메모
             </Text>
@@ -127,8 +129,8 @@ const styles = StyleSheet.create({
     borderColor: colors.Outline,
     paddingTop: 17,
     paddingHorizontal: 19,
-    paddingBottom: 21,
-    gap: 12,
+    paddingBottom: 16,
+    gap: 17,
   },
   meta: {
     fontFamily: 'ui-monospace',
@@ -142,8 +144,10 @@ const styles = StyleSheet.create({
     lineHeight: 35,
     color: colors.PrimaryText,
   },
-  fields: { marginTop: 10, marginBottom: 18 },
+  fields: { marginTop: 11, marginBottom: 18 },
   field: { paddingVertical: 12, paddingHorizontal: 4, gap: 4 },
+  nameField: { gap: 6.6 },
+  memoField: { gap: 4.9 },
   caption: { ...typography.sectionLabel, color: colors.SecondaryText },
   name: {
     fontSize: 17,
@@ -157,7 +161,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 4,
+    paddingLeft: 4,
+    paddingRight: 1.8,
   },
   pinLabel: {
     flex: 1,

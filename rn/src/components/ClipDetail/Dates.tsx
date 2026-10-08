@@ -9,18 +9,18 @@ export function ClipDetailDates({
   return (
     <View style={styles.container}>
       <View style={styles.cell}>
-        <Text style={styles.caption} numberOfLines={1}>
+        <Text allowFontScaling={false} style={styles.caption} numberOfLines={1}>
           저장한 날짜
         </Text>
-        <Text style={styles.value} numberOfLines={0}>
+        <Text allowFontScaling={false} style={styles.value} numberOfLines={0}>
           {savedValue}
         </Text>
       </View>
       <View style={styles.cell}>
-        <Text style={styles.caption} numberOfLines={1}>
+        <Text allowFontScaling={false} style={styles.caption} numberOfLines={1}>
           마지막 사용
         </Text>
-        <Text style={styles.value} numberOfLines={0}>
+        <Text allowFontScaling={false} style={styles.value} numberOfLines={0}>
           {lastUsedValue}
         </Text>
       </View>
