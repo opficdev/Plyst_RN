@@ -60,6 +60,7 @@ public struct ClipBridgeRecord: Sendable {
 public enum ClipBridgeError: Error, Sendable {
     case invalidID
     case unavailable
+    case writeFailed
     case readFailed
     case corruptedData
     case imageUnavailable
@@ -68,6 +69,7 @@ public enum ClipBridgeError: Error, Sendable {
         switch self {
         case .invalidID: "E_INVALID_ID"
         case .unavailable: "E_UNAVAILABLE"
+        case .writeFailed: "E_WRITE_FAILED"
         case .readFailed: "E_READ_FAILED"
         case .corruptedData: "E_CORRUPTED_DATA"
         case .imageUnavailable: "E_IMAGE_UNAVAILABLE"
@@ -77,6 +79,13 @@ public enum ClipBridgeError: Error, Sendable {
 
 public protocol ClipBridgeProvider: Sendable {
     func clip(id: UUID) async throws -> ClipBridgeRecord?
+    func updateClip(
+        id: UUID,
+        name: String?,
+        memo: String?,
+        isPinned: Bool
+    ) async throws -> ClipBridgeRecord?
+    func deleteClip(id: UUID) async throws
 }
 
 @MainActor

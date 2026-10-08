@@ -28,6 +28,45 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         return try await record(from: clip)
     }
 
+    func updateClip(
+        id: UUID,
+        name: String?,
+        memo: String?,
+        isPinned: Bool
+    ) async throws -> ClipBridgeRecord? {
+        do {
+            let change = ClipUpdate.details(
+                name: name,
+                memo: memo,
+                isPinned: isPinned
+            )
+            let clip = try await storage.update(id: id, change: change)
+            return try await record(from: clip)
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.notFound {
+            return nil
+        } catch ClipStorageError.corruptedData {
+            throw ClipBridgeError.corruptedData
+        } catch {
+            throw ClipBridgeError.writeFailed
+        }
+    }
+
+    func deleteClip(id: UUID) async throws {
+        do {
+            _ = try await images.delete(id: id)
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.notFound {
+            return
+        } catch ClipStorageError.corruptedData {
+            throw ClipBridgeError.corruptedData
+        } catch {
+            throw ClipBridgeError.writeFailed
+        }
+    }
+
     private func record(from clip: Clip) async throws -> ClipBridgeRecord {
         let text: String?
         let image: ClipBridgeRecord.Image?

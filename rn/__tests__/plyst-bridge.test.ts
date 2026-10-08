@@ -1,4 +1,10 @@
-import { closeScreen, getClip, subscribeToastRequests } from 'plyst-bridge';
+import {
+  closeScreen,
+  deleteClip,
+  getClip,
+  subscribeToastRequests,
+  updateClip,
+} from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
 
 import NativePlystScreen from '../modules/plyst-bridge/src/NativePlystScreen';
@@ -12,7 +18,11 @@ jest.mock('../modules/plyst-bridge/src/NativePlystToast', () => ({
 
 jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
   __esModule: true,
-  default: { getClip: jest.fn() },
+  default: {
+    getClip: jest.fn(),
+    updateClip: jest.fn(),
+    deleteClip: jest.fn(),
+  },
 }));
 
 jest.mock('../modules/plyst-bridge/src/NativePlystScreen', () => ({
@@ -91,4 +101,66 @@ test('토스트 요청을 구독한 뒤 준비를 알리고 구독 객체를 반
   expect(toast.onToastRequest).toHaveBeenCalledWith(listener);
   expect(toast.onToastRequest).toHaveBeenCalledTimes(1);
   expect(toast.ready).toHaveBeenCalledTimes(1);
+});
+
+test('갱신 인자를 그대로 전달하고 저장된 클립을 반환한다', async () => {
+  const record: ClipRecord = {
+    id: 'clip-id',
+    text: '원문',
+    characterCount: 2,
+    image: null,
+    name: ' 이름 ',
+    memo: null,
+    isPinned: true,
+    createdAt: 1000,
+    lastUsedAt: null,
+  };
+  native.updateClip.mockResolvedValue(record);
+
+  await expect(updateClip(record.id, ' 이름 ', null, true)).resolves.toBe(
+    record,
+  );
+  expect(native.updateClip).toHaveBeenCalledWith(
+    record.id,
+    ' 이름 ',
+    null,
+    true,
+  );
+  expect(native.updateClip).toHaveBeenCalledTimes(1);
+});
+
+test('없는 클립의 갱신은 null을 반환한다', async () => {
+  native.updateClip.mockResolvedValue(null);
+
+  await expect(
+    updateClip('missing', null, ' 메모 ', false),
+  ).resolves.toBeNull();
+  expect(native.updateClip).toHaveBeenCalledWith(
+    'missing',
+    null,
+    ' 메모 ',
+    false,
+  );
+});
+
+test('삭제 식별자를 그대로 전달하고 반환값 없이 완료한다', async () => {
+  native.deleteClip.mockResolvedValue(undefined);
+
+  await expect(deleteClip('clip-id')).resolves.toBeUndefined();
+  expect(native.deleteClip).toHaveBeenCalledWith('clip-id');
+  expect(native.deleteClip).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  'E_INVALID_ID',
+  'E_UNAVAILABLE',
+  'E_WRITE_FAILED',
+  'E_CORRUPTED_DATA',
+])('갱신과 삭제의 %s 오류를 그대로 전달한다', async (code) => {
+  const error = Object.assign(new Error(code), { code });
+  native.updateClip.mockRejectedValue(error);
+  native.deleteClip.mockRejectedValue(error);
+
+  await expect(updateClip('id', null, null, false)).rejects.toBe(error);
+  await expect(deleteClip('id')).rejects.toBe(error);
 });

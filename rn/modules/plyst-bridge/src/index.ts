@@ -11,6 +11,19 @@ export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }
 
+export function updateClip(
+  id: string,
+  name: string | null,
+  memo: string | null,
+  isPinned: boolean,
+): Promise<ClipRecord | null> {
+  return NativePlystClip.updateClip(id, name, memo, isPinned);
+}
+
+export function deleteClip(id: string): Promise<void> {
+  return NativePlystClip.deleteClip(id);
+}
+
 export function closeScreen(): void {
   NativePlystScreen.close();
 }

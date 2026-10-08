@@ -29,6 +29,47 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(updateClip:name:memo:isPinned:completion:)
+    public nonisolated func updateClip(
+        _ identifier: String,
+        name: String?,
+        memo: String?,
+        isPinned: Bool,
+        completion: @escaping @Sendable (NSDictionary?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .writeFailed,
+            operation: { provider, id in
+                try await provider.updateClip(
+                    id: id,
+                    name: name,
+                    memo: memo,
+                    isPinned: isPinned
+                )
+            },
+            completion: { record, code in
+                completion(record.map(Self.dictionary), code)
+            }
+        )
+    }
+
+    @objc(deleteClip:completion:)
+    public nonisolated func deleteClip(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .writeFailed,
+            operation: { provider, id in
+                try await provider.deleteClip(id: id)
+                return true
+            },
+            completion: { _, code in completion(code) }
+        )
+    }
+
     @objc
     public nonisolated func invalidate() {
         Task { @MainActor in
