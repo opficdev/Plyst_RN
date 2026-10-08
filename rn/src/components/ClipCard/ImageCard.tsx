@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme';
-import type { ClipCardProps } from './ClipCardProps';
-import { ClipThumbnail } from './ClipThumbnail';
+import type { ClipCardProps } from './CardProps';
+import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
 
 type ClipImageCardProps = ClipCardProps & { thumbnailUri: string | null };

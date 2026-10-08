@@ -13,8 +13,8 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { colors } from '../../theme';
-import { ActionSheetButton } from './ActionSheetButton';
-import type { ActionSheetItem } from './ActionSheetItem';
+import { ActionSheetButton } from './Button';
+import type { ActionSheetItem } from './Item';
 
 export type ActionSheetProps = {
   // 항상 마운트하고 isVisible로만 열고 닫는다. 조건부로 렌더링하면 닫힘 뒤에 실행되어야 할 handler가 사라진다.

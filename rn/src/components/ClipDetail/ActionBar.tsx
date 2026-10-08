@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing } from '../../theme';
 
 type ClipDetailActionBarProps = {
   isBusy?: boolean;

@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme';
-import type { ClipCardProps } from './ClipCardProps';
+import type { ClipCardProps } from './CardProps';
 import { CopyButton } from './CopyButton';
 
 type ClipTextCardProps = ClipCardProps & { body: string; isWebLink: boolean };
