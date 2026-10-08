@@ -25,6 +25,10 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
         guard let clip else { return nil }
 
+        return try await record(from: clip)
+    }
+
+    private func record(from clip: Clip) async throws -> ClipBridgeRecord {
         let text: String?
         let image: ClipBridgeRecord.Image?
         switch clip.content {

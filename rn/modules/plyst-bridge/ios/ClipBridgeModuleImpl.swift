@@ -17,23 +17,16 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         _ identifier: String,
         completion: @escaping @Sendable (NSDictionary?, String?) -> Void
     ) {
-        Task { @MainActor in
-            guard !isInvalidated else { return }
-            let request = UUID()
-            tasks[request] = Task { @MainActor in
-                defer { tasks[request] = nil }
-                do {
-                    guard let id = UUID(uuidString: identifier) else { throw ClipBridgeError.invalidID }
-                    guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                    let record = try await provider.clip(id: id)
-                    guard !isInvalidated, !Task.isCancelled else { return }
-                    completion(record.map(Self.dictionary), nil)
-                } catch {
-                    guard !isInvalidated, !Task.isCancelled else { return }
-                    completion(nil, (error as? ClipBridgeError ?? .readFailed).code)
-                }
+        execute(
+            identifier,
+            fallback: .readFailed,
+            operation: { provider, id in
+                try await provider.clip(id: id)
+            },
+            completion: { record, code in
+                completion(record.map(Self.dictionary), code)
             }
-        }
+        )
     }
 
     @objc
@@ -42,6 +35,31 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
             isInvalidated = true
             for task in tasks.values { task.cancel() }
             tasks.removeAll()
+        }
+    }
+
+    private nonisolated func execute<Value: Sendable>(
+        _ identifier: String,
+        fallback: ClipBridgeError,
+        operation: @escaping @MainActor @Sendable (any ClipBridgeProvider, UUID) async throws -> Value?,
+        completion: @escaping @MainActor @Sendable (Value?, String?) -> Void
+    ) {
+        Task { @MainActor in
+            guard !isInvalidated else { return }
+            let request = UUID()
+            tasks[request] = Task { @MainActor in
+                defer { tasks[request] = nil }
+                do {
+                    guard let id = UUID(uuidString: identifier) else { throw ClipBridgeError.invalidID }
+                    guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                    let value = try await operation(provider, id)
+                    guard !isInvalidated, !Task.isCancelled else { return }
+                    completion(value, nil)
+                } catch {
+                    guard !isInvalidated, !Task.isCancelled else { return }
+                    completion(nil, (error as? ClipBridgeError ?? fallback).code)
+                }
+            }
         }
     }
 
