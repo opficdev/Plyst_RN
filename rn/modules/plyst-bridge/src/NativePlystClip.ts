@@ -13,6 +13,8 @@ export type ClipImageRecord = {
 export type ClipRecord = {
   id: string;
   text: string | null;
+  // Swift String.count로 센 글자 수입니다. 이미지 클립은 0입니다.
+  characterCount: number;
   image: ClipImageRecord | null;
   name: string | null;
   memo: string | null;

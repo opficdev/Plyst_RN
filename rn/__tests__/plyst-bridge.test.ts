@@ -16,6 +16,7 @@ test('식별자를 전달하고 클립의 필드를 그대로 반환한다', asy
   const record: ClipRecord = {
     id: 'clip-id',
     text: null,
+    characterCount: 0,
     image: {
       uri: 'file:///images/original',
       contentType: 'public.png',
