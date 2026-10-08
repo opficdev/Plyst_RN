@@ -85,11 +85,11 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
     }
 
     private func makeHierarchy() {
+        if let contentView { view.addSubview(contentView) }
         view.addSubview(topBar)
         topBar.addSubview(closeButton)
         topBar.addSubview(titleLabel)
         topBar.addSubview(saveButton)
-        if let contentView { view.addSubview(contentView) }
     }
 
     private func makeLayout() {
