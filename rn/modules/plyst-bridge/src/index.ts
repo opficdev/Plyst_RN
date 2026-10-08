@@ -48,6 +48,16 @@ export function closeScreen(): void {
   NativePlystScreen.close();
 }
 
+export function setSaveEnabled(isEnabled: boolean): void {
+  NativePlystScreen.setSaveEnabled(isEnabled);
+}
+
+export function subscribeSave(listener: () => void) {
+  const subscription = NativePlystScreen.onSave(listener);
+  NativePlystScreen.ready();
+  return subscription;
+}
+
 export function subscribeToastRequests(
   listener: (request: ToastRequest) => void,
 ) {

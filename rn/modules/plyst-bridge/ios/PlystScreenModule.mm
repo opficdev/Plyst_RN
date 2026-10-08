@@ -15,7 +15,10 @@ RCT_EXPORT_MODULE(PlystScreen);
 - (instancetype)init {
   self = [super init];
   if (self) {
-    _implementation = [ScreenBridgeModuleImpl new];
+    __weak PlystScreenModule *weakSelf = self;
+    _implementation = [[ScreenBridgeModuleImpl alloc] initWithEmit:^{
+      [weakSelf emitOnSave];
+    }];
   }
   return self;
 }
@@ -26,6 +29,14 @@ RCT_EXPORT_MODULE(PlystScreen);
 
 RCT_EXPORT_METHOD(close) {
   [_implementation close];
+}
+
+RCT_EXPORT_METHOD(ready) {
+  [_implementation ready];
+}
+
+RCT_EXPORT_METHOD(setSaveEnabled:(BOOL)isEnabled) {
+  [_implementation setSaveEnabled:isEnabled];
 }
 
 - (void)invalidate {

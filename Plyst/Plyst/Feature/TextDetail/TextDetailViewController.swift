@@ -67,6 +67,10 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
         dismissScreen()
     }
 
+    func setSaveEnabled(_ isEnabled: Bool) {
+        saveButton.isEnabled = isEnabled
+    }
+
     private func dismissScreen() {
         guard !isBeingPresented, !isBeingDismissed,
               presentingViewController != nil, viewIfLoaded?.window != nil else { return }
@@ -119,5 +123,6 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
 
     private func bindActions() {
         closeButton.addAction(UIAction { [weak self] _ in self?.close() }, for: .touchUpInside)
+        saveButton.addAction(UIAction { _ in ScreenBridge.save() }, for: .touchUpInside)
     }
 }
