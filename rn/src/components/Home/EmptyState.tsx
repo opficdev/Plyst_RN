@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme';
+import { colors } from '../../theme';
 
 type HomeEmptyStateProps = { emptyTitle: string; emptyBody: string };
 export function HomeEmptyState({ emptyTitle, emptyBody }: HomeEmptyStateProps) {

@@ -16,6 +16,12 @@
 		DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00011306A4A9700115D10 /* StructuredQueriesSQLite */; };
 		DFA00013306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00015306A4A9700115D10 /* GRDB */; };
 		DFA00014306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00016306A4A9700115D10 /* GRDB */; };
+		DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00018306A4A9700115D10 /* ReactorKit */; };
+		DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00019306A4A9700115D10 /* RxSwift */; };
+		DFA0001F306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001A306A4A9700115D10 /* SQLiteData */; };
+		DFA00020306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */; };
+		DFA00021306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001C306A4A9700115D10 /* GRDB */; };
+		DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00024306A4A9700115D10 /* PlystReactNative */; };
 		DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFC00002306A4A9700115D10 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFD00002306A4A9700115D10 /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DFD00020306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00010306A4A9700115D10 /* ReactorKit */; };
@@ -23,22 +29,9 @@
 		DFD00022306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00012306A4A9700115D10 /* SQLiteData */; };
 		DFD00023306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */; };
 		DFD00024306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00014306A4A9700115D10 /* GRDB */; };
-		DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00018306A4A9700115D10 /* ReactorKit */; };
-		DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00019306A4A9700115D10 /* RxSwift */; };
-		DFA0001F306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001A306A4A9700115D10 /* SQLiteData */; };
-		DFA00020306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */; };
-		DFA00021306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0001C306A4A9700115D10 /* GRDB */; };
-		DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00024306A4A9700115D10 /* PlystReactNative */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DFEB0A20306A4A9500115D10;
-			remoteInfo = Plyst;
-		};
 		DFC0000B306A4A9700115D10 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
@@ -53,44 +46,40 @@
 			remoteGlobalIDString = DFD00001306A4A9700115D10;
 			remoteInfo = WidgetExtension;
 		};
+		DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFEB0A20306A4A9500115D10;
+			remoteInfo = Plyst;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		DFC0000D306A4A9700115D10 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstSubfolder = PlugIns;
 			files = (
 				DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */,
 				DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		DFEB0A21306A4A9500115D10 /* Plyst.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plyst.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DFEB0A37306A4A9700115D10 /* PlystTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlystTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DFC00002306A4A9700115D10 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DFD00002306A4A9700115D10 /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFEB0A21306A4A9500115D10 /* Plyst.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plyst.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFEB0A37306A4A9700115D10 /* PlystTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlystTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-				Plyst.entitlements,
-			);
-			target = DFEB0A20306A4A9500115D10 /* Plyst */;
-		};
 		DFC00004306A4A9700115D10 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				ShareExtension.entitlements,
 			);
 			target = DFC00001306A4A9700115D10 /* ShareExtension */;
 		};
@@ -101,17 +90,16 @@
 			);
 			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
 		};
+		DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DFEB0A20306A4A9500115D10 /* Plyst */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DFEB0A23306A4A9500115D10 /* Plyst */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */,
-			);
-			path = Plyst;
-			sourceTree = "<group>";
-		};
 		DFC00003306A4A9700115D10 /* ShareExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -128,39 +116,27 @@
 			path = WidgetExtension;
 			sourceTree = "<group>";
 		};
-		DFEB0A3A306A4A9700115D10 /* PlystTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = PlystTests;
-			sourceTree = "<group>";
-		};
 		DFE00001306A4A9700115D10 /* Common */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Common;
 			sourceTree = "<group>";
 		};
+		DFEB0A23306A4A9500115D10 /* Plyst */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */,
+			);
+			path = Plyst;
+			sourceTree = "<group>";
+		};
+		DFEB0A3A306A4A9700115D10 /* PlystTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PlystTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-				DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */,
-				DFA00002306A4A9700115D10 /* RxSwift in Frameworks */,
-				DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */,
-				DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
-				DFA00013306A4A9700115D10 /* GRDB in Frameworks */,
-				DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */,
-			);
-		};
-		DFEB0A34306A4A9700115D10 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-				DFA00003306A4A9700115D10 /* ReactorKit in Frameworks */,
-				DFA00004306A4A9700115D10 /* RxSwift in Frameworks */,
-				DFA0000C306A4A9700115D10 /* SQLiteData in Frameworks */,
-				DFA00014306A4A9700115D10 /* GRDB in Frameworks */,
-			);
-		};
 		DFC00006306A4A9700115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -179,6 +155,26 @@
 				DFD00022306A4A9700115D10 /* SQLiteData in Frameworks */,
 				DFD00023306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
 				DFD00024306A4A9700115D10 /* GRDB in Frameworks */,
+			);
+		};
+		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFA00002306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */,
+				DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
+				DFA00013306A4A9700115D10 /* GRDB in Frameworks */,
+				DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */,
+			);
+		};
+		DFEB0A34306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA00003306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFA00004306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFA0000C306A4A9700115D10 /* SQLiteData in Frameworks */,
+				DFA00014306A4A9700115D10 /* GRDB in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -210,6 +206,58 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		DFC00001306A4A9700115D10 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				DFC00005306A4A9700115D10 /* Sources */,
+				DFC00006306A4A9700115D10 /* Frameworks */,
+				DFC00007306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFC00003306A4A9700115D10 /* ShareExtension */,
+				DFE00001306A4A9700115D10 /* Common */,
+			);
+			name = ShareExtension;
+			packageProductDependencies = (
+				DFA00018306A4A9700115D10 /* ReactorKit */,
+				DFA00019306A4A9700115D10 /* RxSwift */,
+				DFA0001A306A4A9700115D10 /* SQLiteData */,
+				DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */,
+				DFA0001C306A4A9700115D10 /* GRDB */,
+			);
+			productName = ShareExtension;
+			productReference = DFC00002306A4A9700115D10 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DFD00001306A4A9700115D10 /* WidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */;
+			buildPhases = (
+				DFD00005306A4A9700115D10 /* Sources */,
+				DFD00006306A4A9700115D10 /* Frameworks */,
+				DFD00007306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFD00003306A4A9700115D10 /* WidgetExtension */,
+				DFE00001306A4A9700115D10 /* Common */,
+			);
+			name = WidgetExtension;
+			packageProductDependencies = (
+				DFD00010306A4A9700115D10 /* ReactorKit */,
+				DFD00011306A4A9700115D10 /* RxSwift */,
+				DFD00012306A4A9700115D10 /* SQLiteData */,
+				DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */,
+				DFD00014306A4A9700115D10 /* GRDB */,
+			);
+			productName = WidgetExtension;
+			productReference = DFD00002306A4A9700115D10 /* WidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		DFEB0A20306A4A9500115D10 /* Plyst */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DFEB0A48306A4A9700115D10 /* Build configuration list for PBXNativeTarget "Plyst" */;
@@ -226,8 +274,8 @@
 				DFD0000C306A4A9700115D10 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				DFEB0A23306A4A9500115D10 /* Plyst */,
 				DFE00001306A4A9700115D10 /* Common */,
+				DFEB0A23306A4A9500115D10 /* Plyst */,
 			);
 			name = Plyst;
 			packageProductDependencies = (
@@ -269,62 +317,6 @@
 			productReference = DFEB0A37306A4A9700115D10 /* PlystTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		DFC00001306A4A9700115D10 /* ShareExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
-			buildPhases = (
-				DFC00005306A4A9700115D10 /* Sources */,
-				DFC00006306A4A9700115D10 /* Frameworks */,
-				DFC00007306A4A9700115D10 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				DFC00003306A4A9700115D10 /* ShareExtension */,
-				DFE00001306A4A9700115D10 /* Common */,
-			);
-			name = ShareExtension;
-			packageProductDependencies = (
-				DFA00018306A4A9700115D10 /* ReactorKit */,
-				DFA00019306A4A9700115D10 /* RxSwift */,
-				DFA0001A306A4A9700115D10 /* SQLiteData */,
-				DFA0001B306A4A9700115D10 /* StructuredQueriesSQLite */,
-				DFA0001C306A4A9700115D10 /* GRDB */,
-			);
-			productName = ShareExtension;
-			productReference = DFC00002306A4A9700115D10 /* ShareExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
-		DFD00001306A4A9700115D10 /* WidgetExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */;
-			buildPhases = (
-				DFD00005306A4A9700115D10 /* Sources */,
-				DFD00006306A4A9700115D10 /* Frameworks */,
-				DFD00007306A4A9700115D10 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				DFD00003306A4A9700115D10 /* WidgetExtension */,
-				DFE00001306A4A9700115D10 /* Common */,
-			);
-			name = WidgetExtension;
-			packageProductDependencies = (
-				DFD00010306A4A9700115D10 /* ReactorKit */,
-				DFD00011306A4A9700115D10 /* RxSwift */,
-				DFD00012306A4A9700115D10 /* SQLiteData */,
-				DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */,
-				DFD00014306A4A9700115D10 /* GRDB */,
-			);
-			productName = WidgetExtension;
-			productReference = DFD00002306A4A9700115D10 /* WidgetExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -335,18 +327,18 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					DFC00001306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					DFD00001306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					DFEB0A20306A4A9500115D10 = {
 						CreatedOnToolsVersion = 27.0;
 					};
 					DFEB0A36306A4A9700115D10 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = DFEB0A20306A4A9500115D10;
-					};
-					DFC00001306A4A9700115D10 = {
-						CreatedOnToolsVersion = 27.0;
-					};
-					DFD00001306A4A9700115D10 = {
-						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -365,7 +357,7 @@
 				DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */,
 				DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */,
 				DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
-				DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystReactNative" */,
+				DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DFEB0A22306A4A9500115D10 /* Products */;
@@ -381,16 +373,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		DFEB0A1F306A4A9500115D10 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		DFEB0A35306A4A9700115D10 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
 		DFC00007306A4A9700115D10 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -401,19 +383,19 @@
 			files = (
 			);
 		};
+		DFEB0A1F306A4A9500115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A35306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		DFEB0A1D306A4A9500115D10 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
-		DFEB0A33306A4A9700115D10 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
 		DFC00005306A4A9700115D10 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -424,14 +406,19 @@
 			files = (
 			);
 		};
+		DFEB0A1D306A4A9500115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A33306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		DFEB0A39306A4A9700115D10 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DFEB0A20306A4A9500115D10 /* Plyst */;
-			targetProxy = DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */;
-		};
 		DFC0000C306A4A9700115D10 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DFC00001306A4A9700115D10 /* ShareExtension */;
@@ -442,9 +429,148 @@
 			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
 			targetProxy = DFD0000B306A4A9700115D10 /* PBXContainerItemProxy */;
 		};
+		DFEB0A39306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFEB0A20306A4A9500115D10 /* Plyst */;
+			targetProxy = DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		DFC00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFC0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DFD00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.WidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFD0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.WidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		DFEB0A49306A4A9700115D10 /* Debug configuration for PBXNativeTarget "Plyst" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -698,143 +824,25 @@
 			};
 			name = Release;
 		};
-		DFC00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "ShareExtension" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4CPC6N38WA;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ShareExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.ShareExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		DFC0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "ShareExtension" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4CPC6N38WA;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ShareExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.ShareExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
-		DFD00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "WidgetExtension" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4CPC6N38WA;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = WidgetExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.WidgetExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		DFD0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "WidgetExtension" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4CPC6N38WA;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = WidgetExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystRN.WidgetExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFC00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "ShareExtension" */,
+				DFC0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "ShareExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFD00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "WidgetExtension" */,
+				DFD0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "WidgetExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		DFEB0A1C306A4A9500115D10 /* Build configuration list for PBXProject "Plyst" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -859,26 +867,10 @@
 			);
 			defaultConfigurationName = Release;
 		};
-		DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DFC00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "ShareExtension" */,
-				DFC0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "ShareExtension" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DFD00009306A4A9700115D10 /* Debug configuration for PBXNativeTarget "WidgetExtension" */,
-				DFD0000A306A4A9700115D10 /* Release configuration for PBXNativeTarget "WidgetExtension" */,
-			);
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystReactNative" */ = {
+		DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PlystReactNative;
 		};
@@ -928,11 +920,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DFA00024306A4A9700115D10 /* PlystReactNative */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystReactNative" */;
-			productName = PlystReactNative;
-		};
 		DFA00005306A4A9700115D10 /* ReactorKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
@@ -1002,6 +989,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
+		};
+		DFA00024306A4A9700115D10 /* PlystReactNative */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */;
+			productName = PlystReactNative;
 		};
 		DFD00010306A4A9700115D10 /* ReactorKit */ = {
 			isa = XCSwiftPackageProductDependency;

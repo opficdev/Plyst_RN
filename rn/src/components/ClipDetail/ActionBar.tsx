@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing } from '../../theme';
 
 type ClipDetailActionBarProps = {
   isBusy?: boolean;
@@ -21,7 +21,11 @@ export function ClipDetailActionBar({
           disabled={isBusy}
           onPress={onDeleteButtonPress}
         >
-          <Text style={styles.deleteTitle} numberOfLines={1}>
+          <Text
+            allowFontScaling={false}
+            style={styles.deleteTitle}
+            numberOfLines={1}
+          >
             삭제
           </Text>
         </Pressable>
@@ -35,7 +39,11 @@ export function ClipDetailActionBar({
             contentFit="contain"
             style={styles.copyIcon}
           />
-          <Text style={styles.copyTitle} numberOfLines={1}>
+          <Text
+            allowFontScaling={false}
+            style={styles.copyTitle}
+            numberOfLines={1}
+          >
             다시 복사
           </Text>
         </Pressable>

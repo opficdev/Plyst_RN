@@ -57,6 +57,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         return [
             "id": record.id,
             "text": record.text as Any? ?? NSNull(),
+            "characterCount": record.text?.count ?? 0,
             "image": image as Any? ?? NSNull(),
             "name": record.name as Any? ?? NSNull(),
             "memo": record.memo as Any? ?? NSNull(),

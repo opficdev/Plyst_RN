@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../theme';
+import { colors, spacing } from '../../theme';
 
 export function HomeTitleHeader({
   onSearchButtonPress,

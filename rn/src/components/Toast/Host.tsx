@@ -11,9 +11,9 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { FullWindowOverlay } from 'react-native-screens';
-import { Toast } from './Toast';
-import { createToastController } from './toastController';
-import type { ToastController, ToastItem } from './toastController';
+import { Toast } from './View';
+import { createToastController } from './controller';
+import type { ToastController, ToastItem } from './controller';
 
 export type ToastProviderProps = { children: ReactNode };
 
