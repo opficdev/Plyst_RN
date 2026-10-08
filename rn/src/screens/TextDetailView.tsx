@@ -29,6 +29,7 @@ import { saveTextDetail } from './saveTextDetail';
 import { canSave, initialState, reduce } from './textDetailDraft';
 import type { TextDetailAction, TextDetailState } from './textDetailDraft';
 import { createTextDetailRefresher } from './textDetailRefresher';
+import { useScrollFieldIntoView } from './useScrollFieldIntoView';
 
 type TextDetailViewProps = { clipID: string };
 type State = TextDetailState | null | 'closed';
@@ -133,6 +134,15 @@ function TextDetailEditor({
   const deletingRef = useRef(false);
   const activeRef = useRef(true);
   const insets = useSafeAreaInsets();
+  const {
+    contentRef,
+    nameRef,
+    memoRef,
+    nameInputProps,
+    memoInputProps,
+    revealMemo,
+    scrollProps,
+  } = useScrollFieldIntoView();
   const isSaveEnabled = canSave(state);
 
   useLayoutEffect(() => {
@@ -228,67 +238,74 @@ function TextDetailEditor({
     <View style={styles.canvas}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        {...scrollProps}
         contentInsetAdjustmentBehavior="never"
       >
-        <View style={styles.card}>
-          <Text allowFontScaling={false} style={styles.meta}>
-            {`${clip.isPinned ? '고정됨 · ' : ''}${clip.characterCount}자`}
-          </Text>
-          <Text allowFontScaling={false} style={styles.body}>
-            {clip.text}
-          </Text>
+        <View ref={contentRef} style={styles.content} collapsable={false}>
+          <View style={styles.card}>
+            <Text allowFontScaling={false} style={styles.meta}>
+              {`${clip.isPinned ? '고정됨 · ' : ''}${clip.characterCount}자`}
+            </Text>
+            <Text allowFontScaling={false} style={styles.body}>
+              {clip.text}
+            </Text>
+          </View>
+          <View style={styles.fields}>
+            <View ref={nameRef} style={[styles.field, styles.nameField]}>
+              <Text allowFontScaling={false} style={styles.caption}>
+                이름
+              </Text>
+              <TextInput
+                allowFontScaling={false}
+                style={styles.name}
+                {...nameInputProps}
+                value={draft.name}
+                placeholder="이름 없음"
+                placeholderTextColor={colors.Placeholder}
+                returnKeyType="done"
+                onChangeText={(name) => dispatch({ type: 'nameChanged', name })}
+              />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.pin}>
+              <Text allowFontScaling={false} style={styles.pinLabel}>
+                고정
+              </Text>
+              <Switch
+                value={draft.isPinned}
+                onValueChange={(isPinned) =>
+                  dispatch({ type: 'pinnedChanged', isPinned })
+                }
+                trackColor={{ true: colors.SwitchOn }}
+              />
+            </View>
+            <View style={styles.divider} />
+            <View ref={memoRef} style={[styles.field, styles.memoField]}>
+              <Text allowFontScaling={false} style={styles.caption}>
+                메모
+              </Text>
+              <TextInput
+                allowFontScaling={false}
+                style={styles.memo}
+                {...memoInputProps}
+                value={draft.memo}
+                placeholder="이 내용을 언제 쓰는지 적어 두세요"
+                placeholderTextColor={colors.Placeholder}
+                multiline
+                scrollEnabled={false}
+                onChangeText={(memo) => {
+                  dispatch({ type: 'memoChanged', memo });
+                  revealMemo();
+                }}
+              />
+            </View>
+            <View style={styles.divider} />
+          </View>
+          <ClipDetailDates
+            savedValue={formatClipDate(clip.createdAt)}
+            lastUsedValue={formatClipDate(clip.lastUsedAt)}
+          />
         </View>
-        <View style={styles.fields}>
-          <View style={[styles.field, styles.nameField]}>
-            <Text allowFontScaling={false} style={styles.caption}>
-              이름
-            </Text>
-            <TextInput
-              allowFontScaling={false}
-              style={styles.name}
-              value={draft.name}
-              placeholder="이름 없음"
-              placeholderTextColor={colors.Placeholder}
-              returnKeyType="done"
-              onChangeText={(name) => dispatch({ type: 'nameChanged', name })}
-            />
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.pin}>
-            <Text allowFontScaling={false} style={styles.pinLabel}>
-              고정
-            </Text>
-            <Switch
-              value={draft.isPinned}
-              onValueChange={(isPinned) =>
-                dispatch({ type: 'pinnedChanged', isPinned })
-              }
-              trackColor={{ true: colors.SwitchOn }}
-            />
-          </View>
-          <View style={styles.divider} />
-          <View style={[styles.field, styles.memoField]}>
-            <Text allowFontScaling={false} style={styles.caption}>
-              메모
-            </Text>
-            <TextInput
-              allowFontScaling={false}
-              style={styles.memo}
-              value={draft.memo}
-              placeholder="이 내용을 언제 쓰는지 적어 두세요"
-              placeholderTextColor={colors.Placeholder}
-              multiline
-              scrollEnabled={false}
-              onChangeText={(memo) => dispatch({ type: 'memoChanged', memo })}
-            />
-          </View>
-          <View style={styles.divider} />
-        </View>
-        <ClipDetailDates
-          savedValue={formatClipDate(clip.createdAt)}
-          lastUsedValue={formatClipDate(clip.lastUsedAt)}
-        />
       </ScrollView>
       <View style={{ paddingBottom: insets.bottom }}>
         <ClipDetailActionBar

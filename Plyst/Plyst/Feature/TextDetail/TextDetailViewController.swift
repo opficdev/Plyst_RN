@@ -113,11 +113,18 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
         ])
         guard let contentView else { return }
         contentView.translatesAutoresizingMaskIntoConstraints = false
+        // 시트가 화면 아래에서 올라오는 동안에는 키보드 가이드가 뷰 위쪽에 있어 필수 제약으로 두면 충돌합니다.
+        // 우선순위를 낮추고 키보드가 없을 때의 위치를 그보다 낮은 우선순위로 함께 둡니다.
+        let keyboard = contentView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor)
+        keyboard.priority = UILayoutPriority(999)
+        let resting = contentView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        resting.priority = UILayoutPriority(998)
         NSLayoutConstraint.activate([
+            keyboard,
+            resting,
             contentView.topAnchor.constraint(equalTo: topBar.bottomAnchor),
             contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
 
