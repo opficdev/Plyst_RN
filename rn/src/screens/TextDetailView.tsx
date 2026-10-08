@@ -19,9 +19,11 @@ import {
 } from 'react-native-safe-area-context';
 import { closeScreen, setSaveEnabled, subscribeSave } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
-import { showToast } from '../components';
+import { ActionSheet, showToast } from '../components';
 import { ClipDetailActionBar, ClipDetailDates } from '../components/ClipDetail';
 import { colors, radius, spacing, typography } from '../theme';
+import { copyTextDetail } from './copyTextDetail';
+import { deleteTextDetail } from './deleteTextDetail';
 import { formatClipDate } from './formatClipDate';
 import { loadTextDetail } from './loadTextDetail';
 import type { TextDetailResult } from './loadTextDetail';
@@ -30,7 +32,6 @@ import { canSave, initialState, reduce } from './textDetailDraft';
 
 type TextDetailViewProps = { clipID: string };
 type State = { status: 'loading' } | TextDetailResult;
-const ignorePress = () => {};
 
 export function TextDetailView({ clipID }: TextDetailViewProps) {
   return (
@@ -68,6 +69,8 @@ function TextDetailEditor({
   const [state, dispatch] = useReducer(reduce, initialClip, initialState);
   const stateRef = useRef(state);
   const savingRef = useRef(false);
+  const deletingRef = useRef(false);
+  const activeRef = useRef(true);
   const didClose = useRef(false);
   const insets = useSafeAreaInsets();
   const isSaveEnabled = canSave(state);
@@ -75,6 +78,13 @@ function TextDetailEditor({
   useLayoutEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    activeRef.current = true;
+    return () => {
+      activeRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     setSaveEnabled(isSaveEnabled);
@@ -122,6 +132,42 @@ function TextDetailEditor({
       subscription.remove();
     };
   }, [clipID]);
+
+  function copy() {
+    const current = stateRef.current;
+    if (current.isDeleting || current.isRemoved) return;
+    void copyTextDetail(clipID).then((result) => {
+      if (result === 'copied') {
+        showToast('클립보드에 복사했습니다', true);
+      } else {
+        showToast('클립보드에 복사하지 못했습니다', false);
+      }
+    });
+  }
+
+  function showDeleteSheet() {
+    const current = stateRef.current;
+    if (current.isDeleting || current.isRemoved || current.isDeleteSheetOpen) {
+      return;
+    }
+    dispatch({ type: 'deleteSheetShown' });
+  }
+
+  function startDelete() {
+    const current = stateRef.current;
+    if (deletingRef.current || current.isDeleting || current.isRemoved) return;
+    deletingRef.current = true;
+    dispatch({ type: 'deleteStarted' });
+    void deleteTextDetail(clipID).then((result) => {
+      deletingRef.current = false;
+      if (result === 'deleted') {
+        if (activeRef.current) dispatch({ type: 'removed' });
+      } else {
+        if (activeRef.current) dispatch({ type: 'deleteFailed' });
+        showToast('삭제하지 못했습니다', false);
+      }
+    });
+  }
 
   const { clip, draft } = state;
   return (
@@ -190,12 +236,23 @@ function TextDetailEditor({
           lastUsedValue={formatClipDate(clip.lastUsedAt)}
         />
       </ScrollView>
-      <View pointerEvents="none" style={{ paddingBottom: insets.bottom }}>
+      <View style={{ paddingBottom: insets.bottom }}>
         <ClipDetailActionBar
-          onDeleteButtonPress={ignorePress}
-          onCopyButtonPress={ignorePress}
+          isBusy={state.isDeleting}
+          onDeleteButtonPress={showDeleteSheet}
+          onCopyButtonPress={copy}
         />
       </View>
+      <ActionSheet
+        isVisible={state.isDeleteSheetOpen}
+        title="이 텍스트를 삭제할까요?"
+        message="삭제하면 되돌릴 수 없습니다."
+        items={[
+          { title: '삭제', role: 'destructive', handler: startDelete },
+          { title: '취소', role: 'cancel' },
+        ]}
+        onClose={() => dispatch({ type: 'deleteSheetClosed' })}
+      />
     </View>
   );
 }
