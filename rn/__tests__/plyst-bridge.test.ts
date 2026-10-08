@@ -1,11 +1,17 @@
-import { getClip } from 'plyst-bridge';
+import { closeScreen, getClip } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
 
+import NativePlystScreen from '../modules/plyst-bridge/src/NativePlystScreen';
 import NativePlystClip from '../modules/plyst-bridge/src/NativePlystClip';
 
 jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
   __esModule: true,
   default: { getClip: jest.fn() },
+}));
+
+jest.mock('../modules/plyst-bridge/src/NativePlystScreen', () => ({
+  __esModule: true,
+  default: { close: jest.fn() },
 }));
 
 const native = jest.mocked(NativePlystClip);
@@ -53,4 +59,10 @@ test.each([
   native.getClip.mockRejectedValue(error);
 
   await expect(getClip('id')).rejects.toBe(error);
+});
+
+test('화면 닫기를 네이티브 모듈에 전달한다', () => {
+  closeScreen();
+  expect(NativePlystScreen.close).toHaveBeenCalledTimes(1);
+  expect(NativePlystScreen.close).toHaveBeenCalledWith();
 });

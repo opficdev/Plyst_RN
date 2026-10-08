@@ -2,7 +2,7 @@
   "name": "plyst-bridge",
   "version": "1.0.0",
   "private": true,
-  "description": "Plyst 클립 조회 브리지",
+  "description": "Plyst 클립 조회 및 화면 닫기 브리지",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "react-native": "src/index.ts",

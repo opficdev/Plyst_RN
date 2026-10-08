@@ -46,11 +46,13 @@ expected_frameworks_file=
 actual_frameworks_file=
 trap 'rm -rf "$bridge_directory"; rm -f "$expected_frameworks_file" "$actual_frameworks_file"' EXIT HUP INT TERM
 
-bridge_header=$repository_root/rn/modules/plyst-bridge/ios/PlystClipModule.h
-if ! [ -f "$bridge_header" ]; then
-	printf '오류: PlystBridge 공개 헤더가 없습니다: %s\n' "$bridge_header" >&2
-	exit 1
-fi
+bridge_headers_directory=$repository_root/rn/modules/plyst-bridge/ios
+for header in "$bridge_headers_directory"/*.h; do
+	if ! [ -f "$header" ]; then
+		printf '오류: PlystBridge 공개 헤더가 없습니다: %s\n' "$header" >&2
+		exit 1
+	fi
+done
 
 for platform in iphoneos iphonesimulator; do
 	products=$repository_root/rn/ios/.brownfield/build/Build/Products/$configuration-$platform/PlystBridge
@@ -85,7 +87,7 @@ for platform in iphoneos iphonesimulator; do
 
 	framework=$bridge_directory/$platform/PlystBridge.framework
 	mkdir -p "$framework/Headers" "$framework/Modules"
-	cp "$bridge_header" "$products/PlystBridge-umbrella.h" \
+	cp "$bridge_headers_directory"/*.h "$products/PlystBridge-umbrella.h" \
 		"$products/Swift Compatibility Header/PlystBridge-Swift.h" "$framework/Headers/"
 	cp -R "$products/PlystBridge.swiftmodule" "$framework/Modules/"
 	cat > "$framework/Modules/module.modulemap" <<'EOF'
