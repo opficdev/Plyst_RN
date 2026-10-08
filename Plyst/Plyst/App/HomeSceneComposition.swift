@@ -79,15 +79,7 @@ final class HomeSceneComposition {
         let makeDetail: @MainActor (Clip) -> UIViewController = { [storage, clipboard, images, photos, toastWindow] clip in
             switch clip.content {
             case .text:
-                TextDetailViewController(
-                    reactor: TextDetailReactor(
-                        clip: clip,
-                        storage: storage,
-                        clipboard: clipboard
-                    ),
-                    toastWindow: toastWindow,
-                    makeTextDetailView: { TextDetailView(frame: .zero, send: $0) }
-                )
+                TextDetailViewController(clipID: clip.id)
             case .image:
                 ImageDetailViewController(
                     reactor: ImageDetailReactor(

@@ -2,39 +2,26 @@
 //  TextDetailViewController.swift
 //  Plyst
 //
-//  Created by opfic on 10/1/26.
+//  Created by opfic on 10/8/26.
 //
 
-import ReactorKit
-import RxSwift
+import PlystBridge
+import ReactBrownfield
 import UIKit
 
-/// 텍스트 클립의 상세 정보를 시트로 표시하고 편집합니다.
-/// 닫는 동작은 스스로 dismiss하므로 내비게이션 스택에 의존하지 않습니다.
 @MainActor
-final class TextDetailViewController: ReactorViewController<TextDetailReactor> {
-    private lazy var detailView = makeTextDetailView(makeSend())
-    private let makeTextDetailView: @MainActor (@escaping @MainActor (TextDetailViewAction) -> Void) -> any TextDetailViewLike & ClipDetailLike
-    /// 처음 나타날 때 이름 입력에 초점을 줄지 여부입니다.
-    private let focusesName: Bool
-    private let toastWindow: ToastWindow
-    private lazy var feedbackPresenter = FeedbackPresenter(
-        window: toastWindow,
-        dismiss: { [reactor] in reactor.action.onNext(.dismissFeedback($0)) }
-    )
-    private var didFocusName = false
+final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
+    private let clipID: Clip.ID
+    private let topBar = UIView()
+    private let closeButton = DetailBarButton(style: .icon("xmark"))
+    private let titleLabel = UILabel()
+    private let saveButton = DetailBarButton(style: .title("저장"))
+    private var contentView: UIView?
     private var didClose = false
 
-    init(
-        reactor: TextDetailReactor,
-        toastWindow: ToastWindow,
-        makeTextDetailView: @escaping @MainActor (@escaping @MainActor (TextDetailViewAction) -> Void) -> any TextDetailViewLike & ClipDetailLike,
-        focusesName: Bool = false
-    ) {
-        self.toastWindow = toastWindow
-        self.makeTextDetailView = makeTextDetailView
-        self.focusesName = focusesName
-        super.init(reactor: reactor)
+    init(clipID: Clip.ID) {
+        self.clipID = clipID
+        super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .pageSheet
         sheetPresentationController?.detents = [.large()]
     }
@@ -44,94 +31,93 @@ final class TextDetailViewController: ReactorViewController<TextDetailReactor> {
         fatalError("init(coder:) is unavailable")
     }
 
-    private func makeSend() -> @MainActor (TextDetailViewAction) -> Void {
-        { [weak self] action in
-            guard let self else { return }
-            switch action {
-            case .close:
-                close()
-            case .save:
-                reactor.action.onNext(.save)
-            case .copy:
-                reactor.action.onNext(.copy)
-            case .delete:
-                confirmDelete()
-            case .changeName(let name):
-                reactor.action.onNext(.changeName(name))
-            case .changeMemo(let memo):
-                reactor.action.onNext(.changeMemo(memo))
-            case .changePinned(let isPinned):
-                reactor.action.onNext(.changePinned(isPinned))
-            }
-        }
-    }
-
-    override func loadView() {
-        view = detailView
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
-        reactor.action.onNext(.viewDidLoad)
+        ScreenBridge.register(self)
+        contentView = ReactNativeBrownfield.shared.view(
+            moduleName: "TextDetailView",
+            initialProps: ["clipID": clipID.uuidString],
+            launchOptions: nil
+        )
+        configureAppearance()
+        makeHierarchy()
+        makeLayout()
+        bindActions()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if focusesName, !didFocusName {
-            didFocusName = true
-            detailView.focusName()
+        if contentView == nil { close() }
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.didClose else { return }
+            self.dismissScreen()
         }
     }
 
-    override func render(state: TextDetailReactor.State) {
-        let clip = state.clip
-        detailView.setContent(
-            meta: "\(clip.isPinned ? "고정됨 · " : "")\(state.characterCount)자",
-            text: state.text
-        )
-        detailView.setDraft(
-            name: state.draft.name,
-            memo: state.draft.memo,
-            isPinned: state.draft.isPinned
-        )
-        detailView.setDates(
-            saved: Self.dateText(clip.createdAt),
-            lastUsed: clip.lastUsedAt.map(Self.dateText) ?? ""
-        )
-        detailView.setSaveEnabled(state.canSave)
-        detailView.setBusy(state.isDeleting)
-        feedbackPresenter.update(state.feedback)
-        if state.isRemoved || state.isSaved { close() }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed || presentingViewController == nil {
+            ScreenBridge.unregister(self)
+        }
     }
 
-    /// 날짜는 한국어 년월일 형식으로 표시하고 시각은 다음 줄에 표시합니다.
-    private static func dateText(_ date: Date) -> String {
-        let locale = Locale(identifier: "ko_KR")
-        let day = date.formatted(.dateTime.year().month(.wide).day().locale(locale))
-        let time = date.formatted(.dateTime.hour().minute().locale(locale))
-        return "\(day)\n\(time)"
-    }
-
-    /// 저장하지 않은 초안은 Reactor와 함께 사라지므로 닫기만 하면 폐기됩니다.
-    private func close() {
-        guard !didClose else { return }
+    func close() {
+        guard !didClose, !isBeingDismissed else { return }
         didClose = true
-        dismiss(animated: true)
+        dismissScreen()
     }
 
-    private func confirmDelete() {
-        let alert = ActionSheetViewController(
-            title: "이 텍스트를 삭제할까요?",
-            message: "삭제하면 되돌릴 수 없습니다.",
-            items: [
-                ActionSheetItem(
-                    title: "삭제",
-                    role: .destructive,
-                    handler: { [weak self] in self?.reactor.action.onNext(.delete) }
-                ),
-                ActionSheetItem(title: "취소", role: .cancel)
-            ]
-        )
-        present(alert, animated: true)
+    private func dismissScreen() {
+        guard !isBeingPresented, !isBeingDismissed,
+              presentingViewController != nil, viewIfLoaded?.window != nil else { return }
+        dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            ScreenBridge.unregister(self)
+        }
+    }
+
+    private func configureAppearance() {
+        view.backgroundColor = UIColor(resource: .homeCanvas)
+        titleLabel.text = "텍스트"
+        titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
+        titleLabel.textColor = UIColor(resource: .homePrimaryText)
+        saveButton.isEnabled = false
+    }
+
+    private func makeHierarchy() {
+        view.addSubview(topBar)
+        topBar.addSubview(closeButton)
+        topBar.addSubview(titleLabel)
+        topBar.addSubview(saveButton)
+        if let contentView { view.addSubview(contentView) }
+    }
+
+    private func makeLayout() {
+        topBar.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            topBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            topBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            topBar.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
+            closeButton.topAnchor.constraint(equalTo: topBar.topAnchor),
+            closeButton.leadingAnchor.constraint(equalTo: topBar.leadingAnchor, constant: 16),
+            saveButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
+            saveButton.trailingAnchor.constraint(equalTo: topBar.trailingAnchor, constant: -16),
+            titleLabel.centerXAnchor.constraint(equalTo: topBar.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor)
+        ])
+        guard let contentView else { return }
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            contentView.topAnchor.constraint(equalTo: topBar.bottomAnchor),
+            contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    private func bindActions() {
+        closeButton.addAction(UIAction { [weak self] _ in self?.close() }, for: .touchUpInside)
     }
 }
