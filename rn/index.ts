@@ -3,6 +3,7 @@ import { subscribeToastRequests } from 'plyst-bridge';
 
 import App from './App';
 import { showToast, ToastHost } from './src/components';
+import { ImageDetailView } from './src/screens/ImageDetailView';
 import { TextDetailView } from './src/screens/TextDetailView';
 
 subscribeToastRequests(({ message, isSuccess }) =>
@@ -15,3 +16,5 @@ AppRegistry.registerComponent('PlystRN', () => App);
 AppRegistry.registerComponent('TextDetailView', () => TextDetailView);
 
 AppRegistry.registerComponent('ToastHost', () => ToastHost);
+
+AppRegistry.registerComponent('ImageDetailView', () => ImageDetailView);

@@ -2,6 +2,8 @@ import { AppRegistry } from 'react-native';
 
 jest.mock('plyst-bridge', () => ({
   getClip: jest.fn(),
+  getClipImagePreview: jest.fn(),
+  saveClipImageToPhotos: jest.fn(),
   copyClip: jest.fn(),
   deleteClip: jest.fn(),
   closeScreen: jest.fn(),
@@ -20,4 +22,8 @@ test('PlystRN 모듈을 등록한다', () => {
 
 test('TextDetailView 모듈을 등록한다', () => {
   expect(AppRegistry.getAppKeys()).toContain('TextDetailView');
+});
+
+test('ImageDetailView 모듈을 등록한다', () => {
+  expect(AppRegistry.getAppKeys()).toContain('ImageDetailView');
 });
