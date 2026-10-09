@@ -22,9 +22,9 @@ final class HomeViewController: ReactorViewController<HomeReactor> {
     private var pinnedClips = [Clip]()
     private var renderedNow: Date?
     private var renderedFilter: HomeFilter?
-    private let toastWindow: ToastWindow
+    private let showToast: @MainActor (String, Bool) -> Void
     private lazy var feedbackPresenter = FeedbackPresenter(
-        window: toastWindow,
+        show: showToast,
         dismiss: { [reactor] in reactor.action.onNext(.dismissFeedback($0)) }
     )
     private let makeHomeView: @MainActor (@escaping @MainActor (HomeViewAction) -> Void) -> any HomeViewLike & ClipGridLike
@@ -37,12 +37,12 @@ final class HomeViewController: ReactorViewController<HomeReactor> {
 
     init(
         reactor: HomeReactor,
-        toastWindow: ToastWindow,
+        showToast: @escaping @MainActor (String, Bool) -> Void,
         makeHomeView: @escaping @MainActor (@escaping @MainActor (HomeViewAction) -> Void) -> any HomeViewLike & ClipGridLike,
         makeSearchViewController: @escaping @MainActor (@escaping @MainActor () -> Void) -> UIViewController,
         makeDetailViewController: @escaping @MainActor (Clip) -> UIViewController
     ) {
-        self.toastWindow = toastWindow
+        self.showToast = showToast
         self.makeHomeView = makeHomeView
         self.makeSearchViewController = makeSearchViewController
         self.makeDetailViewController = makeDetailViewController

@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.BottomText,
     flexShrink: 1,
+    transform: [{ translateX: -4 / 3 }],
   },
   // 원본 액션 바 복사 아이콘(pointSize 15)의 화면 실측 크기는 약 20pt다.
   // contain은 글리프를 박스에 맞춰 확대하므로 실측 크기에 맞게 박스 크기를 27로 정했다.
@@ -111,5 +112,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.BottomText,
     flexShrink: 0,
+    transform: [{ translateX: -4 / 3 }],
   },
 });

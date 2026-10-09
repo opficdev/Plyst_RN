@@ -1,12 +1,12 @@
 export type ToastItem = {
-  id: string | number;
+  id: number;
   message: string;
   isSuccess: boolean;
 };
 export type ToastSnapshot = { toast: ToastItem | null; isVisible: boolean };
 export type ToastController = {
-  show: (message: string, isSuccess: boolean, id?: string) => void;
-  dismissed: (id: string | number) => void;
+  show: (message: string, isSuccess: boolean) => void;
+  dismissed: (id: number) => void;
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => ToastSnapshot;
 };
@@ -15,7 +15,6 @@ const duration = 2000;
 
 export function createToastController(): ToastController {
   let snapshot: ToastSnapshot = { toast: null, isVisible: false };
-  let lastId: string | number | undefined;
   let nextId = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const listeners = new Set<() => void>();
@@ -24,23 +23,21 @@ export function createToastController(): ToastController {
     listeners.forEach((listener) => listener());
   }
 
-  function hide(id: string | number) {
+  function hide(id: number) {
     if (snapshot.toast?.id !== id || !snapshot.isVisible) return;
     snapshot = { toast: snapshot.toast, isVisible: false };
     notify();
   }
 
   return {
-    show(message, isSuccess, id) {
-      const resolvedId = id ?? nextId++;
-      if (resolvedId === lastId) return;
-      lastId = resolvedId;
+    show(message, isSuccess) {
+      const id = nextId++;
       snapshot = {
-        toast: { id: resolvedId, message, isSuccess },
+        toast: { id, message, isSuccess },
         isVisible: true,
       };
       clearTimeout(timer);
-      timer = setTimeout(() => hide(resolvedId), duration);
+      timer = setTimeout(() => hide(id), duration);
       notify();
     },
     dismissed(id) {
@@ -56,4 +53,10 @@ export function createToastController(): ToastController {
     },
     getSnapshot: () => snapshot,
   };
+}
+
+export const controller = createToastController();
+
+export function showToast(message: string, isSuccess: boolean) {
+  controller.show(message, isSuccess);
 }

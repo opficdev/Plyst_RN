@@ -9,13 +9,115 @@ import Foundation
 
 @objc(ClipBridgeModuleImpl)
 public final class ClipBridgeModuleImpl: NSObject, Sendable {
+    private let id = UUID()
+    private let emit: @Sendable (String, String) -> Void
     @MainActor private var tasks = [UUID: Task<Void, Never>]()
     @MainActor private var isInvalidated = false
+
+    @objc
+    public init(emit: @escaping @Sendable (String, String) -> Void) {
+        self.emit = emit
+        super.init()
+    }
+
+    @objc
+    public nonisolated func ready() {
+        Task { @MainActor in
+            guard !isInvalidated else { return }
+            ClipBridge.register(id: id, emit: emit)
+        }
+    }
 
     @objc(getClip:completion:)
     public nonisolated func getClip(
         _ identifier: String,
         completion: @escaping @Sendable (NSDictionary?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .readFailed,
+            operation: { provider, id in
+                try await provider.clip(id: id)
+            },
+            completion: { record, code in
+                completion(record.map(Self.dictionary), code)
+            }
+        )
+    }
+
+    @objc(updateClip:name:memo:isPinned:completion:)
+    public nonisolated func updateClip(
+        _ identifier: String,
+        name: String?,
+        memo: String?,
+        isPinned: Bool,
+        completion: @escaping @Sendable (NSDictionary?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .writeFailed,
+            operation: { provider, id in
+                try await provider.updateClip(
+                    id: id,
+                    name: name,
+                    memo: memo,
+                    isPinned: isPinned
+                )
+            },
+            completion: { record, code in
+                completion(record.map(Self.dictionary), code)
+            }
+        )
+    }
+
+    @objc(deleteClip:completion:)
+    public nonisolated func deleteClip(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .writeFailed,
+            operation: { provider, id in
+                try await provider.deleteClip(id: id)
+                return true
+            },
+            completion: { _, code in completion(code) }
+        )
+    }
+
+    @objc(copyClip:completion:)
+    public nonisolated func copyClip(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .copyFailed,
+            operation: { provider, id in
+                try await provider.copyClip(id: id)
+            },
+            completion: { result, code in
+                completion(result?.rawValue, code)
+            }
+        )
+    }
+
+    @objc
+    public nonisolated func invalidate() {
+        Task { @MainActor in
+            isInvalidated = true
+            ClipBridge.unregister(id: id)
+            for task in tasks.values { task.cancel() }
+            tasks.removeAll()
+        }
+    }
+
+    private nonisolated func execute<Value: Sendable>(
+        _ identifier: String,
+        fallback: ClipBridgeError,
+        operation: @escaping @MainActor @Sendable (any ClipBridgeProvider, UUID) async throws -> Value?,
+        completion: @escaping @MainActor @Sendable (Value?, String?) -> Void
     ) {
         Task { @MainActor in
             guard !isInvalidated else { return }
@@ -25,23 +127,14 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
                 do {
                     guard let id = UUID(uuidString: identifier) else { throw ClipBridgeError.invalidID }
                     guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                    let record = try await provider.clip(id: id)
+                    let value = try await operation(provider, id)
                     guard !isInvalidated, !Task.isCancelled else { return }
-                    completion(record.map(Self.dictionary), nil)
+                    completion(value, nil)
                 } catch {
                     guard !isInvalidated, !Task.isCancelled else { return }
-                    completion(nil, (error as? ClipBridgeError ?? .readFailed).code)
+                    completion(nil, (error as? ClipBridgeError ?? fallback).code)
                 }
             }
-        }
-    }
-
-    @objc
-    public nonisolated func invalidate() {
-        Task { @MainActor in
-            isInvalidated = true
-            for task in tasks.values { task.cancel() }
-            tasks.removeAll()
         }
     }
 

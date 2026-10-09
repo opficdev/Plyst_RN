@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     )
 
     var window: UIWindow?
-    private var toastWindow: ToastWindow?
+    private var toastHostWindow: ToastHostWindow?
     private var composition: HomeSceneComposition?
     private var isClipboardSaveRequested = false
     #if DEBUG
@@ -33,9 +33,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: windowScene)
         self.window = window
-        toastWindow = ToastWindow(windowScene: windowScene)
         configureRoot(in: window)
         window.makeKeyAndVisible()
+        toastHostWindow = ToastHostWindow(windowScene: windowScene)
+        toastHostWindow?.isHidden = false
         request(from: connectionOptions.urlContexts)
     }
 
@@ -61,8 +62,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
-        toastWindow?.hide()
-        toastWindow = nil
+        toastHostWindow?.isHidden = true
+        toastHostWindow = nil
         window = nil
         ClipBridge.unregister()
         composition = nil
@@ -105,12 +106,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     #endif
 
     private func configureRoot(in window: UIWindow) {
-        guard let toastWindow else { return }
         do {
-            let composition = try HomeSceneComposition(toastWindow: toastWindow)
+            let composition = try HomeSceneComposition()
             let root = composition.makeRootViewController()
             self.composition = composition
-            ClipBridge.register(ClipBridgeAdapter(storage: composition.storage, images: composition.images))
+            ClipBridge.register(ClipBridgeAdapter(
+                storage: composition.storage,
+                images: composition.images,
+                clipboard: composition.clipboard
+            ))
             window.rootViewController = root
             composition.startPendingCleanupRecovery()
             // 시작 실패 후 다시 시도해 성공하면 Scene이 이미 활성 상태라 sceneDidBecomeActive가 오지 않습니다.

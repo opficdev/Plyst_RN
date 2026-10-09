@@ -6,5 +6,5 @@ export { SearchTermChip } from './SearchTermChip';
 export { ClipDetailDates, ClipDetailActionBar } from './ClipDetail';
 export { ActionSheet } from './ActionSheet';
 export type { ActionSheetProps } from './ActionSheet';
-export { Toast, ToastProvider, useToast } from './Toast';
-export type { ToastProps, ToastProviderProps } from './Toast';
+export { Toast, ToastHost, showToast } from './Toast';
+export type { ToastProps } from './Toast';

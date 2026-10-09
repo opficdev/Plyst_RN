@@ -40,9 +40,9 @@ final class SearchViewController: ReactorViewController<SearchReactor> {
     private var renderedClips = [Clip]()
     private var renderedFilter: HomeFilter?
     private var renderedRecent: RecentDisplay?
-    private let toastWindow: ToastWindow
+    private let showToast: @MainActor (String, Bool) -> Void
     private lazy var feedbackPresenter = FeedbackPresenter(
-        window: toastWindow,
+        show: showToast,
         dismiss: { [reactor] in reactor.action.onNext(.dismissFeedback($0)) }
     )
     private var didEnter = false
@@ -50,12 +50,12 @@ final class SearchViewController: ReactorViewController<SearchReactor> {
     /// 취소 동작은 내비게이션 스택에 의존하지 않고 표시한 쪽이 넘긴 cancel로 전달한다.
     init(
         reactor: SearchReactor,
-        toastWindow: ToastWindow,
+        showToast: @escaping @MainActor (String, Bool) -> Void,
         makeSearchView: @escaping @MainActor (@escaping @MainActor (SearchViewAction) -> Void) -> any SearchViewLike & ClipGridLike,
         makeDetailViewController: @escaping @MainActor (Clip) -> UIViewController,
         cancel: @escaping @MainActor () -> Void
     ) {
-        self.toastWindow = toastWindow
+        self.showToast = showToast
         self.makeSearchView = makeSearchView
         self.makeDetailViewController = makeDetailViewController
         self.cancel = cancel

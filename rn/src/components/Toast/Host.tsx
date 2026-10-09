@@ -1,67 +1,37 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useSyncExternalStore,
-} from 'react';
-import type { ReactNode } from 'react';
+import { useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { FullWindowOverlay } from 'react-native-screens';
 import { Toast } from './View';
-import { createToastController } from './controller';
-import type { ToastController, ToastItem } from './controller';
+import { controller } from './controller';
+import type { ToastItem } from './controller';
 
-export type ToastProviderProps = { children: ReactNode };
-
-const ToastContext = createContext<ToastController | null>(null);
-
-export function ToastProvider({ children }: ToastProviderProps) {
-  const [controller] = useState(() => createToastController());
+export function ToastHost() {
   const snapshot = useSyncExternalStore(
     controller.subscribe,
     controller.getSnapshot,
   );
 
   return (
-    <ToastContext.Provider value={controller}>
-      {children}
+    <SafeAreaProvider
+      style={[StyleSheet.absoluteFill, styles.root]}
+      pointerEvents="none"
+    >
       {snapshot.toast !== null && (
-        <FullWindowOverlay>
-          <SafeAreaProvider
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          >
-            <ToastLayer
-              toast={snapshot.toast}
-              isVisible={snapshot.isVisible}
-              controller={controller}
-            />
-          </SafeAreaProvider>
-        </FullWindowOverlay>
+        <ToastLayer toast={snapshot.toast} isVisible={snapshot.isVisible} />
       )}
-    </ToastContext.Provider>
+    </SafeAreaProvider>
   );
-}
-
-export function useToast() {
-  const controller = useContext(ToastContext);
-  if (controller === null) {
-    throw new Error('useToast는 ToastProvider 안에서 사용해야 합니다.');
-  }
-  return { show: controller.show };
 }
 
 type ToastLayerProps = {
   toast: ToastItem;
   isVisible: boolean;
-  controller: ToastController;
 };
 
-function ToastLayer({ toast, isVisible, controller }: ToastLayerProps) {
+function ToastLayer({ toast, isVisible }: ToastLayerProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -81,6 +51,7 @@ function ToastLayer({ toast, isVisible, controller }: ToastLayerProps) {
 }
 
 const styles = StyleSheet.create({
+  root: { backgroundColor: 'transparent' },
   layer: {
     ...StyleSheet.absoluteFill,
     paddingHorizontal: 20,

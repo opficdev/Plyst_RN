@@ -61,20 +61,14 @@ final class DetailBarButton: UIButton {
         }
         self.configuration = configuration
 
-        configurationUpdateHandler = { [style] button in
+        configurationUpdateHandler = { button in
             guard var configuration = button.configuration else { return }
             let color = UIColor(resource: button.isEnabled ? .homePrimaryText : .homePlaceholder)
             configuration.baseForegroundColor = color
             if !Self.usesGlass {
                 configuration.background.strokeWidth = 1
-                switch style {
-                case .icon:
-                    configuration.background.backgroundColor = UIColor(resource: .homeCard)
-                    configuration.background.strokeColor = UIColor(resource: .homeOutline)
-                case .title:
-                    configuration.background.backgroundColor = .clear
-                    configuration.background.strokeColor = color
-                }
+                configuration.background.backgroundColor = UIColor(resource: .homeCard)
+                configuration.background.strokeColor = UIColor(resource: .homeOutline)
             }
             button.configuration = configuration
         }
@@ -82,13 +76,9 @@ final class DetailBarButton: UIButton {
 
     private func makeLayout() {
         translatesAutoresizingMaskIntoConstraints = false
-        let side: CGFloat
-        switch style {
-        case .icon:
-            side = Self.usesGlass ? 44 : 40
+        let side = CGFloat(Self.usesGlass ? 44 : 40)
+        if case .icon = style {
             widthAnchor.constraint(equalToConstant: side).isActive = true
-        case .title:
-            side = Self.usesGlass ? 44 : 36
         }
         heightAnchor.constraint(equalToConstant: side).isActive = true
     }
