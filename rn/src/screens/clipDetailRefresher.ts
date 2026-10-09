@@ -1,11 +1,12 @@
-import type { TextDetailResult } from './loadTextDetail';
-
-type Options = {
-  load: () => Promise<TextDetailResult>;
-  onResult: (result: TextDetailResult, isInitial: boolean) => void;
+type Options<Result> = {
+  load: () => Promise<Result>;
+  onResult: (result: Result, isInitial: boolean) => void;
 };
 
-export function createTextDetailRefresher({ load, onResult }: Options) {
+export function createClipDetailRefresher<Result>({
+  load,
+  onResult,
+}: Options<Result>) {
   let request = 0;
   let started = false;
   let disposed = false;

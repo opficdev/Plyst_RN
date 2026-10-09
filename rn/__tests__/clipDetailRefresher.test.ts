@@ -1,5 +1,5 @@
 import type { TextDetailResult } from '../src/screens/loadTextDetail';
-import { createTextDetailRefresher } from '../src/screens/textDetailRefresher';
+import { createClipDetailRefresher } from '../src/screens/clipDetailRefresher';
 
 function deferred() {
   let resolve!: (result: TextDetailResult) => void;
@@ -25,7 +25,7 @@ test('첫 조회만 초기 조회로 전달한다', async () => {
     },
   };
   const onResult = jest.fn();
-  const refresher = createTextDetailRefresher({
+  const refresher = createClipDetailRefresher({
     load: jest.fn().mockResolvedValue(result),
     onResult,
   });
@@ -43,7 +43,7 @@ test('겹친 조회에서 늦게 도착한 이전 응답은 무시한다', async
   const first = deferred();
   const second = deferred();
   const onResult = jest.fn();
-  const refresher = createTextDetailRefresher({
+  const refresher = createClipDetailRefresher({
     load: jest
       .fn()
       .mockReturnValueOnce(first.promise)
@@ -65,7 +65,7 @@ test('최신 조회가 대기 중이어도 이전 응답은 무시한다', async
   const first = deferred();
   const second = deferred();
   const onResult = jest.fn();
-  const refresher = createTextDetailRefresher({
+  const refresher = createClipDetailRefresher({
     load: jest
       .fn()
       .mockReturnValueOnce(first.promise)
@@ -87,7 +87,7 @@ test('최신 조회가 대기 중이어도 이전 응답은 무시한다', async
 test('무효화한 조회의 응답은 무시하고 다음 조회는 전달한다', async () => {
   const pending = deferred();
   const onResult = jest.fn();
-  const refresher = createTextDetailRefresher({
+  const refresher = createClipDetailRefresher({
     load: jest
       .fn()
       .mockReturnValueOnce(pending.promise)
@@ -109,7 +109,7 @@ test('정리 후에는 대기 중 응답을 무시하고 새 조회도 시작하
   const pending = deferred();
   const load = jest.fn().mockReturnValue(pending.promise);
   const onResult = jest.fn();
-  const refresher = createTextDetailRefresher({ load, onResult });
+  const refresher = createClipDetailRefresher({ load, onResult });
 
   const request = refresher.refresh();
   refresher.dispose();
@@ -124,7 +124,7 @@ test('정리 후에는 대기 중 응답을 무시하고 새 조회도 시작하
 test('조회 실패 결과도 그대로 전달한다', async () => {
   const result: TextDetailResult = { status: 'failed' };
   const onResult = jest.fn();
-  const refresher = createTextDetailRefresher({
+  const refresher = createClipDetailRefresher({
     load: jest.fn().mockResolvedValue(result),
     onResult,
   });
@@ -133,4 +133,14 @@ test('조회 실패 결과도 그대로 전달한다', async () => {
 
   expect(onResult).toHaveBeenCalledWith(result, true);
   expect(onResult).toHaveBeenCalledTimes(1);
+});
+
+test('화면과 무관한 결과 타입을 그대로 전달한다', async () => {
+  const onResult = jest.fn();
+  const refresher = createClipDetailRefresher<number>({
+    load: async () => 42,
+    onResult,
+  });
+  await refresher.refresh();
+  expect(onResult).toHaveBeenCalledWith(42, true);
 });

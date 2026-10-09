@@ -1,6 +1,6 @@
 import { deleteClip } from 'plyst-bridge';
 
-export async function deleteTextDetail(
+export async function deleteClipDetail(
   clipID: string,
 ): Promise<'deleted' | 'failed'> {
   try {

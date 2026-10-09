@@ -1,6 +1,6 @@
 import { updateClip } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
-import { normalizedMemo, normalizedName } from './textDetailDraft';
+import { normalizedMemo, normalizedName } from './clipDetailValues';
 import type { Draft } from './textDetailDraft';
 
 export type SaveTextDetailResult =

@@ -5,8 +5,6 @@ import {
   draftFromClip,
   hasChanges,
   initialState,
-  normalizedMemo,
-  normalizedName,
   reduce,
 } from '../src/screens/textDetailDraft';
 import type {
@@ -38,27 +36,6 @@ test('원본의 null을 빈 문자열로 바꾸고 고정 여부를 유지한다
   expect(
     draftFromClip({ ...clip, name: '이름', memo: '메모', isPinned: true }),
   ).toEqual({ name: '이름', memo: '메모', isPinned: true });
-});
-
-test.each<[string, string | null]>([
-  ['  이름  ', '이름'],
-  ['', null],
-  [whitespace, null],
-  [`${whitespace}이름${whitespace}`, '이름'],
-  ['이 름\n본문', '이 름\n본문'],
-  ['\uFEFF', '\uFEFF'],
-  [`${whitespace}\uFEFF${whitespace}`, '\uFEFF'],
-])('이름 %j을 정규화한다', (name, expected) => {
-  expect(normalizedName({ ...draftFromClip(clip), name })).toBe(expected);
-});
-
-test.each<[string, string | null]>([
-  ['', null],
-  [whitespace, null],
-  [`${whitespace}메모${whitespace}`, `${whitespace}메모${whitespace}`],
-  ['\uFEFF', '\uFEFF'],
-])('메모 %j의 공백 여부를 판정하고 내용을 보존한다', (memo, expected) => {
-  expect(normalizedMemo({ ...draftFromClip(clip), memo })).toBe(expected);
 });
 
 test.each<[Partial<Draft>, boolean]>([

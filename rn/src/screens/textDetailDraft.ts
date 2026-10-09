@@ -1,9 +1,7 @@
 import type { ClipRecord } from 'plyst-bridge';
+import { equivalent, normalizedMemo, normalizedName } from './clipDetailValues';
 
 export type Draft = { name: string; memo: string; isPinned: boolean };
-
-const edgeWhitespace =
-  /^[\t\n\v\f\r\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+|[\t\n\v\f\r\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+$/g;
 
 export function draftFromClip(clip: ClipRecord): Draft {
   return {
@@ -11,19 +9,6 @@ export function draftFromClip(clip: ClipRecord): Draft {
     memo: clip.memo ?? '',
     isPinned: clip.isPinned,
   };
-}
-
-export function normalizedName(draft: Draft): string | null {
-  return draft.name.replace(edgeWhitespace, '') || null;
-}
-
-export function normalizedMemo(draft: Draft): string | null {
-  return draft.memo.replace(edgeWhitespace, '') === '' ? null : draft.memo;
-}
-
-function equivalent(left: string | null, right: string | null): boolean {
-  if (left === null || right === null) return left === right;
-  return left.normalize('NFC') === right.normalize('NFC');
 }
 
 export function differs(draft: Draft, clip: ClipRecord): boolean {

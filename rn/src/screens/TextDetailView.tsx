@@ -21,14 +21,14 @@ import {
 import { ActionSheet, showToast } from '../components';
 import { ClipDetailActionBar, ClipDetailDates } from '../components/ClipDetail';
 import { colors, radius, spacing, typography } from '../theme';
-import { copyTextDetail } from './copyTextDetail';
-import { deleteTextDetail } from './deleteTextDetail';
+import { copyClipDetail } from './copyClipDetail';
+import { deleteClipDetail } from './deleteClipDetail';
 import { formatClipDate } from './formatClipDate';
 import { loadTextDetail } from './loadTextDetail';
 import { saveTextDetail } from './saveTextDetail';
 import { canSave, initialState, reduce } from './textDetailDraft';
 import type { TextDetailAction, TextDetailState } from './textDetailDraft';
-import { createTextDetailRefresher } from './textDetailRefresher';
+import { createClipDetailRefresher } from './clipDetailRefresher';
 import { useScrollFieldIntoView } from './useScrollFieldIntoView';
 
 type TextDetailViewProps = { clipID: string };
@@ -75,7 +75,7 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
   useEffect(() => {
     let removed = false;
     const isStopped = () => removed || closedRef.current || didClose.current;
-    const refresher = createTextDetailRefresher({
+    const refresher = createClipDetailRefresher({
       load: () => loadTextDetail(clipID),
       onResult: (result) => {
         if (isStopped()) return;
@@ -200,7 +200,7 @@ function TextDetailEditor({
   function copy() {
     const current = stateRef.current;
     if (current.isDeleting || current.isRemoved) return;
-    void copyTextDetail(clipID).then((result) => {
+    void copyClipDetail(clipID).then((result) => {
       if (result === 'copied') {
         showToast('클립보드에 복사했습니다', true);
       } else {
@@ -222,7 +222,7 @@ function TextDetailEditor({
     if (deletingRef.current || current.isDeleting || current.isRemoved) return;
     deletingRef.current = true;
     dispatch({ type: 'deleteStarted' });
-    void deleteTextDetail(clipID).then((result) => {
+    void deleteClipDetail(clipID).then((result) => {
       deletingRef.current = false;
       if (result === 'deleted') {
         if (activeRef.current) dispatch({ type: 'removed' });
