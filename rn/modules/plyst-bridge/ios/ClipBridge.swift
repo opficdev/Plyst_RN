@@ -9,18 +9,18 @@ import Foundation
 
 public struct ClipBridgeRecord: Sendable {
     public struct Image: Sendable {
-        public let uri: String
+        public let byteCount: Int
         public let contentType: String
         public let pixelWidth: Int
         public let pixelHeight: Int
 
         public init(
-            uri: String,
+            byteCount: Int,
             contentType: String,
             pixelWidth: Int,
             pixelHeight: Int
         ) {
-            self.uri = uri
+            self.byteCount = byteCount
             self.contentType = contentType
             self.pixelWidth = pixelWidth
             self.pixelHeight = pixelHeight

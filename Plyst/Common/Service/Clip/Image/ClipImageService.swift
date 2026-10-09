@@ -84,14 +84,6 @@ actor ClipImageService {
         return try files.writePreview(image: image, maximumPixelDimension: Self.previewPixelDimension)
     }
 
-    /// 반환 URL은 `delete(id:)` 전까지만 유효한 읽기 전용 참조입니다. 호출부는 파일을 쓰거나 옮기지 않아야 합니다.
-    /// 이후 읽기에 실패하면 파일이 삭제된 것으로 처리해야 합니다.
-    func loadImageFileURL(_ image: ClipImageMetadata) async throws -> URL {
-        try await acquire()
-        defer { release() }
-        return try files.fileURL(image: image)
-    }
-
     /// 카드 표시용 축소 데이터만 반환하며 원본 파일은 유지합니다.
     func loadThumbnail(
         _ image: ClipImageMetadata,

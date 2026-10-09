@@ -68,38 +68,6 @@ final class ClipImageFileStoreTests: XCTestCase {
         }
     }
 
-    func testFileURLReturnsValidatedOriginalWithoutChangingIt() throws {
-        let data = try ClipImageTestFixture.data()
-        let files = try ClipImageFileStore(rootURL: root)
-        let image = try files.save(data)
-
-        let url = try files.fileURL(image: image)
-
-        XCTAssertTrue(url.isFileURL)
-        XCTAssertEqual(url.lastPathComponent, "original")
-        XCTAssertEqual(try Data(contentsOf: url), data)
-    }
-
-    func testFileURLRejectsMissingAndMismatchedOriginals() throws {
-        let files = try ClipImageFileStore(rootURL: root)
-        let image = try files.save(ClipImageTestFixture.data())
-        let mismatch = ClipImageMetadata(
-            fileID: image.fileID,
-            contentType: image.contentType,
-            pixelWidth: image.pixelWidth,
-            pixelHeight: image.pixelHeight,
-            byteCount: image.byteCount + 1
-        )
-
-        XCTAssertThrowsError(try files.fileURL(image: mismatch)) {
-            XCTAssertEqual($0 as? ClipImageFileError, .corruptedImage(image.fileID))
-        }
-        try FileManager.default.removeItem(at: try files.fileURL(image: image))
-        XCTAssertThrowsError(try files.fileURL(image: image)) {
-            XCTAssertEqual($0 as? ClipImageFileError, .notFound(image.fileID))
-        }
-    }
-
     func testIdentifiersAreUniqueAndInjectedRootsAreIsolated() throws {
         let data = try ClipImageTestFixture.data()
         let files = try ClipImageFileStore(rootURL: root)

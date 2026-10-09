@@ -134,13 +134,6 @@ struct ClipImageFileStore: Sendable {
         return preview
     }
 
-    /// 반환 URL은 `delete(fileID:)` 전까지만 유효한 읽기 전용 참조입니다. 호출부는 파일을 쓰거나 옮기지 않아야 합니다.
-    /// 이후 읽기에 실패하면 파일이 삭제된 것으로 처리해야 합니다.
-    func fileURL(image: ClipImageMetadata) throws -> URL {
-        try Task.checkCancellation()
-        return try validatedOriginalURL(image: image)
-    }
-
     private func validatedOriginalURL(image: ClipImageMetadata) throws -> URL {
         guard let directory = try directory(for: image.fileID) else {
             throw ClipImageFileError.notFound(image.fileID)

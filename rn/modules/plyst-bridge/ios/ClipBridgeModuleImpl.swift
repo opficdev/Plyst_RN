@@ -173,7 +173,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
     private static func dictionary(_ record: ClipBridgeRecord) -> NSDictionary {
         let image = record.image.map {
             [
-                "uri": $0.uri,
+                "byteCountText": ByteCountFormatter.string(fromByteCount: Int64($0.byteCount), countStyle: .file),
                 "contentType": $0.contentType,
                 "pixelWidth": $0.pixelWidth,
                 "pixelHeight": $0.pixelHeight

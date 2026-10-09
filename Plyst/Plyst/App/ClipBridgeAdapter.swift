@@ -48,7 +48,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
         guard let clip else { return nil }
 
-        return try await record(from: clip)
+        return record(from: clip)
     }
 
     func updateClip(
@@ -64,7 +64,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
                 isPinned: isPinned
             )
             let clip = try await storage.update(id: id, change: change)
-            return try await record(from: clip)
+            return record(from: clip)
         } catch let error as CancellationError {
             throw error
         } catch ClipStorageError.notFound {
@@ -134,7 +134,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
     }
 
-    private func record(from clip: Clip) async throws -> ClipBridgeRecord {
+    private func record(from clip: Clip) -> ClipBridgeRecord {
         let text: String?
         let image: ClipBridgeRecord.Image?
         switch clip.content {
@@ -143,19 +143,12 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             image = nil
         case .image(let metadata):
             text = nil
-            do {
-                let url = try await images.loadImageFileURL(metadata)
-                image = ClipBridgeRecord.Image(
-                    uri: url.absoluteString,
-                    contentType: metadata.contentType,
-                    pixelWidth: metadata.pixelWidth,
-                    pixelHeight: metadata.pixelHeight
-                )
-            } catch is CancellationError {
-                throw CancellationError()
-            } catch {
-                throw ClipBridgeError.imageUnavailable
-            }
+            image = ClipBridgeRecord.Image(
+                byteCount: metadata.byteCount,
+                contentType: metadata.contentType,
+                pixelWidth: metadata.pixelWidth,
+                pixelHeight: metadata.pixelHeight
+            )
         }
         return ClipBridgeRecord(
             id: clip.id.uuidString,

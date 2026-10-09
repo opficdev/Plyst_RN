@@ -56,7 +56,7 @@ test('식별자를 전달하고 클립의 필드를 그대로 반환한다', asy
     text: null,
     characterCount: 0,
     image: {
-      uri: 'file:///images/original',
+      byteCountText: '100 bytes',
       contentType: 'public.png',
       pixelWidth: 2,
       pixelHeight: 3,
@@ -85,7 +85,6 @@ test.each([
   'E_UNAVAILABLE',
   'E_READ_FAILED',
   'E_CORRUPTED_DATA',
-  'E_IMAGE_UNAVAILABLE',
 ])('%s 오류를 그대로 전달한다', async (code) => {
   const error = Object.assign(new Error(code), { code });
   native.getClip.mockRejectedValue(error);
