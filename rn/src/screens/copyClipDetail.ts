@@ -1,6 +1,6 @@
 import { copyClip } from 'plyst-bridge';
 
-export async function copyTextDetail(
+export async function copyClipDetail(
   clipID: string,
 ): Promise<'copied' | 'failed'> {
   try {

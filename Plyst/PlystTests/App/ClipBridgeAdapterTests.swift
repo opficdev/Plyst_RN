@@ -46,7 +46,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertEqual(record.lastUsedAt, 2345500)
     }
 
-    func testImageClipReturnsOriginalFileURIAndMetadata() async throws {
+    func testImageClipReturnsMetadataWithoutFileURI() async throws {
         let storage = try makeStorage()
         let adapter = try makeAdapter(storage: storage)
         let result = try await adapter.images.saveImage(ClipImageTestFixture.data())
@@ -57,7 +57,6 @@ final class ClipBridgeAdapterTests: XCTestCase {
         let fetched = try await adapter.clip(id: result.value.id)
         let record = try XCTUnwrap(fetched)
         let image = try XCTUnwrap(record.image)
-        let url = try await adapter.images.loadImageFileURL(metadata)
 
         XCTAssertEqual(record.id, result.value.id.uuidString)
         XCTAssertNil(record.text)
@@ -66,8 +65,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertNil(record.lastUsedAt)
         XCTAssertFalse(record.isPinned)
         XCTAssertEqual(record.createdAt, result.value.createdAt.timeIntervalSince1970 * 1000)
-        XCTAssertEqual(image.uri, url.absoluteString)
-        XCTAssertTrue(image.uri.hasPrefix("file://"))
+        XCTAssertEqual(image.byteCount, metadata.byteCount)
         XCTAssertEqual(image.contentType, metadata.contentType)
         XCTAssertEqual(image.pixelWidth, metadata.pixelWidth)
         XCTAssertEqual(image.pixelHeight, metadata.pixelHeight)
@@ -81,26 +79,29 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertNil(record)
     }
 
-    func testMissingImageFileRejectsTheClip() async throws {
+    func testMissingImageFileStillReturnsAndUpdatesTheClip() async throws {
         let storage = try makeStorage()
         let adapter = try makeAdapter(storage: storage)
         let result = try await adapter.images.saveImage(ClipImageTestFixture.data())
         guard case .image(let metadata) = result.value.content else {
             return XCTFail("이미지 클립이 아닙니다.")
         }
-        let url = try await adapter.images.loadImageFileURL(metadata)
+        let url = directory.appendingPathComponent("images").appendingPathComponent(metadata.fileID.uuidString).appendingPathComponent("original")
         try FileManager.default.removeItem(at: url)
 
-        do {
-            _ = try await adapter.clip(id: result.value.id)
-            XCTFail("없는 이미지 파일의 조회가 성공했습니다.")
-        } catch {
-            guard case ClipBridgeError.imageUnavailable = error else {
-                return XCTFail("이미지 파일 오류가 변환되지 않았습니다: \(error)")
-            }
-        }
+        let record = try await adapter.clip(id: result.value.id)
+        XCTAssertEqual(record?.image?.byteCount, metadata.byteCount)
+        let updated = try await adapter.updateClip(
+            id: result.value.id,
+            name: "새 이름",
+            memo: "메모",
+            isPinned: true
+        )
+        XCTAssertEqual(updated?.name, "새 이름")
+        XCTAssertEqual(updated?.memo, "메모")
+        XCTAssertEqual(updated?.isPinned, true)
         let preserved = try await storage.fetch(id: result.value.id)
-        XCTAssertEqual(preserved, result.value)
+        XCTAssertEqual(preserved?.name, "새 이름")
     }
 
     func testUpdateReturnsStoredFieldsWithoutNormalization() async throws {
@@ -177,7 +178,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         guard case .image(let metadata) = result.value.content else {
             return XCTFail("이미지 클립이 아닙니다.")
         }
-        let url = try await adapter.images.loadImageFileURL(metadata)
+        let url = directory.appendingPathComponent("images").appendingPathComponent(metadata.fileID.uuidString).appendingPathComponent("original")
 
         try await adapter.deleteClip(id: result.value.id)
 
@@ -330,7 +331,8 @@ final class ClipBridgeAdapterTests: XCTestCase {
         return ClipBridgeAdapter(
             storage: storage,
             images: images,
-            clipboard: ClipboardService(storage: storage, images: images)
+            clipboard: ClipboardService(storage: storage, images: images),
+            photos: ClipPhotoLibraryService(storage: storage, images: images)
         )
     }
 }

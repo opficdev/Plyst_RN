@@ -2,8 +2,8 @@ import type { CodegenTypes, TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 export type ClipImageRecord = {
-  // 원본 이미지의 읽기 전용 file:// URI입니다.
-  uri: string;
+  // 원본 바이트 수를 ByteCountFormatter의 file 방식으로 표시한 문자열입니다.
+  byteCountText: string;
   // public.png와 같은 원본 타입 식별자입니다.
   contentType: string;
   pixelWidth: number;
@@ -34,8 +34,14 @@ export interface Spec extends TurboModule {
   readonly onClipChange: CodegenTypes.EventEmitter<ClipChange>;
   ready(): void;
   // 클립이 없으면 null입니다. 실패하면 E_INVALID_ID, E_UNAVAILABLE,
-  // E_READ_FAILED, E_CORRUPTED_DATA, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
+  // E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   getClip(id: string): Promise<ClipRecord | null>;
+  // 매번 다시 만든 미리보기의 file:// URI입니다. 클립이 없거나 이미지가 아니면 null입니다.
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
+  getClipImagePreview(id: string): Promise<string | null>;
+  // 결과는 saved, denied, restricted 중 하나입니다. 클립이 없으면 null입니다.
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_PHOTO_SAVE_FAILED 중 하나로 거부합니다.
+  saveClipImageToPhotos(id: string): Promise<string | null>;
   // 저장이 확정된 클립을 반환합니다. 클립이 없으면 null입니다.
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   updateClip(

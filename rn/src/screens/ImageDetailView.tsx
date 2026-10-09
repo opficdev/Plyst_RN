@@ -1,7 +1,17 @@
-import { useEffect, useLayoutEffect, useReducer, useRef } from 'react';
-import type { Dispatch, RefObject } from 'react';
 import {
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import type { Dispatch, RefObject } from 'react';
+import { Image } from 'expo-image';
+import {
+  ActivityIndicator,
+  Pressable,
   ScrollView,
+  useWindowDimensions,
   StyleSheet,
   Switch,
   Text,
@@ -24,16 +34,18 @@ import { colors, radius, spacing, typography } from '../theme';
 import { copyClipDetail } from './copyClipDetail';
 import { deleteClipDetail } from './deleteClipDetail';
 import { formatClipDate } from './formatClipDate';
-import { loadTextDetail } from './loadTextDetail';
-import { saveTextDetail } from './saveTextDetail';
-import { canSave, initialState, reduce } from './textDetailDraft';
-import type { TextDetailAction, TextDetailState } from './textDetailDraft';
+import { loadImageDetail } from './loadImageDetail';
+import { saveImageDetail } from './saveImageDetail';
+import { loadImageDetailPreview } from './loadImageDetailPreview';
+import { saveImageDetailToPhotos } from './saveImageDetailToPhotos';
+import { canSave, initialState, reduce } from './imageDetailDraft';
+import type { ImageDetailAction, ImageDetailState } from './imageDetailDraft';
 import { createClipDetailRefresher } from './clipDetailRefresher';
 import { useScrollFieldIntoView } from './useScrollFieldIntoView';
 
-type TextDetailViewProps = { clipID: string };
-type State = TextDetailState | null | 'closed';
-type Action = TextDetailAction | { type: 'loadFailed' };
+type ImageDetailViewProps = { clipID: string };
+type State = ImageDetailState | null | 'closed';
+type Action = ImageDetailAction | { type: 'loadFailed' };
 
 function reduceContent(state: State, action: Action): State {
   if (state === 'closed') return state;
@@ -48,15 +60,15 @@ function reduceContent(state: State, action: Action): State {
   return reduce(state, action);
 }
 
-export function TextDetailView({ clipID }: TextDetailViewProps) {
+export function ImageDetailView({ clipID }: ImageDetailViewProps) {
   return (
     <SafeAreaProvider style={styles.canvas}>
-      <TextDetailContent key={clipID} clipID={clipID} />
+      <ImageDetailContent key={clipID} clipID={clipID} />
     </SafeAreaProvider>
   );
 }
 
-function TextDetailContent({ clipID }: TextDetailViewProps) {
+function ImageDetailContent({ clipID }: ImageDetailViewProps) {
   const [state, dispatch] = useReducer(reduceContent, null);
   const didClose = useRef(false);
   const isClosed = state === 'closed' || !!(state?.isRemoved || state?.isSaved);
@@ -74,13 +86,25 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
 
   useEffect(() => {
     let removed = false;
+    let previewRequested = false;
     const isStopped = () => removed || closedRef.current || didClose.current;
     const refresher = createClipDetailRefresher({
-      load: () => loadTextDetail(clipID),
+      load: () => loadImageDetail(clipID),
       onResult: (result) => {
         if (isStopped()) return;
         if (result.status === 'loaded') {
           dispatch({ type: 'clipLoaded', clip: result.clip });
+          if (!previewRequested) {
+            previewRequested = true;
+            void loadImageDetailPreview(clipID).then((preview) => {
+              if (isStopped()) return;
+              dispatch(
+                preview.status === 'loaded'
+                  ? { type: 'previewReady', uri: preview.uri }
+                  : { type: 'previewFailed' },
+              );
+            });
+          }
         } else if (result.status === 'missing') {
           removed = true;
           dispatch({ type: 'removed' });
@@ -110,7 +134,7 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
   if (state === null) return <View style={styles.canvas} />;
 
   return (
-    <TextDetailEditor
+    <ImageDetailEditor
       clipID={clipID}
       state={state}
       dispatch={dispatch}
@@ -119,30 +143,26 @@ function TextDetailContent({ clipID }: TextDetailViewProps) {
   );
 }
 
-function TextDetailEditor({
+function ImageDetailEditor({
   clipID,
   state,
   dispatch,
   didClose,
-}: TextDetailViewProps & {
-  state: TextDetailState;
-  dispatch: Dispatch<TextDetailAction>;
+}: ImageDetailViewProps & {
+  state: ImageDetailState;
+  dispatch: Dispatch<ImageDetailAction>;
   didClose: RefObject<boolean>;
 }) {
   const stateRef = useRef(state);
   const savingRef = useRef(false);
   const deletingRef = useRef(false);
+  const photoSavingRef = useRef(false);
+  const [previewWidth, setPreviewWidth] = useState(0);
+  const window = useWindowDimensions();
   const activeRef = useRef(true);
   const insets = useSafeAreaInsets();
-  const {
-    contentRef,
-    nameRef,
-    memoRef,
-    nameInputProps,
-    memoInputProps,
-    revealMemo,
-    scrollProps,
-  } = useScrollFieldIntoView();
+  const { contentRef, nameRef, nameInputProps, scrollProps } =
+    useScrollFieldIntoView();
   const isSaveEnabled = canSave(state);
 
   useLayoutEffect(() => {
@@ -174,22 +194,24 @@ function TextDetailEditor({
       }
       savingRef.current = true;
       dispatch({ type: 'saveStarted' });
-      void saveTextDetail(clipID, current.draft).then((result) => {
-        savingRef.current = false;
-        switch (result.status) {
-          case 'saved':
-            if (active) dispatch({ type: 'saved', clip: result.clip });
-            showToast('저장했습니다', true);
-            break;
-          case 'removed':
-            if (active) dispatch({ type: 'removed' });
-            break;
-          case 'failed':
-            if (active) dispatch({ type: 'saveFailed' });
-            showToast('저장하지 못했습니다', false);
-            break;
-        }
-      });
+      void saveImageDetail(clipID, current.draft, current.clip.memo).then(
+        (result) => {
+          savingRef.current = false;
+          switch (result.status) {
+            case 'saved':
+              if (active) dispatch({ type: 'saved', clip: result.clip });
+              showToast('저장했습니다', true);
+              break;
+            case 'removed':
+              if (active) dispatch({ type: 'removed' });
+              break;
+            case 'failed':
+              if (active) dispatch({ type: 'saveFailed' });
+              showToast('저장하지 못했습니다', false);
+              break;
+          }
+        },
+      );
     });
     return () => {
       active = false;
@@ -233,7 +255,36 @@ function TextDetailEditor({
     });
   }
 
-  const { clip, draft } = state;
+  function saveToPhotos() {
+    const current = stateRef.current;
+    if (
+      photoSavingRef.current ||
+      current.isSavingToPhotos ||
+      current.isDeleting ||
+      current.isRemoved
+    ) {
+      return;
+    }
+    photoSavingRef.current = true;
+    dispatch({ type: 'photoSaveStarted' });
+    void saveImageDetailToPhotos(clipID).then((result) => {
+      photoSavingRef.current = false;
+      if (result.status === 'removed') {
+        if (activeRef.current) dispatch({ type: 'removed' });
+      } else {
+        if (activeRef.current) dispatch({ type: 'photoSaveFinished' });
+        showToast(result.message, result.isSuccess);
+      }
+    });
+  }
+
+  const { clip, draft, preview } = state;
+  const image = clip.image;
+  const previewHeight = Math.min(
+    Math.max(96, previewWidth / preview.aspectRatio),
+    Math.max(0, window.height - insets.top - insets.bottom) * 0.6,
+  );
+  const photoDisabled = state.isDeleting || state.isSavingToPhotos;
   return (
     <View style={styles.canvas}>
       <ScrollView
@@ -244,12 +295,71 @@ function TextDetailEditor({
         <View ref={contentRef} style={styles.content} collapsable={false}>
           <View style={styles.card}>
             <Text allowFontScaling={false} style={styles.meta}>
-              {`${clip.isPinned ? '고정됨 · ' : ''}${clip.characterCount}자`}
+              {image &&
+                `${image.pixelWidth} × ${image.pixelHeight} px, ${image.byteCountText}`}
             </Text>
-            <Text allowFontScaling={false} style={styles.body}>
-              {clip.text}
-            </Text>
+            <View
+              style={[styles.preview, { height: previewHeight }]}
+              onLayout={(event) =>
+                setPreviewWidth(event.nativeEvent.layout.width)
+              }
+            >
+              {preview.uri !== null && (
+                <Image
+                  source={{ uri: preview.uri }}
+                  style={StyleSheet.absoluteFill}
+                  cachePolicy="none"
+                  contentFit="contain"
+                  onLoad={({ source }) =>
+                    dispatch({
+                      type: 'previewLoaded',
+                      width: source.width,
+                      height: source.height,
+                    })
+                  }
+                  onError={() => dispatch({ type: 'previewFailed' })}
+                />
+              )}
+              {preview.status !== 'loaded' && (
+                <View style={styles.previewMessage}>
+                  {preview.status === 'failed' && (
+                    <Image
+                      source="sf:exclamationmark.triangle"
+                      style={styles.failureIcon}
+                      contentFit="contain"
+                    />
+                  )}
+                  <Text allowFontScaling={false} style={styles.message}>
+                    {preview.status === 'failed'
+                      ? '이미지를 불러오지 못했습니다'
+                      : '이미지를 불러오는 중입니다'}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
+          <Pressable
+            disabled={photoDisabled}
+            onPress={saveToPhotos}
+            style={({ pressed }) => [
+              styles.photoButton,
+              { opacity: photoDisabled || pressed ? 0.5 : 1 },
+            ]}
+          >
+            <View pointerEvents="none" style={styles.photoBackground} />
+            {state.isSavingToPhotos ? (
+              <ActivityIndicator color={colors.PrimaryText} />
+            ) : (
+              <Image
+                source="sf:square.and.arrow.down"
+                style={styles.photoIcon}
+                contentFit="contain"
+              />
+            )}
+            <Text allowFontScaling={false} style={styles.photoLabel}>
+              사진 앱에 저장
+            </Text>
+          </Pressable>
           <View style={styles.fields}>
             <View ref={nameRef} style={[styles.field, styles.nameField]}>
               <Text allowFontScaling={false} style={styles.caption}>
@@ -280,26 +390,6 @@ function TextDetailEditor({
               />
             </View>
             <View style={styles.divider} />
-            <View ref={memoRef} style={[styles.field, styles.memoField]}>
-              <Text allowFontScaling={false} style={styles.caption}>
-                메모
-              </Text>
-              <TextInput
-                allowFontScaling={false}
-                style={styles.memo}
-                {...memoInputProps}
-                value={draft.memo}
-                placeholder="이 내용을 언제 쓰는지 적어 두세요"
-                placeholderTextColor={colors.Placeholder}
-                multiline
-                scrollEnabled={false}
-                onChangeText={(memo) => {
-                  dispatch({ type: 'memoChanged', memo });
-                  revealMemo();
-                }}
-              />
-            </View>
-            <View style={styles.divider} />
           </View>
           <ClipDetailDates
             savedValue={formatClipDate(clip.createdAt)}
@@ -316,7 +406,7 @@ function TextDetailEditor({
       </View>
       <ActionSheet
         isVisible={state.isDeleteSheetOpen}
-        title="이 텍스트를 삭제할까요?"
+        title="이 이미지를 삭제할까요?"
         message="삭제하면 되돌릴 수 없습니다."
         items={[
           { title: '삭제', role: 'destructive', handler: startDelete },
@@ -338,30 +428,52 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.Card,
-    borderRadius: radius.card,
+    borderRadius: radius.field,
     borderWidth: 1,
     borderColor: colors.Outline,
-    paddingTop: 17,
-    paddingHorizontal: 19,
-    paddingBottom: 16,
-    gap: 17,
+    padding: spacing.detail,
+    gap: spacing.card,
+    overflow: 'hidden',
   },
   meta: {
     fontFamily: 'ui-monospace',
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '500',
     color: colors.SecondaryText,
   },
-  body: {
-    fontSize: 22,
-    fontWeight: '500',
-    lineHeight: 35,
-    color: colors.PrimaryText,
+  preview: { width: '100%', justifyContent: 'center' },
+  previewMessage: { alignItems: 'center' },
+  failureIcon: {
+    color: colors.SecondaryText,
+    width: 32,
+    height: 32,
+    position: 'absolute',
+    bottom: '100%',
+    marginBottom: 6,
   },
-  fields: { marginTop: 11, marginBottom: 18 },
+  message: { fontSize: 14, color: colors.SecondaryText, textAlign: 'center' },
+  photoButton: {
+    marginTop: spacing.card,
+    // 아이콘 영역이 실제 기호보다 높아 세로 여백을 줄여 원본 높이 49pt를 유지한다.
+    paddingVertical: 10.5,
+    paddingHorizontal: spacing.card,
+    borderRadius: radius.button,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  photoBackground: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.Card,
+    opacity: 0.2,
+    borderRadius: radius.button,
+  },
+  photoIcon: { width: 24, height: 28, color: colors.PrimaryText },
+  photoLabel: { fontSize: 17, color: colors.PrimaryText, flexShrink: 1 },
+  fields: { marginTop: spacing.card, marginBottom: 18 },
   field: { paddingVertical: 12, paddingHorizontal: 4, gap: 4 },
-  nameField: { paddingTop: 11.67, paddingBottom: 12.33, gap: 6.93 },
-  memoField: { paddingTop: 12.67, paddingBottom: 11.67, gap: 5.9 },
+  nameField: { gap: 6.5 },
   caption: { ...typography.sectionLabel, color: colors.SecondaryText },
   name: {
     fontSize: 17,
@@ -374,21 +486,13 @@ const styles = StyleSheet.create({
   pin: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingLeft: 4,
-    paddingRight: 1.8,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   pinLabel: {
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
     color: colors.PrimaryText,
-  },
-  memo: {
-    minHeight: 64,
-    fontSize: 16,
-    color: colors.PrimaryText,
-    textAlignVertical: 'top',
-    padding: 0,
   },
 });

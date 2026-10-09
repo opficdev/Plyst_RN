@@ -1,22 +1,23 @@
 import { updateClip } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
-import { normalizedMemo, normalizedName } from './clipDetailValues';
-import type { Draft } from './textDetailDraft';
+import { normalizedName } from './clipDetailValues';
+import type { Draft } from './imageDetailDraft';
 
-export type SaveTextDetailResult =
+export type SaveImageDetailResult =
   | { status: 'saved'; clip: ClipRecord }
   | { status: 'removed' }
   | { status: 'failed' };
 
-export async function saveTextDetail(
+export async function saveImageDetail(
   clipID: string,
   draft: Draft,
-): Promise<SaveTextDetailResult> {
+  memo: string | null,
+): Promise<SaveImageDetailResult> {
   try {
     const clip = await updateClip(
       clipID,
       normalizedName(draft),
-      normalizedMemo(draft),
+      memo,
       draft.isPinned,
     );
     if (clip === null) return { status: 'removed' };

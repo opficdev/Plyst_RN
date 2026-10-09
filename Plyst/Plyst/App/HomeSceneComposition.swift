@@ -21,7 +21,7 @@ final class HomeSceneComposition {
     let storage: SQLiteClipStorageService
     let images: ClipImageService
     let clipboard: ClipboardService
-    private let photos: ClipPhotoLibraryService
+    let photos: ClipPhotoLibraryService
     /// App Group 컨테이너를 찾지 못하면 nil입니다. 본 저장소가 정상이므로 시작은 계속하고 반입만 건너뜁니다.
     private let imports: ClipShareImportService?
     private var importTask: Task<Void, Never>?
@@ -78,21 +78,19 @@ final class HomeSceneComposition {
             ToastBridge.show(message: $0, isSuccess: $1)
         }
         // 상세 화면은 같은 저장소와 서비스 인스턴스를 공유합니다.
-        let makeDetail: @MainActor (Clip) -> UIViewController = { [storage, clipboard, images, photos, showToast] clip in
+        let makeDetail: @MainActor (Clip) -> UIViewController = { clip in
             switch clip.content {
             case .text:
-                TextDetailViewController(clipID: clip.id)
+                ClipDetailViewController(
+                    clipID: clip.id,
+                    moduleName: "TextDetailView",
+                    title: "텍스트"
+                )
             case .image:
-                ImageDetailViewController(
-                    reactor: ImageDetailReactor(
-                        clip: clip,
-                        storage: storage,
-                        clipboard: clipboard,
-                        images: images,
-                        photos: photos
-                    ),
-                    showToast: showToast,
-                    makeImageDetailView: { ImageDetailView(frame: .zero, send: $0) }
+                ClipDetailViewController(
+                    clipID: clip.id,
+                    moduleName: "ImageDetailView",
+                    title: "이미지"
                 )
             }
         }

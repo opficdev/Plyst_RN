@@ -1,12 +1,11 @@
 import type { ClipRecord } from 'plyst-bridge';
-import { equivalent, normalizedMemo, normalizedName } from './clipDetailValues';
+import { equivalent, normalizedName } from './clipDetailValues';
 
-export type Draft = { name: string; memo: string; isPinned: boolean };
+export type Draft = { name: string; isPinned: boolean };
 
 export function draftFromClip(clip: ClipRecord): Draft {
   return {
     name: clip.name ?? '',
-    memo: clip.memo ?? '',
     isPinned: clip.isPinned,
   };
 }
@@ -14,14 +13,21 @@ export function draftFromClip(clip: ClipRecord): Draft {
 export function differs(draft: Draft, clip: ClipRecord): boolean {
   return (
     !equivalent(normalizedName(draft), clip.name) ||
-    !equivalent(normalizedMemo(draft), clip.memo) ||
     draft.isPinned !== clip.isPinned
   );
 }
 
-export type TextDetailState = {
+export type Preview = {
+  status: 'loading' | 'loaded' | 'failed';
+  uri: string | null;
+  aspectRatio: number;
+};
+
+export type ImageDetailState = {
   clip: ClipRecord;
   draft: Draft;
+  isSavingToPhotos: boolean;
+  preview: Preview;
   isSaving: boolean;
   isDeleting: boolean;
   isRemoved: boolean;
@@ -29,10 +35,12 @@ export type TextDetailState = {
   isDeleteSheetOpen: boolean;
 };
 
-export function initialState(clip: ClipRecord): TextDetailState {
+export function initialState(clip: ClipRecord): ImageDetailState {
   return {
     clip,
     draft: draftFromClip(clip),
+    isSavingToPhotos: false,
+    preview: { status: 'loading', uri: null, aspectRatio: 4 / 3 },
     isSaving: false,
     isDeleting: false,
     isRemoved: false,
@@ -41,11 +49,11 @@ export function initialState(clip: ClipRecord): TextDetailState {
   };
 }
 
-export function hasChanges(state: TextDetailState): boolean {
+export function hasChanges(state: ImageDetailState): boolean {
   return differs(state.draft, state.clip);
 }
 
-export function canSave(state: TextDetailState): boolean {
+export function canSave(state: ImageDetailState): boolean {
   return (
     hasChanges(state) &&
     !state.isSaving &&
@@ -54,11 +62,10 @@ export function canSave(state: TextDetailState): boolean {
   );
 }
 
-export type TextDetailAction =
+export type ImageDetailAction =
   | { type: 'clipLoaded'; clip: ClipRecord }
   | { type: 'removed' }
   | { type: 'nameChanged'; name: string }
-  | { type: 'memoChanged'; memo: string }
   | { type: 'pinnedChanged'; isPinned: boolean }
   | { type: 'saveStarted' }
   | { type: 'saved'; clip: ClipRecord }
@@ -66,19 +73,23 @@ export type TextDetailAction =
   | { type: 'deleteSheetShown' }
   | { type: 'deleteSheetClosed' }
   | { type: 'deleteStarted' }
-  | { type: 'deleteFailed' };
+  | { type: 'deleteFailed' }
+  | { type: 'photoSaveStarted' }
+  | { type: 'photoSaveFinished' }
+  | { type: 'previewReady'; uri: string }
+  | { type: 'previewLoaded'; width: number; height: number }
+  | { type: 'previewFailed' };
 
 export function reduce(
-  state: TextDetailState,
-  action: TextDetailAction,
-): TextDetailState {
+  state: ImageDetailState,
+  action: ImageDetailAction,
+): ImageDetailState {
   const next = { ...state, draft: { ...state.draft } };
   switch (action.type) {
     case 'clipLoaded': {
       const original = draftFromClip(state.clip);
       if (
-        state.draft.name === original.name &&
-        state.draft.memo === original.memo &&
+        equivalent(state.draft.name, original.name) &&
         state.draft.isPinned === original.isPinned
       ) {
         next.draft = draftFromClip(action.clip);
@@ -87,6 +98,7 @@ export function reduce(
       break;
     }
     case 'removed':
+      next.isSavingToPhotos = false;
       next.isSaving = false;
       next.isDeleting = false;
       next.isRemoved = true;
@@ -94,9 +106,6 @@ export function reduce(
       break;
     case 'nameChanged':
       next.draft.name = action.name;
-      break;
-    case 'memoChanged':
-      next.draft.memo = action.memo;
       break;
     case 'pinnedChanged':
       next.draft.isPinned = action.isPinned;
@@ -124,6 +133,34 @@ export function reduce(
     case 'deleteStarted':
       next.isDeleting = true;
       next.isDeleteSheetOpen = false;
+      break;
+    case 'photoSaveStarted':
+      next.isSavingToPhotos = true;
+      break;
+    case 'photoSaveFinished':
+      next.isSavingToPhotos = false;
+      break;
+    case 'previewReady':
+      if (!state.isRemoved) {
+        next.preview = { ...state.preview, uri: action.uri };
+      }
+      break;
+    case 'previewLoaded':
+      if (!state.isRemoved && state.preview.status !== 'failed') {
+        next.preview = {
+          ...state.preview,
+          status: 'loaded',
+          aspectRatio:
+            0 < action.width && 0 < action.height
+              ? action.width / action.height
+              : state.preview.aspectRatio,
+        };
+      }
+      break;
+    case 'previewFailed':
+      if (!state.isRemoved) {
+        next.preview = { ...state.preview, status: 'failed', uri: null };
+      }
       break;
     case 'deleteFailed':
       next.isDeleting = false;

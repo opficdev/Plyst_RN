@@ -12,6 +12,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
     let storage: any ClipStorageService
     let images: ClipImageService
     let clipboard: ClipboardService
+    let photos: ClipPhotoLibraryService
 
     func changes() async -> AsyncStream<ClipBridgeChange> {
         let changes = await storage.changes()
@@ -47,7 +48,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
         guard let clip else { return nil }
 
-        return try await record(from: clip)
+        return record(from: clip)
     }
 
     func updateClip(
@@ -63,7 +64,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
                 isPinned: isPinned
             )
             let clip = try await storage.update(id: id, change: change)
-            return try await record(from: clip)
+            return record(from: clip)
         } catch let error as CancellationError {
             throw error
         } catch ClipStorageError.notFound {
@@ -105,7 +106,35 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
     }
 
-    private func record(from clip: Clip) async throws -> ClipBridgeRecord {
+    func getClipImagePreview(id: UUID) async throws -> String? {
+        do {
+            guard let clip = try await storage.fetch(id: id),
+                  case .image(let image) = clip.content else { return nil }
+            return try await images.makePreviewFileURL(image).absoluteString
+        } catch let error as CancellationError {
+            throw error
+        } catch {
+            throw ClipBridgeError.imageUnavailable
+        }
+    }
+
+    func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? {
+        do {
+            switch try await photos.save(id: id) {
+            case .saved: return .saved
+            case .denied: return .denied
+            case .restricted: return .restricted
+            }
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.notFound {
+            return nil
+        } catch {
+            throw ClipBridgeError.photoSaveFailed
+        }
+    }
+
+    private func record(from clip: Clip) -> ClipBridgeRecord {
         let text: String?
         let image: ClipBridgeRecord.Image?
         switch clip.content {
@@ -114,19 +143,12 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             image = nil
         case .image(let metadata):
             text = nil
-            do {
-                let url = try await images.loadImageFileURL(metadata)
-                image = ClipBridgeRecord.Image(
-                    uri: url.absoluteString,
-                    contentType: metadata.contentType,
-                    pixelWidth: metadata.pixelWidth,
-                    pixelHeight: metadata.pixelHeight
-                )
-            } catch is CancellationError {
-                throw CancellationError()
-            } catch {
-                throw ClipBridgeError.imageUnavailable
-            }
+            image = ClipBridgeRecord.Image(
+                byteCount: metadata.byteCount,
+                contentType: metadata.contentType,
+                pixelWidth: metadata.pixelWidth,
+                pixelHeight: metadata.pixelHeight
+            )
         }
         return ClipBridgeRecord(
             id: clip.id.uuidString,

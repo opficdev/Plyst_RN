@@ -11,7 +11,9 @@ import Foundation
 ///
 /// `ShareInboxImages`는 두 프로세스가 다룹니다. 저장과 `recoverPendingCleanup`은 Share Extension만 실행합니다.
 /// 본 앱은 읽기와 `delete(id:)`만 실행합니다. 본 앱이 복구를 실행하면 Extension이 저장 중이라 아직 참조되지 않은 파일을 지울 수 있습니다.
+/// `<fileID>/preview`는 원본에서 다시 만들 수 있는 파생 파일입니다. 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않습니다.
 actor ClipImageService {
+    private static let previewPixelDimension = 1600
     private let storage: any ClipStorageService
     private let files: ClipImageFileStore
     private var isBusy = false
@@ -75,12 +77,11 @@ actor ClipImageService {
         return try files.load(image: image)
     }
 
-    /// 반환 URL은 `delete(id:)` 전까지만 유효한 읽기 전용 참조입니다. 호출부는 파일을 쓰거나 옮기지 않아야 합니다.
-    /// 이후 읽기에 실패하면 파일이 삭제된 것으로 처리해야 합니다.
-    func loadImageFileURL(_ image: ClipImageMetadata) async throws -> URL {
+    /// 본 앱 이미지 루트에서만 호출합니다. 삭제와 직렬화하여 원본에서 미리보기 파일을 매번 다시 만듭니다.
+    func makePreviewFileURL(_ image: ClipImageMetadata) async throws -> URL {
         try await acquire()
         defer { release() }
-        return try files.fileURL(image: image)
+        return try files.writePreview(image: image, maximumPixelDimension: Self.previewPixelDimension)
     }
 
     /// 카드 표시용 축소 데이터만 반환하며 원본 파일은 유지합니다.

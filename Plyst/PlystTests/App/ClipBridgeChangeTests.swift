@@ -144,6 +144,10 @@ private struct ClipBridgeChangeProviderStub: ClipBridgeProvider {
     var continuation: AsyncStream<ClipBridgeChange>.Continuation { pair.continuation }
 
     func changes() async -> AsyncStream<ClipBridgeChange> { pair.stream }
+    func getClipImagePreview(id: UUID) async throws -> String? { nil }
+
+    func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? { nil }
+
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
     func updateClip(
         id: UUID,

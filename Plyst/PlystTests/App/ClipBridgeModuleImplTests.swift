@@ -78,6 +78,25 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         await fulfillment(of: [completion], timeout: 2)
     }
 
+    func testImageRecordContainsFormattedSizeWithoutURI() async throws {
+        let adapter = try makeAdapter(storage: makeStorage())
+        let data = try ClipImageTestFixture.data()
+        let clip = try await adapter.images.saveImage(data).value
+        await ClipBridge.register(adapter)
+        let completion = expectation(description: "이미지 조회 완료")
+        let expected = ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(clip.id.uuidString) { record, code in
+            let image = record?["image"] as? NSDictionary
+            XCTAssertEqual(image?["byteCountText"] as? String, expected)
+            XCTAssertNil(image?["uri"])
+            XCTAssertNil(code)
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
     private func makeStorage() throws -> SQLiteClipStorageService {
         try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
     }
@@ -88,7 +107,8 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         return ClipBridgeAdapter(
             storage: storage,
             images: images,
-            clipboard: ClipboardService(storage: storage, images: images)
+            clipboard: ClipboardService(storage: storage, images: images),
+            photos: ClipPhotoLibraryService(storage: storage, images: images)
         )
     }
 }

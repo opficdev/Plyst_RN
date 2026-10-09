@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 
 /// 주입한 전용 루트에서 원본 바이트를 관리합니다. 같은 루트의 변경은 ClipImageService 하나가 조율해야 합니다.
 /// `ShareInboxImages`는 예외입니다. 저장과 정리 복구는 Share Extension만 실행하고 본 앱은 읽기와 삭제만 실행합니다.
+/// `<fileID>/preview`는 원본에서 다시 만들 수 있는 파생 파일입니다. 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않습니다.
 struct ClipImageFileStore: Sendable {
     /// 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수입니다. 검증이 원본 해상도 비트맵을 만들지 않게 합니다.
     private static let validationPixelDimension = 64
@@ -117,11 +118,20 @@ struct ClipImageFileStore: Sendable {
         return output as Data
     }
 
-    /// 반환 URL은 `delete(fileID:)` 전까지만 유효한 읽기 전용 참조입니다. 호출부는 파일을 쓰거나 옮기지 않아야 합니다.
-    /// 이후 읽기에 실패하면 파일이 삭제된 것으로 처리해야 합니다.
-    func fileURL(image: ClipImageMetadata) throws -> URL {
+    /// 본 앱 이미지 루트에서만 호출합니다. 원본에서 만든 축소본을 매번 원자적으로 덮어씁니다.
+    func writePreview(
+        image: ClipImageMetadata,
+        maximumPixelDimension: Int
+    ) throws -> URL {
+        let data = try loadThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
+        guard let directory = try directory(for: image.fileID) else {
+            throw ClipImageFileError.notFound(image.fileID)
+        }
+        let preview = directory.appendingPathComponent("preview")
+        try validateFile(at: preview)
         try Task.checkCancellation()
-        return try validatedOriginalURL(image: image)
+        do { try data.write(to: preview, options: .atomic) } catch { throw ClipImageFileError.writeFailed }
+        return preview
     }
 
     private func validatedOriginalURL(image: ClipImageMetadata) throws -> URL {

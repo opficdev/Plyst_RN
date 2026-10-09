@@ -103,6 +103,38 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(getClipImagePreview:completion:)
+    public nonisolated func getClipImagePreview(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .imageUnavailable,
+            operation: { provider, id in
+                try await provider.getClipImagePreview(id: id)
+            },
+            completion: completion
+        )
+    }
+
+    @objc(saveClipImageToPhotos:completion:)
+    public nonisolated func saveClipImageToPhotos(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .photoSaveFailed,
+            operation: { provider, id in
+                try await provider.saveClipImageToPhotos(id: id)
+            },
+            completion: { result, code in
+                completion(result?.rawValue, code)
+            }
+        )
+    }
+
     @objc
     public nonisolated func invalidate() {
         Task { @MainActor in
@@ -141,7 +173,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
     private static func dictionary(_ record: ClipBridgeRecord) -> NSDictionary {
         let image = record.image.map {
             [
-                "uri": $0.uri,
+                "byteCountText": ByteCountFormatter.string(fromByteCount: Int64($0.byteCount), countStyle: .file),
                 "contentType": $0.contentType,
                 "pixelWidth": $0.pixelWidth,
                 "pixelHeight": $0.pixelHeight

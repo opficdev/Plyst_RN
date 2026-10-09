@@ -9,18 +9,18 @@ import Foundation
 
 public struct ClipBridgeRecord: Sendable {
     public struct Image: Sendable {
-        public let uri: String
+        public let byteCount: Int
         public let contentType: String
         public let pixelWidth: Int
         public let pixelHeight: Int
 
         public init(
-            uri: String,
+            byteCount: Int,
             contentType: String,
             pixelWidth: Int,
             pixelHeight: Int
         ) {
-            self.uri = uri
+            self.byteCount = byteCount
             self.contentType = contentType
             self.pixelWidth = pixelWidth
             self.pixelHeight = pixelHeight
@@ -81,6 +81,12 @@ public enum ClipBridgeCopyResult: String, Sendable {
     case writeNotObserved
 }
 
+public enum ClipBridgePhotoSaveResult: String, Sendable {
+    case saved
+    case denied
+    case restricted
+}
+
 public enum ClipBridgeError: Error, Sendable {
     case invalidID
     case unavailable
@@ -88,6 +94,7 @@ public enum ClipBridgeError: Error, Sendable {
     case writeFailed
     case readFailed
     case corruptedData
+    case photoSaveFailed
     case imageUnavailable
 
     var code: String {
@@ -98,6 +105,7 @@ public enum ClipBridgeError: Error, Sendable {
         case .writeFailed: "E_WRITE_FAILED"
         case .readFailed: "E_READ_FAILED"
         case .corruptedData: "E_CORRUPTED_DATA"
+        case .photoSaveFailed: "E_PHOTO_SAVE_FAILED"
         case .imageUnavailable: "E_IMAGE_UNAVAILABLE"
         }
     }
@@ -105,6 +113,8 @@ public enum ClipBridgeError: Error, Sendable {
 
 public protocol ClipBridgeProvider: Sendable {
     func changes() async -> AsyncStream<ClipBridgeChange>
+    func getClipImagePreview(id: UUID) async throws -> String?
+    func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult?
     func clip(id: UUID) async throws -> ClipBridgeRecord?
     func updateClip(
         id: UUID,

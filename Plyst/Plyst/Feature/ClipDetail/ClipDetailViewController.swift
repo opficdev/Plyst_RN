@@ -1,8 +1,8 @@
 //
-//  TextDetailViewController.swift
+//  ClipDetailViewController.swift
 //  Plyst
 //
-//  Created by opfic on 10/8/26.
+//  Created by opfic on 10/9/26.
 //
 
 import PlystBridge
@@ -10,8 +10,9 @@ import ReactBrownfield
 import UIKit
 
 @MainActor
-final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
+final class ClipDetailViewController: UIViewController, ScreenBridgeCloser {
     private let clipID: Clip.ID
+    private let moduleName: String
     private let topBar = UIView()
     private let closeButton = DetailBarButton(style: .icon("xmark"))
     private let titleLabel = UILabel()
@@ -19,9 +20,15 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
     private var contentView: UIView?
     private var didClose = false
 
-    init(clipID: Clip.ID) {
+    init(
+        clipID: Clip.ID,
+        moduleName: String,
+        title: String
+    ) {
         self.clipID = clipID
+        self.moduleName = moduleName
         super.init(nibName: nil, bundle: nil)
+        self.title = title
         modalPresentationStyle = .pageSheet
         sheetPresentationController?.detents = [.large()]
     }
@@ -35,7 +42,7 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
         super.viewDidLoad()
         ScreenBridge.register(self)
         contentView = ReactNativeBrownfield.shared.view(
-            moduleName: "TextDetailView",
+            moduleName: moduleName,
             initialProps: ["clipID": clipID.uuidString],
             launchOptions: nil
         )
@@ -82,7 +89,7 @@ final class TextDetailViewController: UIViewController, ScreenBridgeCloser {
 
     private func configureAppearance() {
         view.backgroundColor = UIColor(resource: .homeCanvas)
-        titleLabel.text = "텍스트"
+        titleLabel.text = title
         titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
         titleLabel.textColor = UIColor(resource: .homePrimaryText)
         saveButton.isEnabled = false

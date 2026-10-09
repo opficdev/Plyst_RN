@@ -31,6 +31,20 @@ export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }
 
+export function getClipImagePreview(id: string): Promise<string | null> {
+  return NativePlystClip.getClipImagePreview(id);
+}
+
+export type ClipPhotoSaveResult = 'saved' | 'denied' | 'restricted';
+
+export function saveClipImageToPhotos(
+  id: string,
+): Promise<ClipPhotoSaveResult | null> {
+  return NativePlystClip.saveClipImageToPhotos(
+    id,
+  ) as Promise<ClipPhotoSaveResult | null>;
+}
+
 export function updateClip(
   id: string,
   name: string | null,
