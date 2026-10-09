@@ -103,7 +103,8 @@ final class ClipBridgeAdapterChangesTests: XCTestCase {
         return ClipBridgeAdapter(
             storage: storage,
             images: images,
-            clipboard: ClipboardService(storage: storage, images: images)
+            clipboard: ClipboardService(storage: storage, images: images),
+            photos: ClipPhotoLibraryService(storage: storage, images: images)
         )
     }
 }

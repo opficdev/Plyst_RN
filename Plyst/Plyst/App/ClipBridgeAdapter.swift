@@ -12,6 +12,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
     let storage: any ClipStorageService
     let images: ClipImageService
     let clipboard: ClipboardService
+    let photos: ClipPhotoLibraryService
 
     func changes() async -> AsyncStream<ClipBridgeChange> {
         let changes = await storage.changes()
@@ -102,6 +103,34 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             return nil
         } catch {
             throw ClipBridgeError.copyFailed
+        }
+    }
+
+    func getClipImagePreview(id: UUID) async throws -> String? {
+        do {
+            guard let clip = try await storage.fetch(id: id),
+                  case .image(let image) = clip.content else { return nil }
+            return try await images.makePreviewFileURL(image).absoluteString
+        } catch let error as CancellationError {
+            throw error
+        } catch {
+            throw ClipBridgeError.imageUnavailable
+        }
+    }
+
+    func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? {
+        do {
+            switch try await photos.save(id: id) {
+            case .saved: return .saved
+            case .denied: return .denied
+            case .restricted: return .restricted
+            }
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.notFound {
+            return nil
+        } catch {
+            throw ClipBridgeError.photoSaveFailed
         }
     }
 

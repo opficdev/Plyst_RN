@@ -113,7 +113,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             ClipBridge.register(ClipBridgeAdapter(
                 storage: composition.storage,
                 images: composition.images,
-                clipboard: composition.clipboard
+                clipboard: composition.clipboard,
+                photos: composition.photos
             ))
             window.rootViewController = root
             composition.startPendingCleanupRecovery()

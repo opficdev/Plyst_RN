@@ -3,6 +3,8 @@ import {
   copyClip,
   deleteClip,
   getClip,
+  getClipImagePreview,
+  saveClipImageToPhotos,
   setSaveEnabled,
   subscribeClipChanges,
   subscribeSave,
@@ -26,6 +28,8 @@ jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
     onClipChange: jest.fn(),
     ready: jest.fn(),
     getClip: jest.fn(),
+    getClipImagePreview: jest.fn(),
+    saveClipImageToPhotos: jest.fn(),
     updateClip: jest.fn(),
     deleteClip: jest.fn(),
     copyClip: jest.fn(),
@@ -248,3 +252,39 @@ test('저장 탭을 구독한 뒤 준비를 알리고 구독 객체를 반환한
   expect(listener).toHaveBeenCalledWith();
   expect(listener).toHaveBeenCalledTimes(1);
 });
+
+test.each(['file:///images/preview', null])(
+  '미리보기 %s를 전달한다',
+  async (uri) => {
+    native.getClipImagePreview.mockResolvedValue(uri);
+    await expect(getClipImagePreview('clip-id')).resolves.toBe(uri);
+    expect(native.getClipImagePreview).toHaveBeenCalledWith('clip-id');
+  },
+);
+
+test.each(['saved', 'denied', 'restricted', null])(
+  '사진 저장 %s를 전달한다',
+  async (result) => {
+    native.saveClipImageToPhotos.mockResolvedValue(result);
+    await expect(saveClipImageToPhotos('clip-id')).resolves.toBe(result);
+    expect(native.saveClipImageToPhotos).toHaveBeenCalledWith('clip-id');
+  },
+);
+
+test.each(['E_INVALID_ID', 'E_UNAVAILABLE', 'E_IMAGE_UNAVAILABLE'])(
+  '미리보기 %s 오류를 전달한다',
+  async (code) => {
+    const error = Object.assign(new Error(code), { code });
+    native.getClipImagePreview.mockRejectedValue(error);
+    await expect(getClipImagePreview('id')).rejects.toBe(error);
+  },
+);
+
+test.each(['E_INVALID_ID', 'E_UNAVAILABLE', 'E_PHOTO_SAVE_FAILED'])(
+  '사진 저장 %s 오류를 전달한다',
+  async (code) => {
+    const error = Object.assign(new Error(code), { code });
+    native.saveClipImageToPhotos.mockRejectedValue(error);
+    await expect(saveClipImageToPhotos('id')).rejects.toBe(error);
+  },
+);

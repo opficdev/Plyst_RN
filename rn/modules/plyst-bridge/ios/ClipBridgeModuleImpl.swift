@@ -103,6 +103,38 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(getClipImagePreview:completion:)
+    public nonisolated func getClipImagePreview(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .imageUnavailable,
+            operation: { provider, id in
+                try await provider.getClipImagePreview(id: id)
+            },
+            completion: completion
+        )
+    }
+
+    @objc(saveClipImageToPhotos:completion:)
+    public nonisolated func saveClipImageToPhotos(
+        _ identifier: String,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        execute(
+            identifier,
+            fallback: .photoSaveFailed,
+            operation: { provider, id in
+                try await provider.saveClipImageToPhotos(id: id)
+            },
+            completion: { result, code in
+                completion(result?.rawValue, code)
+            }
+        )
+    }
+
     @objc
     public nonisolated func invalidate() {
         Task { @MainActor in

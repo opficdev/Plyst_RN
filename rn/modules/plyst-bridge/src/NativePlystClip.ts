@@ -36,6 +36,12 @@ export interface Spec extends TurboModule {
   // 클립이 없으면 null입니다. 실패하면 E_INVALID_ID, E_UNAVAILABLE,
   // E_READ_FAILED, E_CORRUPTED_DATA, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
   getClip(id: string): Promise<ClipRecord | null>;
+  // 매번 다시 만든 미리보기의 file:// URI입니다. 클립이 없거나 이미지가 아니면 null입니다.
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
+  getClipImagePreview(id: string): Promise<string | null>;
+  // 결과는 saved, denied, restricted 중 하나입니다. 클립이 없으면 null입니다.
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_PHOTO_SAVE_FAILED 중 하나로 거부합니다.
+  saveClipImageToPhotos(id: string): Promise<string | null>;
   // 저장이 확정된 클립을 반환합니다. 클립이 없으면 null입니다.
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   updateClip(

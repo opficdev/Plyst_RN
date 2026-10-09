@@ -141,6 +141,10 @@ private struct ClipBridgeCopyProviderStub: ClipBridgeProvider {
         AsyncStream { $0.finish() }
     }
 
+    func getClipImagePreview(id: UUID) async throws -> String? { nil }
+
+    func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? { nil }
+
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
 
     func updateClip(
