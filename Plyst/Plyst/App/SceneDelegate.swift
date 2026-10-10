@@ -19,7 +19,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     private var toastHostWindow: ToastHostWindow?
     private var composition: HomeSceneComposition?
-    private var isClipboardSaveRequested = false
     #if DEBUG
     private var isReactNativeDebugRequested = false
     #endif
@@ -46,7 +45,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         request(from: contexts)
         if scene.activationState == .foregroundActive {
-            saveClipboardIfRequested()
             #if DEBUG
             presentReactNativeDebugScreenIfRequested()
             #endif
@@ -55,7 +53,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         composition?.importSharedClips()
-        saveClipboardIfRequested()
         #if DEBUG
         presentReactNativeDebugScreenIfRequested()
         #endif
@@ -70,22 +67,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func request(from contexts: Set<UIOpenURLContext>) {
-        if contexts.contains(where: { AppLink(url: $0.url) == .saveClipboard }) {
-            isClipboardSaveRequested = true
-        }
         #if DEBUG
         if contexts.contains(where: { isReactNativeDebugURL($0.url) }) {
             isReactNativeDebugRequested = true
         }
         #endif
-    }
-
-    /// 클립보드 읽기는 앱이 활성 상태일 때만 가능하므로 활성화된 뒤에 요청을 처리합니다.
-    /// 처리할 수 없는 상태에서 요청이 남아 이후 활성화에 실행되지 않도록 항상 요청을 비웁니다.
-    private func saveClipboardIfRequested() {
-        guard isClipboardSaveRequested else { return }
-        isClipboardSaveRequested = false
-        composition?.saveCurrentClipboard()
     }
 
     #if DEBUG
@@ -108,7 +94,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private func configureRoot(in window: UIWindow) {
         do {
             let composition = try HomeSceneComposition()
-            let root = composition.makeRootViewController()
+            let root = composition.makeRootViewController { [weak self, weak window] in
+                guard let self, let window else { return }
+                Self.logger.error("기록 화면 React Native 루트 생성 실패")
+                self.showStartupFailure(in: window)
+            }
             self.composition = composition
             ClipBridge.register(ClipBridgeAdapter(
                 storage: composition.storage,
@@ -122,11 +112,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             composition.importSharedClips()
         } catch {
             Self.logger.error("기록 화면 초기화 실패: \(String(describing: type(of: error)), privacy: .public)")
-            composition = nil
-            window.rootViewController = StartupFailureViewController { [weak self] in
-                guard let self, let window = self.window else { return }
-                self.configureRoot(in: window)
-            }
+            showStartupFailure(in: window)
+        }
+    }
+
+    private func showStartupFailure(in window: UIWindow) {
+        ClipBridge.unregister()
+        composition = nil
+        window.rootViewController = StartupFailureViewController { [weak self] in
+            guard let self, let window = self.window else { return }
+            self.configureRoot(in: window)
         }
     }
 }
