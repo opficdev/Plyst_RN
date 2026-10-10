@@ -55,7 +55,10 @@ export function HomePinnedRow({
 }
 
 const styles = StyleSheet.create({
-  container: { paddingTop: spacing.screen, paddingBottom: spacing.detail },
+  container: {
+    paddingTop: spacing.screen,
+    paddingBottom: spacing.detail + 0.6667, // 원본의 레이블 높이 올림에 따른 행 높이를 맞춘다.
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -65,6 +68,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.sectionLabel,
+    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영한다.
     color: colors.SecondaryText,
     flexShrink: 1,
   },
