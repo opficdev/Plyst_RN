@@ -11,7 +11,6 @@ import XCTest
 
 final class HomeBridgeModuleImplTests: XCTestCase {
     private let navigator = HomeBridgeNavigatorSpy()
-    private let other = HomeBridgeNavigatorSpy()
 
     override func setUp() async throws {
         try await super.setUp()
@@ -76,13 +75,16 @@ final class HomeBridgeModuleImplTests: XCTestCase {
     }
 
     func testRequestsWithoutNavigatorDoNothing() async {
-        let unexpected = expectation(description: "등록 해제 이후 화면 이동 없음")
+        let unexpected = expectation(description: "대상 해제 이후 화면 이동 없음")
         unexpected.isInverted = true
-        await MainActor.run { [navigator] in
-            navigator.onOpenClip = { _, _ in unexpected.fulfill() }
-            navigator.onOpenSearch = { unexpected.fulfill() }
-            HomeBridge.register(navigator)
-            HomeBridge.unregister(navigator)
+        await MainActor.run {
+            var navigator = Optional(HomeBridgeNavigatorSpy())
+            weak let reference = navigator
+            navigator?.onOpenClip = { _, _ in unexpected.fulfill() }
+            navigator?.onOpenSearch = { unexpected.fulfill() }
+            HomeBridge.register(navigator!)
+            navigator = nil
+            XCTAssertNil(reference)
         }
         let module = HomeBridgeModuleImpl { _ in }
 
@@ -90,19 +92,6 @@ final class HomeBridgeModuleImplTests: XCTestCase {
         module.openSearch()
 
         await fulfillment(of: [unexpected], timeout: 0.1)
-    }
-
-    func testUnregisteringDifferentNavigatorPreservesRegistration() async {
-        let completion = expectation(description: "등록된 검색 화면 표시")
-        await MainActor.run { [navigator, other] in
-            navigator.onOpenSearch = { completion.fulfill() }
-            HomeBridge.register(navigator)
-            HomeBridge.unregister(other)
-        }
-
-        HomeBridgeModuleImpl { _ in }.openSearch()
-
-        await fulfillment(of: [completion], timeout: 2)
     }
 
     func testNavigatorIsHeldWeakly() async {
@@ -222,8 +211,11 @@ final class HomeBridgeModuleImplTests: XCTestCase {
     }
 
     private func resetBridge() async {
-        await HomeBridge.unregister(navigator)
-        await HomeBridge.unregister(other)
+        await MainActor.run { [navigator] in
+            navigator.onOpenClip = nil
+            navigator.onOpenSearch = nil
+            HomeBridge.register(navigator)
+        }
         let module = HomeBridgeModuleImpl { _ in }
         await MainActor.run { module.ready() }
         await MainActor.run { module.invalidate() }

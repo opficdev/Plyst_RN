@@ -38,11 +38,6 @@ public enum HomeBridge {
         self.navigator = navigator
     }
 
-    /// 호스트가 자신의 등록을 해제합니다. 등록된 대상과 다른 객체이면 무시합니다.
-    public static func unregister(_ navigator: any HomeBridgeNavigator) {
-        if self.navigator === navigator { self.navigator = nil }
-    }
-
     static func openClip(
         id: UUID,
         kind: HomeBridgeClipKind

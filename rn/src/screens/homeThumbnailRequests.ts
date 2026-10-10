@@ -1,10 +1,11 @@
+const THUMBNAIL_CONCURRENCY = 2;
+
 type Options = {
   load: (clipID: string, pixels: number) => Promise<string | null>;
   onStarted: (key: string) => void;
   onLoaded: (key: string, uri: string) => void;
   onFailed: (key: string) => void;
   onCancelled: (key: string) => void;
-  concurrency?: number;
 };
 type ThumbnailRequest = {
   key: string;
@@ -19,7 +20,6 @@ export function createThumbnailRequestQueue({
   onLoaded,
   onFailed,
   onCancelled,
-  concurrency = 2,
 }: Options) {
   const requests = new Map<string, ThumbnailRequest>();
   const queued: ThumbnailRequest[] = [];
@@ -46,7 +46,7 @@ export function createThumbnailRequestQueue({
   }
 
   function start() {
-    while (!disposed && active < concurrency && queued.length !== 0) {
+    while (!disposed && active < THUMBNAIL_CONCURRENCY && queued.length !== 0) {
       const request = queued.shift()!;
       active += 1;
       onStarted(request.key);
