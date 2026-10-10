@@ -18,7 +18,9 @@ export function ClipImageCard({
 }: ClipImageCardProps) {
   return (
     <View style={styles.card}>
-      <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
+      <View style={styles.thumbnailInset}>
+        <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
+      </View>
       <View style={styles.content}>
         <Text
           style={[styles.name, name === null && styles.unnamed]}
@@ -53,6 +55,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     overflow: 'hidden',
   },
+  // margin이 정사각형 상자의 너비를 줄이지 않도록 바깥 View에 여백을 둡니다.
+  thumbnailInset: { padding: 5, paddingBottom: 0 },
   content: {
     paddingLeft: 13,
     paddingRight: spacing.card - 1,
