@@ -3,6 +3,7 @@ import { colors, radius, spacing, typography } from '../../theme';
 import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
+import { ClipCardLabel } from './Label';
 
 type ClipImageCardProps = ClipCardProps & {
   thumbnailUri: string | null;
@@ -22,13 +23,13 @@ export function ClipImageCard({
         <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
       </View>
       <View style={styles.content}>
-        <Text
+        <ClipCardLabel
           style={[styles.name, name === null && styles.unnamed]}
           numberOfLines={2}
           lineBreakStrategyIOS="standard"
         >
           {name ?? '이름 없는 이미지'}
-        </Text>
+        </ClipCardLabel>
         <View style={styles.metadataRow}>
           <Text
             style={styles.metadata}
