@@ -1,3 +1,4 @@
+import NativePlystHome from './NativePlystHome';
 import NativePlystScreen from './NativePlystScreen';
 import NativePlystClip from './NativePlystClip';
 import type { ClipRecord } from './NativePlystClip';
@@ -88,5 +89,23 @@ export function subscribeToastRequests(
 ) {
   const subscription = NativePlystToast.onToastRequest(listener);
   NativePlystToast.ready();
+  return subscription;
+}
+
+export function openClip(id: string, kind: 'text' | 'image'): void {
+  NativePlystHome.openClip(id, kind);
+}
+
+export function openSearch(): void {
+  NativePlystHome.openSearch();
+}
+
+export function subscribeSearchVisibility(
+  listener: (isVisible: boolean) => void,
+) {
+  const subscription = NativePlystHome.onSearchVisibilityChange((change) => {
+    listener(change.isVisible);
+  });
+  NativePlystHome.ready();
   return subscription;
 }

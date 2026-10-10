@@ -1,4 +1,7 @@
 import {
+  openClip,
+  openSearch,
+  subscribeSearchVisibility,
   closeScreen,
   copyClip,
   deleteClip,
@@ -15,6 +18,7 @@ import {
 } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
 
+import NativePlystHome from '../modules/plyst-bridge/src/NativePlystHome';
 import NativePlystScreen from '../modules/plyst-bridge/src/NativePlystScreen';
 import NativePlystClip from '../modules/plyst-bridge/src/NativePlystClip';
 import NativePlystToast from '../modules/plyst-bridge/src/NativePlystToast';
@@ -50,6 +54,15 @@ jest.mock('../modules/plyst-bridge/src/NativePlystScreen', () => ({
   },
 }));
 
+jest.mock('../modules/plyst-bridge/src/NativePlystHome', () => ({
+  __esModule: true,
+  default: {
+    openClip: jest.fn(),
+    openSearch: jest.fn(),
+    ready: jest.fn(),
+    onSearchVisibilityChange: jest.fn(),
+  },
+}));
 const native = jest.mocked(NativePlystClip);
 
 beforeEach(() => jest.resetAllMocks());
@@ -363,3 +376,24 @@ test.each(['E_INVALID_ID', 'E_UNAVAILABLE', 'E_IMAGE_UNAVAILABLE'])(
     await expect(getClipThumbnail('id', 240)).rejects.toBe(error);
   },
 );
+test('상세 및 검색 화면 요청과 검색 상태 구독을 전달한다', () => {
+  const home = jest.mocked(NativePlystHome);
+  for (const kind of ['text', 'image'] as const) {
+    expect(openClip('clip-id', kind)).toBeUndefined();
+    expect(home.openClip).toHaveBeenLastCalledWith('clip-id', kind);
+  }
+  expect(openSearch()).toBeUndefined();
+  expect(home.openSearch).toHaveBeenCalledWith();
+  const listener = jest.fn();
+  const subscription = { remove: jest.fn() } as unknown as ReturnType<
+    typeof home.onSearchVisibilityChange
+  >;
+  home.onSearchVisibilityChange.mockImplementation((callback) => {
+    expect(home.ready).not.toHaveBeenCalled();
+    [true, false].forEach((isVisible) => callback({ isVisible }));
+    return subscription;
+  });
+  expect(subscribeSearchVisibility(listener)).toBe(subscription);
+  expect(home.ready).toHaveBeenCalledTimes(1);
+  expect(listener.mock.calls).toEqual([[true], [false]]);
+});
