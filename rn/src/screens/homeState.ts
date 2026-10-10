@@ -12,6 +12,10 @@ export type HomeState = {
   loadingThumbnails: Record<string, true>;
   failedThumbnails: Record<string, true>;
   isSearchVisible: boolean;
+  isSaving: boolean;
+  menuClip: ClipRecord | null;
+  isMenuVisible: boolean;
+  isDeleteConfirmVisible: boolean;
 };
 export function initialState(now: number): HomeState {
   return {
@@ -24,9 +28,19 @@ export function initialState(now: number): HomeState {
     loadingThumbnails: {},
     failedThumbnails: {},
     isSearchVisible: false,
+    isSaving: false,
+    menuClip: null,
+    isMenuVisible: false,
+    isDeleteConfirmVisible: false,
   };
 }
 export type HomeAction =
+  | { type: 'savingStarted' }
+  | { type: 'savingStopped' }
+  | { type: 'menuShown'; clip: ClipRecord }
+  | { type: 'menuClosed' }
+  | { type: 'deleteConfirmShown'; clip: ClipRecord }
+  | { type: 'deleteConfirmClosed' }
   | { type: 'clipsLoaded'; clips: ClipRecord[]; now: number }
   | { type: 'loadFailed' }
   | { type: 'timeChanged'; now: number }
@@ -42,6 +56,11 @@ function clipID(key: string): string {
 }
 
 export function reduce(state: HomeState, action: HomeAction): HomeState {
+  if (
+    action.type === 'menuShown' &&
+    (state.isMenuVisible || state.isDeleteConfirmVisible)
+  )
+    return state;
   if (action.type === 'filterSelected' && state.filter === action.filter)
     return state;
   const next = {
@@ -52,6 +71,26 @@ export function reduce(state: HomeState, action: HomeAction): HomeState {
     failedThumbnails: { ...state.failedThumbnails },
   };
   switch (action.type) {
+    case 'savingStarted':
+      next.isSaving = true;
+      break;
+    case 'savingStopped':
+      next.isSaving = false;
+      break;
+    case 'menuShown':
+      next.menuClip = action.clip;
+      next.isMenuVisible = true;
+      break;
+    case 'menuClosed':
+      next.isMenuVisible = false;
+      break;
+    case 'deleteConfirmShown':
+      next.menuClip = action.clip;
+      next.isDeleteConfirmVisible = true;
+      break;
+    case 'deleteConfirmClosed':
+      next.isDeleteConfirmVisible = false;
+      break;
     case 'clipsLoaded': {
       next.clips = action.clips;
       next.now = action.now;
