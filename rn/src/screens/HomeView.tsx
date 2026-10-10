@@ -14,7 +14,12 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import type { ClipRecord } from 'plyst-bridge';
-import { openClip, openSearch, updateClip } from 'plyst-bridge';
+import {
+  openClip,
+  openSearch,
+  subscribeClipboardSaveRequests,
+  updateClip,
+} from 'plyst-bridge';
 import {
   ActionSheet,
   showToast,
@@ -158,6 +163,17 @@ function HomeContent() {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [headerHeight, setHeaderHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const saveRef = useRef(save);
+  useLayoutEffect(() => {
+    saveRef.current = save;
+  });
+  // useHomeClips의 ready()가 보관된 요청을 전달하기 전에 저장 요청 리스너를 등록해야 합니다.
+  useEffect(() => {
+    const subscription = subscribeClipboardSaveRequests(() => {
+      void saveRef.current();
+    });
+    return () => subscription.remove();
+  }, []);
   useHomeClips(dispatch);
   const dates = useMemo(
     () => state.clips.map((clip) => clip.createdAt),
