@@ -3,6 +3,7 @@ import { colors, radius, spacing, typography } from '../../theme';
 import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
+import { ClipCardLabel } from './Label';
 
 type ClipImageCardProps = ClipCardProps & {
   thumbnailUri: string | null;
@@ -14,27 +15,34 @@ export function ClipImageCard({
   thumbnailUri,
   isThumbnailFailed,
   onCopyButtonPress,
+  onCopyButtonLongPress,
 }: ClipImageCardProps) {
   return (
     <View style={styles.card}>
-      <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
+      <View style={styles.thumbnailInset}>
+        <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
+      </View>
       <View style={styles.content}>
-        <Text
+        <ClipCardLabel
           style={[styles.name, name === null && styles.unnamed]}
           numberOfLines={2}
           lineBreakStrategyIOS="standard"
         >
           {name ?? '이름 없는 이미지'}
-        </Text>
+        </ClipCardLabel>
         <View style={styles.metadataRow}>
           <Text
             style={styles.metadata}
             numberOfLines={onCopyButtonPress ? 2 : 1}
+            lineBreakStrategyIOS="hangul-word"
           >
             {metadata}
           </Text>
           {onCopyButtonPress && (
-            <CopyButton onCopyButtonPress={onCopyButtonPress} />
+            <CopyButton
+              onCopyButtonPress={onCopyButtonPress}
+              onCopyButtonLongPress={onCopyButtonLongPress}
+            />
           )}
         </View>
       </View>
@@ -49,6 +57,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     overflow: 'hidden',
   },
+  // margin이 정사각형 상자의 너비를 줄이지 않도록 바깥 View에 여백을 둡니다.
+  thumbnailInset: { padding: 5, paddingBottom: 0 },
   content: {
     paddingLeft: 13,
     paddingRight: spacing.card - 1,

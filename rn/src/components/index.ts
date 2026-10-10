@@ -14,3 +14,4 @@ export { ActionSheet } from './ActionSheet';
 export type { ActionSheetProps } from './ActionSheet';
 export { Toast, ToastHost, showToast } from './Toast';
 export type { ToastProps } from './Toast';
+export { HomeSaveBar } from './Home';

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme';
 import type { ClipCardProps } from './CardProps';
 import { CopyButton } from './CopyButton';
+import { ClipCardLabel } from './Label';
 
 type ClipTextCardProps = ClipCardProps & { body: string; isWebLink: boolean };
 export function ClipTextCard({
@@ -11,6 +12,7 @@ export function ClipTextCard({
   body,
   isWebLink,
   onCopyButtonPress,
+  onCopyButtonLongPress,
 }: ClipTextCardProps) {
   return (
     <View style={styles.card}>
@@ -20,15 +22,15 @@ export function ClipTextCard({
         <Text style={styles.quote}>“</Text>
       )}
       {name !== null && (
-        <Text
+        <ClipCardLabel
           style={styles.name}
           numberOfLines={2}
           lineBreakStrategyIOS="standard"
         >
           {name}
-        </Text>
+        </ClipCardLabel>
       )}
-      <Text
+      <ClipCardLabel
         style={[
           styles.body,
           name === null ? styles.unnamedBody : styles.namedBody,
@@ -37,13 +39,20 @@ export function ClipTextCard({
         lineBreakStrategyIOS="standard"
       >
         {body}
-      </Text>
+      </ClipCardLabel>
       <View style={styles.metadataRow}>
-        <Text style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1}>
+        <Text
+          style={styles.metadata}
+          numberOfLines={onCopyButtonPress ? 2 : 1}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {metadata}
         </Text>
         {onCopyButtonPress && (
-          <CopyButton onCopyButtonPress={onCopyButtonPress} />
+          <CopyButton
+            onCopyButtonPress={onCopyButtonPress}
+            onCopyButtonLongPress={onCopyButtonLongPress}
+          />
         )}
       </View>
     </View>

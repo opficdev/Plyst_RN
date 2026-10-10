@@ -9,6 +9,7 @@ const clip: ClipRecord = {
   id: 'clip-id',
   text: null,
   characterCount: 0,
+  textPrefix: null,
   isWebLink: false,
   image: {
     contentType: 'public.png',

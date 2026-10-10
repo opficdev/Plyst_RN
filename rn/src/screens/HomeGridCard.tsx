@@ -3,6 +3,8 @@ import type { Ref } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { ViewProps } from 'react-native';
 
+import { clipCardLongPressDelay } from '../components/ClipCard';
+
 const leftColumn = createContext(true);
 
 // 항목 순번 대신 실제 열 위치를 사용합니다. 전체 너비 항목에는 여백을 적용하지 않습니다.
@@ -24,14 +26,22 @@ export function HomeListCell({
 export function HomeGridCard({
   children,
   onPress,
+  onShowMenu,
 }: {
   children: React.ReactNode;
   onPress: () => void;
+  onShowMenu: () => void;
 }) {
   const isLeft = useContext(leftColumn);
   return (
     <View style={[styles.card, isLeft ? styles.leftCard : styles.rightCard]}>
-      <Pressable onPress={onPress}>{children}</Pressable>
+      <Pressable
+        onPress={onPress}
+        onLongPress={onShowMenu}
+        delayLongPress={clipCardLongPressDelay}
+      >
+        {children}
+      </Pressable>
     </View>
   );
 }

@@ -10,6 +10,7 @@ const clip: ClipRecord = {
   id: 'image',
   text: null,
   characterCount: 0,
+  textPrefix: null,
   isWebLink: false,
   image: {
     byteCountText: '1 KB',
@@ -51,6 +52,10 @@ test('초기 상태는 지정한 시각과 빈 목록 및 캐시를 가진다', 
     loadingThumbnails: {},
     failedThumbnails: {},
     isSearchVisible: false,
+    isSaving: false,
+    menuClip: null,
+    isMenuVisible: false,
+    isDeleteConfirmVisible: false,
   });
   const first = initialState(1000);
   first.thumbnailOrder.push(key);
@@ -105,7 +110,7 @@ test('시작된 이미지 요청만 캐시에 넣고 로딩 상태를 지운다'
 
 test.each<{ clips: ClipRecord[] }>([
   { clips: [] },
-  { clips: [{ ...clip, image: null, text: '원문' }] },
+  { clips: [{ ...clip, image: null, text: '원문', textPrefix: '원문' }] },
 ])('이미지가 사라진 응답은 로딩 표시만 지운다', ({ clips }) => {
   const state = {
     ...loaded(),
@@ -192,7 +197,10 @@ test('목록 갱신은 이미지로 남아 있는 클립의 모든 크기만 보
     },
     failedThumbnails: { 'image:400': true, 'gone:400': true, 'text:400': true },
   };
-  const clips = [clip, { ...clip, id: 'text', image: null, text: '원문' }];
+  const clips = [
+    clip,
+    { ...clip, id: 'text', image: null, text: '원문', textPrefix: '원문' },
+  ];
   expect(reduce(state, { type: 'clipsLoaded', clips, now: 5000 })).toEqual({
     ...state,
     clips,
@@ -222,6 +230,12 @@ test('취소 후 도착한 성공 응답은 캐시에 넣지 않는다', () => {
 });
 
 test.each<HomeAction>([
+  { type: 'savingStarted' },
+  { type: 'savingStopped' },
+  { type: 'menuShown', clip },
+  { type: 'menuClosed' },
+  { type: 'deleteConfirmShown', clip },
+  { type: 'deleteConfirmClosed' },
   { type: 'clipsLoaded', clips: [clip], now: 3000 },
   { type: 'loadFailed' },
   { type: 'timeChanged', now: 3000 },
@@ -243,4 +257,46 @@ test.each<HomeAction>([
   Object.freeze(state);
   reduce(state, Object.freeze(action));
   expect(state).toEqual(before);
+});
+
+test('저장 시작과 종료는 저장 상태만 변경한다', () => {
+  const state = loaded();
+  const saving = reduce(state, { type: 'savingStarted' });
+  expect(saving).toEqual({ ...state, isSaving: true });
+  expect(reduce(saving, { type: 'savingStarted' })).toEqual(saving);
+  expect(reduce(saving, { type: 'savingStopped' })).toEqual(state);
+});
+
+test('메뉴와 삭제 확인을 취소해도 클립은 바뀌지 않는다', () => {
+  const state = loaded();
+  const menu = reduce(state, { type: 'menuShown', clip });
+  expect(menu).toEqual({ ...state, menuClip: clip, isMenuVisible: true });
+  const closed = reduce(menu, { type: 'menuClosed' });
+  expect(closed).toEqual({ ...menu, isMenuVisible: false });
+  expect(closed.clips).toBe(state.clips);
+  expect(closed.menuClip).toBe(clip);
+  const confirmation = reduce(closed, { type: 'deleteConfirmShown', clip });
+  expect(confirmation).toEqual({ ...closed, isDeleteConfirmVisible: true });
+  const cancelled = reduce(confirmation, { type: 'deleteConfirmClosed' });
+  expect(cancelled).toEqual(closed);
+  expect(cancelled.clips).toBe(state.clips);
+});
+
+test('열린 메뉴와 삭제 확인 위에 새 메뉴를 열지 않는다', () => {
+  const menu = reduce(loaded(), { type: 'menuShown', clip });
+  const action = { type: 'menuShown', clip: { ...clip, id: 'other' } } as const;
+  expect(reduce(menu, action)).toBe(menu);
+  const confirmation = reduce(reduce(menu, { type: 'menuClosed' }), {
+    type: 'deleteConfirmShown',
+    clip,
+  });
+  expect(reduce(confirmation, action)).toBe(confirmation);
+});
+
+test('목록에서 삭제되어도 시트가 닫히는 동안 메뉴 내용은 유지한다', () => {
+  const menu = reduce(loaded(), { type: 'menuShown', clip });
+  const refreshed = reduce(menu, { type: 'clipsLoaded', clips: [], now: 3000 });
+  expect(refreshed.menuClip).toBe(clip);
+  expect(refreshed.isMenuVisible).toBe(true);
+  expect(refreshed.clips).toEqual([]);
 });

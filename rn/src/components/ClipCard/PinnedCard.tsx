@@ -47,7 +47,10 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
         </Text>
       </View>
       {props.onCopyButtonPress && (
-        <CopyButton onCopyButtonPress={props.onCopyButtonPress} />
+        <CopyButton
+          onCopyButtonPress={props.onCopyButtonPress}
+          onCopyButtonLongPress={props.onCopyButtonLongPress}
+        />
       )}
     </View>
   );

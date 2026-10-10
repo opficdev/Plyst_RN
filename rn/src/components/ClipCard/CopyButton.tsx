@@ -1,14 +1,22 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet } from 'react-native';
+import { clipCardLongPressDelay } from './longPressDelay';
 import { colors } from '../../theme';
 
 export function CopyButton({
   onCopyButtonPress,
+  onCopyButtonLongPress,
 }: {
   onCopyButtonPress: () => void;
+  onCopyButtonLongPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.copyButton} onPress={onCopyButtonPress}>
+    <Pressable
+      style={styles.copyButton}
+      onPress={onCopyButtonPress}
+      onLongPress={onCopyButtonLongPress}
+      delayLongPress={clipCardLongPressDelay}
+    >
       <Image source="sf:doc.on.doc" contentFit="contain" style={styles.icon} />
     </Pressable>
   );

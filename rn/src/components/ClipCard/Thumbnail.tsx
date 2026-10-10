@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardBox: { aspectRatio: 1, borderRadius: 13, margin: 5, marginBottom: 0 },
+  cardBox: { aspectRatio: 1, borderRadius: 13 },
   pinnedBox: { width: 56, height: 56, borderRadius: 10, flexShrink: 0 },
   imageView: { ...StyleSheet.absoluteFill },
   hidden: { opacity: 0 },

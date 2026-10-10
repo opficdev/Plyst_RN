@@ -102,6 +102,25 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
     }
 
+    func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult {
+        do {
+            switch try await clipboard.saveCurrentClipboard() {
+            case .saved: return .saved
+            case .savedWithPendingCleanup:
+                Task { [images] in _ = try? await images.recoverPendingCleanup() }
+                return .saved
+            case .empty: return .empty
+            case .unsupported: return .unsupported
+            case .accessFailed: return .accessFailed
+            case .invalidImage: return .invalidImage
+            }
+        } catch let error as CancellationError {
+            throw error
+        } catch {
+            throw ClipBridgeError.saveFailed
+        }
+    }
+
     func copyClip(id: UUID) async throws -> ClipBridgeCopyResult? {
         do {
             switch try await clipboard.copy(id: id) {

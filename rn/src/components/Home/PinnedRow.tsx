@@ -1,13 +1,14 @@
 import type { ComponentProps } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../../theme';
-import { ClipPinnedCard } from '../ClipCard';
+import { ClipPinnedCard, clipCardLongPressDelay } from '../ClipCard';
 
 type HomePinnedRowProps = {
   // 원본 configure(clips:)와 HomePinnedRowViewAction.select의 이름을 유지한다.
   clips: (ComponentProps<typeof ClipPinnedCard> & {
     id: string;
     onSelect: () => void;
+    onShowMenu: () => void;
   })[];
   onViewableIdsChange: (ids: string[]) => void;
 };
@@ -40,8 +41,12 @@ export function HomePinnedRow({
           onViewableIdsChange(viewableItems.map(({ item }) => item.id))
         }
         renderItem={({ item }) => (
-          <Pressable onPress={item.onSelect}>
-            <ClipPinnedCard {...item} />
+          <Pressable
+            onPress={item.onSelect}
+            onLongPress={item.onShowMenu}
+            delayLongPress={clipCardLongPressDelay}
+          >
+            <ClipPinnedCard {...item} onCopyButtonLongPress={item.onShowMenu} />
           </Pressable>
         )}
       />
@@ -50,7 +55,10 @@ export function HomePinnedRow({
 }
 
 const styles = StyleSheet.create({
-  container: { paddingTop: spacing.screen, paddingBottom: spacing.detail },
+  container: {
+    paddingTop: spacing.screen,
+    paddingBottom: spacing.detail + 0.6667, // 원본의 레이블 높이 올림에 따른 행 높이를 맞춘다.
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -60,6 +68,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.sectionLabel,
+    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영한다.
     color: colors.SecondaryText,
     flexShrink: 1,
   },
