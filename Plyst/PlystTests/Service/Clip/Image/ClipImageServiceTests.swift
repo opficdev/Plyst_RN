@@ -26,9 +26,10 @@ final class ClipImageServiceTests: XCTestCase {
         let service = ClipImageService(storage: storage, files: files)
         let result = try await service.saveImage(data, name: "이름", memo: "메모", isPinned: true)
         XCTAssertEqual(result.cleanup, .completed)
-        let reopened = ClipImageService(storage: try makeStorage(), files: try ClipImageFileStore(rootURL: root))
-        let restored = try await reopened.loadImage(id: result.value.id)
-        let clip = try await storage.fetch(id: result.value.id)
+        let reopenedStorage = try makeStorage()
+        let reopened = ClipImageService(storage: reopenedStorage, files: try ClipImageFileStore(rootURL: root))
+        let clip = try await reopenedStorage.fetch(id: result.value.id)
+        let restored = try await reopened.loadImage(image(in: XCTUnwrap(clip)))
         XCTAssertEqual(restored, data)
         XCTAssertEqual(clip, result.value)
         XCTAssertEqual(clip?.name, "이름")
@@ -48,7 +49,8 @@ final class ClipImageServiceTests: XCTestCase {
             XCTFail("중복 식별자 저장 성공")
         } catch { XCTAssertEqual(error as? ClipStorageError, .duplicateID(result.value.id)) }
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path).count, 1)
-        let original = try await service.loadImage(id: result.value.id)
+        let clip = try await storage.fetch(id: result.value.id)
+        let original = try await service.loadImage(image(in: XCTUnwrap(clip)))
         XCTAssertEqual(original, data)
         _ = try await service.delete(id: result.value.id)
         await assertEvents(stream, expected: [.deleted(result.value.id)])
@@ -73,8 +75,7 @@ final class ClipImageServiceTests: XCTestCase {
 
     func testRejectedDeletionPreservesClipOriginalAndEvents() async throws {
         let spy = ClipImageStorageServiceSpy(storage: try makeStorage())
-        let files = try ClipImageFileStore(rootURL: root)
-        let service = ClipImageService(storage: spy, files: files)
+        let service = ClipImageService(storage: spy, files: try ClipImageFileStore(rootURL: root))
         let data = try ClipImageTestFixture.data()
         let result = try await service.saveImage(data)
         let stream = await spy.changes()
@@ -84,7 +85,7 @@ final class ClipImageServiceTests: XCTestCase {
             XCTFail("실패하도록 설정한 삭제 성공")
         } catch { XCTAssertEqual(error as? ClipStorageError, .writeFailed) }
         let preserved = try await spy.fetch(id: result.value.id)
-        let original = try await service.loadImage(id: result.value.id)
+        let original = try await service.loadImage(image(in: XCTUnwrap(preserved)))
         XCTAssertEqual(preserved, result.value)
         XCTAssertEqual(original, data)
         let sentinel = Clip(content: .text("검증"))
@@ -276,7 +277,7 @@ final class ClipImageServiceTests: XCTestCase {
         try await storage.insert(clip)
         let service = ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
         do {
-            _ = try await service.loadImage(id: clip.id)
+            _ = try await service.loadImage(metadata)
             XCTFail("없는 원본 불러오기 성공")
         } catch { XCTAssertEqual(error as? ClipImageFileError, .notFound(metadata.fileID)) }
         let preserved = try await storage.fetch(id: clip.id)
@@ -310,8 +311,7 @@ final class ClipImageServiceTests: XCTestCase {
 
     func testCancelledSaveDoesNotCreateAnOriginalOrMetadata() async throws {
         let storage = try makeStorage()
-        let files = try ClipImageFileStore(rootURL: root)
-        let service = ClipImageService(storage: storage, files: files)
+        let service = ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
         let data = try ClipImageTestFixture.data()
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }

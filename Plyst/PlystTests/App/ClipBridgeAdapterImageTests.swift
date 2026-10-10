@@ -30,7 +30,9 @@ final class ClipBridgeAdapterImageTests: XCTestCase {
         XCTAssertTrue(url.isFileURL)
         XCTAssertEqual(url.lastPathComponent, "preview")
         XCTAssertFalse(try Data(contentsOf: url).isEmpty)
-        let original = try await adapter.images.loadImage(id: clip.id)
+        let stored = try await adapter.storage.fetch(id: clip.id)
+        guard case .image(let image) = try XCTUnwrap(stored).content else { return XCTFail("이미지가 아닙니다.") }
+        let original = try await adapter.images.loadImage(image)
         XCTAssertEqual(original, data)
         let missing = try await adapter.getClipImagePreview(id: UUID())
         XCTAssertNil(missing)
@@ -65,7 +67,9 @@ final class ClipBridgeAdapterImageTests: XCTestCase {
         XCTAssertTrue(url.isFileURL)
         XCTAssertEqual(url.lastPathComponent, "thumbnail-2")
         XCTAssertFalse(try Data(contentsOf: url).isEmpty)
-        let original = try await adapter.images.loadImage(id: clip.id)
+        let stored = try await adapter.storage.fetch(id: clip.id)
+        guard case .image(let image) = try XCTUnwrap(stored).content else { return XCTFail("이미지가 아닙니다.") }
+        let original = try await adapter.images.loadImage(image)
         XCTAssertEqual(original, data)
         let missing = try await adapter.getClipThumbnail(id: UUID(), maximumPixelDimension: 2)
         XCTAssertNil(missing)

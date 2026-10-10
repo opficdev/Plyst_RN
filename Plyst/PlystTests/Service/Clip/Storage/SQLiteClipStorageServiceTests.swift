@@ -71,7 +71,7 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         await assertError(.notFound(clip.id)) { try await storage.delete(id: clip.id) }
     }
 
-    func testStoredDatesPreserveBothDeterministicSortOrders() async throws {
+    func testStoredDatesPreserveDeterministicCreationOrder() async throws {
         let first = makeClip(id: 1, createdAt: 300, lastUsedAt: 400)
         let second = makeClip(id: 2, createdAt: 300, lastUsedAt: 400)
         let recent = makeClip(id: 3, createdAt: 100, lastUsedAt: 500)
@@ -79,9 +79,7 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         for clip in [unused, second, recent, first] { try await storage.insert(clip) }
         let created = try await storage.fetchAll(order: .createdAt)
-        let used = try await storage.fetchAll(order: .lastUsedAt)
         XCTAssertEqual(created, [unused, first, second, recent])
-        XCTAssertEqual(used, [recent, first, second, unused])
     }
 
     func testAllSubscribersReceiveChangesInCommitOrderWithoutReplay() async throws {

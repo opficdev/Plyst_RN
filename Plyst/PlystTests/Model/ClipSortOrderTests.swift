@@ -20,20 +20,6 @@ final class ClipSortOrderTests: XCTestCase {
         XCTAssertEqual(ClipSortOrder.createdAt.sorted([first, older, second]), [first, second, older])
     }
 
-    func testUsageOrderPlacesUnusedClipsLastAndBreaksTiesDeterministically() {
-        let recent = makeClip(id: 1, createdAt: 100, lastUsedAt: 500)
-        let firstTie = makeClip(id: 2, createdAt: 300, lastUsedAt: 400)
-        let secondTie = makeClip(id: 3, createdAt: 300, lastUsedAt: 400)
-        let olderTie = makeClip(id: 4, createdAt: 200, lastUsedAt: 400)
-        let unused = makeClip(id: 5, createdAt: 600)
-        let olderUnused = makeClip(id: 6, createdAt: 550)
-        let clips = [olderUnused, olderTie, secondTie, unused, firstTie, recent]
-        let expected = [recent, firstTie, secondTie, olderTie, unused, olderUnused]
-
-        XCTAssertEqual(ClipSortOrder.lastUsedAt.sorted(clips), expected)
-        XCTAssertEqual(ClipSortOrder.lastUsedAt.sorted(Array(clips.reversed())), expected)
-    }
-
     private func makeClip(id: UInt8, createdAt: TimeInterval, lastUsedAt: TimeInterval? = nil) -> Clip {
         Clip(
             id: UUID(uuid: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, id)),
