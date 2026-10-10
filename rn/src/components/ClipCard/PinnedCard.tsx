@@ -5,9 +5,14 @@ import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
 
-type ClipPinnedCardProps = ClipCardProps & { onCopyButtonPress: () => void } & (
+type ClipPinnedCardProps = ClipCardProps &
+  (
     | { kind: 'text'; body: string; isWebLink: boolean }
-    | { kind: 'image'; thumbnailUri: string | null }
+    | {
+        kind: 'image';
+        thumbnailUri: string | null;
+        isThumbnailFailed?: boolean;
+      }
   );
 export function ClipPinnedCard(props: ClipPinnedCardProps) {
   const name =
@@ -15,7 +20,11 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
   return (
     <View style={styles.card}>
       {props.kind === 'image' ? (
-        <ClipThumbnail uri={props.thumbnailUri} isPinned />
+        <ClipThumbnail
+          uri={props.thumbnailUri}
+          isFailed={props.isThumbnailFailed}
+          isPinned
+        />
       ) : (
         <View style={styles.visualBox}>
           {props.isWebLink ? (
@@ -37,7 +46,9 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
           {props.metadata}
         </Text>
       </View>
-      <CopyButton onCopyButtonPress={props.onCopyButtonPress} />
+      {props.onCopyButtonPress && (
+        <CopyButton onCopyButtonPress={props.onCopyButtonPress} />
+      )}
     </View>
   );
 }
