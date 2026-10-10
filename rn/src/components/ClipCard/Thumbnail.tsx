@@ -3,15 +3,27 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { colors } from '../../theme';
 
-type ClipThumbnailProps = { uri: string | null; isPinned?: boolean };
+type ClipThumbnailProps = {
+  uri: string | null;
+  isPinned?: boolean;
+  isFailed?: boolean;
+};
 type ThumbnailState = {
   uri: string | null;
   phase: 'pending' | 'loaded' | 'failed';
 };
 
-export function ClipThumbnail({ uri, isPinned = false }: ClipThumbnailProps) {
+export function ClipThumbnail({
+  uri,
+  isPinned = false,
+  isFailed = false,
+}: ClipThumbnailProps) {
   const [state, setState] = useState<ThumbnailState>({ uri, phase: 'pending' });
-  const phase = state.uri === uri ? state.phase : 'pending';
+  const phase = isFailed
+    ? 'failed'
+    : state.uri === uri
+      ? state.phase
+      : 'pending';
   return (
     <View
       style={[styles.imageBox, isPinned ? styles.pinnedBox : styles.cardBox]}

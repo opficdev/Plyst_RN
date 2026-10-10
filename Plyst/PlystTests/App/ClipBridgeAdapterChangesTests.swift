@@ -25,6 +25,8 @@ final class ClipBridgeAdapterChangesTests: XCTestCase {
         let storage = try makeStorage()
         let adapter = try makeAdapter(storage: storage)
         let stream = await adapter.changes()
+        let inserted = expectation(description: "삽입 매핑")
+        inserted.assertForOverFulfill = true
         let updated = expectation(description: "갱신 매핑")
         let deleted = expectation(description: "삭제 매핑")
         updated.assertForOverFulfill = true
@@ -34,6 +36,7 @@ final class ClipBridgeAdapterChangesTests: XCTestCase {
             for await change in stream {
                 XCTAssertEqual(change.id, clip.id)
                 switch change.kind {
+                case .inserted: inserted.fulfill()
                 case .updated: updated.fulfill()
                 case .deleted: deleted.fulfill()
                 @unknown default:
@@ -51,7 +54,7 @@ final class ClipBridgeAdapterChangesTests: XCTestCase {
         ))
         try await storage.delete(id: clip.id)
 
-        await fulfillment(of: [updated, deleted], timeout: 2, enforceOrder: true)
+        await fulfillment(of: [inserted, updated, deleted], timeout: 2, enforceOrder: true)
         task.cancel()
         await task.value
     }

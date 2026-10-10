@@ -8,6 +8,7 @@ const clip: ClipRecord = {
   id: 'clip-id',
   text: '원문',
   characterCount: 2,
+  isWebLink: false,
   image: null,
   name: null,
   memo: null,
@@ -20,7 +21,10 @@ beforeEach(() => jest.resetAllMocks());
 
 test('텍스트 클립을 반환한다', async () => {
   getClipMock.mockResolvedValue(clip);
-  await expect(loadTextDetail(clip.id)).resolves.toEqual({ status: 'loaded', clip });
+  await expect(loadTextDetail(clip.id)).resolves.toEqual({
+    status: 'loaded',
+    clip,
+  });
   expect(getClipMock).toHaveBeenCalledWith(clip.id);
   expect(getClipMock).toHaveBeenCalledTimes(1);
 });

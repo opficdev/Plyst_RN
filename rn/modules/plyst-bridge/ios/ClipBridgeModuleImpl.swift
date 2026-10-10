@@ -45,6 +45,20 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(getClips:)
+    public nonisolated func getClips(completion: @escaping @Sendable (NSArray?, String?) -> Void) {
+        execute(
+            fallback: .readFailed,
+            operation: {
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                return try await provider.clips()
+            },
+            completion: { records, code in
+                completion(records.map { $0.map(Self.dictionary) as NSArray }, code)
+            }
+        )
+    }
+
     @objc(updateClip:name:memo:isPinned:completion:)
     public nonisolated func updateClip(
         _ identifier: String,
@@ -118,6 +132,26 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(getClipThumbnail:maximumPixelDimension:completion:)
+    public nonisolated func getClipThumbnail(
+        _ identifier: String,
+        maximumPixelDimension: Double,
+        completion: @escaping @Sendable (String?, String?) -> Void
+    ) {
+        guard let dimension = Int(exactly: maximumPixelDimension), 0 < dimension else {
+            completion(nil, ClipBridgeError.imageUnavailable.code)
+            return
+        }
+        execute(
+            identifier,
+            fallback: .imageUnavailable,
+            operation: { provider, id in
+                try await provider.getClipThumbnail(id: id, maximumPixelDimension: dimension)
+            },
+            completion: completion
+        )
+    }
+
     @objc(saveClipImageToPhotos:completion:)
     public nonisolated func saveClipImageToPhotos(
         _ identifier: String,
@@ -151,15 +185,29 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         operation: @escaping @MainActor @Sendable (any ClipBridgeProvider, UUID) async throws -> Value?,
         completion: @escaping @MainActor @Sendable (Value?, String?) -> Void
     ) {
+        execute(
+            fallback: fallback,
+            operation: {
+                guard let id = UUID(uuidString: identifier) else { throw ClipBridgeError.invalidID }
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                return try await operation(provider, id)
+            },
+            completion: completion
+        )
+    }
+
+    private nonisolated func execute<Value: Sendable>(
+        fallback: ClipBridgeError,
+        operation: @escaping @MainActor @Sendable () async throws -> Value?,
+        completion: @escaping @MainActor @Sendable (Value?, String?) -> Void
+    ) {
         Task { @MainActor in
             guard !isInvalidated else { return }
             let request = UUID()
             tasks[request] = Task { @MainActor in
                 defer { tasks[request] = nil }
                 do {
-                    guard let id = UUID(uuidString: identifier) else { throw ClipBridgeError.invalidID }
-                    guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                    let value = try await operation(provider, id)
+                    let value = try await operation()
                     guard !isInvalidated, !Task.isCancelled else { return }
                     completion(value, nil)
                 } catch {
@@ -187,6 +235,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
             "name": record.name as Any? ?? NSNull(),
             "memo": record.memo as Any? ?? NSNull(),
             "isPinned": record.isPinned,
+            "isWebLink": record.isWebLink,
             "createdAt": record.createdAt,
             "lastUsedAt": record.lastUsedAt as Any? ?? NSNull()
         ] as NSDictionary

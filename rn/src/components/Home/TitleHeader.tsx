@@ -4,8 +4,10 @@ import { colors, spacing } from '../../theme';
 
 export function HomeTitleHeader({
   onSearchButtonPress,
+  isSearchButtonHidden = false,
 }: {
   onSearchButtonPress: () => void;
+  isSearchButtonHidden?: boolean;
 }) {
   return (
     <View style={styles.container}>
@@ -17,7 +19,11 @@ export function HomeTitleHeader({
       <Text style={styles.title} numberOfLines={1}>
         Plyst
       </Text>
-      <Pressable style={styles.searchButton} onPress={onSearchButtonPress}>
+      <Pressable
+        style={[styles.searchButton, isSearchButtonHidden && styles.hidden]}
+        disabled={isSearchButtonHidden}
+        onPress={onSearchButtonPress}
+      >
         <Image
           source="sf:magnifyingglass"
           contentFit="contain"
@@ -51,6 +57,7 @@ const styles = StyleSheet.create({
     color: colors.PrimaryText,
     flexShrink: 1,
   },
+  hidden: { opacity: 0 },
   searchButton: {
     marginLeft: 'auto',
     width: 44,

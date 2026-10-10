@@ -1,3 +1,4 @@
+import NativePlystHome from './NativePlystHome';
 import NativePlystScreen from './NativePlystScreen';
 import NativePlystClip from './NativePlystClip';
 import type { ClipRecord } from './NativePlystClip';
@@ -8,7 +9,7 @@ export type { ClipImageRecord, ClipRecord } from './NativePlystClip';
 export type { ToastRequest } from './NativePlystToast';
 
 export type ClipChange = {
-  kind: 'updated' | 'deleted';
+  kind: 'inserted' | 'updated' | 'deleted';
   id: string;
 };
 
@@ -31,8 +32,19 @@ export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }
 
+export function getClips(): Promise<ClipRecord[]> {
+  return NativePlystClip.getClips();
+}
+
 export function getClipImagePreview(id: string): Promise<string | null> {
   return NativePlystClip.getClipImagePreview(id);
+}
+
+export function getClipThumbnail(
+  id: string,
+  maximumPixelDimension: number,
+): Promise<string | null> {
+  return NativePlystClip.getClipThumbnail(id, maximumPixelDimension);
 }
 
 export type ClipPhotoSaveResult = 'saved' | 'denied' | 'restricted';
@@ -77,5 +89,23 @@ export function subscribeToastRequests(
 ) {
   const subscription = NativePlystToast.onToastRequest(listener);
   NativePlystToast.ready();
+  return subscription;
+}
+
+export function openClip(id: string, kind: 'text' | 'image'): void {
+  NativePlystHome.openClip(id, kind);
+}
+
+export function openSearch(): void {
+  NativePlystHome.openSearch();
+}
+
+export function subscribeSearchVisibility(
+  listener: (isVisible: boolean) => void,
+) {
+  const subscription = NativePlystHome.onSearchVisibilityChange((change) => {
+    listener(change.isVisible);
+  });
+  NativePlystHome.ready();
   return subscription;
 }

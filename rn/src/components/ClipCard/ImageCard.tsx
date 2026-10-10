@@ -4,16 +4,20 @@ import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
 
-type ClipImageCardProps = ClipCardProps & { thumbnailUri: string | null };
+type ClipImageCardProps = ClipCardProps & {
+  thumbnailUri: string | null;
+  isThumbnailFailed?: boolean;
+};
 export function ClipImageCard({
   name,
   metadata,
   thumbnailUri,
+  isThumbnailFailed,
   onCopyButtonPress,
 }: ClipImageCardProps) {
   return (
     <View style={styles.card}>
-      <ClipThumbnail uri={thumbnailUri} />
+      <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
       <View style={styles.content}>
         <Text
           style={[styles.name, name === null && styles.unnamed]}

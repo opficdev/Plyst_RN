@@ -21,11 +21,13 @@ final class ClipBridgeChangeTests: XCTestCase {
 
     func testProviderChangesEmitAfterReady() async {
         let id = UUID()
+        let inserted = expectation(description: "삽입 전송")
         let updated = expectation(description: "갱신 전송")
         let deleted = expectation(description: "삭제 전송")
         let module = ClipBridgeModuleImpl { kind, identifier in
             XCTAssertEqual(identifier, id.uuidString)
             switch kind {
+            case "inserted": inserted.fulfill()
             case "updated": updated.fulfill()
             case "deleted": deleted.fulfill()
             default: XCTFail("예상하지 못한 변경입니다.")
@@ -36,10 +38,11 @@ final class ClipBridgeChangeTests: XCTestCase {
         await MainActor.run { module.ready() }
         await MainActor.run {}
 
+        stub.continuation.yield(ClipBridgeChange(kind: .inserted, id: id))
         stub.continuation.yield(ClipBridgeChange(kind: .updated, id: id))
         stub.continuation.yield(ClipBridgeChange(kind: .deleted, id: id))
 
-        await fulfillment(of: [updated, deleted], timeout: 2, enforceOrder: true)
+        await fulfillment(of: [inserted, updated, deleted], timeout: 2, enforceOrder: true)
     }
 
     func testChangesBeforeReadyAreDiscarded() async {
@@ -144,11 +147,17 @@ private struct ClipBridgeChangeProviderStub: ClipBridgeProvider {
     var continuation: AsyncStream<ClipBridgeChange>.Continuation { pair.continuation }
 
     func changes() async -> AsyncStream<ClipBridgeChange> { pair.stream }
+    func getClipThumbnail(
+        id: UUID,
+        maximumPixelDimension: Int
+    ) async throws -> String? { nil }
+
     func getClipImagePreview(id: UUID) async throws -> String? { nil }
 
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? { nil }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
+    func clips() async throws -> [ClipBridgeRecord] { [] }
     func updateClip(
         id: UUID,
         name: String?,

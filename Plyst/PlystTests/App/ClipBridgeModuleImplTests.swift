@@ -97,11 +97,95 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         await fulfillment(of: [completion], timeout: 2)
     }
 
+    func testGetClipsReturnsDictionariesWithWebLink() async throws {
+        let storage = try makeStorage()
+        let adapter = try makeAdapter(storage: storage)
+        let link = Clip(content: .text("https://example.com"), createdAt: Date(timeIntervalSince1970: 2))
+        let plain = Clip(content: .text("원문"), createdAt: Date(timeIntervalSince1970: 1))
+        try await storage.insert(plain)
+        try await storage.insert(link)
+        await ClipBridge.register(adapter)
+        let completion = expectation(description: "목록 조회 완료")
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
+            let records = records as? [NSDictionary]
+            XCTAssertEqual(records?.count, 2)
+            XCTAssertEqual(records?.first?["id"] as? String, link.id.uuidString)
+            XCTAssertEqual(records?.first?["text"] as? String, "https://example.com")
+            XCTAssertEqual(records?.first?["characterCount"] as? Int, 19)
+            XCTAssertEqual(records?.first?["isPinned"] as? Bool, false)
+            XCTAssertEqual(records?.first?["isWebLink"] as? Bool, true)
+            XCTAssertEqual(records?.last?["isWebLink"] as? Bool, false)
+            XCTAssertEqual(records?.first?["createdAt"] as? Double, 2000)
+            XCTAssertNil(code)
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
+    func testGetClipsReturnsEmptyArray() async throws {
+        let adapter = try makeAdapter(storage: makeStorage())
+        await ClipBridge.register(adapter)
+        let completion = expectation(description: "빈 목록 조회 완료")
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
+            XCTAssertEqual(records?.count, 0)
+            XCTAssertNil(code)
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
+    func testGetClipsUnregisteredProviderReturnsUnavailable() async {
+        await ClipBridge.unregister()
+        let completion = expectation(description: "목록 조회 실패")
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
+            XCTAssertNil(records)
+            XCTAssertEqual(code, "E_UNAVAILABLE")
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
+    func testGetClipsCorruptedDataReturnsCode() async throws {
+        let spy = ClipBridgeStorageServiceSpy(storage: try makeStorage(), failure: ClipStorageError.corruptedData)
+        let adapter = try makeAdapter(storage: spy)
+        await ClipBridge.register(adapter)
+        let completion = expectation(description: "목록 조회 실패")
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
+            XCTAssertNil(records)
+            XCTAssertEqual(code, "E_CORRUPTED_DATA")
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
+    func testGetClipsReadFailureReturnsCode() async throws {
+        let spy = ClipBridgeStorageServiceSpy(storage: try makeStorage(), failure: ClipStorageError.readFailed)
+        let adapter = try makeAdapter(storage: spy)
+        await ClipBridge.register(adapter)
+        let completion = expectation(description: "목록 조회 실패")
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
+            XCTAssertNil(records)
+            XCTAssertEqual(code, "E_READ_FAILED")
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
     private func makeStorage() throws -> SQLiteClipStorageService {
         try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
     }
 
-    private func makeAdapter(storage: SQLiteClipStorageService) throws -> ClipBridgeAdapter {
+    private func makeAdapter(storage: any ClipStorageService) throws -> ClipBridgeAdapter {
         let files = try ClipImageFileStore(rootURL: directory.appendingPathComponent("images", isDirectory: true))
         let images = ClipImageService(storage: storage, files: files)
         return ClipBridgeAdapter(

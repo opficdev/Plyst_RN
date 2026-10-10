@@ -2,6 +2,7 @@ import { AppRegistry } from 'react-native';
 import { subscribeToastRequests } from 'plyst-bridge';
 
 import App from './App';
+import { HomeView } from './src/screens/HomeView';
 import { showToast, ToastHost } from './src/components';
 import { ImageDetailView } from './src/screens/ImageDetailView';
 import { TextDetailView } from './src/screens/TextDetailView';
@@ -18,3 +19,5 @@ AppRegistry.registerComponent('TextDetailView', () => TextDetailView);
 AppRegistry.registerComponent('ToastHost', () => ToastHost);
 
 AppRegistry.registerComponent('ImageDetailView', () => ImageDetailView);
+
+AppRegistry.registerComponent('HomeView', () => HomeView);

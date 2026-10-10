@@ -7,8 +7,6 @@
 
 import OSLog
 import PlystBridge
-import ReactorKit
-import RxSwift
 import UIKit
 
 @MainActor
@@ -25,7 +23,6 @@ final class HomeSceneComposition {
     /// App Group 컨테이너를 찾지 못하면 nil입니다. 본 저장소가 정상이므로 시작은 계속하고 반입만 건너뜁니다.
     private let imports: ClipShareImportService?
     private var importTask: Task<Void, Never>?
-    private weak var home: HomeViewController?
 
     deinit {
         importTask?.cancel()
@@ -73,37 +70,22 @@ final class HomeSceneComposition {
         }
     }
 
-    func makeRootViewController() -> UIViewController {
+    func makeRootViewController(
+        onRootViewUnavailable: @escaping @MainActor () -> Void
+    ) -> UIViewController {
         let showToast: @MainActor (String, Bool) -> Void = {
             ToastBridge.show(message: $0, isSuccess: $1)
         }
-        // 상세 화면은 같은 저장소와 서비스 인스턴스를 공유합니다.
-        let makeDetail: @MainActor (Clip) -> UIViewController = { clip in
+        let makeDetail = { @MainActor (clip: Clip) -> UIViewController in
             switch clip.content {
             case .text:
-                ClipDetailViewController(
-                    clipID: clip.id,
-                    moduleName: "TextDetailView",
-                    title: "텍스트"
-                )
+                Self.makeDetailViewController(id: clip.id, kind: .text)
             case .image:
-                ClipDetailViewController(
-                    clipID: clip.id,
-                    moduleName: "ImageDetailView",
-                    title: "이미지"
-                )
+                Self.makeDetailViewController(id: clip.id, kind: .image)
             }
         }
-        let reactor = HomeReactor(
-            storage: storage,
-            clipboard: clipboard,
-            images: images
-        )
         // 검색 화면은 같은 저장소와 서비스 및 토스트 표시 클로저를 공유합니다. 클로저는 Composition을 캡처하지 않습니다.
-        let controller = HomeViewController(
-            reactor: reactor,
-            showToast: showToast,
-            makeHomeView: { HomeView(frame: .zero, send: $0) },
+        return HomeViewController(
             makeSearchViewController: { [storage, clipboard, images, makeDetail, showToast] cancel in
                 SearchViewController(
                     reactor: SearchReactor(
@@ -118,15 +100,22 @@ final class HomeSceneComposition {
                     cancel: cancel
                 )
             },
-            makeDetailViewController: makeDetail
+            makeDetailViewController: { Self.makeDetailViewController(id: $0, kind: $1) },
+            onRootViewUnavailable: onRootViewUnavailable
         )
-        home = controller
-        return controller
     }
 
-    /// 기록 화면의 저장 버튼과 같은 Action으로 현재 클립보드를 저장합니다. 화면이 로드된 뒤에 호출해야 합니다.
-    func saveCurrentClipboard() {
-        home?.reactor.action.onNext(.saveCurrentClipboard)
+    private static func makeDetailViewController(
+        id: Clip.ID,
+        kind: HomeBridgeClipKind
+    ) -> UIViewController {
+        // 브리지는 텍스트와 이미지 종류만 전달하며 그 밖의 종류는 텍스트 상세로 표시합니다.
+        let isImage = kind == .image
+        return ClipDetailViewController(
+            clipID: id,
+            moduleName: isImage ? "ImageDetailView" : "TextDetailView",
+            title: isImage ? "이미지" : "텍스트"
+        )
     }
 
     /// Share Extension이 저장한 클립을 본 저장소로 옮깁니다. 이미 실행 중이면 새로 시작하지 않습니다.

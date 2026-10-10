@@ -32,6 +32,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
                     name: name,
                     memo: memo,
                     isPinned: isPinned,
+                    isWebLink: false,
                     createdAt: 1000,
                     lastUsedAt: nil
                 )
@@ -342,11 +343,17 @@ private struct ClipBridgeProviderStub: ClipBridgeProvider {
         AsyncStream { $0.finish() }
     }
 
+    func getClipThumbnail(
+        id: UUID,
+        maximumPixelDimension: Int
+    ) async throws -> String? { nil }
+
     func getClipImagePreview(id: UUID) async throws -> String? { nil }
 
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? { nil }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
+    func clips() async throws -> [ClipBridgeRecord] { [] }
 
     func copyClip(id: UUID) async throws -> ClipBridgeCopyResult? { nil }
 

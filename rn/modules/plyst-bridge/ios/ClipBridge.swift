@@ -33,6 +33,7 @@ public struct ClipBridgeRecord: Sendable {
     public let name: String?
     public let memo: String?
     public let isPinned: Bool
+    public let isWebLink: Bool
     public let createdAt: Double
     public let lastUsedAt: Double?
 
@@ -43,6 +44,7 @@ public struct ClipBridgeRecord: Sendable {
         name: String?,
         memo: String?,
         isPinned: Bool,
+        isWebLink: Bool,
         createdAt: Double,
         lastUsedAt: Double?
     ) {
@@ -52,6 +54,7 @@ public struct ClipBridgeRecord: Sendable {
         self.name = name
         self.memo = memo
         self.isPinned = isPinned
+        self.isWebLink = isWebLink
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt
     }
@@ -59,6 +62,7 @@ public struct ClipBridgeRecord: Sendable {
 
 public struct ClipBridgeChange: Sendable {
     public enum Kind: String, Sendable {
+        case inserted
         case updated
         case deleted
     }
@@ -114,8 +118,13 @@ public enum ClipBridgeError: Error, Sendable {
 public protocol ClipBridgeProvider: Sendable {
     func changes() async -> AsyncStream<ClipBridgeChange>
     func getClipImagePreview(id: UUID) async throws -> String?
+    func getClipThumbnail(
+        id: UUID,
+        maximumPixelDimension: Int
+    ) async throws -> String?
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult?
     func clip(id: UUID) async throws -> ClipBridgeRecord?
+    func clips() async throws -> [ClipBridgeRecord]
     func updateClip(
         id: UUID,
         name: String?,

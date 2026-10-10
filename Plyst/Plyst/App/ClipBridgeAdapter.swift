@@ -22,8 +22,8 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             for await event in changes {
                 guard !Task.isCancelled else { return }
                 switch event {
-                case .inserted:
-                    continue
+                case .inserted(let clip):
+                    continuation.yield(ClipBridgeChange(kind: .inserted, id: clip.id))
                 case .updated(let clip):
                     continuation.yield(ClipBridgeChange(kind: .updated, id: clip.id))
                 case .deleted(let id):
@@ -49,6 +49,18 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         guard let clip else { return nil }
 
         return record(from: clip)
+    }
+
+    func clips() async throws -> [ClipBridgeRecord] {
+        do {
+            return try await storage.fetchAll(order: .createdAt).map { record(from: $0) }
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.corruptedData {
+            throw ClipBridgeError.corruptedData
+        } catch {
+            throw ClipBridgeError.readFailed
+        }
     }
 
     func updateClip(
@@ -118,6 +130,21 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         }
     }
 
+    func getClipThumbnail(
+        id: UUID,
+        maximumPixelDimension: Int
+    ) async throws -> String? {
+        do {
+            guard let clip = try await storage.fetch(id: id),
+                  case .image(let image) = clip.content else { return nil }
+            return try await images.makeThumbnailFileURL(image, maximumPixelDimension: maximumPixelDimension).absoluteString
+        } catch let error as CancellationError {
+            throw error
+        } catch {
+            throw ClipBridgeError.imageUnavailable
+        }
+    }
+
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? {
         do {
             switch try await photos.save(id: id) {
@@ -157,6 +184,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             name: clip.name,
             memo: clip.memo,
             isPinned: clip.isPinned,
+            isWebLink: clip.content.isWebLink,
             createdAt: clip.createdAt.timeIntervalSince1970 * 1000,
             lastUsedAt: clip.lastUsedAt.map { $0.timeIntervalSince1970 * 1000 }
         )

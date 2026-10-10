@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 
 /// 주입한 전용 루트에서 원본 바이트를 관리합니다. 같은 루트의 변경은 ClipImageService 하나가 조율해야 합니다.
 /// `ShareInboxImages`는 예외입니다. 저장과 정리 복구는 Share Extension만 실행하고 본 앱은 읽기와 삭제만 실행합니다.
-/// `<fileID>/preview`는 원본에서 다시 만들 수 있는 파생 파일입니다. 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않습니다.
+/// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일입니다. 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않습니다.
 struct ClipImageFileStore: Sendable {
     /// 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수입니다. 검증이 원본 해상도 비트맵을 만들지 않게 합니다.
     private static let validationPixelDimension = 64
@@ -123,15 +123,31 @@ struct ClipImageFileStore: Sendable {
         image: ClipImageMetadata,
         maximumPixelDimension: Int
     ) throws -> URL {
+        try writeDerivedFile(named: "preview", image: image, maximumPixelDimension: maximumPixelDimension)
+    }
+
+    /// 본 앱 이미지 루트에서만 호출합니다. 요청한 크기의 축소본을 매번 원자적으로 덮어씁니다.
+    func writeThumbnail(
+        image: ClipImageMetadata,
+        maximumPixelDimension: Int
+    ) throws -> URL {
+        try writeDerivedFile(named: "thumbnail-\(maximumPixelDimension)", image: image, maximumPixelDimension: maximumPixelDimension)
+    }
+
+    private func writeDerivedFile(
+        named name: String,
+        image: ClipImageMetadata,
+        maximumPixelDimension: Int
+    ) throws -> URL {
         let data = try loadThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
         guard let directory = try directory(for: image.fileID) else {
             throw ClipImageFileError.notFound(image.fileID)
         }
-        let preview = directory.appendingPathComponent("preview")
-        try validateFile(at: preview)
+        let file = directory.appendingPathComponent(name)
+        try validateFile(at: file)
         try Task.checkCancellation()
-        do { try data.write(to: preview, options: .atomic) } catch { throw ClipImageFileError.writeFailed }
-        return preview
+        do { try data.write(to: file, options: .atomic) } catch { throw ClipImageFileError.writeFailed }
+        return file
     }
 
     private func validatedOriginalURL(image: ClipImageMetadata) throws -> URL {
