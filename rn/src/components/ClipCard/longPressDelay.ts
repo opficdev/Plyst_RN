@@ -1,1 +1,1 @@
-export const clipCardLongPressDelay = 480;
+export const clipCardLongPressDelay = 500;
