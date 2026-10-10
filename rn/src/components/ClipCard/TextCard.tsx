@@ -40,7 +40,11 @@ export function ClipTextCard({
         {body}
       </Text>
       <View style={styles.metadataRow}>
-        <Text style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1}>
+        <Text
+          style={styles.metadata}
+          numberOfLines={onCopyButtonPress ? 2 : 1}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {metadata}
         </Text>
         {onCopyButtonPress && (

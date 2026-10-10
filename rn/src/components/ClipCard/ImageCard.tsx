@@ -33,6 +33,7 @@ export function ClipImageCard({
           <Text
             style={styles.metadata}
             numberOfLines={onCopyButtonPress ? 2 : 1}
+            lineBreakStrategyIOS="hangul-word"
           >
             {metadata}
           </Text>
