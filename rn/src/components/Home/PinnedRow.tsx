@@ -1,13 +1,14 @@
 import type { ComponentProps } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../../theme';
-import { ClipPinnedCard } from '../ClipCard';
+import { ClipPinnedCard, clipCardLongPressDelay } from '../ClipCard';
 
 type HomePinnedRowProps = {
   // 원본 configure(clips:)와 HomePinnedRowViewAction.select의 이름을 유지한다.
   clips: (ComponentProps<typeof ClipPinnedCard> & {
     id: string;
     onSelect: () => void;
+    onShowMenu: () => void;
   })[];
   onViewableIdsChange: (ids: string[]) => void;
 };
@@ -40,8 +41,12 @@ export function HomePinnedRow({
           onViewableIdsChange(viewableItems.map(({ item }) => item.id))
         }
         renderItem={({ item }) => (
-          <Pressable onPress={item.onSelect}>
-            <ClipPinnedCard {...item} />
+          <Pressable
+            onPress={item.onSelect}
+            onLongPress={item.onShowMenu}
+            delayLongPress={clipCardLongPressDelay}
+          >
+            <ClipPinnedCard {...item} onCopyButtonLongPress={item.onShowMenu} />
           </Pressable>
         )}
       />

@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import {
+  useLayoutEffect,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { Animated, PixelRatio, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -6,8 +13,12 @@ import {
 } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
-import { openClip, openSearch } from 'plyst-bridge';
+import type { ClipRecord } from 'plyst-bridge';
+import { openClip, openSearch, updateClip } from 'plyst-bridge';
 import {
+  ActionSheet,
+  showToast,
+  HomeSaveBar,
   ClipTextCard,
   ClipImageCard,
   EdgeFade,
@@ -17,7 +28,11 @@ import {
   HomeTitleHeader,
   SectionTitle,
 } from '../components';
-import { colors } from '../theme';
+import { saveHomeClipboard } from './saveHomeClipboard';
+import { copyClipDetail } from './copyClipDetail';
+import { deleteClipDetail } from './deleteClipDetail';
+import { homeMenuTitle, homeMenuSummary, homePinTarget } from './homeMenu';
+import { colors, spacing } from '../theme';
 import { HomeGridCard, HomeListCell } from './HomeGridCard';
 import {
   homeEmptyState,
@@ -56,6 +71,89 @@ function HomeContent() {
   const [state, dispatch] = useReducer(reduce, undefined, () =>
     initialState(Date.now()),
   );
+  const stateRef = useRef(state);
+  useLayoutEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  const savingRef = useRef(false);
+  const deletingRef = useRef(false);
+
+  function selectClip(clip: ClipRecord) {
+    const current = stateRef.current;
+    if (current.isMenuVisible || current.isDeleteConfirmVisible) return;
+    openClip(clip.id, clip.image === null ? 'text' : 'image');
+  }
+
+  function showMenu(clip: ClipRecord) {
+    const current = stateRef.current;
+    if (current.isMenuVisible || current.isDeleteConfirmVisible) return;
+    const action = { type: 'menuShown', clip } as const;
+    stateRef.current = reduce(current, action);
+    dispatch(action);
+  }
+
+  async function copy(clip: ClipRecord) {
+    const result = await copyClipDetail(clip.id);
+    showToast(
+      result === 'copied'
+        ? '클립보드에 복사했습니다'
+        : '클립보드에 복사하지 못했습니다',
+      result === 'copied',
+    );
+  }
+
+  async function save() {
+    if (savingRef.current || stateRef.current.isSaving) return;
+    savingRef.current = true;
+    dispatch({ type: 'savingStarted' });
+    try {
+      const result = await saveHomeClipboard();
+      showToast(result.message, result.isSuccess);
+    } finally {
+      savingRef.current = false;
+      dispatch({ type: 'savingStopped' });
+    }
+  }
+
+  function latestMenuClip() {
+    const current = stateRef.current;
+    return current.clips.find((clip) => clip.id === current.menuClip?.id);
+  }
+
+  async function togglePin() {
+    const menuClip = stateRef.current.menuClip;
+    const clip = latestMenuClip();
+    if (!menuClip) return;
+    const target = homePinTarget(menuClip, clip);
+    if (target === null || !clip) return;
+    try {
+      const result = await updateClip(clip.id, clip.name, clip.memo, target);
+      if (result === null) showToast('고정 상태를 바꾸지 못했습니다', false);
+    } catch {
+      showToast('고정 상태를 바꾸지 못했습니다', false);
+    }
+  }
+
+  function confirmDelete() {
+    const clip = latestMenuClip();
+    if (!clip) return;
+    const action = { type: 'deleteConfirmShown', clip } as const;
+    stateRef.current = reduce(stateRef.current, action);
+    dispatch(action);
+  }
+
+  async function deleteClip() {
+    const clip = latestMenuClip();
+    if (!clip || deletingRef.current) return;
+    deletingRef.current = true;
+    try {
+      if ((await deleteClipDetail(clip.id)) === 'failed')
+        showToast('삭제하지 못했습니다', false);
+    } finally {
+      deletingRef.current = false;
+    }
+  }
+
   const list = useRef<FlashListRef<HomeListItem>>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -89,7 +187,7 @@ function HomeContent() {
       safeTop: insets.top,
       // 상단 여백을 contentInset 대신 padding으로 줍니다. 스크롤 시작점은 0이므로 insetTop도 0입니다.
       insetTop: 0,
-      insetBottom: insets.bottom,
+      insetBottom: 0,
       contentHeight,
       viewportHeight: size.height,
       sectionCount:
@@ -97,15 +195,7 @@ function HomeContent() {
           ? content.sections.length + Number(content.pinnedClips.length !== 0)
           : 0,
     }),
-    [
-      headerHeight,
-      insets.top,
-      insets.bottom,
-      contentHeight,
-      size.height,
-      content,
-      empty,
-    ],
+    [headerHeight, insets.top, contentHeight, size.height, content, empty],
   );
   const header = useHomeHeaderScroll(list, geometry, items);
   const { reset } = header;
@@ -151,7 +241,9 @@ function HomeContent() {
               ...values,
               ...thumbnail(clip.id, pinnedPixels),
               id: clip.id,
-              onSelect: () => openClip(clip.id, values.kind),
+              onSelect: () => selectClip(clip),
+              onShowMenu: () => showMenu(clip),
+              onCopyButtonPress: () => void copy(clip),
             };
           })}
           onViewableIdsChange={thumbnails.onViewableIdsChange}
@@ -170,11 +262,23 @@ function HomeContent() {
       );
     const values = homeCardValues(item.clip, state.now);
     return (
-      <HomeGridCard onPress={() => openClip(item.clip.id, values.kind)}>
+      <HomeGridCard
+        onPress={() => selectClip(item.clip)}
+        onShowMenu={() => showMenu(item.clip)}
+      >
         {values.kind === 'text' ? (
-          <ClipTextCard {...values} />
+          <ClipTextCard
+            {...values}
+            onCopyButtonPress={() => void copy(item.clip)}
+            onCopyButtonLongPress={() => showMenu(item.clip)}
+          />
         ) : (
-          <ClipImageCard {...values} {...thumbnail(item.clip.id, gridPixels)} />
+          <ClipImageCard
+            {...values}
+            {...thumbnail(item.clip.id, gridPixels)}
+            onCopyButtonPress={() => void copy(item.clip)}
+            onCopyButtonLongPress={() => showMenu(item.clip)}
+          />
         )}
       </HomeGridCard>
     );
@@ -182,98 +286,140 @@ function HomeContent() {
 
   return (
     <View style={styles.canvas}>
-      <FlashList
-        ref={list}
-        data={items}
-        renderItem={renderItem}
-        extraData={state}
-        masonry
-        numColumns={2}
-        CellRendererComponent={HomeListCell}
-        keyExtractor={(item) => item.key}
-        getItemType={(item) =>
-          item.kind === 'card'
-            ? item.clip.image === null
-              ? 'text'
-              : 'image'
-            : item.kind
-        }
-        overrideItemLayout={(layout, item) => {
-          layout.span = item.kind === 'card' ? 1 : 2;
-        }}
-        maintainVisibleContentPosition={{ disabled: true }}
-        contentInsetAdjustmentBehavior="never"
-        automaticallyAdjustsScrollIndicatorInsets={false}
-        contentInset={{ top: 0, bottom: insets.bottom, left: 0, right: 0 }}
-        contentContainerStyle={{
-          paddingTop: headerHeight,
-          paddingBottom: content.sections.length === 0 ? 0 : 10,
-          minHeight: size.height + headerHeight,
-        }}
-        scrollEnabled={0 < geometry.sectionCount}
-        showsVerticalScrollIndicator={0 < geometry.sectionCount}
-        scrollsToTop={!state.isSearchVisible}
-        alwaysBounceVertical
-        scrollIndicatorInsets={{
-          top: header.indicatorTop,
-          bottom: insets.bottom,
-        }}
-        onLayout={({ nativeEvent: { layout } }) =>
-          setSize({ width: layout.width, height: layout.height })
-        }
-        onContentSizeChange={(_, height) => setContentHeight(height)}
-        scrollEventThrottle={16}
-        onScroll={header.onScroll}
-        onScrollBeginDrag={header.onScrollBeginDrag}
-        onScrollEndDrag={header.onScrollEndDrag}
-        onMomentumScrollBegin={header.onMomentumScrollBegin}
-        onMomentumScrollEnd={header.onMomentumScrollEnd}
-        viewabilityConfig={thumbnails.viewabilityConfig}
-        onViewableItemsChanged={thumbnails.onViewableItemsChanged}
-      />
-      {empty !== 'none' && (
-        <View
-          pointerEvents="none"
-          style={[styles.empty, { top: headerHeight, bottom: insets.bottom }]}
+      <View style={styles.list}>
+        <FlashList
+          ref={list}
+          data={items}
+          renderItem={renderItem}
+          extraData={state}
+          masonry
+          numColumns={2}
+          CellRendererComponent={HomeListCell}
+          keyExtractor={(item) => item.key}
+          getItemType={(item) =>
+            item.kind === 'card'
+              ? item.clip.image === null
+                ? 'text'
+                : 'image'
+              : item.kind
+          }
+          overrideItemLayout={(layout, item) => {
+            layout.span = item.kind === 'card' ? 1 : 2;
+          }}
+          maintainVisibleContentPosition={{ disabled: true }}
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustsScrollIndicatorInsets={false}
+          contentInset={{ top: 0, bottom: 0, left: 0, right: 0 }}
+          contentContainerStyle={{
+            paddingTop: headerHeight,
+            paddingBottom: content.sections.length === 0 ? 0 : 10,
+            minHeight: size.height + headerHeight,
+          }}
+          scrollEnabled={0 < geometry.sectionCount}
+          showsVerticalScrollIndicator={0 < geometry.sectionCount}
+          scrollsToTop={!state.isSearchVisible}
+          alwaysBounceVertical
+          scrollIndicatorInsets={{
+            top: header.indicatorTop,
+            bottom: 0,
+          }}
+          onLayout={({ nativeEvent: { layout } }) =>
+            setSize({ width: layout.width, height: layout.height })
+          }
+          onContentSizeChange={(_, height) => setContentHeight(height)}
+          scrollEventThrottle={16}
+          onScroll={header.onScroll}
+          onScrollBeginDrag={header.onScrollBeginDrag}
+          onScrollEndDrag={header.onScrollEndDrag}
+          onMomentumScrollBegin={header.onMomentumScrollBegin}
+          onMomentumScrollEnd={header.onMomentumScrollEnd}
+          viewabilityConfig={thumbnails.viewabilityConfig}
+          onViewableItemsChanged={thumbnails.onViewableItemsChanged}
+        />
+        {empty !== 'none' && (
+          <View
+            pointerEvents="none"
+            style={[styles.empty, { top: headerHeight, bottom: 0 }]}
+          >
+            <View style={styles.emptyContent}>
+              <HomeEmptyState
+                emptyTitle={strings.emptyTitle}
+                emptyBody={strings.emptyMessage}
+              />
+            </View>
+          </View>
+        )}
+        <Animated.View
+          onLayout={({ nativeEvent: { layout } }) =>
+            setHeaderHeight(layout.height)
+          }
+          style={[
+            styles.header,
+            {
+              paddingTop: insets.top,
+              transform: [{ translateY: header.translateY }],
+            },
+          ]}
         >
-          <View style={styles.emptyContent}>
-            <HomeEmptyState
-              emptyTitle={strings.emptyTitle}
-              emptyBody={strings.emptyMessage}
+          <HomeTitleHeader
+            onSearchButtonPress={openSearch}
+            isSearchButtonHidden={state.isSearchVisible}
+          />
+          <View style={styles.filters}>
+            <HomeFilterBar
+              chips={chips}
+              selectedKey={state.filter}
+              onSelect={(filter) =>
+                dispatch({ type: 'filterSelected', filter })
+              }
             />
           </View>
-        </View>
-      )}
-      <Animated.View
-        onLayout={({ nativeEvent: { layout } }) =>
-          setHeaderHeight(layout.height)
-        }
-        style={[
-          styles.header,
-          {
-            paddingTop: insets.top,
-            transform: [{ translateY: header.translateY }],
-          },
-        ]}
-      >
-        <HomeTitleHeader
-          onSearchButtonPress={openSearch}
-          isSearchButtonHidden={state.isSearchVisible}
+        </Animated.View>
+        <EdgeFade height={insets.top} />
+      </View>
+      <View style={{ paddingBottom: insets.bottom + spacing.card }}>
+        <HomeSaveBar
+          isSaving={state.isSaving}
+          onSaveButtonPress={() => void save()}
         />
-        <View style={styles.filters}>
-          <HomeFilterBar
-            chips={chips}
-            selectedKey={state.filter}
-            onSelect={(filter) => dispatch({ type: 'filterSelected', filter })}
-          />
-        </View>
-      </Animated.View>
-      <EdgeFade height={insets.top} />
+      </View>
+      <ActionSheet
+        isVisible={state.isMenuVisible}
+        title={state.menuClip ? homeMenuTitle(state.menuClip) : '텍스트'}
+        message={
+          state.menuClip ? homeMenuSummary(state.menuClip) : '이름 없는 이미지'
+        }
+        onClose={() => dispatch({ type: 'menuClosed' })}
+        items={[
+          {
+            title: state.menuClip?.isPinned ? '고정 해제' : '고정',
+            role: 'default',
+            handler: () => void togglePin(),
+          },
+          { title: '삭제', role: 'destructive', handler: confirmDelete },
+          { title: '취소', role: 'cancel' },
+        ]}
+      />
+      <ActionSheet
+        isVisible={state.isDeleteConfirmVisible}
+        title={`이 ${state.menuClip ? homeMenuTitle(state.menuClip) : '텍스트'}를 삭제할까요?`}
+        message="삭제하면 되돌릴 수 없습니다."
+        onClose={() => dispatch({ type: 'deleteConfirmClosed' })}
+        items={[
+          {
+            title: '삭제',
+            role: 'destructive',
+            handler: () => void deleteClip(),
+          },
+          { title: '취소', role: 'cancel' },
+        ]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  list: { flex: 1, marginBottom: spacing.card },
   canvas: { flex: 1, backgroundColor: colors.Canvas },
   header: {
     position: 'absolute',
