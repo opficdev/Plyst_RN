@@ -18,6 +18,8 @@ RCT_EXPORT_MODULE(PlystHome);
     __weak PlystHomeModule *weakSelf = self;
     _implementation = [[HomeBridgeModuleImpl alloc] initWithEmit:^(BOOL isVisible) {
       [weakSelf emitOnSearchVisibilityChange:@{@"isVisible": @(isVisible)}];
+    } requestSave:^{
+      [weakSelf emitOnClipboardSaveRequest];
     }];
   }
   return self;

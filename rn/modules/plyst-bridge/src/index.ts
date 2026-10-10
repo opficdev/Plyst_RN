@@ -107,6 +107,12 @@ export function openSearch(): void {
   NativePlystHome.openSearch();
 }
 
+export function subscribeClipboardSaveRequests(listener: () => void) {
+  const subscription = NativePlystHome.onClipboardSaveRequest(listener);
+  NativePlystHome.ready();
+  return subscription;
+}
+
 export function subscribeSearchVisibility(
   listener: (isVisible: boolean) => void,
 ) {

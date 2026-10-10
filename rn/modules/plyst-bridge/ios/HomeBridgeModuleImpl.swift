@@ -12,21 +12,26 @@ import Foundation
 public final class HomeBridgeModuleImpl: NSObject, Sendable {
     private let id = UUID()
     private let emit: @Sendable (Bool) -> Void
+    private let requestSave: @Sendable () -> Void
     @MainActor private var isInvalidated = false
 
-    /// Objective-C++ 모듈이 검색 표시 상태 전송 함수를 전달합니다. ready() 전에는 호출하지 않습니다.
+    /// Objective-C++ 모듈이 검색 표시 상태와 저장 요청 전송 함수를 전달합니다. ready() 전에는 호출하지 않습니다.
     @objc
-    public init(emit: @escaping @Sendable (Bool) -> Void) {
+    public init(
+        emit: @escaping @Sendable (Bool) -> Void,
+        requestSave: @escaping @Sendable () -> Void
+    ) {
         self.emit = emit
+        self.requestSave = requestSave
         super.init()
     }
 
-    /// JavaScript가 구독한 뒤 호출합니다. 현재 상태를 한 번 전달합니다. 무효화된 모듈은 무시합니다.
+    /// JavaScript가 구독한 뒤 호출합니다. 현재 검색 표시 상태와 보관된 저장 요청을 전달합니다. 무효화된 모듈은 무시합니다.
     @objc
     public nonisolated func ready() {
         Task { @MainActor in
             guard !isInvalidated else { return }
-            HomeBridge.register(id: id, emit: emit)
+            HomeBridge.register(id: id, emit: emit, requestSave: requestSave)
         }
     }
 

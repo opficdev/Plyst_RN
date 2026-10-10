@@ -26,12 +26,18 @@ public protocol HomeBridgeNavigator: AnyObject, Sendable {
     @MainActor func openSearch()
 }
 
-/// 호스트가 화면 이동 대상을 등록하고 검색 표시 상태를 전달하는 진입점입니다.
+/// 호스트가 화면 이동 대상을 등록하고 검색 표시 상태와 저장 요청을 전달하는 진입점입니다.
+/// ready()에서 현재 검색 표시 상태와 보관된 저장 요청을 전달합니다.
 @MainActor
 public enum HomeBridge {
     private static weak var navigator: (any HomeBridgeNavigator)?
-    private static var registration: (id: UUID, emit: @Sendable (Bool) -> Void)?
+    private static var registration: (
+        id: UUID,
+        emit: @Sendable (Bool) -> Void,
+        requestSave: @Sendable () -> Void
+    )?
     private static var isSearchVisible = false
+    private static var isClipboardSaveRequested = false
 
     /// 호스트가 화면 이동 대상을 약한 참조로 등록합니다. 기존 대상은 교체됩니다.
     public static func register(_ navigator: any HomeBridgeNavigator) {
@@ -51,10 +57,24 @@ public enum HomeBridge {
 
     static func register(
         id: UUID,
-        emit: @escaping @Sendable (Bool) -> Void
+        emit: @escaping @Sendable (Bool) -> Void,
+        requestSave: @escaping @Sendable () -> Void
     ) {
-        registration = (id, emit)
+        registration = (id, emit, requestSave)
         emit(isSearchVisible)
+        if isClipboardSaveRequested {
+            isClipboardSaveRequested = false
+            requestSave()
+        }
+    }
+
+    /// 호스트가 클립보드 저장을 요청합니다. ready() 전에는 요청 하나를 만료 없이 보관합니다.
+    public static func requestClipboardSave() {
+        guard let registration else {
+            isClipboardSaveRequested = true
+            return
+        }
+        registration.requestSave()
     }
 
     static func unregister(id: UUID) {

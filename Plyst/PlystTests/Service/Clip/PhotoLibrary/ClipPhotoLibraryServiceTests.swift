@@ -62,7 +62,8 @@ final class ClipPhotoLibraryServiceTests: XCTestCase {
         XCTAssertEqual(result, .saved)
         XCTAssertEqual(spy.writes, [PhotoLibraryWriterSpy.PhotoLibraryWrite(data: data, contentType: UTType.gif.identifier)])
         let stored = try await storage.fetch(id: clip.id)
-        let original = try await images.loadImage(id: clip.id)
+        guard case .image(let image) = try XCTUnwrap(stored).content else { return XCTFail("이미지 클립 필요") }
+        let original = try await images.loadImage(image)
         XCTAssertEqual(stored, clip)
         XCTAssertEqual(original, data)
     }
@@ -108,7 +109,8 @@ final class ClipPhotoLibraryServiceTests: XCTestCase {
             XCTFail("사진 쓰기 실패 누락")
         } catch { XCTAssertTrue(error is PhotoLibraryWriterSpy.Failure) }
         let stored = try await storage.fetch(id: clip.id)
-        let original = try await images.loadImage(id: clip.id)
+        guard case .image(let image) = try XCTUnwrap(stored).content else { return XCTFail("이미지 클립 필요") }
+        let original = try await images.loadImage(image)
         XCTAssertEqual(stored, clip)
         XCTAssertEqual(original, data)
     }

@@ -211,7 +211,7 @@ final class ClipShareServiceTests: XCTestCase {
         let stored = try await reopened.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip])
         let images = ClipImageService(storage: reopened, files: try ClipImageFileStore(rootURL: imagesDirectory))
-        let loaded = try await images.loadImage(id: clip.id)
+        let loaded = try await images.loadImage(image)
         XCTAssertEqual(loaded, data)
         XCTAssertEqual(try imageEntryCount(), 1)
     }

@@ -118,6 +118,11 @@ final class HomeSceneComposition {
         )
     }
 
+    /// RN 기록 화면의 저장 버튼과 같은 경로로 현재 클립보드 저장을 요청합니다.
+    func saveCurrentClipboard() {
+        HomeBridge.requestClipboardSave()
+    }
+
     /// Share Extension이 저장한 클립을 본 저장소로 옮깁니다. 이미 실행 중이면 새로 시작하지 않습니다.
     /// 실패해도 화면 상태와 Inbox는 유지되며 다음 활성화에서 다시 시도합니다. 해제되면 진행 중인 반입을 취소합니다.
     func importSharedClips() {
