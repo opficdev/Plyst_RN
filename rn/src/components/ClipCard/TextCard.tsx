@@ -11,6 +11,7 @@ export function ClipTextCard({
   body,
   isWebLink,
   onCopyButtonPress,
+  onCopyButtonLongPress,
 }: ClipTextCardProps) {
   return (
     <View style={styles.card}>
@@ -43,7 +44,10 @@ export function ClipTextCard({
           {metadata}
         </Text>
         {onCopyButtonPress && (
-          <CopyButton onCopyButtonPress={onCopyButtonPress} />
+          <CopyButton
+            onCopyButtonPress={onCopyButtonPress}
+            onCopyButtonLongPress={onCopyButtonLongPress}
+          />
         )}
       </View>
     </View>

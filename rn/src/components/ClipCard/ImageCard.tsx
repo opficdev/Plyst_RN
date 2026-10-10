@@ -14,6 +14,7 @@ export function ClipImageCard({
   thumbnailUri,
   isThumbnailFailed,
   onCopyButtonPress,
+  onCopyButtonLongPress,
 }: ClipImageCardProps) {
   return (
     <View style={styles.card}>
@@ -34,7 +35,10 @@ export function ClipImageCard({
             {metadata}
           </Text>
           {onCopyButtonPress && (
-            <CopyButton onCopyButtonPress={onCopyButtonPress} />
+            <CopyButton
+              onCopyButtonPress={onCopyButtonPress}
+              onCopyButtonLongPress={onCopyButtonLongPress}
+            />
           )}
         </View>
       </View>
