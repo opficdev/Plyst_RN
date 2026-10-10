@@ -8,6 +8,7 @@ const clip: ClipRecord = {
   id: 'text',
   text: '원문',
   characterCount: 2,
+  textPrefix: '원문',
   image: null,
   name: null,
   memo: null,
@@ -27,7 +28,13 @@ test('텍스트 원문과 이름 및 브릿지 링크 판정을 그대로 전달
   });
   expect(
     homeCardValues(
-      { ...clip, name: '이름', text: 'https://example.com', isWebLink: false },
+      {
+        ...clip,
+        name: '이름',
+        text: 'https://example.com',
+        textPrefix: 'https://example.com',
+        isWebLink: false,
+      },
       61000,
       true,
     ),
@@ -44,6 +51,7 @@ test('격자 이미지에만 해상도를 표시한다', () => {
   const image = {
     ...clip,
     text: null,
+    textPrefix: null,
     image: {
       pixelWidth: 1920,
       pixelHeight: 1080,

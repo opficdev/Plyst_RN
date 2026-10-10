@@ -262,6 +262,8 @@ private struct ClipBridgeImageProviderStub: ClipBridgeProvider {
     }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
+    func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult { .empty }
+
     func clips() async throws -> [ClipBridgeRecord] { [] }
 
     func updateClip(

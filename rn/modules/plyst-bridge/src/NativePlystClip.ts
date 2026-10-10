@@ -15,6 +15,9 @@ export type ClipRecord = {
   text: string | null;
   // Swift String.count로 센 글자 수입니다. 이미지 클립은 0입니다.
   characterCount: number;
+  // Swift String.prefix(60)의 결과입니다. 이미지 클립은 접두어가 없다고 확정된 값이므로 null입니다.
+  // 이 필드는 항상 전달되므로 undefined는 계약 위반입니다.
+  textPrefix: string | null;
   image: ClipImageRecord | null;
   name: string | null;
   memo: string | null;
@@ -41,6 +44,9 @@ export interface Spec extends TurboModule {
   // 페이지 구분 없이 전체 클립을 생성 시각 내림차순으로 반환합니다. 동률이면 id.uuidString 오름차순입니다.
   // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   getClips(): Promise<ClipRecord[]>;
+  // 결과는 saved, empty, unsupported, accessFailed, invalidImage 중 하나입니다.
+  // 실패하면 E_UNAVAILABLE, E_SAVE_FAILED 중 하나로 거부합니다.
+  saveCurrentClipboard(): Promise<string>;
   // 매번 다시 만든 미리보기의 file:// URI입니다. 클립이 없거나 이미지가 아니면 null입니다.
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
   getClipImagePreview(id: string): Promise<string | null>;

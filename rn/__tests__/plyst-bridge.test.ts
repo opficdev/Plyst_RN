@@ -4,6 +4,7 @@ import {
   subscribeSearchVisibility,
   closeScreen,
   copyClip,
+  saveCurrentClipboard,
   deleteClip,
   getClip,
   getClips,
@@ -41,6 +42,7 @@ jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
     updateClip: jest.fn(),
     deleteClip: jest.fn(),
     copyClip: jest.fn(),
+    saveCurrentClipboard: jest.fn(),
   },
 }));
 
@@ -72,6 +74,7 @@ test('식별자를 전달하고 클립의 필드를 그대로 반환한다', asy
     id: 'clip-id',
     text: null,
     characterCount: 0,
+    textPrefix: null,
     isWebLink: false,
     image: {
       byteCountText: '100 bytes',
@@ -98,6 +101,7 @@ test('전체 클립 목록의 순서와 필드를 그대로 반환한다', async
       id: 'link-id',
       text: 'https://example.com',
       characterCount: 19,
+      textPrefix: 'https://example.com',
       image: null,
       name: null,
       memo: null,
@@ -110,6 +114,7 @@ test('전체 클립 목록의 순서와 필드를 그대로 반환한다', async
       id: 'text-id',
       text: '원문',
       characterCount: 2,
+      textPrefix: '원문',
       image: null,
       name: null,
       memo: null,
@@ -191,6 +196,7 @@ test('갱신 인자를 그대로 전달하고 저장된 클립을 반환한다',
     id: 'clip-id',
     text: '원문',
     characterCount: 2,
+    textPrefix: '원문',
     isWebLink: false,
     image: null,
     name: ' 이름 ',
@@ -397,3 +403,51 @@ test('상세 및 검색 화면 요청과 검색 상태 구독을 전달한다', 
   expect(home.ready).toHaveBeenCalledTimes(1);
   expect(listener.mock.calls).toEqual([[true], [false]]);
 });
+
+test.each(['saved', 'empty', 'unsupported', 'accessFailed', 'invalidImage'])(
+  '현재 클립보드 저장 결과 %s를 그대로 전달한다',
+  async (result) => {
+    native.saveCurrentClipboard.mockResolvedValue(result);
+    await expect(saveCurrentClipboard()).resolves.toBe(result);
+    expect(native.saveCurrentClipboard).toHaveBeenCalledWith();
+    expect(native.saveCurrentClipboard).toHaveBeenCalledTimes(1);
+  },
+);
+
+test.each(['E_UNAVAILABLE', 'E_SAVE_FAILED'])(
+  '현재 클립보드 저장 오류 %s를 그대로 전달한다',
+  async (code) => {
+    const error = Object.assign(new Error(code), { code });
+    native.saveCurrentClipboard.mockRejectedValue(error);
+    await expect(saveCurrentClipboard()).rejects.toBe(error);
+  },
+);
+
+test.each(['👨‍👩‍👧‍👦🇰🇷e\u0301'.repeat(20), null])(
+  '네이티브 textPrefix를 가공하지 않고 전달한다',
+  async (textPrefix) => {
+    const record: ClipRecord = {
+      id: 'clip-id',
+      text: textPrefix,
+      textPrefix,
+      characterCount: textPrefix === null ? 0 : 60,
+      image:
+        textPrefix === null
+          ? {
+              byteCountText: '1 KB',
+              contentType: 'public.png',
+              pixelWidth: 1,
+              pixelHeight: 1,
+            }
+          : null,
+      name: null,
+      memo: null,
+      isPinned: false,
+      isWebLink: false,
+      createdAt: 1000,
+      lastUsedAt: null,
+    };
+    native.getClip.mockResolvedValue(record);
+    expect((await getClip(record.id))?.textPrefix).toBe(textPrefix);
+  },
+);

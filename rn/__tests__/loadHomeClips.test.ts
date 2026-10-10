@@ -8,6 +8,7 @@ const clip: ClipRecord = {
   id: 'clip-id',
   text: '원문',
   characterCount: 2,
+  textPrefix: '원문',
   isWebLink: false,
   image: null,
   name: null,

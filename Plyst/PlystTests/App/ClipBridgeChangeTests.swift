@@ -157,6 +157,8 @@ private struct ClipBridgeChangeProviderStub: ClipBridgeProvider {
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? { nil }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
+    func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult { .empty }
+
     func clips() async throws -> [ClipBridgeRecord] { [] }
     func updateClip(
         id: UUID,

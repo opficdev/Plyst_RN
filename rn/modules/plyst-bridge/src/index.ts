@@ -32,6 +32,13 @@ export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }
 
+export type ClipboardSaveResult =
+  'saved' | 'empty' | 'unsupported' | 'accessFailed' | 'invalidImage';
+
+export function saveCurrentClipboard(): Promise<ClipboardSaveResult> {
+  return NativePlystClip.saveCurrentClipboard() as Promise<ClipboardSaveResult>;
+}
+
 export function getClips(): Promise<ClipRecord[]> {
   return NativePlystClip.getClips();
 }

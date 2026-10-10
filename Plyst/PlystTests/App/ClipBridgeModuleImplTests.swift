@@ -32,6 +32,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         ClipBridgeModuleImpl(emit: { _, _ in }).getClip(clip.id.uuidString) { record, code in
             XCTAssertEqual(record?["name"] as? String, "이름")
             XCTAssertEqual(record?["characterCount"] as? Int, 4)
+            XCTAssertEqual(record?["textPrefix"] as? String, "가족 👨‍👩‍👧‍👦")
             XCTAssertNil(code)
             completion.fulfill()
         }
@@ -90,6 +91,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
             let image = record?["image"] as? NSDictionary
             XCTAssertEqual(image?["byteCountText"] as? String, expected)
             XCTAssertNil(image?["uri"])
+            XCTAssertTrue(record?["textPrefix"] is NSNull)
             XCTAssertNil(code)
             completion.fulfill()
         }
@@ -113,6 +115,7 @@ final class ClipBridgeModuleImplTests: XCTestCase {
             XCTAssertEqual(records?.first?["id"] as? String, link.id.uuidString)
             XCTAssertEqual(records?.first?["text"] as? String, "https://example.com")
             XCTAssertEqual(records?.first?["characterCount"] as? Int, 19)
+            XCTAssertEqual(records?.first?["textPrefix"] as? String, "https://example.com")
             XCTAssertEqual(records?.first?["isPinned"] as? Bool, false)
             XCTAssertEqual(records?.first?["isWebLink"] as? Bool, true)
             XCTAssertEqual(records?.last?["isWebLink"] as? Bool, false)
@@ -175,6 +178,25 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
             XCTAssertNil(records)
             XCTAssertEqual(code, "E_READ_FAILED")
+            completion.fulfill()
+        }
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
+    func testTextPrefixPreservesSixtyGraphemes() async throws {
+        let storage = try makeStorage()
+        let adapter = try makeAdapter(storage: storage)
+        let prefix = String(repeating: "👨‍👩‍👧‍👦🇰🇷e\u{301}", count: 20)
+        let clip = Clip(content: .text(prefix + "끝"))
+        try await storage.insert(clip)
+        await ClipBridge.register(adapter)
+        let completion = expectation(description: "문자 경계 보존")
+
+        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(clip.id.uuidString) { record, code in
+            XCTAssertEqual(record?["characterCount"] as? Int, 61)
+            XCTAssertEqual(record?["textPrefix"] as? String, prefix)
+            XCTAssertNil(code)
             completion.fulfill()
         }
 

@@ -4,6 +4,7 @@ const clip: ClipRecord = {
   id: 'text',
   text: '원문',
   characterCount: 2,
+  textPrefix: '원문',
   image: null,
   name: null,
   memo: null,

@@ -8,6 +8,7 @@ const clip: ClipRecord = {
   id: 'clip-id',
   text: '원문',
   characterCount: 2,
+  textPrefix: '원문',
   isWebLink: false,
   image: null,
   name: null,
@@ -42,6 +43,6 @@ test('브리지 오류가 발생하면 failed이다', async () => {
 });
 
 test('텍스트가 null이면 failed이다', async () => {
-  getClipMock.mockResolvedValue({ ...clip, text: null });
+  getClipMock.mockResolvedValue({ ...clip, text: null, textPrefix: null });
   await expect(loadTextDetail(clip.id)).resolves.toEqual({ status: 'failed' });
 });

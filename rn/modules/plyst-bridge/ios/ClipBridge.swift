@@ -91,9 +91,18 @@ public enum ClipBridgePhotoSaveResult: String, Sendable {
     case restricted
 }
 
+public enum ClipBridgeClipboardSaveResult: String, Sendable {
+    case saved
+    case empty
+    case unsupported
+    case accessFailed
+    case invalidImage
+}
+
 public enum ClipBridgeError: Error, Sendable {
     case invalidID
     case unavailable
+    case saveFailed
     case copyFailed
     case writeFailed
     case readFailed
@@ -105,6 +114,7 @@ public enum ClipBridgeError: Error, Sendable {
         switch self {
         case .invalidID: "E_INVALID_ID"
         case .unavailable: "E_UNAVAILABLE"
+        case .saveFailed: "E_SAVE_FAILED"
         case .copyFailed: "E_COPY_FAILED"
         case .writeFailed: "E_WRITE_FAILED"
         case .readFailed: "E_READ_FAILED"
@@ -124,6 +134,7 @@ public protocol ClipBridgeProvider: Sendable {
     ) async throws -> String?
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult?
     func clip(id: UUID) async throws -> ClipBridgeRecord?
+    func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult
     func clips() async throws -> [ClipBridgeRecord]
     func updateClip(
         id: UUID,

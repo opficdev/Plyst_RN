@@ -54,6 +54,17 @@ RCT_EXPORT_METHOD(getClips:(RCTPromiseResolveBlock)resolve
   }];
 }
 
+RCT_EXPORT_METHOD(saveCurrentClipboard:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  [_implementation saveCurrentClipboard:^(NSString *result, NSString *code) {
+    if (code) {
+      reject(code, code, nil);
+    } else {
+      resolve(result ?: [NSNull null]);
+    }
+  }];
+}
+
 RCT_EXPORT_METHOD(updateClip:(NSString *)identifier
                   name:(NSString * _Nullable)name
                   memo:(NSString * _Nullable)memo

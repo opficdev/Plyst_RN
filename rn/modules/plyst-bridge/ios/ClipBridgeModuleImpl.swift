@@ -59,6 +59,20 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(saveCurrentClipboard:)
+    public nonisolated func saveCurrentClipboard(completion: @escaping @Sendable (String?, String?) -> Void) {
+        execute(
+            fallback: .saveFailed,
+            operation: {
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                return try await provider.saveCurrentClipboard()
+            },
+            completion: { result, code in
+                completion(result?.rawValue, code)
+            }
+        )
+    }
+
     @objc(updateClip:name:memo:isPinned:completion:)
     public nonisolated func updateClip(
         _ identifier: String,
@@ -231,6 +245,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
             "id": record.id,
             "text": record.text as Any? ?? NSNull(),
             "characterCount": record.text?.count ?? 0,
+            "textPrefix": record.text.map { String($0.prefix(60)) } as Any? ?? NSNull(),
             "image": image as Any? ?? NSNull(),
             "name": record.name as Any? ?? NSNull(),
             "memo": record.memo as Any? ?? NSNull(),
