@@ -145,20 +145,60 @@ jobs:
         timeout-minutes: 2
         run: echo "TEST_DEVICE_ID=$(make -s test-device-id)" >> "$GITHUB_ENV"
 
-      # 시뮬레이터를 빌드와 겹쳐 기동했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 기동합니다.
+      # 시뮬레이터를 빌드와 겹쳐 부팅했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 부팅합니다.
       - name: Build for testing
         if: matrix.target == 'test'
         timeout-minutes: 12
         run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID" XCODEBUILD_FLAGS=-skipMacroValidation
 
+      # simslim은 부팅 시간을 줄이는 최적화이고 테스트는 simslim이 끄는 데몬에 의존하지 않습니다. 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행합니다.
+      - name: Install simslim
+        id: simslim
+        if: matrix.target == 'test'
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          SIMSLIM_VERSION: 0.12.2
+          SIMSLIM_SHA256: b47302da6fb83b8b4c21f4fdd61507469770c07b0ff07fd1f48207bda4270887
+        run: |
+          archive="$RUNNER_TEMP/simslim.tar.gz"
+          directory="$RUNNER_TEMP/simslim"
+          mkdir -p "$directory"
+          if curl -fsSL --retry 3 -o "$archive" "https://github.com/MobAI-App/simslim/releases/download/v$SIMSLIM_VERSION/simslim-v$SIMSLIM_VERSION-macos-arm64.tar.gz" \
+            && echo "$SIMSLIM_SHA256  $archive" | shasum -a 256 -c - \
+            && tar -xzf "$archive" -C "$directory" simslim \
+            && "$directory/simslim" --version; then
+            echo "path=$directory/simslim" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=simslim::설치에 실패해 기본 상태 시뮬레이터로 진행합니다."
+          fi
+
+      # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅합니다. 제한 시간이 지나도 진행 중인 부팅은 다음 단계가 기다립니다.
+      - name: Slim simulator
+        if: matrix.target == 'test' && steps.simslim.outputs.path != ''
+        continue-on-error: true
+        timeout-minutes: 4
+        env:
+          SIMSLIM: ${{ steps.simslim.outputs.path }}
+          SIMSLIM_BOOT_TIMEOUT: 3m
+        run: |
+          if "$SIMSLIM" on "$TEST_DEVICE_ID"; then
+            "$SIMSLIM" status "$TEST_DEVICE_ID" || true
+          else
+            echo "::warning title=simslim::적용에 실패해 기본 상태 시뮬레이터로 진행합니다."
+          fi
+
       - name: Boot simulator
         if: matrix.target == 'test'
         timeout-minutes: 5
         run: |
-          xcrun simctl boot "$TEST_DEVICE_ID"
+          # 종료 상태가 아니면 부팅 명령을 보내지 않습니다. 부팅이 완료될 때까지 기다립니다.
+          if xcrun simctl list devices | grep "$TEST_DEVICE_ID" | grep -q "(Shutdown)"; then
+            xcrun simctl boot "$TEST_DEVICE_ID"
+          fi
           xcrun simctl bootstatus "$TEST_DEVICE_ID" -b
 
-      # 병렬 테스트는 복제 시뮬레이터 기동 지연과 멈춤의 원인으로 의심되어 CI에서만 끕니다.
+      # 병렬 테스트는 복제 시뮬레이터 부팅 지연과 멈춤의 원인으로 의심되어 CI에서만 끕니다.
       - name: Test
         if: matrix.target == 'test'
         timeout-minutes: 9
