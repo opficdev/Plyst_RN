@@ -1,4 +1,5 @@
 import { AppRegistry } from 'react-native';
+import '../index';
 
 jest.mock('plyst-bridge', () => ({
   getClip: jest.fn(),
@@ -14,7 +15,7 @@ jest.mock('plyst-bridge', () => ({
   subscribeToastRequests: jest.fn(),
 }));
 
-import '../index';
+jest.mock('@shopify/flash-list', () => ({ FlashList: () => null }));
 
 test('PlystRN 모듈을 등록한다', () => {
   expect(AppRegistry.getAppKeys()).toContain('PlystRN');
@@ -26,4 +27,8 @@ test('TextDetailView 모듈을 등록한다', () => {
 
 test('ImageDetailView 모듈을 등록한다', () => {
   expect(AppRegistry.getAppKeys()).toContain('ImageDetailView');
+});
+
+test('HomeView 모듈을 등록한다', () => {
+  expect(AppRegistry.getAppKeys()).toContain('HomeView');
 });
