@@ -145,7 +145,7 @@ jobs:
         timeout-minutes: 2
         run: echo "TEST_DEVICE_ID=$(make -s test-device-id)" >> "$GITHUB_ENV"
 
-      # 시뮬레이터를 빌드와 겹쳐 기동했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 기동합니다.
+      # 시뮬레이터를 빌드와 겹쳐 부팅했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 부팅합니다.
       - name: Build for testing
         if: matrix.target == 'test'
         timeout-minutes: 12
@@ -158,7 +158,7 @@ jobs:
           xcrun simctl boot "$TEST_DEVICE_ID"
           xcrun simctl bootstatus "$TEST_DEVICE_ID" -b
 
-      # 병렬 테스트는 복제 시뮬레이터 기동 지연과 멈춤의 원인으로 의심되어 CI에서만 끕니다.
+      # 병렬 테스트는 복제 시뮬레이터 부팅 지연과 멈춤의 원인으로 의심되어 CI에서만 끕니다.
       - name: Test
         if: matrix.target == 'test'
         timeout-minutes: 9
