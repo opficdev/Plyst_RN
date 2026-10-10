@@ -2,6 +2,7 @@ import {
   openClip,
   openSearch,
   subscribeSearchVisibility,
+  subscribeClipboardSaveRequests,
   closeScreen,
   copyClip,
   saveCurrentClipboard,
@@ -63,6 +64,7 @@ jest.mock('../modules/plyst-bridge/src/NativePlystHome', () => ({
     openSearch: jest.fn(),
     ready: jest.fn(),
     onSearchVisibilityChange: jest.fn(),
+    onClipboardSaveRequest: jest.fn(),
   },
 }));
 const native = jest.mocked(NativePlystClip);
@@ -451,3 +453,26 @@ test.each(['👨‍👩‍👧‍👦🇰🇷e\u0301'.repeat(20), null])(
     expect((await getClip(record.id))?.textPrefix).toBe(textPrefix);
   },
 );
+
+test('클립보드 저장 요청 리스너를 등록한 뒤 준비를 알리고 구독 객체를 반환한다', () => {
+  const home = jest.mocked(NativePlystHome);
+  const listener = jest.fn();
+  const subscription = { remove: jest.fn() } as unknown as ReturnType<
+    typeof home.onClipboardSaveRequest
+  >;
+  home.onClipboardSaveRequest.mockImplementation(() => {
+    expect(home.ready).not.toHaveBeenCalled();
+    return subscription;
+  });
+  home.ready.mockImplementation(() => {
+    expect(home.onClipboardSaveRequest).toHaveReturnedWith(subscription);
+    home.onClipboardSaveRequest.mock.calls[0][0]();
+  });
+
+  expect(subscribeClipboardSaveRequests(listener)).toBe(subscription);
+  expect(home.onClipboardSaveRequest).toHaveBeenCalledWith(listener);
+  expect(home.onClipboardSaveRequest).toHaveBeenCalledTimes(1);
+  expect(home.ready).toHaveBeenCalledTimes(1);
+  expect(listener).toHaveBeenCalledWith();
+  expect(listener).toHaveBeenCalledTimes(1);
+});
