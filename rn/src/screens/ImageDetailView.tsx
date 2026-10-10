@@ -116,7 +116,7 @@ function ImageDetailContent({ clipID }: ImageDetailViewProps) {
     const subscription = subscribeClipChanges((change) => {
       if (change.id !== clipID || isStopped()) return;
       if (change.kind === 'updated') void refresher.refresh();
-      else {
+      else if (change.kind === 'deleted') {
         removed = true;
         refresher.invalidate();
         dispatch({ type: 'removed' });

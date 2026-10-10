@@ -56,6 +56,69 @@ final class ClipBridgeAdapterImageTests: XCTestCase {
         XCTAssertNotNil(record)
     }
 
+    func testThumbnailReturnsDerivedFileAndMissingOrTextReturnsNil() async throws {
+        let adapter = try makeAdapter(writer: PhotoLibraryWriterSpy())
+        let data = try ClipImageTestFixture.data()
+        let clip = try await adapter.images.saveImage(data).value
+        let uri = try await adapter.getClipThumbnail(id: clip.id, maximumPixelDimension: 2)
+        let url = try XCTUnwrap(uri.flatMap(URL.init(string:)))
+        XCTAssertTrue(url.isFileURL)
+        XCTAssertEqual(url.lastPathComponent, "thumbnail-2")
+        XCTAssertFalse(try Data(contentsOf: url).isEmpty)
+        let original = try await adapter.images.loadImage(id: clip.id)
+        XCTAssertEqual(original, data)
+        let missing = try await adapter.getClipThumbnail(id: UUID(), maximumPixelDimension: 2)
+        XCTAssertNil(missing)
+        let text = Clip(content: .text("원문"))
+        try await adapter.storage.insert(text)
+        let nonImage = try await adapter.getClipThumbnail(id: text.id, maximumPixelDimension: 2)
+        XCTAssertNil(nonImage)
+    }
+
+    func testMissingOriginalRejectsOnlyThumbnail() async throws {
+        let adapter = try makeAdapter(writer: PhotoLibraryWriterSpy())
+        let clip = try await adapter.images.saveImage(ClipImageTestFixture.data()).value
+        guard case .image(let image) = clip.content else { return XCTFail("이미지가 아닙니다.") }
+        let original = directory.appendingPathComponent("images").appendingPathComponent(image.fileID.uuidString).appendingPathComponent("original")
+        try FileManager.default.removeItem(at: original)
+        do {
+            _ = try await adapter.getClipThumbnail(id: clip.id, maximumPixelDimension: 2)
+            XCTFail("없는 파일의 썸네일이 반환됐습니다.")
+        } catch {
+            guard case ClipBridgeError.imageUnavailable = error else { return XCTFail("예상한 오류가 아닙니다.") }
+        }
+        let record = try await adapter.clip(id: clip.id)
+        XCTAssertNotNil(record)
+    }
+
+    func testThumbnailRejectsNonPositiveSizes() async throws {
+        let adapter = try makeAdapter(writer: PhotoLibraryWriterSpy())
+        let clip = try await adapter.images.saveImage(ClipImageTestFixture.data()).value
+        for dimension in [0, -1] {
+            do {
+                _ = try await adapter.getClipThumbnail(id: clip.id, maximumPixelDimension: dimension)
+                XCTFail("잘못된 크기의 썸네일이 반환됐습니다.")
+            } catch {
+                guard case ClipBridgeError.imageUnavailable = error else { return XCTFail("예상한 오류가 아닙니다.") }
+            }
+        }
+    }
+
+    func testThumbnailPreservesCancellation() async throws {
+        let adapter = try makeAdapter(writer: PhotoLibraryWriterSpy())
+        let clip = try await adapter.images.saveImage(ClipImageTestFixture.data()).value
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await adapter.getClipThumbnail(id: clip.id, maximumPixelDimension: 2)
+        }
+        do {
+            _ = try await task.value
+            XCTFail("취소된 썸네일이 반환됐습니다.")
+        } catch {
+            XCTAssertTrue(error is CancellationError)
+        }
+    }
+
     func testPhotoSaveMapsPermissionResultsAndPreservesOriginalBytes() async throws {
         let spy = PhotoLibraryWriterSpy()
         let adapter = try makeAdapter(writer: spy)

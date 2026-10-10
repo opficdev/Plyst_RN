@@ -8,7 +8,7 @@ export type { ClipImageRecord, ClipRecord } from './NativePlystClip';
 export type { ToastRequest } from './NativePlystToast';
 
 export type ClipChange = {
-  kind: 'updated' | 'deleted';
+  kind: 'inserted' | 'updated' | 'deleted';
   id: string;
 };
 
@@ -31,8 +31,19 @@ export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }
 
+export function getClips(): Promise<ClipRecord[]> {
+  return NativePlystClip.getClips();
+}
+
 export function getClipImagePreview(id: string): Promise<string | null> {
   return NativePlystClip.getClipImagePreview(id);
+}
+
+export function getClipThumbnail(
+  id: string,
+  maximumPixelDimension: number,
+): Promise<string | null> {
+  return NativePlystClip.getClipThumbnail(id, maximumPixelDimension);
 }
 
 export type ClipPhotoSaveResult = 'saved' | 'denied' | 'restricted';

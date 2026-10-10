@@ -19,13 +19,15 @@ export type ClipRecord = {
   name: string | null;
   memo: string | null;
   isPinned: boolean;
+  // Foundation URL 검증은 JavaScript에서 재현할 수 없어 Swift에서 판별합니다. 이미지 클립은 false입니다.
+  isWebLink: boolean;
   // 날짜는 Unix epoch 기준 밀리초입니다. JavaScript Date와 같은 단위입니다.
   createdAt: number;
   lastUsedAt: number | null;
 };
 
 export type ClipChange = {
-  // kind는 updated 또는 deleted입니다.
+  // kind는 inserted, updated, deleted 중 하나입니다.
   kind: string;
   id: string;
 };
@@ -36,9 +38,20 @@ export interface Spec extends TurboModule {
   // 클립이 없으면 null입니다. 실패하면 E_INVALID_ID, E_UNAVAILABLE,
   // E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   getClip(id: string): Promise<ClipRecord | null>;
+  // 페이지 구분 없이 전체 클립을 생성 시각 내림차순으로 반환합니다. 동률이면 id.uuidString 오름차순입니다.
+  // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
+  getClips(): Promise<ClipRecord[]>;
   // 매번 다시 만든 미리보기의 file:// URI입니다. 클립이 없거나 이미지가 아니면 null입니다.
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
   getClipImagePreview(id: string): Promise<string | null>;
+  // 매 호출마다 다시 쓰는 <fileID>/thumbnail-<px> 파일의 file:// URI입니다.
+  // 호출자가 크기를 선택하며 크기마다 별도 파일을 사용합니다. 클립이 없거나 이미지가 아니면 null입니다.
+  // 크기 인자 없이 고정 크기를 사용하는 getClipImagePreview와 다릅니다.
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부합니다.
+  getClipThumbnail(
+    id: string,
+    maximumPixelDimension: number,
+  ): Promise<string | null>;
   // 결과는 saved, denied, restricted 중 하나입니다. 클립이 없으면 null입니다.
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_PHOTO_SAVE_FAILED 중 하나로 거부합니다.
   saveClipImageToPhotos(id: string): Promise<string | null>;

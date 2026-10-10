@@ -16,6 +16,7 @@ test('첫 조회만 초기 조회로 전달한다', async () => {
       id: 'clip-id',
       text: '원문',
       characterCount: 2,
+      isWebLink: false,
       image: null,
       name: null,
       memo: null,

@@ -3,7 +3,9 @@ import {
   copyClip,
   deleteClip,
   getClip,
+  getClips,
   getClipImagePreview,
+  getClipThumbnail,
   saveClipImageToPhotos,
   setSaveEnabled,
   subscribeClipChanges,
@@ -28,7 +30,9 @@ jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
     onClipChange: jest.fn(),
     ready: jest.fn(),
     getClip: jest.fn(),
+    getClips: jest.fn(),
     getClipImagePreview: jest.fn(),
+    getClipThumbnail: jest.fn(),
     saveClipImageToPhotos: jest.fn(),
     updateClip: jest.fn(),
     deleteClip: jest.fn(),
@@ -55,6 +59,7 @@ test('식별자를 전달하고 클립의 필드를 그대로 반환한다', asy
     id: 'clip-id',
     text: null,
     characterCount: 0,
+    isWebLink: false,
     image: {
       byteCountText: '100 bytes',
       contentType: 'public.png',
@@ -73,6 +78,56 @@ test('식별자를 전달하고 클립의 필드를 그대로 반환한다', asy
   expect(native.getClip).toHaveBeenCalledWith(record.id);
   expect(native.getClip).toHaveBeenCalledTimes(1);
 });
+
+test('전체 클립 목록의 순서와 필드를 그대로 반환한다', async () => {
+  const records: ClipRecord[] = [
+    {
+      id: 'link-id',
+      text: 'https://example.com',
+      characterCount: 19,
+      image: null,
+      name: null,
+      memo: null,
+      isPinned: false,
+      isWebLink: true,
+      createdAt: 2000,
+      lastUsedAt: null,
+    },
+    {
+      id: 'text-id',
+      text: '원문',
+      characterCount: 2,
+      image: null,
+      name: null,
+      memo: null,
+      isPinned: false,
+      isWebLink: false,
+      createdAt: 1000,
+      lastUsedAt: null,
+    },
+  ];
+  native.getClips.mockResolvedValue(records);
+
+  await expect(getClips()).resolves.toBe(records);
+  expect(native.getClips).toHaveBeenCalledWith();
+  expect(native.getClips).toHaveBeenCalledTimes(1);
+});
+
+test('클립이 없으면 빈 목록을 반환한다', async () => {
+  native.getClips.mockResolvedValue([]);
+
+  await expect(getClips()).resolves.toEqual([]);
+});
+
+test.each(['E_UNAVAILABLE', 'E_READ_FAILED', 'E_CORRUPTED_DATA'])(
+  '목록 조회의 %s 오류를 그대로 전달한다',
+  async (code) => {
+    const error = Object.assign(new Error(code), { code });
+    native.getClips.mockRejectedValue(error);
+
+    await expect(getClips()).rejects.toBe(error);
+  },
+);
 
 test('없는 클립은 null을 반환한다', async () => {
   native.getClip.mockResolvedValue(null);
@@ -123,6 +178,7 @@ test('갱신 인자를 그대로 전달하고 저장된 클립을 반환한다',
     id: 'clip-id',
     text: '원문',
     characterCount: 2,
+    isWebLink: false,
     image: null,
     name: ' 이름 ',
     memo: null,
@@ -205,6 +261,7 @@ test('클립 변경을 구독한 뒤 준비를 알리고 구독 객체를 반환
   >;
   native.onClipChange.mockImplementation((callback) => {
     expect(native.ready).not.toHaveBeenCalled();
+    callback({ kind: 'inserted', id: 'clip-id' });
     callback({ kind: 'updated', id: 'clip-id' });
     callback({ kind: 'deleted', id: 'clip-id' });
     return subscription;
@@ -217,6 +274,7 @@ test('클립 변경을 구독한 뒤 준비를 알리고 구독 객체를 반환
   expect(native.onClipChange).toHaveBeenCalledTimes(1);
   expect(native.ready).toHaveBeenCalledTimes(1);
   expect(listener.mock.calls).toEqual([
+    [{ kind: 'inserted', id: 'clip-id' }],
     [{ kind: 'updated', id: 'clip-id' }],
     [{ kind: 'deleted', id: 'clip-id' }],
   ]);
@@ -285,5 +343,23 @@ test.each(['E_INVALID_ID', 'E_UNAVAILABLE', 'E_PHOTO_SAVE_FAILED'])(
     const error = Object.assign(new Error(code), { code });
     native.saveClipImageToPhotos.mockRejectedValue(error);
     await expect(saveClipImageToPhotos('id')).rejects.toBe(error);
+  },
+);
+
+test.each(['file:///images/thumbnail-240', null])(
+  '썸네일 %s와 요청한 크기를 전달한다',
+  async (uri) => {
+    native.getClipThumbnail.mockResolvedValue(uri);
+    await expect(getClipThumbnail('clip-id', 240)).resolves.toBe(uri);
+    expect(native.getClipThumbnail).toHaveBeenCalledWith('clip-id', 240);
+  },
+);
+
+test.each(['E_INVALID_ID', 'E_UNAVAILABLE', 'E_IMAGE_UNAVAILABLE'])(
+  '썸네일 %s 오류를 전달한다',
+  async (code) => {
+    const error = Object.assign(new Error(code), { code });
+    native.getClipThumbnail.mockRejectedValue(error);
+    await expect(getClipThumbnail('id', 240)).rejects.toBe(error);
   },
 );

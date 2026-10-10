@@ -337,7 +337,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
     }
 }
 
-private actor ClipBridgeStorageServiceSpy: ClipStorageService {
+actor ClipBridgeStorageServiceSpy: ClipStorageService {
     private let storage: SQLiteClipStorageService
     private let failure: any Error
 
@@ -350,7 +350,7 @@ private actor ClipBridgeStorageServiceSpy: ClipStorageService {
     }
 
     func fetchAll(order: ClipSortOrder) async throws -> [Clip] {
-        try await storage.fetchAll(order: order)
+        throw failure
     }
 
     func fetch(id: Clip.ID) async throws -> Clip? {
