@@ -2,18 +2,24 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { Dispatch } from 'react';
 import { getClipThumbnail } from 'plyst-bridge';
 import type { ViewToken } from '@shopify/flash-list';
-import type { HomeAction, HomeState } from './homeState';
-import type { HomeListItem } from './homeListItems';
-import { createThumbnailRequestQueue } from './homeThumbnailRequests';
+import type { ClipRecord } from 'plyst-bridge';
+import type { ClipThumbnailAction, ClipThumbnails } from './clipThumbnails';
+import { createThumbnailRequestQueue } from './clipThumbnailRequests';
 
 const viewabilityConfig = {
   viewAreaCoveragePercentThreshold: 0,
   minimumViewTime: 0,
 };
 
-export function useHomeThumbnails(
-  state: HomeState,
-  dispatch: Dispatch<HomeAction>,
+type ThumbnailState = Pick<
+  ClipThumbnails,
+  'thumbnails' | 'loadingThumbnails' | 'failedThumbnails'
+> & { clips: ClipRecord[] };
+type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
+
+export function useClipThumbnails<Item extends ThumbnailItem>(
+  state: ThumbnailState,
+  dispatch: Dispatch<ClipThumbnailAction>,
   gridPixels: number,
   pinnedPixels: number,
   isMeasured: boolean,
@@ -91,9 +97,11 @@ export function useHomeThumbnails(
   }, [state.clips, gridPixels, pinnedPixels, isMeasured, request, updateGrid]);
 
   const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken<HomeListItem>[] }) => {
+    ({ viewableItems }: { viewableItems: ViewToken<Item>[] }) => {
       visibleIds.current = viewableItems.flatMap(({ item }) =>
-        item.kind === 'card' && item.clip.image !== null ? [item.clip.id] : [],
+        item.kind === 'card' && 'clip' in item && item.clip.image !== null
+          ? [item.clip.id]
+          : [],
       );
       updateGrid();
     },

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import { nextHomeTimelineChange } from './homeTimeline';
+import { nextClipTimelineChange } from './clipTimeline';
 
-export function useHomeTimeline(
+export function useClipTimeline(
   createdAtList: readonly number[],
   isEnabled: boolean,
 ): number {
@@ -25,7 +25,7 @@ export function useHomeTimeline(
       stop();
       if (!isEnabled || AppState.currentState !== 'active') return;
       const current = Date.now();
-      const next = nextHomeTimelineChange(dates.current, current);
+      const next = nextClipTimelineChange(dates.current, current);
       if (next !== null)
         timer = setTimeout(refresh, Math.max(0, next - current));
     }

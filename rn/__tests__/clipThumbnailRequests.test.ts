@@ -1,4 +1,4 @@
-import { createThumbnailRequestQueue } from '../src/screens/homeThumbnailRequests';
+import { createThumbnailRequestQueue } from '../src/screens/clipThumbnailRequests';
 
 function deferred() {
   let resolve!: (uri: string | null) => void;

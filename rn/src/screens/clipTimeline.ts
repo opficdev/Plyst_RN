@@ -1,4 +1,4 @@
-export function nextHomeTimelineChange(
+export function nextClipTimelineChange(
   createdAtList: readonly number[],
   now: number,
 ): number | null {

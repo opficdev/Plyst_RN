@@ -1,16 +1,14 @@
+import { reduceClipThumbnails, retainClipThumbnails } from './clipThumbnails';
+import type { ClipThumbnailAction, ClipThumbnails } from './clipThumbnails';
 import type { ClipRecord } from 'plyst-bridge';
-import type { HomeFilter, HomeLoadPhase } from './homeContent';
+import type { ClipFilter } from './clipFilter';
+import type { ClipLoadPhase } from './loadClips';
 
-export const homeThumbnailLimit = 48;
-export type HomeState = {
-  loadPhase: HomeLoadPhase;
+export type HomeState = ClipThumbnails & {
+  loadPhase: ClipLoadPhase;
   clips: ClipRecord[];
   now: number;
-  filter: HomeFilter;
-  thumbnails: Record<string, string>;
-  thumbnailOrder: string[];
-  loadingThumbnails: Record<string, true>;
-  failedThumbnails: Record<string, true>;
+  filter: ClipFilter;
   isSearchVisible: boolean;
   isSaving: boolean;
   menuClip: ClipRecord | null;
@@ -44,16 +42,9 @@ export type HomeAction =
   | { type: 'clipsLoaded'; clips: ClipRecord[]; now: number }
   | { type: 'loadFailed' }
   | { type: 'timeChanged'; now: number }
-  | { type: 'filterSelected'; filter: HomeFilter }
-  | { type: 'thumbnailStarted'; key: string }
-  | { type: 'thumbnailLoaded'; key: string; uri: string }
-  | { type: 'thumbnailFailed'; key: string }
-  | { type: 'thumbnailCancelled'; key: string }
+  | { type: 'filterSelected'; filter: ClipFilter }
+  | ClipThumbnailAction
   | { type: 'searchVisibilityChanged'; isVisible: boolean };
-
-function clipID(key: string): string {
-  return key.slice(0, key.lastIndexOf(':'));
-}
 
 export function reduce(state: HomeState, action: HomeAction): HomeState {
   if (
@@ -95,22 +86,7 @@ export function reduce(state: HomeState, action: HomeAction): HomeState {
       next.clips = action.clips;
       next.now = action.now;
       next.loadPhase = 'loaded';
-      const valid = new Set(
-        action.clips
-          .filter((clip) => clip.image !== null)
-          .map((clip) => clip.id),
-      );
-      const retained = (key: string) => valid.has(clipID(key));
-      next.thumbnails = Object.fromEntries(
-        Object.entries(next.thumbnails).filter(([key]) => retained(key)),
-      );
-      next.thumbnailOrder = next.thumbnailOrder.filter(retained);
-      next.loadingThumbnails = Object.fromEntries(
-        Object.entries(next.loadingThumbnails).filter(([key]) => retained(key)),
-      );
-      next.failedThumbnails = Object.fromEntries(
-        Object.entries(next.failedThumbnails).filter(([key]) => retained(key)),
-      );
+      Object.assign(next, retainClipThumbnails(next, action.clips));
       break;
     }
     case 'loadFailed':
@@ -123,35 +99,10 @@ export function reduce(state: HomeState, action: HomeAction): HomeState {
       next.filter = action.filter;
       break;
     case 'thumbnailStarted':
-      next.loadingThumbnails[action.key] = true;
-      break;
-    case 'thumbnailLoaded': {
-      const wasLoading = next.loadingThumbnails[action.key];
-      delete next.loadingThumbnails[action.key];
-      if (
-        !wasLoading ||
-        !next.clips.some(
-          (clip) => clip.id === clipID(action.key) && clip.image !== null,
-        )
-      )
-        break;
-      next.thumbnails[action.key] = action.uri;
-      next.thumbnailOrder = next.thumbnailOrder.filter(
-        (key) => key !== action.key,
-      );
-      next.thumbnailOrder.push(action.key);
-      while (homeThumbnailLimit < next.thumbnailOrder.length) {
-        const oldest = next.thumbnailOrder.shift()!;
-        delete next.thumbnails[oldest];
-      }
-      break;
-    }
+    case 'thumbnailLoaded':
     case 'thumbnailFailed':
-      delete next.loadingThumbnails[action.key];
-      next.failedThumbnails[action.key] = true;
-      break;
     case 'thumbnailCancelled':
-      delete next.loadingThumbnails[action.key];
+      Object.assign(next, reduceClipThumbnails(next, action, next.clips));
       break;
     case 'searchVisibilityChanged':
       next.isSearchVisible = action.isVisible;

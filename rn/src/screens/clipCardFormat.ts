@@ -1,4 +1,4 @@
-export function formatHomeCardTime(date: number, now: number): string {
+export function formatClipCardTime(date: number, now: number): string {
   const age = (now - date) / 1000;
   if (0 <= age && age < 60) return '지금';
   if (0 <= age && age < 300) return `${Math.floor(age / 60)}분 전`;

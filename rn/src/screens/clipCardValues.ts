@@ -1,12 +1,12 @@
 import type { ClipRecord } from 'plyst-bridge';
-import { formatHomeCardTime } from './homeCardFormat';
+import { formatClipCardTime } from './clipCardFormat';
 
-export function homeCardValues(
+export function clipCardValues(
   clip: ClipRecord,
   now: number,
   isPinned = false,
 ) {
-  const time = formatHomeCardTime(clip.createdAt, now);
+  const time = formatClipCardTime(clip.createdAt, now);
   const common = { name: clip.name };
   if (clip.image !== null) {
     const { pixelWidth, pixelHeight } = clip.image;
@@ -27,11 +27,11 @@ export function homeCardValues(
   };
 }
 
-export function homeColumnWidth(width: number) {
+export function clipColumnWidth(width: number) {
   return Math.max(1, (width - 42) / 2);
 }
 
-export function homeThumbnailPixels(
+export function clipThumbnailPixels(
   columnWidth: number,
   scale: number,
   isPinned = false,

@@ -8,7 +8,7 @@ import { clipCardLongPressDelay } from '../components/ClipCard';
 const leftColumn = createContext(true);
 
 // 항목 순번 대신 실제 열 위치를 사용합니다. 전체 너비 항목에는 여백을 적용하지 않습니다.
-export function HomeListCell({
+export function ClipListCell({
   children,
   style,
   index: _index,
@@ -23,14 +23,14 @@ export function HomeListCell({
   );
 }
 
-export function HomeGridCard({
+export function ClipGridCard({
   children,
   onPress,
   onShowMenu,
 }: {
   children: React.ReactNode;
   onPress: () => void;
-  onShowMenu: () => void;
+  onShowMenu?: () => void;
 }) {
   const isLeft = useContext(leftColumn);
   return (

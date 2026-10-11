@@ -1,9 +1,6 @@
+import { clipThumbnailLimit } from '../src/screens/clipThumbnails';
 import type { ClipRecord } from 'plyst-bridge';
-import {
-  homeThumbnailLimit,
-  initialState,
-  reduce,
-} from '../src/screens/homeState';
+import { initialState, reduce } from '../src/screens/homeState';
 import type { HomeAction, HomeState } from '../src/screens/homeState';
 
 const clip: ClipRecord = {
@@ -154,7 +151,7 @@ test('시작과 성공은 기존 실패 기록을 지우지 않는다', () => {
 });
 
 test('48개를 유지하고 다시 받은 키를 맨 뒤로 옮긴 후 가장 오래된 키를 제거한다', () => {
-  expect(homeThumbnailLimit).toBe(48);
+  expect(clipThumbnailLimit).toBe(48);
   let state = loaded();
   for (let pixels = 1; pixels <= 48; pixels += 1)
     state = loadThumbnail(state, `image:${pixels}`);
