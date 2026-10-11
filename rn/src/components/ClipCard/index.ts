@@ -1,5 +1,5 @@
 export { ClipTextCard } from './TextCard';
 export { ClipImageCard } from './ImageCard';
 export { ClipPinnedCard } from './PinnedCard';
-export type { ClipCardProps } from './CardProps';
+export type { ClipCardProps, ClipTextRange } from './CardProps';
 export { clipCardLongPressDelay } from './longPressDelay';

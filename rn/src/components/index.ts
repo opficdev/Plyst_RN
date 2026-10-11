@@ -1,5 +1,5 @@
 export { ClipTextCard, ClipImageCard, ClipPinnedCard } from './ClipCard';
-export type { ClipCardProps } from './ClipCard';
+export type { ClipCardProps, ClipTextRange } from './ClipCard';
 export { SectionTitle } from './SectionTitle';
 export {
   HomeEmptyState,

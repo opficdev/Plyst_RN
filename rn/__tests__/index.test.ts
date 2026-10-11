@@ -32,3 +32,7 @@ test('ImageDetailView 모듈을 등록한다', () => {
 test('HomeView 모듈을 등록한다', () => {
   expect(AppRegistry.getAppKeys()).toContain('HomeView');
 });
+
+test('SearchView 모듈을 등록한다', () => {
+  expect(AppRegistry.getAppKeys()).toContain('SearchView');
+});

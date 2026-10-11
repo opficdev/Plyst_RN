@@ -6,6 +6,7 @@ import { HomeView } from './src/screens/HomeView';
 import { showToast, ToastHost } from './src/components';
 import { ImageDetailView } from './src/screens/ImageDetailView';
 import { TextDetailView } from './src/screens/TextDetailView';
+import { SearchView } from './src/screens/SearchView';
 
 subscribeToastRequests(({ message, isSuccess }) =>
   showToast(message, isSuccess),
@@ -21,3 +22,5 @@ AppRegistry.registerComponent('ToastHost', () => ToastHost);
 AppRegistry.registerComponent('ImageDetailView', () => ImageDetailView);
 
 AppRegistry.registerComponent('HomeView', () => HomeView);
+
+AppRegistry.registerComponent('SearchView', () => SearchView);

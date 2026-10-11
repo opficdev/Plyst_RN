@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import type { ScrollViewProps } from 'react-native';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { colors, spacing, typography } from '../../theme';
 
-type HomeFilterBarProps<Key extends string> = {
+type HomeFilterBarProps<Key extends string> = Pick<
+  ScrollViewProps,
+  'keyboardShouldPersistTaps'
+> & {
   chips: { key: Key; title: string }[];
   selectedKey: Key;
   // HomeFilterBarViewAction.select의 의미를 유지한다.
@@ -24,12 +28,14 @@ function HomeFilterChips<Key extends string>({
   chips,
   selectedKey,
   onSelect,
+  keyboardShouldPersistTaps,
 }: HomeFilterBarProps<Key>) {
   const [maxWidth, setMaxWidth] = useState(0);
 
   return (
     <ScrollView
       horizontal
+      keyboardShouldPersistTaps={keyboardShouldPersistTaps}
       style={styles.scrollView}
       contentContainerStyle={styles.stack}
       showsHorizontalScrollIndicator={false}
