@@ -38,30 +38,30 @@ import { copyClipDetail } from './copyClipDetail';
 import { deleteClipDetail } from './deleteClipDetail';
 import { homeMenuTitle, homeMenuSummary, homePinTarget } from './homeMenu';
 import { colors, spacing } from '../theme';
-import { HomeGridCard, HomeListCell } from './HomeGridCard';
+import { ClipGridCard, ClipListCell } from './ClipGridCard';
 import {
   homeEmptyState,
-  homeFilters,
   homeFilterStrings,
-  homeSectionTitles,
   makeHomeContent,
 } from './homeContent';
+import { clipFilters, clipFilterTitles } from './clipFilter';
+import { clipSectionTitles } from './clipSection';
 import {
-  homeCardValues,
-  homeColumnWidth,
-  homeThumbnailPixels,
-} from './homeCardValues';
+  clipCardValues,
+  clipColumnWidth,
+  clipThumbnailPixels,
+} from './clipCardValues';
 import { makeHomeListItems } from './homeListItems';
 import type { HomeListItem } from './homeListItems';
 import { initialState, reduce } from './homeState';
 import { useHomeClips } from './useHomeClips';
-import { useHomeTimeline } from './useHomeTimeline';
+import { useClipTimeline } from './useClipTimeline';
 import { useHomeHeaderScroll } from './useHomeHeaderScroll';
-import { useHomeThumbnails } from './useHomeThumbnails';
+import { useClipThumbnails } from './useClipThumbnails';
 
-const chips = homeFilters.map((key) => ({
+const chips = clipFilters.map((key) => ({
   key,
-  title: homeFilterStrings[key].title,
+  title: clipFilterTitles[key],
 }));
 export function HomeView() {
   return (
@@ -179,7 +179,7 @@ function HomeContent() {
     () => state.clips.map((clip) => clip.createdAt),
     [state.clips],
   );
-  const now = useHomeTimeline(dates, !state.isSearchVisible);
+  const now = useClipTimeline(dates, !state.isSearchVisible);
   useEffect(() => {
     dispatch({ type: 'timeChanged', now });
   }, [now]);
@@ -221,11 +221,11 @@ function HomeContent() {
     previousFilter.current = state.filter;
     reset();
   }, [state.filter, reset]);
-  const columnWidth = homeColumnWidth(size.width);
+  const columnWidth = clipColumnWidth(size.width);
   const scale = PixelRatio.get();
-  const gridPixels = homeThumbnailPixels(columnWidth, scale);
-  const pinnedPixels = homeThumbnailPixels(columnWidth, scale, true);
-  const thumbnails = useHomeThumbnails(
+  const gridPixels = clipThumbnailPixels(columnWidth, scale);
+  const pinnedPixels = clipThumbnailPixels(columnWidth, scale, true);
+  const thumbnails = useClipThumbnails<HomeListItem>(
     state,
     dispatch,
     gridPixels,
@@ -252,7 +252,7 @@ function HomeContent() {
       return (
         <HomePinnedRow
           clips={item.clips.map((clip) => {
-            const values = homeCardValues(clip, state.now, true);
+            const values = clipCardValues(clip, state.now, true);
             return {
               ...values,
               ...thumbnail(clip.id, pinnedPixels),
@@ -273,12 +273,12 @@ function HomeContent() {
             item.hasPreviousSection && styles.nextSection,
           ]}
         >
-          <SectionTitle title={homeSectionTitles[item.section]} />
+          <SectionTitle title={clipSectionTitles[item.section]} />
         </View>
       );
-    const values = homeCardValues(item.clip, state.now);
+    const values = clipCardValues(item.clip, state.now);
     return (
-      <HomeGridCard
+      <ClipGridCard
         onPress={() => selectClip(item.clip)}
         onShowMenu={() => showMenu(item.clip)}
       >
@@ -296,7 +296,7 @@ function HomeContent() {
             onCopyButtonLongPress={() => showMenu(item.clip)}
           />
         )}
-      </HomeGridCard>
+      </ClipGridCard>
     );
   }
 
@@ -310,7 +310,7 @@ function HomeContent() {
           extraData={state}
           masonry
           numColumns={2}
-          CellRendererComponent={HomeListCell}
+          CellRendererComponent={ClipListCell}
           keyExtractor={(item) => item.key}
           getItemType={(item) =>
             item.kind === 'card'

@@ -1,17 +1,17 @@
 import type { ClipRecord } from 'plyst-bridge';
+import { clipFilters } from '../src/screens/clipFilter';
 import {
-  homeFilters,
   homeFilterStrings,
-  homeSectionKinds,
-  homeSectionTitles,
   makeHomeContent,
   homeEmptyState,
 } from '../src/screens/homeContent';
-import type {
-  HomeFilter,
-  HomeLoadPhase,
-  HomeEmptyState,
-} from '../src/screens/homeContent';
+import {
+  clipSectionKinds,
+  clipSectionTitles,
+} from '../src/screens/clipSection';
+import type { ClipFilter } from '../src/screens/clipFilter';
+import type { ClipLoadPhase } from '../src/screens/loadClips';
+import type { HomeEmptyState } from '../src/screens/homeContent';
 const clip: ClipRecord = {
   id: 'clip-id',
   text: '원문',
@@ -41,8 +41,8 @@ const image: ClipRecord = {
 };
 
 test('필터 순서와 모든 고정 문구는 원본과 같다', () => {
-  expect(homeFilters).toEqual(['all', 'text', 'image', 'pinned']);
-  expect(homeFilters.map((filter) => homeFilterStrings[filter])).toEqual([
+  expect(clipFilters).toEqual(['all', 'text', 'image', 'pinned']);
+  expect(clipFilters.map((filter) => homeFilterStrings[filter])).toEqual([
     {
       title: '전체',
       emptyTitle: '아직 저장된 내용이 없습니다',
@@ -65,8 +65,8 @@ test('필터 순서와 모든 고정 문구는 원본과 같다', () => {
       emptyMessage: '항목을 길게 눌러 고정할 수 있어요',
     },
   ]);
-  expect(homeSectionKinds).toEqual(['recent', 'today', 'yesterday', 'earlier']);
-  expect(homeSectionTitles).toEqual({
+  expect(clipSectionKinds).toEqual(['recent', 'today', 'yesterday', 'earlier']);
+  expect(clipSectionTitles).toEqual({
     recent: '방금',
     today: '오늘',
     yesterday: '어제',
@@ -124,7 +124,7 @@ const pinnedImage = { ...image, id: 'pinned-image', isPinned: true };
 const text = { ...clip, id: 'text', createdAt: now - 2000, isWebLink: true };
 const clips = [pinnedText, pinnedImage, image, text];
 
-test.each<[HomeFilter, ClipRecord[], ClipRecord[]]>([
+test.each<[ClipFilter, ClipRecord[], ClipRecord[]]>([
   ['all', [pinnedText, pinnedImage], [image, text]],
   ['text', [], [pinnedText, text]],
   ['image', [], [pinnedImage, image]],
@@ -150,7 +150,7 @@ test('고정 목록만 있어도 비어 있지 않다', () => {
   });
 });
 
-test.each(homeFilters)('%s 필터의 빈 결과에는 빈 섹션이 없다', (filter) => {
+test.each(clipFilters)('%s 필터의 빈 결과에는 빈 섹션이 없다', (filter) => {
   expect(makeHomeContent([], filter, now)).toEqual({
     pinnedClips: [],
     sections: [],
@@ -158,7 +158,7 @@ test.each(homeFilters)('%s 필터의 빈 결과에는 빈 섹션이 없다', (fi
   });
 });
 
-test.each<[HomeLoadPhase, boolean, boolean, HomeEmptyState]>([
+test.each<[ClipLoadPhase, boolean, boolean, HomeEmptyState]>([
   ['loading', true, true, 'none'],
   ['loading', false, true, 'none'],
   ['loading', false, false, 'none'],

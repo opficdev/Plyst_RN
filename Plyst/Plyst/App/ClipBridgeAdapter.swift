@@ -10,6 +10,7 @@ import PlystBridge
 
 struct ClipBridgeAdapter: ClipBridgeProvider {
     let storage: any ClipStorageService
+    let history: any ClipSearchHistoryStorageService
     let images: ClipImageService
     let clipboard: ClipboardService
     let photos: ClipPhotoLibraryService
@@ -60,6 +61,53 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             throw ClipBridgeError.corruptedData
         } catch {
             throw ClipBridgeError.readFailed
+        }
+    }
+
+    func searchHistory() async throws -> [String] {
+        do {
+            return try await history.fetchSearchHistory().terms
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.corruptedData {
+            throw ClipBridgeError.corruptedData
+        } catch {
+            throw ClipBridgeError.readFailed
+        }
+    }
+
+    func recordSearchTerm(_ term: String) async throws -> [String]? {
+        guard let query = ClipSearchQuery(term) else { return nil }
+        do {
+            return try await history.recordSearchTerm(query).terms
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.corruptedData {
+            throw ClipBridgeError.corruptedData
+        } catch {
+            throw ClipBridgeError.writeFailed
+        }
+    }
+
+    func removeSearchTerm(_ term: String) async throws -> [String] {
+        do {
+            return try await history.removeSearchTerm(term).terms
+        } catch let error as CancellationError {
+            throw error
+        } catch ClipStorageError.corruptedData {
+            throw ClipBridgeError.corruptedData
+        } catch {
+            throw ClipBridgeError.writeFailed
+        }
+    }
+
+    func removeAllSearchTerms() async throws {
+        do {
+            try await history.removeAllSearchTerms()
+        } catch let error as CancellationError {
+            throw error
+        } catch {
+            throw ClipBridgeError.writeFailed
         }
     }
 

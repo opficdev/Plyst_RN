@@ -1,12 +1,13 @@
 import type { ClipRecord } from 'plyst-bridge';
-import type { HomeContent, HomeSectionKind } from './homeContent';
+import type { HomeContent } from './homeContent';
+import type { ClipSectionKind } from './clipSection';
 
 export type HomeListItem =
   | { kind: 'pinned'; key: string; clips: ClipRecord[] }
   | {
       kind: 'section';
       key: string;
-      section: HomeSectionKind;
+      section: ClipSectionKind;
       hasPreviousSection: boolean;
     }
   | { kind: 'card'; key: string; clip: ClipRecord };

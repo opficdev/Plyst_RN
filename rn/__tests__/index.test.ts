@@ -12,7 +12,6 @@ jest.mock('plyst-bridge', () => ({
   subscribeSave: jest.fn(() => ({ remove: jest.fn() })),
   subscribeClipChanges: jest.fn(() => ({ remove: jest.fn() })),
   updateClip: jest.fn(),
-  subscribeToastRequests: jest.fn(),
 }));
 
 jest.mock('@shopify/flash-list', () => ({ FlashList: () => null }));
@@ -31,4 +30,8 @@ test('ImageDetailView 모듈을 등록한다', () => {
 
 test('HomeView 모듈을 등록한다', () => {
   expect(AppRegistry.getAppKeys()).toContain('HomeView');
+});
+
+test('SearchView 모듈을 등록한다', () => {
+  expect(AppRegistry.getAppKeys()).toContain('SearchView');
 });

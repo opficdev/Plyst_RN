@@ -37,6 +37,10 @@ RCT_EXPORT_METHOD(openSearch) {
   [_implementation openSearch];
 }
 
+RCT_EXPORT_METHOD(closeSearch) {
+  [_implementation closeSearch];
+}
+
 RCT_EXPORT_METHOD(ready) {
   [_implementation ready];
 }

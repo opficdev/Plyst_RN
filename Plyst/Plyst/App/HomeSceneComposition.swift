@@ -73,33 +73,7 @@ final class HomeSceneComposition {
     func makeRootViewController(
         onRootViewUnavailable: @escaping @MainActor () -> Void
     ) -> UIViewController {
-        let showToast: @MainActor (String, Bool) -> Void = {
-            ToastBridge.show(message: $0, isSuccess: $1)
-        }
-        let makeDetail = { @MainActor (clip: Clip) -> UIViewController in
-            switch clip.content {
-            case .text:
-                Self.makeDetailViewController(id: clip.id, kind: .text)
-            case .image:
-                Self.makeDetailViewController(id: clip.id, kind: .image)
-            }
-        }
-        // 검색 화면은 같은 저장소와 서비스 및 토스트 표시 클로저를 공유합니다. 클로저는 Composition을 캡처하지 않습니다.
         return HomeViewController(
-            makeSearchViewController: { [storage, clipboard, images, makeDetail, showToast] cancel in
-                SearchViewController(
-                    reactor: SearchReactor(
-                        storage: storage,
-                        history: storage,
-                        clipboard: clipboard,
-                        images: images
-                    ),
-                    showToast: showToast,
-                    makeSearchView: { SearchView(frame: .zero, send: $0) },
-                    makeDetailViewController: makeDetail,
-                    cancel: cancel
-                )
-            },
             makeDetailViewController: { Self.makeDetailViewController(id: $0, kind: $1) },
             onRootViewUnavailable: onRootViewUnavailable
         )

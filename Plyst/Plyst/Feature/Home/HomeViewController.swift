@@ -12,18 +12,15 @@ import UIKit
 /// React Native 홈을 호스팅하고 화면 이동을 연결하므로 Feature에서 PlystBridge를 직접 사용합니다.
 @MainActor
 final class HomeViewController: UIViewController, HomeBridgeNavigator {
-    private let makeSearchViewController: @MainActor (@escaping @MainActor () -> Void) -> UIViewController
     private let makeDetailViewController: @MainActor (Clip.ID, HomeBridgeClipKind) -> UIViewController
     private let onRootViewUnavailable: @MainActor () -> Void
     private var contentView: UIView?
-    private var searchViewController: UIViewController?
+    private var searchView: UIView?
 
     init(
-        makeSearchViewController: @escaping @MainActor (@escaping @MainActor () -> Void) -> UIViewController,
         makeDetailViewController: @escaping @MainActor (Clip.ID, HomeBridgeClipKind) -> UIViewController,
         onRootViewUnavailable: @escaping @MainActor () -> Void
     ) {
-        self.makeSearchViewController = makeSearchViewController
         self.makeDetailViewController = makeDetailViewController
         self.onRootViewUnavailable = onRootViewUnavailable
         super.init(nibName: nil, bundle: nil)
@@ -62,17 +59,22 @@ final class HomeViewController: UIViewController, HomeBridgeNavigator {
     }
 
     func openSearch() {
-        guard searchViewController == nil else { return }
-        let search = makeSearchViewController { [weak self] in self?.hideSearch() }
-        embed(search)
-        searchViewController = search
+        guard searchView == nil,
+              let search = ReactNativeBrownfield.shared.view(
+                  moduleName: "SearchView",
+                  initialProps: nil,
+                  launchOptions: nil
+              ) else { return }
+        searchView = search
+        makeSearchHierarchy()
+        makeSearchLayout()
         HomeBridge.searchVisibilityChanged(true)
     }
 
-    private func hideSearch() {
-        guard let search = searchViewController else { return }
-        removeEmbedded(search)
-        searchViewController = nil
+    func closeSearch() {
+        guard let searchView else { return }
+        searchView.removeFromSuperview()
+        self.searchView = nil
         HomeBridge.searchVisibilityChanged(false)
     }
 
@@ -92,6 +94,21 @@ final class HomeViewController: UIViewController, HomeBridgeNavigator {
             contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    private func makeSearchHierarchy() {
+        if let searchView { view.addSubview(searchView) }
+    }
+
+    private func makeSearchLayout() {
+        guard let searchView else { return }
+        searchView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            searchView.topAnchor.constraint(equalTo: view.topAnchor),
+            searchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            searchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            searchView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 }

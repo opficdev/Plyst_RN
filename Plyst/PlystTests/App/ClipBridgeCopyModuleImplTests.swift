@@ -153,6 +153,11 @@ private struct ClipBridgeCopyProviderStub: ClipBridgeProvider {
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
     func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult { .empty }
 
+    func searchHistory() async throws -> [String] { [] }
+    func recordSearchTerm(_ term: String) async throws -> [String]? { nil }
+    func removeSearchTerm(_ term: String) async throws -> [String] { [] }
+    func removeAllSearchTerms() async throws {}
+
     func clips() async throws -> [ClipBridgeRecord] { [] }
 
     func updateClip(
@@ -281,6 +286,11 @@ private struct ClipBridgeSaveProviderStub: ClipBridgeProvider {
     func getClipImagePreview(id: UUID) async throws -> String? { nil }
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? { nil }
     func clip(id: UUID) async throws -> ClipBridgeRecord? { nil }
+    func searchHistory() async throws -> [String] { [] }
+    func recordSearchTerm(_ term: String) async throws -> [String]? { nil }
+    func removeSearchTerm(_ term: String) async throws -> [String] { [] }
+    func removeAllSearchTerms() async throws {}
+
     func clips() async throws -> [ClipBridgeRecord] { [] }
 
     func updateClip(

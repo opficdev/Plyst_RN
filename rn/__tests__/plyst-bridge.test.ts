@@ -15,7 +15,6 @@ import {
   setSaveEnabled,
   subscribeClipChanges,
   subscribeSave,
-  subscribeToastRequests,
   updateClip,
 } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
@@ -23,12 +22,6 @@ import type { ClipRecord } from 'plyst-bridge';
 import NativePlystHome from '../modules/plyst-bridge/src/NativePlystHome';
 import NativePlystScreen from '../modules/plyst-bridge/src/NativePlystScreen';
 import NativePlystClip from '../modules/plyst-bridge/src/NativePlystClip';
-import NativePlystToast from '../modules/plyst-bridge/src/NativePlystToast';
-
-jest.mock('../modules/plyst-bridge/src/NativePlystToast', () => ({
-  __esModule: true,
-  default: { onToastRequest: jest.fn(), ready: jest.fn() },
-}));
 
 jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
   __esModule: true,
@@ -171,26 +164,6 @@ test('화면 닫기를 네이티브 모듈에 전달한다', () => {
   closeScreen();
   expect(NativePlystScreen.close).toHaveBeenCalledTimes(1);
   expect(NativePlystScreen.close).toHaveBeenCalledWith();
-});
-
-test('토스트 요청을 구독한 뒤 준비를 알리고 구독 객체를 반환한다', () => {
-  const toast = jest.mocked(NativePlystToast);
-  const listener = jest.fn();
-  const subscription = { remove: jest.fn() } as unknown as ReturnType<
-    typeof NativePlystToast.onToastRequest
-  >;
-  toast.onToastRequest.mockImplementation(() => {
-    expect(toast.ready).not.toHaveBeenCalled();
-    return subscription;
-  });
-  toast.ready.mockImplementation(() => {
-    expect(toast.onToastRequest).toHaveReturnedWith(subscription);
-  });
-
-  expect(subscribeToastRequests(listener)).toBe(subscription);
-  expect(toast.onToastRequest).toHaveBeenCalledWith(listener);
-  expect(toast.onToastRequest).toHaveBeenCalledTimes(1);
-  expect(toast.ready).toHaveBeenCalledTimes(1);
 });
 
 test('갱신 인자를 그대로 전달하고 저장된 클립을 반환한다', async () => {

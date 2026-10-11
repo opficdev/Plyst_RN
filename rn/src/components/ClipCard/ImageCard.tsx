@@ -11,6 +11,7 @@ type ClipImageCardProps = ClipCardProps & {
 };
 export function ClipImageCard({
   name,
+  nameHighlights,
   metadata,
   thumbnailUri,
   isThumbnailFailed,
@@ -24,6 +25,8 @@ export function ClipImageCard({
       </View>
       <View style={styles.content}>
         <ClipCardLabel
+          highlights={nameHighlights}
+          highlightWeight="700"
           style={[styles.name, name === null && styles.unnamed]}
           numberOfLines={2}
           lineBreakStrategyIOS="standard"

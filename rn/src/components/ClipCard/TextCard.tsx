@@ -1,13 +1,19 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme';
-import type { ClipCardProps } from './CardProps';
+import type { ClipCardProps, ClipTextRange } from './CardProps';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';
 
-type ClipTextCardProps = ClipCardProps & { body: string; isWebLink: boolean };
+type ClipTextCardProps = ClipCardProps & {
+  body: string;
+  isWebLink: boolean;
+  bodyHighlights?: ClipTextRange[];
+};
 export function ClipTextCard({
   name,
+  nameHighlights,
+  bodyHighlights,
   metadata,
   body,
   isWebLink,
@@ -23,6 +29,8 @@ export function ClipTextCard({
       )}
       {name !== null && (
         <ClipCardLabel
+          highlights={nameHighlights}
+          highlightWeight="700"
           style={styles.name}
           numberOfLines={2}
           lineBreakStrategyIOS="standard"
@@ -31,6 +39,8 @@ export function ClipTextCard({
         </ClipCardLabel>
       )}
       <ClipCardLabel
+        highlights={bodyHighlights}
+        highlightWeight="600"
         style={[
           styles.body,
           name === null ? styles.unnamedBody : styles.namedBody,

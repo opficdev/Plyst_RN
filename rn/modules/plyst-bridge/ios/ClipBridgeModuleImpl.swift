@@ -59,6 +59,67 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         )
     }
 
+    @objc(getSearchHistory:)
+    public nonisolated func getSearchHistory(completion: @escaping @Sendable (NSArray?, String?) -> Void) {
+        execute(
+            fallback: .readFailed,
+            operation: {
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                return try await provider.searchHistory()
+            },
+            completion: { terms, code in
+                completion(terms.map { $0 as NSArray }, code)
+            }
+        )
+    }
+
+    @objc(recordSearchTerm:completion:)
+    public nonisolated func recordSearchTerm(
+        _ term: String,
+        completion: @escaping @Sendable (NSArray?, String?) -> Void
+    ) {
+        execute(
+            fallback: .writeFailed,
+            operation: {
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                return try await provider.recordSearchTerm(term)
+            },
+            completion: { terms, code in
+                completion(terms.map { $0 as NSArray }, code)
+            }
+        )
+    }
+
+    @objc(removeSearchTerm:completion:)
+    public nonisolated func removeSearchTerm(
+        _ term: String,
+        completion: @escaping @Sendable (NSArray?, String?) -> Void
+    ) {
+        execute(
+            fallback: .writeFailed,
+            operation: {
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                return try await provider.removeSearchTerm(term)
+            },
+            completion: { terms, code in
+                completion(terms.map { $0 as NSArray }, code)
+            }
+        )
+    }
+
+    @objc(removeAllSearchTerms:)
+    public nonisolated func removeAllSearchTerms(completion: @escaping @Sendable (String?) -> Void) {
+        execute(
+            fallback: .writeFailed,
+            operation: {
+                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+                try await provider.removeAllSearchTerms()
+                return true
+            },
+            completion: { _, code in completion(code) }
+        )
+    }
+
     @objc(saveCurrentClipboard:)
     public nonisolated func saveCurrentClipboard(completion: @escaping @Sendable (String?, String?) -> Void) {
         execute(

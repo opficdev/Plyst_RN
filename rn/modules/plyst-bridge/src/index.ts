@@ -2,11 +2,8 @@ import NativePlystHome from './NativePlystHome';
 import NativePlystScreen from './NativePlystScreen';
 import NativePlystClip from './NativePlystClip';
 import type { ClipRecord } from './NativePlystClip';
-import NativePlystToast from './NativePlystToast';
-import type { ToastRequest } from './NativePlystToast';
 
 export type { ClipImageRecord, ClipRecord } from './NativePlystClip';
-export type { ToastRequest } from './NativePlystToast';
 
 export type ClipChange = {
   kind: 'inserted' | 'updated' | 'deleted';
@@ -41,6 +38,22 @@ export function saveCurrentClipboard(): Promise<ClipboardSaveResult> {
 
 export function getClips(): Promise<ClipRecord[]> {
   return NativePlystClip.getClips();
+}
+
+export function getSearchHistory(): Promise<string[]> {
+  return NativePlystClip.getSearchHistory();
+}
+
+export function recordSearchTerm(term: string): Promise<string[] | null> {
+  return NativePlystClip.recordSearchTerm(term);
+}
+
+export function removeSearchTerm(term: string): Promise<string[]> {
+  return NativePlystClip.removeSearchTerm(term);
+}
+
+export function removeAllSearchTerms(): Promise<void> {
+  return NativePlystClip.removeAllSearchTerms();
 }
 
 export function getClipImagePreview(id: string): Promise<string | null> {
@@ -91,20 +104,16 @@ export function subscribeSave(listener: () => void) {
   return subscription;
 }
 
-export function subscribeToastRequests(
-  listener: (request: ToastRequest) => void,
-) {
-  const subscription = NativePlystToast.onToastRequest(listener);
-  NativePlystToast.ready();
-  return subscription;
-}
-
 export function openClip(id: string, kind: 'text' | 'image'): void {
   NativePlystHome.openClip(id, kind);
 }
 
 export function openSearch(): void {
   NativePlystHome.openSearch();
+}
+
+export function closeSearch(): void {
+  NativePlystHome.closeSearch();
 }
 
 export function subscribeClipboardSaveRequests(listener: () => void) {
