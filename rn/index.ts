@@ -3,7 +3,7 @@ import { AppRegistry } from 'react-native';
 import App from './App';
 import { SearchView } from './src/screens/SearchView';
 import { HomeView } from './src/screens/HomeView';
-import { ToastHost } from './src/components';
+import { ToastHost } from './src/Shared/UI';
 import { ImageDetailView } from './src/screens/ImageDetailView';
 import { TextDetailView } from './src/screens/TextDetailView';
 

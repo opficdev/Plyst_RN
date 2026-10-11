@@ -37,8 +37,8 @@ import {
   SearchTermChip,
   SectionTitle,
   showToast,
-} from '../components';
-import { colors, typography } from '../theme';
+} from '../Shared/UI';
+import { colors, typography } from '../Shared/Theme';
 import { ClipGridCard, ClipListCell } from './ClipGridCard';
 import {
   clipCardValues,

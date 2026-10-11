@@ -18,9 +18,9 @@ import {
   subscribeClipChanges,
   subscribeSave,
 } from 'plyst-bridge';
-import { ActionSheet, showToast } from '../components';
-import { ClipDetailActionBar, ClipDetailDates } from '../components/ClipDetail';
-import { colors, radius, spacing, typography } from '../theme';
+import { ActionSheet, showToast } from '../Shared/UI';
+import { ClipDetailActionBar, ClipDetailDates } from '../Shared/UI/ClipDetail';
+import { colors, radius, spacing, typography } from '../Shared/Theme';
 import { copyClipDetail } from './copyClipDetail';
 import { deleteClipDetail } from './deleteClipDetail';
 import { formatClipDate } from './formatClipDate';

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 
 type ClipDetailDatesProps = { savedValue: string; lastUsedValue: string };
 export function ClipDetailDates({

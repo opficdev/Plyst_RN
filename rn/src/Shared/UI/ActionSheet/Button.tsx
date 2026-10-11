@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, typography } from '../../theme';
+import { colors, typography } from '../../Theme';
 import type { ActionSheetItem } from './Item';
 
 type ActionSheetButtonProps = {

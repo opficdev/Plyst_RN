@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';

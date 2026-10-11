@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text } from 'react-native';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 
 export type ToastProps = {
   message: string;

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography } from '../../Theme';
 import type { ClipCardProps, ClipTextRange } from './CardProps';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';

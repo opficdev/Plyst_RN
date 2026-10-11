@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography } from '../../Theme';
 
 type HomeSaveBarProps = {
   isSaving: boolean;

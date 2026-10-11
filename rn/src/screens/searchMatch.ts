@@ -1,5 +1,5 @@
 import type { ClipRecord } from 'plyst-bridge';
-import type { ClipTextRange } from '../components';
+import type { ClipTextRange } from '../Shared/UI';
 import { edgeWhitespace } from './clipWhitespace';
 
 const mark = /\p{M}/u;

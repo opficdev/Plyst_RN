@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, type TextProps } from 'react-native';
 import type { ReactNode } from 'react';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 import type { ClipTextRange } from './CardProps';
 import { labelTruncation } from './labelTruncation';
 

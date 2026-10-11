@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { colors } from '../theme';
+import { colors } from '../Theme';
 
 export function EdgeFade({ height }: { height: number }) {
   return <View pointerEvents="none" style={[styles.fade, { height }]} />;

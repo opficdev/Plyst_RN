@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { colors, spacing, typography } from '../../theme';
+import { colors, spacing, typography } from '../../Theme';
 
 type HomeFilterBarProps<Key extends string> = Pick<
   ScrollViewProps,

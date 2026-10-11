@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 
 type ClipThumbnailProps = {
   uri: string | null;

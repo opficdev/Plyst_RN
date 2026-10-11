@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, typography } from '../theme';
+import { colors, spacing, typography } from '../Theme';
 
 export function SectionTitle({ title }: { title: string }) {
   return (

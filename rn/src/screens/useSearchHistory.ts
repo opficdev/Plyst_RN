@@ -6,7 +6,7 @@ import {
   removeSearchTerm,
   removeAllSearchTerms,
 } from 'plyst-bridge';
-import { showToast } from '../components';
+import { showToast } from '../Shared/UI';
 import { createSearchHistoryQueue } from './searchHistoryQueue';
 import type { SearchAction } from './searchState';
 

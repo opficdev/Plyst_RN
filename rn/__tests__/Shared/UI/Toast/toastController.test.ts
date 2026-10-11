@@ -1,4 +1,4 @@
-import { createToastController } from '../src/components/Toast/controller';
+import { createToastController } from '../../../../src/Shared/UI/Toast/controller';
 
 beforeEach(() => jest.useFakeTimers());
 

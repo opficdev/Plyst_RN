@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, typography } from '../theme';
+import { colors, typography } from '../Theme';
 
 type SearchTermChipProps = {
   term: string;

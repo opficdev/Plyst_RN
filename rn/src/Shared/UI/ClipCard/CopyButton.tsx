@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet } from 'react-native';
 import { clipCardLongPressDelay } from './longPressDelay';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 
 export function CopyButton({
   onCopyButtonPress,

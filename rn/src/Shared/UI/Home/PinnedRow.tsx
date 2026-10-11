@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, typography } from '../../theme';
+import { colors, spacing, typography } from '../../Theme';
 import { ClipPinnedCard, clipCardLongPressDelay } from '../ClipCard';
 
 type HomePinnedRowProps = {

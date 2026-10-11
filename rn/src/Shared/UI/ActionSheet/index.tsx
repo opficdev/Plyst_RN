@@ -12,7 +12,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { colors } from '../../theme';
+import { colors } from '../../Theme';
 import { ActionSheetButton } from './Button';
 import type { ActionSheetItem } from './Item';
 

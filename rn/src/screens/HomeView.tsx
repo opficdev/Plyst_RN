@@ -32,12 +32,12 @@ import {
   HomePinnedRow,
   HomeTitleHeader,
   SectionTitle,
-} from '../components';
+} from '../Shared/UI';
 import { saveHomeClipboard } from './saveHomeClipboard';
 import { copyClipDetail } from './copyClipDetail';
 import { deleteClipDetail } from './deleteClipDetail';
 import { homeMenuTitle, homeMenuSummary, homePinTarget } from './homeMenu';
-import { colors, spacing } from '../theme';
+import { colors, spacing } from '../Shared/Theme';
 import { ClipGridCard, ClipListCell } from './ClipGridCard';
 import {
   homeEmptyState,

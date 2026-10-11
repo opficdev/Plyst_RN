@@ -3,7 +3,7 @@ import type { Ref } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { ViewProps } from 'react-native';
 
-import { clipCardLongPressDelay } from '../components/ClipCard';
+import { clipCardLongPressDelay } from '../Shared/UI/ClipCard';
 
 const leftColumn = createContext(true);
 

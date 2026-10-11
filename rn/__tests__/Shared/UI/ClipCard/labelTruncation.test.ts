@@ -1,4 +1,4 @@
-import { labelTruncation } from '../src/components/ClipCard/labelTruncation';
+import { labelTruncation } from '../../../../src/Shared/UI/ClipCard/labelTruncation';
 
 test('두 번째 문단 끝의 줄바꿈을 제외한 위치를 반환한다', () => {
   const text = 'a\nb\nc';
