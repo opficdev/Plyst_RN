@@ -63,6 +63,8 @@ import { useClipThumbnails } from './useClipThumbnails';
 import { useClipTimeline } from './useClipTimeline';
 import { useSearchHistory } from './useSearchHistory';
 
+let hasPresentedKeyboard = false;
+
 type SearchListItem =
   | { kind: 'header'; key: string }
   | { kind: 'card'; key: string; clip: ClipRecord };
@@ -90,6 +92,9 @@ function SearchScreen() {
   const input = useRef<TextInput>(null);
   const list = useRef<FlashListRef<SearchListItem>>(null);
   const [progress] = useState(() => new Animated.Value(0));
+  const hasEntered = useRef(false);
+  const hasStarted = useRef(false);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isClosing = useRef(false);
   const isMounted = useRef(false);
   const animation = useRef<Animated.CompositeAnimation | null>(null);
@@ -111,19 +116,43 @@ function SearchScreen() {
   useEffect(() => () => index.dispose(), [index]);
   useEffect(() => {
     isMounted.current = true;
-    input.current?.focus();
+    return () => {
+      isMounted.current = false;
+      animation.current?.stop();
+      if (openTimer.current !== null) clearTimeout(openTimer.current);
+    };
+  }, [progress]);
+
+  // 앱을 켠 뒤 처음 키보드를 띄울 때는 메인 스레드를 막아 페이드가 한 프레임에 끝나므로 페이드 뒤에 포커스를 준다.
+  // 그 뒤로는 원본처럼 페이드와 동시에 포커스를 준다. 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 온다.
+  function startOpen() {
+    if (hasStarted.current || !isMounted.current || isClosing.current) return;
+    hasStarted.current = true;
     animation.current = Animated.timing(progress, {
       toValue: 1,
       duration: 300,
       easing: Easing.bezier(0.42, 0, 0.58, 1),
       useNativeDriver: false,
     });
-    animation.current.start();
-    return () => {
-      isMounted.current = false;
-      animation.current?.stop();
-    };
-  }, [progress]);
+    if (hasPresentedKeyboard) {
+      animation.current.start();
+      hasPresentedKeyboard = true;
+      input.current?.focus();
+    } else {
+      animation.current.start(({ finished }) => {
+        if (finished && isMounted.current && !isClosing.current) {
+          hasPresentedKeyboard = true;
+          input.current?.focus();
+        }
+      });
+    }
+  }
+
+  function enter() {
+    if (hasEntered.current) return;
+    hasEntered.current = true;
+    openTimer.current = setTimeout(startOpen, 800);
+  }
 
   function close() {
     if (isClosing.current) return;
@@ -249,7 +278,7 @@ function SearchScreen() {
   );
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={enter}>
       <Animated.View
         pointerEvents="none"
         style={[styles.backdrop, { opacity: progress }]}
@@ -272,6 +301,8 @@ function SearchScreen() {
             source="sf:magnifyingglass"
             contentFit="contain"
             style={styles.searchIcon}
+            onDisplay={startOpen}
+            onLoad={startOpen}
           />
           <TextInput
             ref={input}
@@ -312,11 +343,18 @@ function SearchScreen() {
             <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
           </Animated.View>
           <Animated.View style={[styles.buttonIcon, { opacity: progress }]}>
-            <Image source="sf:xmark" style={styles.cancelIcon} />
+            <Image
+              source="sf:xmark"
+              contentFit="none"
+              style={styles.xmarkIcon}
+            />
           </Animated.View>
         </Pressable>
       </View>
-      <KeyboardAvoidingView behavior="padding" style={styles.root}>
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={[styles.root, { marginBottom: insets.bottom }]}
+      >
         <Animated.View style={[styles.root, { opacity: progress }]}>
           <View style={styles.filters}>
             <HomeFilterBar
@@ -491,6 +529,13 @@ const styles = StyleSheet.create({
   cancelIcon: {
     width: 28,
     height: 28,
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.PrimaryText,
+  },
+  xmarkIcon: {
+    width: 23,
+    height: 21.6667,
     fontSize: 17,
     fontWeight: '600',
     color: colors.PrimaryText,

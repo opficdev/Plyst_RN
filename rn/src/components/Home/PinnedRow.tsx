@@ -24,7 +24,7 @@ export function HomePinnedRow({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
           고정
         </Text>
         <View style={styles.rule} />

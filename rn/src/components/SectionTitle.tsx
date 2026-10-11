@@ -4,7 +4,7 @@ import { colors, spacing, typography } from '../theme';
 export function SectionTitle({ title }: { title: string }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title} numberOfLines={1}>
+      <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
         {title}
       </Text>
       <View style={styles.rule} />

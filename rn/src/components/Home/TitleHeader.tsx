@@ -16,7 +16,7 @@ export function HomeTitleHeader({
         contentFit="cover"
         style={styles.mark}
       />
-      <Text style={styles.title} numberOfLines={1}>
+      <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
         Plyst
       </Text>
       <Pressable

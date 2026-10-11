@@ -25,7 +25,9 @@ export function ClipTextCard({
       {isWebLink ? (
         <Image source="sf:globe" contentFit="contain" style={styles.linkIcon} />
       ) : (
-        <Text style={styles.quote}>“</Text>
+        <Text allowFontScaling={false} style={styles.quote}>
+          “
+        </Text>
       )}
       {name !== null && (
         <ClipCardLabel
@@ -52,6 +54,7 @@ export function ClipTextCard({
       </ClipCardLabel>
       <View style={styles.metadataRow}>
         <Text
+          allowFontScaling={false}
           style={styles.metadata}
           numberOfLines={onCopyButtonPress ? 2 : 1}
           lineBreakStrategyIOS="hangul-word"
