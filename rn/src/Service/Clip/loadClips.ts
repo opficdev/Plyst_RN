@@ -12,5 +12,3 @@ export async function loadClips(): Promise<ClipsResult> {
     return { status: 'failed' };
   }
 }
-
-export type ClipLoadPhase = 'loading' | 'loaded' | 'failed';

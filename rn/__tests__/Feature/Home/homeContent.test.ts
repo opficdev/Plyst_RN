@@ -10,7 +10,7 @@ import {
   clipSectionTitles,
 } from '../../../src/Feature/ClipGrid/clipSection';
 import type { ClipFilter } from '../../../src/Feature/ClipGrid/clipFilter';
-import type { ClipLoadPhase } from '../../../src/Service/Clip/loadClips';
+import type { ClipLoadPhase } from '../../../src/Feature/ClipGrid/clipLoadPhase';
 import type { HomeEmptyState } from '../../../src/Feature/Home/homeContent';
 const clip: ClipRecord = {
   id: 'clip-id',

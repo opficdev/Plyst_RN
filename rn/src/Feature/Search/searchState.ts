@@ -1,6 +1,6 @@
 import type { ClipRecord } from 'plyst-bridge';
 import type { ClipFilter } from '../ClipGrid/clipFilter';
-import type { ClipLoadPhase } from '../../Service/Clip/loadClips';
+import type { ClipLoadPhase } from '../ClipGrid/clipLoadPhase';
 import type {
   ClipThumbnailAction,
   ClipThumbnails,
