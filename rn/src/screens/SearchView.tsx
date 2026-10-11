@@ -312,7 +312,11 @@ function SearchScreen() {
             <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
           </Animated.View>
           <Animated.View style={[styles.buttonIcon, { opacity: progress }]}>
-            <Image source="sf:xmark" style={styles.cancelIcon} />
+            <Image
+              source="sf:xmark"
+              contentFit="none"
+              style={styles.xmarkIcon}
+            />
           </Animated.View>
         </Pressable>
       </View>
@@ -491,6 +495,13 @@ const styles = StyleSheet.create({
   cancelIcon: {
     width: 28,
     height: 28,
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.PrimaryText,
+  },
+  xmarkIcon: {
+    width: 23,
+    height: 21.6667,
     fontSize: 17,
     fontWeight: '600',
     color: colors.PrimaryText,
