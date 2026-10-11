@@ -2,11 +2,8 @@ import NativePlystHome from './NativePlystHome';
 import NativePlystScreen from './NativePlystScreen';
 import NativePlystClip from './NativePlystClip';
 import type { ClipRecord } from './NativePlystClip';
-import NativePlystToast from './NativePlystToast';
-import type { ToastRequest } from './NativePlystToast';
 
 export type { ClipImageRecord, ClipRecord } from './NativePlystClip';
-export type { ToastRequest } from './NativePlystToast';
 
 export type ClipChange = {
   kind: 'inserted' | 'updated' | 'deleted';
@@ -104,14 +101,6 @@ export function setSaveEnabled(isEnabled: boolean): void {
 export function subscribeSave(listener: () => void) {
   const subscription = NativePlystScreen.onSave(listener);
   NativePlystScreen.ready();
-  return subscription;
-}
-
-export function subscribeToastRequests(
-  listener: (request: ToastRequest) => void,
-) {
-  const subscription = NativePlystToast.onToastRequest(listener);
-  NativePlystToast.ready();
   return subscription;
 }
 

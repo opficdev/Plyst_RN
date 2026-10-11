@@ -12,7 +12,6 @@ jest.mock('plyst-bridge', () => ({
   subscribeSave: jest.fn(() => ({ remove: jest.fn() })),
   subscribeClipChanges: jest.fn(() => ({ remove: jest.fn() })),
   updateClip: jest.fn(),
-  subscribeToastRequests: jest.fn(),
 }));
 
 jest.mock('@shopify/flash-list', () => ({ FlashList: () => null }));

@@ -1,16 +1,11 @@
 import { AppRegistry } from 'react-native';
-import { subscribeToastRequests } from 'plyst-bridge';
 
 import App from './App';
+import { SearchView } from './src/screens/SearchView';
 import { HomeView } from './src/screens/HomeView';
-import { showToast, ToastHost } from './src/components';
+import { ToastHost } from './src/components';
 import { ImageDetailView } from './src/screens/ImageDetailView';
 import { TextDetailView } from './src/screens/TextDetailView';
-import { SearchView } from './src/screens/SearchView';
-
-subscribeToastRequests(({ message, isSuccess }) =>
-  showToast(message, isSuccess),
-);
 
 // PlystRN 이름은 Swift의 ReactNativeViewController moduleName과 공유하는 계약
 AppRegistry.registerComponent('PlystRN', () => App);
