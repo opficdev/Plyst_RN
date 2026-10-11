@@ -132,6 +132,7 @@ final class ClipBridgeAdapterCopyTests: XCTestCase {
         )
         return ClipBridgeAdapter(
             storage: storage,
+            history: try makeStorage(),
             images: images,
             clipboard: clipboard,
             photos: ClipPhotoLibraryService(storage: storage, images: images)
@@ -274,6 +275,7 @@ final class ClipBridgeAdapterSaveTests: XCTestCase {
         let images = ClipImageService(storage: storage, files: files)
         return ClipBridgeAdapter(
             storage: storage,
+            history: try makeStorage(),
             images: images,
             clipboard: ClipboardService(
                 storage: storage,

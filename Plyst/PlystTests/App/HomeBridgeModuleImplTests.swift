@@ -74,6 +74,18 @@ final class HomeBridgeModuleImplTests: XCTestCase {
         await fulfillment(of: [completion], timeout: 2)
     }
 
+    func testCloseSearchCallsRegisteredNavigator() async {
+        let completion = expectation(description: "검색 화면 닫기")
+        await MainActor.run { [navigator] in
+            navigator.onCloseSearch = { completion.fulfill() }
+            HomeBridge.register(navigator)
+        }
+
+        HomeBridgeModuleImpl(emit: { _ in }, requestSave: {}).closeSearch()
+
+        await fulfillment(of: [completion], timeout: 2)
+    }
+
     func testRequestsWithoutNavigatorDoNothing() async {
         let unexpected = expectation(description: "대상 해제 이후 화면 이동 없음")
         unexpected.isInverted = true
@@ -82,6 +94,7 @@ final class HomeBridgeModuleImplTests: XCTestCase {
             weak let reference = navigator
             navigator?.onOpenClip = { _, _ in unexpected.fulfill() }
             navigator?.onOpenSearch = { unexpected.fulfill() }
+            navigator?.onCloseSearch = { unexpected.fulfill() }
             HomeBridge.register(navigator!)
             navigator = nil
             XCTAssertNil(reference)
@@ -90,6 +103,7 @@ final class HomeBridgeModuleImplTests: XCTestCase {
 
         module.openClip(UUID().uuidString, kind: "text")
         module.openSearch()
+        module.closeSearch()
 
         await fulfillment(of: [unexpected], timeout: 0.1)
     }
@@ -199,6 +213,7 @@ final class HomeBridgeModuleImplTests: XCTestCase {
         await MainActor.run { [navigator] in
             navigator.onOpenClip = { _, _ in unexpected.fulfill() }
             navigator.onOpenSearch = { unexpected.fulfill() }
+            navigator.onCloseSearch = { unexpected.fulfill() }
             HomeBridge.register(navigator)
             module.invalidate()
         }
@@ -206,6 +221,7 @@ final class HomeBridgeModuleImplTests: XCTestCase {
 
         module.openClip(UUID().uuidString, kind: "text")
         module.openSearch()
+        module.closeSearch()
 
         await fulfillment(of: [unexpected], timeout: 0.1)
     }
@@ -303,6 +319,7 @@ final class HomeBridgeModuleImplTests: XCTestCase {
         await MainActor.run { [navigator] in
             navigator.onOpenClip = nil
             navigator.onOpenSearch = nil
+            navigator.onCloseSearch = nil
             HomeBridge.register(navigator)
         }
         let module = HomeBridgeModuleImpl(emit: { _ in }, requestSave: {})
@@ -316,6 +333,7 @@ final class HomeBridgeModuleImplTests: XCTestCase {
 private final class HomeBridgeNavigatorSpy: HomeBridgeNavigator {
     @MainActor var onOpenClip: ((UUID, HomeBridgeClipKind) -> Void)?
     @MainActor var onOpenSearch: (() -> Void)?
+    @MainActor var onCloseSearch: (() -> Void)?
 
     nonisolated init() {}
 
@@ -328,6 +346,10 @@ private final class HomeBridgeNavigatorSpy: HomeBridgeNavigator {
 
     @MainActor func openSearch() {
         onOpenSearch?()
+    }
+
+    @MainActor func closeSearch() {
+        onCloseSearch?()
     }
 }
 

@@ -44,6 +44,16 @@ export interface Spec extends TurboModule {
   // 페이지 구분 없이 전체 클립을 생성 시각 내림차순으로 반환합니다. 동률이면 id.uuidString 오름차순입니다.
   // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
   getClips(): Promise<ClipRecord[]>;
+  // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
+  getSearchHistory(): Promise<string[]>;
+  // Swift가 정규화한 뒤 저장한 목록입니다. 공백뿐이면 쓰지 않고 null을 반환합니다.
+  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
+  recordSearchTerm(term: string): Promise<string[] | null>;
+  // 없거나 공백뿐인 검색어는 현재 목록을 반환합니다.
+  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부합니다.
+  removeSearchTerm(term: string): Promise<string[]>;
+  // 저장값을 해석하지 않고 삭제합니다. 실패하면 E_UNAVAILABLE, E_WRITE_FAILED 중 하나로 거부합니다.
+  removeAllSearchTerms(): Promise<void>;
   // 결과는 saved, empty, unsupported, accessFailed, invalidImage 중 하나입니다.
   // 실패하면 E_UNAVAILABLE, E_SAVE_FAILED 중 하나로 거부합니다.
   saveCurrentClipboard(): Promise<string>;

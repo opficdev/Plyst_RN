@@ -54,6 +54,52 @@ RCT_EXPORT_METHOD(getClips:(RCTPromiseResolveBlock)resolve
   }];
 }
 
+RCT_EXPORT_METHOD(getSearchHistory:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  [_implementation getSearchHistory:^(NSArray *terms, NSString *code) {
+    if (code) {
+      reject(code, code, nil);
+    } else {
+      resolve(terms ?: [NSNull null]);
+    }
+  }];
+}
+
+RCT_EXPORT_METHOD(recordSearchTerm:(NSString *)term
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  [_implementation recordSearchTerm:term completion:^(NSArray *terms, NSString *code) {
+    if (code) {
+      reject(code, code, nil);
+    } else {
+      resolve(terms ?: [NSNull null]);
+    }
+  }];
+}
+
+RCT_EXPORT_METHOD(removeSearchTerm:(NSString *)term
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  [_implementation removeSearchTerm:term completion:^(NSArray *terms, NSString *code) {
+    if (code) {
+      reject(code, code, nil);
+    } else {
+      resolve(terms ?: [NSNull null]);
+    }
+  }];
+}
+
+RCT_EXPORT_METHOD(removeAllSearchTerms:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  [_implementation removeAllSearchTerms:^(NSString *code) {
+    if (code) {
+      reject(code, code, nil);
+    } else {
+      resolve(nil);
+    }
+  }];
+}
+
 RCT_EXPORT_METHOD(saveCurrentClipboard:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
   [_implementation saveCurrentClipboard:^(NSString *result, NSString *code) {

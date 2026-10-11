@@ -57,6 +57,15 @@ public final class HomeBridgeModuleImpl: NSObject, Sendable {
         }
     }
 
+    /// JavaScript가 검색 화면 닫기를 요청합니다. 무효화된 모듈이면 무시합니다.
+    @objc
+    public nonisolated func closeSearch() {
+        Task { @MainActor in
+            guard !isInvalidated else { return }
+            HomeBridge.closeSearch()
+        }
+    }
+
     /// 네이티브 모듈이 종료될 때 호출합니다. 자신의 이벤트 등록을 해제하고 이후 요청을 무시합니다.
     @objc
     public nonisolated func invalidate() {

@@ -24,6 +24,8 @@ public protocol HomeBridgeNavigator: AnyObject, Sendable {
     )
     /// 브리지가 JavaScript의 요청을 전달하면 호스트가 검색 화면을 표시합니다.
     @MainActor func openSearch()
+    /// 브리지가 JavaScript의 요청을 전달하면 호스트가 검색 화면을 닫습니다.
+    @MainActor func closeSearch()
 }
 
 /// 호스트가 화면 이동 대상을 등록하고 검색 표시 상태와 저장 요청을 전달하는 진입점입니다.
@@ -53,6 +55,10 @@ public enum HomeBridge {
 
     static func openSearch() {
         navigator?.openSearch()
+    }
+
+    static func closeSearch() {
+        navigator?.closeSearch()
     }
 
     static func register(

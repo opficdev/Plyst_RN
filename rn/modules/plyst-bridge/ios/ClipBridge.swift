@@ -136,6 +136,10 @@ public protocol ClipBridgeProvider: Sendable {
     func clip(id: UUID) async throws -> ClipBridgeRecord?
     func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult
     func clips() async throws -> [ClipBridgeRecord]
+    func searchHistory() async throws -> [String]
+    func recordSearchTerm(_ term: String) async throws -> [String]?
+    func removeSearchTerm(_ term: String) async throws -> [String]
+    func removeAllSearchTerms() async throws
     func updateClip(
         id: UUID,
         name: String?,

@@ -43,6 +43,22 @@ export function getClips(): Promise<ClipRecord[]> {
   return NativePlystClip.getClips();
 }
 
+export function getSearchHistory(): Promise<string[]> {
+  return NativePlystClip.getSearchHistory();
+}
+
+export function recordSearchTerm(term: string): Promise<string[] | null> {
+  return NativePlystClip.recordSearchTerm(term);
+}
+
+export function removeSearchTerm(term: string): Promise<string[]> {
+  return NativePlystClip.removeSearchTerm(term);
+}
+
+export function removeAllSearchTerms(): Promise<void> {
+  return NativePlystClip.removeAllSearchTerms();
+}
+
 export function getClipImagePreview(id: string): Promise<string | null> {
   return NativePlystClip.getClipImagePreview(id);
 }
@@ -105,6 +121,10 @@ export function openClip(id: string, kind: 'text' | 'image'): void {
 
 export function openSearch(): void {
   NativePlystHome.openSearch();
+}
+
+export function closeSearch(): void {
+  NativePlystHome.closeSearch();
 }
 
 export function subscribeClipboardSaveRequests(listener: () => void) {
