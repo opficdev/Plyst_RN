@@ -66,6 +66,7 @@ final class HomeViewController: UIViewController, HomeBridgeNavigator {
                   launchOptions: nil
               ) else { return }
         searchView = search
+        configureSearchAppearance()
         makeSearchHierarchy()
         makeSearchLayout()
         HomeBridge.searchVisibilityChanged(true)
@@ -95,6 +96,11 @@ final class HomeViewController: UIViewController, HomeBridgeNavigator {
             contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+
+    private func configureSearchAppearance() {
+        searchView?.backgroundColor = .clear
+        searchView?.isOpaque = false
     }
 
     private func makeSearchHierarchy() {
