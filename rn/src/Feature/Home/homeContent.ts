@@ -2,7 +2,7 @@ import { clipFilterTitles } from '../ClipGrid/clipFilter';
 import type { ClipFilter } from '../ClipGrid/clipFilter';
 import { clipSectionKind, clipSectionKinds } from '../ClipGrid/clipSection';
 import type { ClipSectionKind } from '../ClipGrid/clipSection';
-import type { ClipLoadPhase } from '../../Service/Clip/loadClips';
+import type { ClipLoadPhase } from '../ClipGrid/clipLoadPhase';
 import type { ClipRecord } from 'plyst-bridge';
 
 export const homeFilterStrings = {
