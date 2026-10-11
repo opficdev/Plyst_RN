@@ -63,6 +63,8 @@ import { useClipThumbnails } from './useClipThumbnails';
 import { useClipTimeline } from './useClipTimeline';
 import { useSearchHistory } from './useSearchHistory';
 
+let hasPresentedKeyboard = false;
+
 type SearchListItem =
   | { kind: 'header'; key: string }
   | { kind: 'card'; key: string; clip: ClipRecord };
@@ -121,8 +123,8 @@ function SearchScreen() {
     };
   }, [progress]);
 
-  // 페이드를 먼저 끝내고 키보드 포커스를 그 뒤에 주어 키보드 표시가 메인 스레드를 막아 애니메이션이 압축되는 것을 막는다.
-  // 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 온다.
+  // 앱을 켠 뒤 처음 키보드를 띄울 때는 메인 스레드를 막아 페이드가 한 프레임에 끝나므로 페이드 뒤에 포커스를 준다.
+  // 그 뒤로는 원본처럼 페이드와 동시에 포커스를 준다. 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 온다.
   function startOpen() {
     if (hasStarted.current || !isMounted.current || isClosing.current) return;
     hasStarted.current = true;
@@ -132,10 +134,18 @@ function SearchScreen() {
       easing: Easing.bezier(0.42, 0, 0.58, 1),
       useNativeDriver: false,
     });
-    animation.current.start(({ finished }) => {
-      if (finished && isMounted.current && !isClosing.current)
-        input.current?.focus();
-    });
+    if (hasPresentedKeyboard) {
+      animation.current.start();
+      hasPresentedKeyboard = true;
+      input.current?.focus();
+    } else {
+      animation.current.start(({ finished }) => {
+        if (finished && isMounted.current && !isClosing.current) {
+          hasPresentedKeyboard = true;
+          input.current?.focus();
+        }
+      });
+    }
   }
 
   function enter() {
