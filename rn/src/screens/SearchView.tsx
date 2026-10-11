@@ -320,7 +320,10 @@ function SearchScreen() {
           </Animated.View>
         </Pressable>
       </View>
-      <KeyboardAvoidingView behavior="padding" style={styles.root}>
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={[styles.root, { marginBottom: insets.bottom }]}
+      >
         <Animated.View style={[styles.root, { opacity: progress }]}>
           <View style={styles.filters}>
             <HomeFilterBar
