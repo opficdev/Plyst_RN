@@ -6,6 +6,7 @@ export function HomeEmptyState({ emptyTitle, emptyBody }: HomeEmptyStateProps) {
   return (
     <View style={styles.container}>
       <Text
+        allowFontScaling={false}
         style={styles.emptyTitle}
         numberOfLines={0}
         lineBreakStrategyIOS="standard"
@@ -13,6 +14,7 @@ export function HomeEmptyState({ emptyTitle, emptyBody }: HomeEmptyStateProps) {
         {emptyTitle}
       </Text>
       <Text
+        allowFontScaling={false}
         style={styles.emptyBody}
         numberOfLines={0}
         lineBreakStrategyIOS="standard"

@@ -34,15 +34,21 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
               style={styles.linkIcon}
             />
           ) : (
-            <Text style={styles.quote}>“</Text>
+            <Text allowFontScaling={false} style={styles.quote}>
+              “
+            </Text>
           )}
         </View>
       )}
       <View style={styles.textStack}>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        <Text style={styles.metadata} numberOfLines={1}>
+        <Text
+          allowFontScaling={false}
+          style={styles.metadata}
+          numberOfLines={1}
+        >
           {props.metadata}
         </Text>
       </View>

@@ -38,6 +38,7 @@ export function ClipCardLabel({
     parts.push(text.slice(cursor, location));
     parts.push(
       <Text
+        allowFontScaling={false}
         key={location}
         style={{
           backgroundColor: colors.SearchHighlight,
@@ -55,6 +56,7 @@ export function ClipCardLabel({
   return (
     <Text
       {...props}
+      allowFontScaling={false}
       numberOfLines={numberOfLines}
       onTextLayout={
         numberOfLines && /[\n\r\u2028\u2029]/.test(children)

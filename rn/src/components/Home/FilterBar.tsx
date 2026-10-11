@@ -56,6 +56,7 @@ function HomeFilterChips<Key extends string>({
           onPress={() => onSelect(key)}
         >
           <Text
+            allowFontScaling={false}
             style={[styles.title, key === selectedKey && styles.selectedTitle]}
             numberOfLines={1}
           >

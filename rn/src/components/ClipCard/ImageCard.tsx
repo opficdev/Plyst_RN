@@ -35,6 +35,7 @@ export function ClipImageCard({
         </ClipCardLabel>
         <View style={styles.metadataRow}>
           <Text
+            allowFontScaling={false}
             style={styles.metadata}
             numberOfLines={onCopyButtonPress ? 2 : 1}
             lineBreakStrategyIOS="hangul-word"
