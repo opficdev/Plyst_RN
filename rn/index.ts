@@ -4,7 +4,7 @@ import App from './App';
 import { SearchView } from './src/Feature/Search/SearchView';
 import { HomeView } from './src/Feature/Home/View';
 import { ToastHost } from './src/Shared/UI';
-import { ImageDetailView } from './src/Feature/ImageDetail/ImageDetailView';
+import { ImageDetailView } from './src/Feature/ImageDetail/View';
 import { TextDetailView } from './src/Feature/TextDetail/View';
 
 // PlystRN 이름은 Swift의 ReactNativeViewController moduleName과 공유하는 계약
