@@ -11,6 +11,7 @@ import {
 import { loadClipThumbnail } from '../../../src/Service/Clip/loadThumbnail';
 import type { ClipThumbnailResult } from '../../../src/Service/Clip/loadThumbnail';
 
+jest.mock('plyst-bridge', () => ({}));
 jest.mock('../../../src/Service/Clip/loadThumbnail');
 const settle = () => new Promise<void>((resolve) => setImmediate(resolve));
 function deferred() {

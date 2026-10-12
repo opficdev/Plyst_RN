@@ -36,7 +36,10 @@
     "test": "jest --ci"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "testEnvironmentOptions": {
+      "customExportConditions": ["node", "node-addons"]
+    }
   },
   "private": true
 }
