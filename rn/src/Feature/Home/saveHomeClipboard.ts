@@ -1,5 +1,5 @@
-import { saveCurrentClipboard } from 'plyst-bridge';
 import type { ClipboardSaveResult } from 'plyst-bridge';
+import { saveClipboard } from '../../Service/Clip/saveClipboard';
 
 const messages: Record<ClipboardSaveResult, string> = {
   saved: 'Plyst에 저장했습니다',
@@ -10,10 +10,9 @@ const messages: Record<ClipboardSaveResult, string> = {
 };
 
 export async function saveHomeClipboard() {
-  try {
-    const result = await saveCurrentClipboard();
-    return { message: messages[result], isSuccess: result === 'saved' };
-  } catch {
+  const result = await saveClipboard();
+  if (result === 'failed') {
     return { message: '클립을 저장하지 못했습니다', isSuccess: false };
   }
+  return { message: messages[result], isSuccess: result === 'saved' };
 }
