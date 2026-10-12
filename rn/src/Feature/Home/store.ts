@@ -1,5 +1,5 @@
 import { createScreenStore } from '../../Shared/State/screenStore';
-import { initialState, reduce } from './homeState';
+import { initialState, reduce } from './state';
 import { startHomeListeners } from './listeners';
 
 export function createHomeStore() {

@@ -1,5 +1,5 @@
 import { createScreenStore } from '../../Shared/State/screenStore';
-import { initialSearchState, reduceSearch } from './searchState';
+import { initialSearchState, reduceSearch } from './state';
 import { startSearchListeners } from './listeners';
 
 export function createSearchStore(onReload: () => void) {

@@ -3,9 +3,9 @@ import type { ClipRecord } from 'plyst-bridge';
 import { createTextDetailStore } from '../../../src/Feature/TextDetail/store';
 import { textDetailActions as actions } from '../../../src/Feature/TextDetail/actions';
 import { loadTextDetail } from '../../../src/Service/Clip/loadTextDetail';
-import { saveTextDetail } from '../../../src/Feature/TextDetail/saveTextDetail';
-import { copyClipDetail } from '../../../src/Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../../src/Service/Clip/deleteClipDetail';
+import { saveTextDetail } from '../../../src/Feature/TextDetail/save';
+import { copyClipDetail } from '../../../src/Service/Clip/copyDetail';
+import { deleteClipDetail } from '../../../src/Service/Clip/deleteDetail';
 import { showToast } from '../../../src/Shared/UI';
 
 jest.mock('plyst-bridge', () => ({
@@ -14,9 +14,9 @@ jest.mock('plyst-bridge', () => ({
 }));
 jest.mock('../../../src/Shared/UI', () => ({ showToast: jest.fn() }));
 jest.mock('../../../src/Service/Clip/loadTextDetail');
-jest.mock('../../../src/Feature/TextDetail/saveTextDetail');
-jest.mock('../../../src/Service/Clip/copyClipDetail');
-jest.mock('../../../src/Service/Clip/deleteClipDetail');
+jest.mock('../../../src/Feature/TextDetail/save');
+jest.mock('../../../src/Service/Clip/copyDetail');
+jest.mock('../../../src/Service/Clip/deleteDetail');
 
 const clip = {
   id: 'clip',

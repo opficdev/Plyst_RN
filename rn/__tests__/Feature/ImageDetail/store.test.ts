@@ -3,9 +3,9 @@ import type { ClipRecord } from 'plyst-bridge';
 import { createImageDetailStore } from '../../../src/Feature/ImageDetail/store';
 import { imageDetailActions as actions } from '../../../src/Feature/ImageDetail/actions';
 import { loadImageDetail } from '../../../src/Service/Clip/loadImageDetail';
-import { saveImageDetail } from '../../../src/Feature/ImageDetail/saveImageDetail';
-import { copyClipDetail } from '../../../src/Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../../src/Service/Clip/deleteClipDetail';
+import { saveImageDetail } from '../../../src/Feature/ImageDetail/save';
+import { copyClipDetail } from '../../../src/Service/Clip/copyDetail';
+import { deleteClipDetail } from '../../../src/Service/Clip/deleteDetail';
 import { showToast } from '../../../src/Shared/UI';
 
 jest.mock('plyst-bridge', () => ({
@@ -14,13 +14,13 @@ jest.mock('plyst-bridge', () => ({
 }));
 jest.mock('../../../src/Shared/UI', () => ({ showToast: jest.fn() }));
 jest.mock('../../../src/Service/Clip/loadImageDetail');
-jest.mock('../../../src/Feature/ImageDetail/saveImageDetail');
-jest.mock('../../../src/Service/Clip/copyClipDetail');
-jest.mock('../../../src/Service/Clip/deleteClipDetail');
+jest.mock('../../../src/Feature/ImageDetail/save');
+jest.mock('../../../src/Service/Clip/copyDetail');
+jest.mock('../../../src/Service/Clip/deleteDetail');
 import { loadImageDetailPreview } from '../../../src/Service/Clip/loadImageDetailPreview';
-import { saveImageDetailToPhotos } from '../../../src/Feature/ImageDetail/saveImageDetailToPhotos';
+import { saveImageDetailToPhotos } from '../../../src/Feature/ImageDetail/saveToPhotos';
 jest.mock('../../../src/Service/Clip/loadImageDetailPreview');
-jest.mock('../../../src/Feature/ImageDetail/saveImageDetailToPhotos');
+jest.mock('../../../src/Feature/ImageDetail/saveToPhotos');
 
 const clip = {
   id: 'clip',

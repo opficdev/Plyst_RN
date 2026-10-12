@@ -2,23 +2,23 @@ import { subscribeClipChanges } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
 import { createSearchStore } from '../../../src/Feature/Search/store';
 import { searchActions as actions } from '../../../src/Feature/Search/actions';
-import { loadClips } from '../../../src/Service/Clip/loadClips';
+import { loadClips } from '../../../src/Service/Clip/load';
 import { loadSearchHistory } from '../../../src/Service/Clip/loadSearchHistory';
 import { recordSearchHistoryTerm } from '../../../src/Service/Clip/recordSearchHistoryTerm';
 import { removeSearchHistoryTerm } from '../../../src/Service/Clip/removeSearchHistoryTerm';
 import { clearSearchHistory } from '../../../src/Service/Clip/clearSearchHistory';
-import { copyClipDetail } from '../../../src/Service/Clip/copyClipDetail';
+import { copyClipDetail } from '../../../src/Service/Clip/copyDetail';
 import { showToast } from '../../../src/Shared/UI';
 
 jest.mock('plyst-bridge', () => ({ subscribeClipChanges: jest.fn() }));
 jest.mock('../../../src/Shared/UI', () => ({ showToast: jest.fn() }));
-jest.mock('../../../src/Service/Clip/loadClips');
-jest.mock('../../../src/Service/Clip/loadClipThumbnail');
+jest.mock('../../../src/Service/Clip/load');
+jest.mock('../../../src/Service/Clip/loadThumbnail');
 jest.mock('../../../src/Service/Clip/loadSearchHistory');
 jest.mock('../../../src/Service/Clip/recordSearchHistoryTerm');
 jest.mock('../../../src/Service/Clip/removeSearchHistoryTerm');
 jest.mock('../../../src/Service/Clip/clearSearchHistory');
-jest.mock('../../../src/Service/Clip/copyClipDetail');
+jest.mock('../../../src/Service/Clip/copyDetail');
 
 const settle = () => new Promise<void>((resolve) => setImmediate(resolve));
 function deferred<Value>() {

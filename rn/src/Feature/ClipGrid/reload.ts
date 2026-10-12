@@ -1,6 +1,6 @@
 import { subscribeClipChanges } from 'plyst-bridge';
 import type { ScreenScope } from '../../Shared/State/screenStore';
-import { loadClips } from '../../Service/Clip/loadClips';
+import { loadClips } from '../../Service/Clip/load';
 
 export function startClipReload<State>(
   scope: ScreenScope<State>,

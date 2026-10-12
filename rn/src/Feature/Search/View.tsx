@@ -38,14 +38,14 @@ import {
   SectionTitle,
 } from '../../Shared/UI';
 import { colors, typography } from '../../Shared/Theme';
-import { ClipGridCard, ClipListCell } from '../ClipGrid/ClipGridCard';
+import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
 import {
   clipCardValues,
   clipColumnWidth,
   clipThumbnailPixels,
-} from '../ClipGrid/clipCardValues';
-import { clipFilters, clipFilterTitles } from '../ClipGrid/clipFilter';
-import { searchCardText } from './searchCardText';
+} from '../ClipGrid/cardValues';
+import { clipFilters, clipFilterTitles } from '../ClipGrid/filter';
+import { searchCardText } from './cardText';
 import {
   createSearchTimeTexts,
   makeSearchContent,
@@ -53,9 +53,9 @@ import {
   searchHeaderTitle,
   searchMode,
   searchRecentDisplay,
-} from './searchContent';
-import { createSearchIndex } from './searchMatch';
-import type { SearchState } from './searchState';
+} from './content';
+import { createSearchIndex } from './match';
+import type { SearchState } from './state';
 import { createSearchStore } from './store';
 import { searchActions as actions } from './actions';
 import {
@@ -64,7 +64,7 @@ import {
   useScreenDispatch,
 } from '../../Shared/State/screenStore';
 import { useClipThumbnails } from '../ClipGrid/useThumbnails';
-import { useClipTimeline } from '../ClipGrid/useClipTimeline';
+import { useClipTimeline } from '../ClipGrid/useTimeline';
 
 let hasPresentedKeyboard = false;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

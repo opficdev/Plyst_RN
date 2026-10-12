@@ -1,16 +1,16 @@
 import { subscribeClipChanges, subscribeSave } from 'plyst-bridge';
 import type { ScreenScope } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../Service/Clip/deleteClipDetail';
+import { copyClipDetail } from '../../Service/Clip/copyDetail';
+import { deleteClipDetail } from '../../Service/Clip/deleteDetail';
 import { loadImageDetail } from '../../Service/Clip/loadImageDetail';
-import { createClipDetailRefresher } from '../ClipDetail/clipDetailRefresher';
-import { saveImageDetail } from './saveImageDetail';
-import { canSave } from './imageDetailDraft';
-import type { ImageDetailState } from './imageDetailDraft';
+import { createClipDetailRefresher } from '../ClipDetail/refresher';
+import { saveImageDetail } from './save';
+import { canSave } from './draft';
+import type { ImageDetailState } from './draft';
 import { imageDetailActions as actions } from './actions';
 import { loadImageDetailPreview } from '../../Service/Clip/loadImageDetailPreview';
-import { saveImageDetailToPhotos } from './saveImageDetailToPhotos';
+import { saveImageDetailToPhotos } from './saveToPhotos';
 
 export function startImageDetailListeners(
   scope: ScreenScope<ImageDetailState | null | 'closed'>,

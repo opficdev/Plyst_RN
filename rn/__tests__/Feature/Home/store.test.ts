@@ -6,9 +6,9 @@ import {
 import type { ClipRecord } from 'plyst-bridge';
 import { createHomeStore } from '../../../src/Feature/Home/store';
 import { homeActions as actions } from '../../../src/Feature/Home/actions';
-import { loadClips } from '../../../src/Service/Clip/loadClips';
-import { saveHomeClipboard } from '../../../src/Feature/Home/saveHomeClipboard';
-import { updateClipDetail } from '../../../src/Service/Clip/updateClipDetail';
+import { loadClips } from '../../../src/Service/Clip/load';
+import { saveHomeClipboard } from '../../../src/Feature/Home/saveClipboard';
+import { updateClipDetail } from '../../../src/Service/Clip/updateDetail';
 import { showToast } from '../../../src/Shared/UI';
 
 jest.mock('plyst-bridge', () => ({
@@ -17,10 +17,10 @@ jest.mock('plyst-bridge', () => ({
   subscribeSearchVisibility: jest.fn(),
 }));
 jest.mock('../../../src/Shared/UI', () => ({ showToast: jest.fn() }));
-jest.mock('../../../src/Service/Clip/loadClips');
-jest.mock('../../../src/Service/Clip/loadClipThumbnail');
-jest.mock('../../../src/Service/Clip/updateClipDetail');
-jest.mock('../../../src/Feature/Home/saveHomeClipboard');
+jest.mock('../../../src/Service/Clip/load');
+jest.mock('../../../src/Service/Clip/loadThumbnail');
+jest.mock('../../../src/Service/Clip/updateDetail');
+jest.mock('../../../src/Feature/Home/saveClipboard');
 
 const settle = () => new Promise<void>((resolve) => setImmediate(resolve));
 function deferred<Value>() {

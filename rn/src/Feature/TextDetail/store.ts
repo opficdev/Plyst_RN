@@ -1,6 +1,6 @@
 import { createScreenStore } from '../../Shared/State/screenStore';
-import { initialState, reduce } from './textDetailDraft';
-import type { TextDetailAction, TextDetailState } from './textDetailDraft';
+import { initialState, reduce } from './draft';
+import type { TextDetailAction, TextDetailState } from './draft';
 import { startTextDetailListeners } from './listeners';
 
 export type TextDetailStoreState = TextDetailState | null | 'closed';

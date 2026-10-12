@@ -18,9 +18,9 @@ import {
   ClipDetailDates,
 } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
-import { formatClipDate } from '../ClipDetail/formatClipDate';
-import { canSave } from './textDetailDraft';
-import type { TextDetailState } from './textDetailDraft';
+import { formatClipDate } from '../ClipDetail/formatDate';
+import { canSave } from './draft';
+import type { TextDetailState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
 import {

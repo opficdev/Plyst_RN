@@ -1,6 +1,6 @@
 import { createScreenStore } from '../../Shared/State/screenStore';
-import { initialState, reduce } from './imageDetailDraft';
-import type { ImageDetailAction, ImageDetailState } from './imageDetailDraft';
+import { initialState, reduce } from './draft';
+import type { ImageDetailAction, ImageDetailState } from './draft';
 import { startImageDetailListeners } from './listeners';
 
 export type ImageDetailStoreState = ImageDetailState | null | 'closed';

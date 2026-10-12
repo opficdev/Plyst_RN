@@ -1,7 +1,7 @@
 import { createAction } from '../../Shared/State/screenStore';
 import type { ScreenScope } from '../../Shared/State/screenStore';
-import { loadClipThumbnail } from '../../Service/Clip/loadClipThumbnail';
-import { createThumbnailRequestQueue } from './clipThumbnailRequests';
+import { loadClipThumbnail } from '../../Service/Clip/loadThumbnail';
+import { createThumbnailRequestQueue } from './thumbnailRequests';
 
 export const clipThumbnailActions = {
   thumbnailRequested: createAction<{ id: string; pixels: number }>(

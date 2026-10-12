@@ -1,13 +1,13 @@
 import { subscribeClipChanges, subscribeSave } from 'plyst-bridge';
 import type { ScreenScope } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../Service/Clip/deleteClipDetail';
+import { copyClipDetail } from '../../Service/Clip/copyDetail';
+import { deleteClipDetail } from '../../Service/Clip/deleteDetail';
 import { loadTextDetail } from '../../Service/Clip/loadTextDetail';
-import { createClipDetailRefresher } from '../ClipDetail/clipDetailRefresher';
-import { saveTextDetail } from './saveTextDetail';
-import { canSave } from './textDetailDraft';
-import type { TextDetailState } from './textDetailDraft';
+import { createClipDetailRefresher } from '../ClipDetail/refresher';
+import { saveTextDetail } from './save';
+import { canSave } from './draft';
+import type { TextDetailState } from './draft';
 import { textDetailActions as actions } from './actions';
 
 export function startTextDetailListeners(

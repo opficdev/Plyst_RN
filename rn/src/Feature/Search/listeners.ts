@@ -5,11 +5,11 @@ import { recordSearchHistoryTerm } from '../../Service/Clip/recordSearchHistoryT
 import type { SearchHistoryWriteResult } from '../../Service/Clip/recordSearchHistoryTerm';
 import { removeSearchHistoryTerm } from '../../Service/Clip/removeSearchHistoryTerm';
 import { clearSearchHistory } from '../../Service/Clip/clearSearchHistory';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
+import { copyClipDetail } from '../../Service/Clip/copyDetail';
 import { startClipReload } from '../ClipGrid/reload';
 import { startClipThumbnailListener } from '../ClipGrid/thumbnailListener';
-import { createSearchHistoryQueue } from './searchHistoryQueue';
-import type { SearchState } from './searchState';
+import { createSearchHistoryQueue } from './historyQueue';
+import type { SearchState } from './state';
 import { searchActions as actions } from './actions';
 
 export function startSearchListeners(

@@ -3,15 +3,15 @@ import { createScreenStore } from '../../../src/Shared/State/screenStore';
 import {
   initialSearchState,
   reduceSearch,
-} from '../../../src/Feature/Search/searchState';
+} from '../../../src/Feature/Search/state';
 import {
   clipThumbnailActions as actions,
   startClipThumbnailListener,
 } from '../../../src/Feature/ClipGrid/thumbnailListener';
-import { loadClipThumbnail } from '../../../src/Service/Clip/loadClipThumbnail';
-import type { ClipThumbnailResult } from '../../../src/Service/Clip/loadClipThumbnail';
+import { loadClipThumbnail } from '../../../src/Service/Clip/loadThumbnail';
+import type { ClipThumbnailResult } from '../../../src/Service/Clip/loadThumbnail';
 
-jest.mock('../../../src/Service/Clip/loadClipThumbnail');
+jest.mock('../../../src/Service/Clip/loadThumbnail');
 const settle = () => new Promise<void>((resolve) => setImmediate(resolve));
 function deferred() {
   let resolve!: (value: ClipThumbnailResult) => void;

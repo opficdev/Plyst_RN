@@ -22,9 +22,9 @@ import {
   ClipDetailDates,
 } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
-import { formatClipDate } from '../ClipDetail/formatClipDate';
-import { canSave } from './imageDetailDraft';
-import type { ImageDetailState } from './imageDetailDraft';
+import { formatClipDate } from '../ClipDetail/formatDate';
+import { canSave } from './draft';
+import type { ImageDetailState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
 import {

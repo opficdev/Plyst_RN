@@ -4,14 +4,14 @@ import {
 } from 'plyst-bridge';
 import type { ScreenScope } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../Service/Clip/deleteClipDetail';
-import { updateClipDetail } from '../../Service/Clip/updateClipDetail';
+import { copyClipDetail } from '../../Service/Clip/copyDetail';
+import { deleteClipDetail } from '../../Service/Clip/deleteDetail';
+import { updateClipDetail } from '../../Service/Clip/updateDetail';
 import { startClipReload } from '../ClipGrid/reload';
 import { startClipThumbnailListener } from '../ClipGrid/thumbnailListener';
-import { saveHomeClipboard } from './saveHomeClipboard';
-import { homePinTarget } from './homeMenu';
-import type { HomeState } from './homeState';
+import { saveHomeClipboard } from './saveClipboard';
+import { homePinTarget } from './menu';
+import type { HomeState } from './state';
 import { homeActions as actions } from './actions';
 
 export function startHomeListeners(scope: ScreenScope<HomeState>) {

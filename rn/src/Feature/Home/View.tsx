@@ -20,24 +20,20 @@ import {
   HomeTitleHeader,
   SectionTitle,
 } from '../../Shared/UI';
-import { homeMenuTitle, homeMenuSummary } from './homeMenu';
+import { homeMenuTitle, homeMenuSummary } from './menu';
 import { colors, spacing } from '../../Shared/Theme';
-import { ClipGridCard, ClipListCell } from '../ClipGrid/ClipGridCard';
-import {
-  homeEmptyState,
-  homeFilterStrings,
-  makeHomeContent,
-} from './homeContent';
-import { clipFilters, clipFilterTitles } from '../ClipGrid/clipFilter';
-import { clipSectionTitles } from '../ClipGrid/clipSection';
+import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
+import { homeEmptyState, homeFilterStrings, makeHomeContent } from './content';
+import { clipFilters, clipFilterTitles } from '../ClipGrid/filter';
+import { clipSectionTitles } from '../ClipGrid/section';
 import {
   clipCardValues,
   clipColumnWidth,
   clipThumbnailPixels,
-} from '../ClipGrid/clipCardValues';
-import { makeHomeListItems } from './homeListItems';
-import type { HomeListItem } from './homeListItems';
-import type { HomeState } from './homeState';
+} from '../ClipGrid/cardValues';
+import { makeHomeListItems } from './listItems';
+import type { HomeListItem } from './listItems';
+import type { HomeState } from './state';
 import { createHomeStore } from './store';
 import { homeActions as actions } from './actions';
 import {
@@ -45,8 +41,8 @@ import {
   useScreenState,
   useScreenDispatch,
 } from '../../Shared/State/screenStore';
-import { useClipTimeline } from '../ClipGrid/useClipTimeline';
-import { useHomeHeaderScroll } from './useHomeHeaderScroll';
+import { useClipTimeline } from '../ClipGrid/useTimeline';
+import { useHomeHeaderScroll } from './useHeaderScroll';
 import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 
 const chips = clipFilters.map((key) => ({
