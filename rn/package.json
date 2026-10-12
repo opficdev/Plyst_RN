@@ -4,13 +4,15 @@
   "main": "index.ts",
   "dependencies": {
     "@callstack/react-native-brownfield": "^5.3.0",
+    "@reduxjs/toolkit": "2.13.0",
     "@shopify/flash-list": "2.3.3",
     "expo": "~57.0.27",
     "expo-image": "~57.0.5",
     "plyst-bridge": "file:./modules/plyst-bridge",
     "react": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-safe-area-context": "~5.7.0"
+    "react-native-safe-area-context": "~5.7.0",
+    "react-redux": "9.3.0"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
@@ -34,7 +36,10 @@
     "test": "jest --ci"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "testEnvironmentOptions": {
+      "customExportConditions": ["node", "node-addons"]
+    }
   },
   "private": true
 }
