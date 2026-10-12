@@ -1,5 +1,4 @@
-import { useEffect, useLayoutEffect, useReducer, useRef } from 'react';
-import type { Dispatch, RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -12,130 +11,69 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import {
-  closeScreen,
-  setSaveEnabled,
-  subscribeClipChanges,
-  subscribeSave,
-} from 'plyst-bridge';
-import { ActionSheet, showToast } from '../../Shared/UI';
+import { closeScreen, setSaveEnabled } from 'plyst-bridge';
+import { ActionSheet } from '../../Shared/UI';
 import {
   ClipDetailActionBar,
   ClipDetailDates,
 } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../Service/Clip/deleteClipDetail';
 import { formatClipDate } from '../ClipDetail/formatClipDate';
-import { loadTextDetail } from '../../Service/Clip/loadTextDetail';
-import { saveTextDetail } from './saveTextDetail';
-import { canSave, initialState, reduce } from './textDetailDraft';
-import type { TextDetailAction, TextDetailState } from './textDetailDraft';
-import { createClipDetailRefresher } from '../ClipDetail/clipDetailRefresher';
+import { canSave } from './textDetailDraft';
+import type { TextDetailState } from './textDetailDraft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
-type TextDetailViewProps = { clipID: string };
-type State = TextDetailState | null | 'closed';
-type Action = TextDetailAction | { type: 'loadFailed' };
+import {
+  ScreenProvider,
+  useScreenState,
+  useScreenDispatch,
+} from '../../Shared/State/screenStore';
+import { createTextDetailStore } from './store';
+import type { TextDetailStoreState } from './store';
+import { textDetailActions as actions } from './actions';
 
-function reduceContent(state: State, action: Action): State {
-  if (state === 'closed') return state;
-  if (action.type === 'loadFailed') return state ?? 'closed';
-  if (state === null) {
-    if (action.type === 'clipLoaded') return initialState(action.clip);
-    return action.type === 'removed' ? 'closed' : state;
-  }
-  if (action.type === 'clipLoaded' && (state.isRemoved || state.isSaved)) {
-    return state;
-  }
-  return reduce(state, action);
-}
+type TextDetailViewProps = { clipID: string };
 
 export function TextDetailView({ clipID }: TextDetailViewProps) {
   return (
     <SafeAreaProvider style={styles.canvas}>
-      <TextDetailContent key={clipID} clipID={clipID} />
+      <TextDetailRoot key={clipID} clipID={clipID} />
     </SafeAreaProvider>
   );
 }
 
-function TextDetailContent({ clipID }: TextDetailViewProps) {
-  const [state, dispatch] = useReducer(reduceContent, null);
+function TextDetailRoot({ clipID }: TextDetailViewProps) {
+  const [screen] = useState(() => createTextDetailStore(clipID));
+  useLayoutEffect(() => {
+    screen.start();
+    return () => screen.dispose();
+  }, [screen]);
+  useEffect(() => {
+    screen.store.dispatch(actions.viewDidLoad());
+  }, [screen]);
+  return (
+    <ScreenProvider store={screen.store}>
+      <TextDetailContent />
+    </ScreenProvider>
+  );
+}
+
+function TextDetailContent() {
+  const state = useScreenState<TextDetailStoreState>();
   const didClose = useRef(false);
   const isClosed = state === 'closed' || !!(state?.isRemoved || state?.isSaved);
-  const closedRef = useRef(isClosed);
-
-  useLayoutEffect(() => {
-    closedRef.current = isClosed;
-  }, [isClosed]);
-
   useEffect(() => {
     if (didClose.current || !isClosed) return;
     didClose.current = true;
     closeScreen();
   }, [isClosed]);
-
-  useEffect(() => {
-    let removed = false;
-    const isStopped = () => removed || closedRef.current || didClose.current;
-    const refresher = createClipDetailRefresher({
-      load: () => loadTextDetail(clipID),
-      onResult: (result) => {
-        if (isStopped()) return;
-        if (result.status === 'loaded') {
-          dispatch({ type: 'clipLoaded', clip: result.clip });
-        } else if (result.status === 'missing') {
-          removed = true;
-          dispatch({ type: 'removed' });
-        } else {
-          dispatch({ type: 'loadFailed' });
-        }
-      },
-    });
-    const subscription = subscribeClipChanges((change) => {
-      if (change.id !== clipID || isStopped()) return;
-      if (change.kind === 'updated') void refresher.refresh();
-      else if (change.kind === 'deleted') {
-        removed = true;
-        refresher.invalidate();
-        dispatch({ type: 'removed' });
-      }
-    });
-    if (!isStopped()) void refresher.refresh();
-    return () => {
-      removed = true;
-      refresher.dispose();
-      subscription.remove();
-    };
-  }, [clipID]);
-
   if (state === 'closed') return null;
   if (state === null) return <View style={styles.canvas} />;
-
-  return (
-    <TextDetailEditor
-      clipID={clipID}
-      state={state}
-      dispatch={dispatch}
-      didClose={didClose}
-    />
-  );
+  return <TextDetailEditor state={state} />;
 }
 
-function TextDetailEditor({
-  clipID,
-  state,
-  dispatch,
-  didClose,
-}: TextDetailViewProps & {
-  state: TextDetailState;
-  dispatch: Dispatch<TextDetailAction>;
-  didClose: RefObject<boolean>;
-}) {
-  const stateRef = useRef(state);
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
-  const activeRef = useRef(true);
+function TextDetailEditor({ state }: { state: TextDetailState }) {
+  const dispatch = useScreenDispatch();
   const insets = useSafeAreaInsets();
   const {
     contentRef,
@@ -148,93 +86,16 @@ function TextDetailEditor({
   } = useScrollFieldIntoView();
   const isSaveEnabled = canSave(state);
 
-  useLayoutEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
-  useEffect(() => {
-    activeRef.current = true;
-    return () => {
-      activeRef.current = false;
-    };
-  }, []);
-
   useEffect(() => {
     setSaveEnabled(isSaveEnabled);
   }, [isSaveEnabled]);
 
-  useEffect(() => {
-    let active = true;
-    const subscription = subscribeSave(() => {
-      const current = stateRef.current;
-      if (
-        !active ||
-        didClose.current ||
-        savingRef.current ||
-        !canSave(current)
-      ) {
-        return;
-      }
-      savingRef.current = true;
-      dispatch({ type: 'saveStarted' });
-      void saveTextDetail(clipID, current.draft).then((result) => {
-        savingRef.current = false;
-        switch (result.status) {
-          case 'saved':
-            if (active) dispatch({ type: 'saved', clip: result.clip });
-            showToast('저장했습니다', true);
-            break;
-          case 'removed':
-            if (active) dispatch({ type: 'removed' });
-            break;
-          case 'failed':
-            if (active) dispatch({ type: 'saveFailed' });
-            showToast('저장하지 못했습니다', false);
-            break;
-        }
-      });
-    });
-    return () => {
-      active = false;
-      subscription.remove();
-    };
-  }, [clipID, didClose, dispatch]);
-
-  function copy() {
-    const current = stateRef.current;
-    if (current.isDeleting || current.isRemoved) return;
-    void copyClipDetail(clipID).then((result) => {
-      if (result === 'copied') {
-        showToast('클립보드에 복사했습니다', true);
-      } else {
-        showToast('클립보드에 복사하지 못했습니다', false);
-      }
-    });
-  }
-
   function showDeleteSheet() {
-    const current = stateRef.current;
-    if (current.isDeleting || current.isRemoved || current.isDeleteSheetOpen) {
-      return;
-    }
+    if (state.isDeleting || state.isRemoved || state.isDeleteSheetOpen) return;
     dispatch({ type: 'deleteSheetShown' });
   }
-
-  function startDelete() {
-    const current = stateRef.current;
-    if (deletingRef.current || current.isDeleting || current.isRemoved) return;
-    deletingRef.current = true;
-    dispatch({ type: 'deleteStarted' });
-    void deleteClipDetail(clipID).then((result) => {
-      deletingRef.current = false;
-      if (result === 'deleted') {
-        if (activeRef.current) dispatch({ type: 'removed' });
-      } else {
-        if (activeRef.current) dispatch({ type: 'deleteFailed' });
-        showToast('삭제하지 못했습니다', false);
-      }
-    });
-  }
+  const copy = () => dispatch(actions.copy());
+  const startDelete = () => dispatch(actions.delete());
 
   const { clip, draft } = state;
   return (
@@ -276,9 +137,9 @@ function TextDetailEditor({
               </Text>
               <Switch
                 value={draft.isPinned}
-                onValueChange={(isPinned) =>
-                  dispatch({ type: 'pinnedChanged', isPinned })
-                }
+                onValueChange={(isPinned) => {
+                  dispatch({ type: 'pinnedChanged', isPinned });
+                }}
                 trackColor={{ true: colors.SwitchOn }}
               />
             </View>
