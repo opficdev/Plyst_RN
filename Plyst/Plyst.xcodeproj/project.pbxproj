@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00005306A4A9700115D10 /* ReactorKit */; };
-		DFA00002306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00006306A4A9700115D10 /* RxSwift */; };
-		DFA00003306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00007306A4A9700115D10 /* ReactorKit */; };
-		DFA00004306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00008306A4A9700115D10 /* RxSwift */; };
 		DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0000D306A4A9700115D10 /* SQLiteData */; };
 		DFA0000C306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0000E306A4A9700115D10 /* SQLiteData */; };
 		DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00011306A4A9700115D10 /* StructuredQueriesSQLite */; };
@@ -160,8 +156,6 @@
 		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				DFA00001306A4A9700115D10 /* ReactorKit in Frameworks */,
-				DFA00002306A4A9700115D10 /* RxSwift in Frameworks */,
 				DFA0000B306A4A9700115D10 /* SQLiteData in Frameworks */,
 				DFA00010306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
 				DFA00013306A4A9700115D10 /* GRDB in Frameworks */,
@@ -171,8 +165,6 @@
 		DFEB0A34306A4A9700115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				DFA00003306A4A9700115D10 /* ReactorKit in Frameworks */,
-				DFA00004306A4A9700115D10 /* RxSwift in Frameworks */,
 				DFA0000C306A4A9700115D10 /* SQLiteData in Frameworks */,
 				DFA00014306A4A9700115D10 /* GRDB in Frameworks */,
 			);
@@ -279,8 +271,6 @@
 			);
 			name = Plyst;
 			packageProductDependencies = (
-				DFA00005306A4A9700115D10 /* ReactorKit */,
-				DFA00006306A4A9700115D10 /* RxSwift */,
 				DFA0000D306A4A9700115D10 /* SQLiteData */,
 				DFA00011306A4A9700115D10 /* StructuredQueriesSQLite */,
 				DFA00015306A4A9700115D10 /* GRDB */,
@@ -308,8 +298,6 @@
 			);
 			name = PlystTests;
 			packageProductDependencies = (
-				DFA00007306A4A9700115D10 /* ReactorKit */,
-				DFA00008306A4A9700115D10 /* RxSwift */,
 				DFA0000E306A4A9700115D10 /* SQLiteData */,
 				DFA00016306A4A9700115D10 /* GRDB */,
 			);
@@ -920,26 +908,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DFA00005306A4A9700115D10 /* ReactorKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
-			productName = ReactorKit;
-		};
-		DFA00006306A4A9700115D10 /* RxSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
-			productName = RxSwift;
-		};
-		DFA00007306A4A9700115D10 /* ReactorKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
-			productName = ReactorKit;
-		};
-		DFA00008306A4A9700115D10 /* RxSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
-			productName = RxSwift;
-		};
 		DFA0000D306A4A9700115D10 /* SQLiteData */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */;
