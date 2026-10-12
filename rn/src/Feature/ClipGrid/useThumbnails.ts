@@ -10,10 +10,7 @@ const viewabilityConfig = {
   minimumViewTime: 0,
 };
 
-type ThumbnailState = Pick<
-  ClipThumbnails,
-  'thumbnails' | 'loadingThumbnails' | 'failedThumbnails'
-> & { clips: ClipRecord[] };
+type ThumbnailState = ClipThumbnails & { clips: ClipRecord[] };
 type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
 
 export function useClipThumbnails<Item extends ThumbnailItem>(
@@ -26,6 +23,8 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
   const current = useRef({ state, gridPixels, pinnedPixels, isMeasured });
   const visibleIds = useRef<string[]>([]);
   const pinnedIds = useRef<string[]>([]);
+  const isPinnedVisible = useRef(false);
+  const previousOrder = useRef(state.thumbnailOrder);
   const visibleKeys = useRef(new Map<string, { id: string; pixels: number }>());
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
@@ -85,16 +84,36 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
     for (const id of pinnedIds.current) request(id, pinnedPixels);
   }, [state.clips, gridPixels, pinnedPixels, isMeasured, request, updateGrid]);
 
+  useEffect(() => {
+    const order = previousOrder.current;
+    previousOrder.current = state.thumbnailOrder;
+    if (!isPinnedVisible.current) return;
+    for (const id of pinnedIds.current) {
+      const pixels = current.current.pinnedPixels;
+      const key = `${id}:${pixels}`;
+      if (order.includes(key) && !state.thumbnailOrder.includes(key))
+        request(id, pixels);
+    }
+  }, [state.thumbnailOrder, request]);
+
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken<Item>[] }) => {
+      const wasPinnedVisible = isPinnedVisible.current;
+      isPinnedVisible.current = viewableItems.some(
+        ({ item }) => item.kind === 'pinned',
+      );
       visibleIds.current = viewableItems.flatMap(({ item }) =>
         item.kind === 'card' && 'clip' in item && item.clip.image !== null
           ? [item.clip.id]
           : [],
       );
       updateGrid();
+      if (!wasPinnedVisible && isPinnedVisible.current) {
+        for (const id of pinnedIds.current)
+          request(id, current.current.pinnedPixels);
+      }
     },
-    [updateGrid],
+    [request, updateGrid],
   );
 
   const onViewableIdsChange = useCallback(
