@@ -1,7 +1,9 @@
+import type { ClipThumbnailResult } from '../../Service/Clip/loadClipThumbnail';
+
 const THUMBNAIL_CONCURRENCY = 2;
 
 type Options = {
-  load: (clipID: string, pixels: number) => Promise<string | null>;
+  load: (clipID: string, pixels: number) => Promise<ClipThumbnailResult>;
   onStarted: (key: string) => void;
   onLoaded: (key: string, uri: string) => void;
   onFailed: (key: string) => void;
@@ -27,19 +29,13 @@ export function createThumbnailRequestQueue({
   let disposed = false;
 
   async function run(request: ThumbnailRequest) {
-    let uri: string | null = null;
-    let failed = false;
-    try {
-      uri = await load(request.clipID, request.pixels);
-    } catch {
-      failed = true;
-    }
+    const result = await load(request.clipID, request.pixels);
     active -= 1;
     requests.delete(request.key);
     if (!disposed && !request.cancelled) {
-      if (failed) onFailed(request.key);
-      else if (uri !== null) onLoaded(request.key, uri);
-      // null이면 실패로 처리하지 않고 로딩 상태만 해제합니다.
+      if (result.status === 'failed') onFailed(request.key);
+      else if (result.status === 'loaded') onLoaded(request.key, result.uri);
+      // missing이면 실패로 처리하지 않고 로딩 상태만 해제합니다.
       else onCancelled(request.key);
     }
     start();

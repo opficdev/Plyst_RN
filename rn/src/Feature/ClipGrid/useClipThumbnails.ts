@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { Dispatch } from 'react';
-import { getClipThumbnail } from 'plyst-bridge';
 import type { ViewToken } from '@shopify/flash-list';
 import type { ClipRecord } from 'plyst-bridge';
 import type { ClipThumbnailAction, ClipThumbnails } from './clipThumbnails';
+import { loadClipThumbnail } from '../../Service/Clip/loadClipThumbnail';
 import { createThumbnailRequestQueue } from './clipThumbnailRequests';
 
 const viewabilityConfig = {
@@ -39,7 +39,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
 
   useEffect(() => {
     const requests = createThumbnailRequestQueue({
-      load: getClipThumbnail,
+      load: loadClipThumbnail,
       onStarted: (key) => dispatch({ type: 'thumbnailStarted', key }),
       onLoaded: (key, uri) => dispatch({ type: 'thumbnailLoaded', key, uri }),
       onFailed: (key) => dispatch({ type: 'thumbnailFailed', key }),
