@@ -10,10 +10,7 @@ const viewabilityConfig = {
   minimumViewTime: 0,
 };
 
-type ThumbnailState = Pick<
-  ClipThumbnails,
-  'thumbnails' | 'thumbnailOrder' | 'loadingThumbnails' | 'failedThumbnails'
-> & { clips: ClipRecord[] };
+type ThumbnailState = ClipThumbnails & { clips: ClipRecord[] };
 type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
 
 export function useClipThumbnails<Item extends ThumbnailItem>(
