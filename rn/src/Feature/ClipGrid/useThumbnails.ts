@@ -24,6 +24,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
   const visibleIds = useRef<string[]>([]);
   const pinnedIds = useRef<string[]>([]);
   const isPinnedVisible = useRef(false);
+  const previousOrder = useRef(state.thumbnailOrder);
   const visibleKeys = useRef(new Map<string, { id: string; pixels: number }>());
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
@@ -84,9 +85,15 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
   }, [state.clips, gridPixels, pinnedPixels, isMeasured, request, updateGrid]);
 
   useEffect(() => {
+    const order = previousOrder.current;
+    previousOrder.current = state.thumbnailOrder;
     if (!isPinnedVisible.current) return;
-    for (const id of pinnedIds.current)
-      request(id, current.current.pinnedPixels);
+    for (const id of pinnedIds.current) {
+      const pixels = current.current.pinnedPixels;
+      const key = `${id}:${pixels}`;
+      if (order.includes(key) && !state.thumbnailOrder.includes(key))
+        request(id, pixels);
+    }
   }, [state.thumbnailOrder, request]);
 
   const onViewableItemsChanged = useCallback(
