@@ -1,0 +1,2 @@
+app_identifier("opfic.PlystRN")
+team_id(ENV["APP_STORE_TEAM_ID"])
