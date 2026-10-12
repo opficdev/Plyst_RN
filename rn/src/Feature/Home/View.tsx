@@ -1,11 +1,4 @@
-import {
-  useLayoutEffect,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import { useLayoutEffect, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, PixelRatio, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -14,14 +7,9 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import type { ClipRecord } from 'plyst-bridge';
-import {
-  openClip,
-  openSearch,
-  subscribeClipboardSaveRequests,
-} from 'plyst-bridge';
+import { openClip, openSearch } from 'plyst-bridge';
 import {
   ActionSheet,
-  showToast,
   HomeSaveBar,
   ClipTextCard,
   ClipImageCard,
@@ -32,11 +20,7 @@ import {
   HomeTitleHeader,
   SectionTitle,
 } from '../../Shared/UI';
-import { saveHomeClipboard } from './saveHomeClipboard';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
-import { deleteClipDetail } from '../../Service/Clip/deleteClipDetail';
-import { updateClipDetail } from '../../Service/Clip/updateClipDetail';
-import { homeMenuTitle, homeMenuSummary, homePinTarget } from './homeMenu';
+import { homeMenuTitle, homeMenuSummary } from './homeMenu';
 import { colors, spacing } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/ClipGridCard';
 import {
@@ -53,11 +37,17 @@ import {
 } from '../ClipGrid/clipCardValues';
 import { makeHomeListItems } from './homeListItems';
 import type { HomeListItem } from './homeListItems';
-import { initialState, reduce } from './homeState';
-import { useHomeClips } from './useHomeClips';
+import type { HomeState } from './homeState';
+import { createHomeStore } from './store';
+import { homeActions as actions } from './actions';
+import {
+  ScreenProvider,
+  useScreenState,
+  useScreenDispatch,
+} from '../../Shared/State/screenStore';
 import { useClipTimeline } from '../ClipGrid/useClipTimeline';
 import { useHomeHeaderScroll } from './useHomeHeaderScroll';
-import { useClipThumbnails } from '../ClipGrid/useClipThumbnails';
+import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 
 const chips = clipFilters.map((key) => ({
   key,
@@ -66,117 +56,58 @@ const chips = clipFilters.map((key) => ({
 export function HomeView() {
   return (
     <SafeAreaProvider style={styles.canvas}>
-      <HomeContent />
+      <HomeRoot />
     </SafeAreaProvider>
   );
 }
 
-function HomeContent() {
-  const insets = useSafeAreaInsets();
-  const [state, dispatch] = useReducer(reduce, undefined, () =>
-    initialState(Date.now()),
-  );
-  const stateRef = useRef(state);
+function HomeRoot() {
+  const [screen] = useState(createHomeStore);
   useLayoutEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
+    screen.start();
+    return () => screen.dispose();
+  }, [screen]);
+  useEffect(() => {
+    screen.store.dispatch(actions.viewDidLoad());
+  }, [screen]);
+  return (
+    <ScreenProvider store={screen.store}>
+      <HomeContent getState={screen.store.getState} />
+    </ScreenProvider>
+  );
+}
+
+function HomeContent({ getState }: { getState: () => HomeState }) {
+  const insets = useSafeAreaInsets();
+  const state = useScreenState<HomeState>();
+  const dispatch = useScreenDispatch();
 
   function selectClip(clip: ClipRecord) {
-    const current = stateRef.current;
+    const current = getState();
     if (current.isMenuVisible || current.isDeleteConfirmVisible) return;
     openClip(clip.id, clip.image === null ? 'text' : 'image');
   }
-
   function showMenu(clip: ClipRecord) {
-    const current = stateRef.current;
+    const current = getState();
     if (current.isMenuVisible || current.isDeleteConfirmVisible) return;
-    const action = { type: 'menuShown', clip } as const;
-    stateRef.current = reduce(current, action);
-    dispatch(action);
+    dispatch({ type: 'menuShown', clip });
   }
-
-  async function copy(clip: ClipRecord) {
-    const result = await copyClipDetail(clip.id);
-    showToast(
-      result === 'copied'
-        ? '클립보드에 복사했습니다'
-        : '클립보드에 복사하지 못했습니다',
-      result === 'copied',
-    );
+  function copy(clip: ClipRecord) {
+    dispatch(actions.copy(clip.id));
   }
-
-  async function save() {
-    if (savingRef.current || stateRef.current.isSaving) return;
-    savingRef.current = true;
-    dispatch({ type: 'savingStarted' });
-    try {
-      const result = await saveHomeClipboard();
-      showToast(result.message, result.isSuccess);
-    } finally {
-      savingRef.current = false;
-      dispatch({ type: 'savingStopped' });
-    }
-  }
-
-  function latestMenuClip() {
-    const current = stateRef.current;
-    return current.clips.find((clip) => clip.id === current.menuClip?.id);
-  }
-
-  async function togglePin() {
-    const menuClip = stateRef.current.menuClip;
-    const clip = latestMenuClip();
-    if (!menuClip) return;
-    const target = homePinTarget(menuClip, clip);
-    if (target === null || !clip) return;
-    const result = await updateClipDetail(
-      clip.id,
-      clip.name,
-      clip.memo,
-      target,
-    );
-    if (result.status !== 'saved')
-      showToast('고정 상태를 바꾸지 못했습니다', false);
-  }
-
+  const save = () => dispatch(actions.saveCurrentClipboard());
+  const togglePin = () => dispatch(actions.setPinned());
+  const deleteClip = () => dispatch(actions.delete());
   function confirmDelete() {
-    const clip = latestMenuClip();
-    if (!clip) return;
-    const action = { type: 'deleteConfirmShown', clip } as const;
-    stateRef.current = reduce(stateRef.current, action);
-    dispatch(action);
-  }
-
-  async function deleteClip() {
-    const clip = latestMenuClip();
-    if (!clip || deletingRef.current) return;
-    deletingRef.current = true;
-    try {
-      if ((await deleteClipDetail(clip.id)) === 'failed')
-        showToast('삭제하지 못했습니다', false);
-    } finally {
-      deletingRef.current = false;
-    }
+    const current = getState();
+    const clip = current.clips.find((clip) => clip.id === current.menuClip?.id);
+    if (clip) dispatch({ type: 'deleteConfirmShown', clip });
   }
 
   const list = useRef<FlashListRef<HomeListItem>>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [headerHeight, setHeaderHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const saveRef = useRef(save);
-  useLayoutEffect(() => {
-    saveRef.current = save;
-  });
-  // useHomeClips의 ready()가 보관된 요청을 전달하기 전에 저장 요청 리스너를 등록해야 합니다.
-  useEffect(() => {
-    const subscription = subscribeClipboardSaveRequests(() => {
-      void saveRef.current();
-    });
-    return () => subscription.remove();
-  }, []);
-  useHomeClips(dispatch);
   const dates = useMemo(
     () => state.clips.map((clip) => clip.createdAt),
     [state.clips],
@@ -184,7 +115,7 @@ function HomeContent() {
   const now = useClipTimeline(dates, !state.isSearchVisible);
   useEffect(() => {
     dispatch({ type: 'timeChanged', now });
-  }, [now]);
+  }, [dispatch, now]);
   const content = useMemo(
     () => makeHomeContent(state.clips, state.filter, state.now),
     [state.clips, state.filter, state.now],
