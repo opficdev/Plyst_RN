@@ -2,7 +2,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
-  useReducer,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -36,7 +36,6 @@ import {
   HomeFilterBar,
   SearchTermChip,
   SectionTitle,
-  showToast,
 } from '../../Shared/UI';
 import { colors, typography } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/ClipGridCard';
@@ -46,7 +45,6 @@ import {
   clipThumbnailPixels,
 } from '../ClipGrid/clipCardValues';
 import { clipFilters, clipFilterTitles } from '../ClipGrid/clipFilter';
-import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
 import { searchCardText } from './searchCardText';
 import {
   createSearchTimeTexts,
@@ -57,11 +55,16 @@ import {
   searchRecentDisplay,
 } from './searchContent';
 import { createSearchIndex } from './searchMatch';
-import { initialSearchState, reduceSearch } from './searchState';
-import { useClips } from '../ClipGrid/useClips';
-import { useClipThumbnails } from '../ClipGrid/useClipThumbnails';
+import type { SearchState } from './searchState';
+import { createSearchStore } from './store';
+import { searchActions as actions } from './actions';
+import {
+  ScreenProvider,
+  useScreenState,
+  useScreenDispatch,
+} from '../../Shared/State/screenStore';
+import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 import { useClipTimeline } from '../ClipGrid/useClipTimeline';
-import { useSearchHistory } from './useSearchHistory';
 
 let hasPresentedKeyboard = false;
 
@@ -76,19 +79,40 @@ const chips = clipFilters.map((key) => ({
 export function SearchView() {
   return (
     <SafeAreaProvider style={styles.root}>
-      <SearchScreen />
+      <SearchRoot />
     </SafeAreaProvider>
   );
 }
 
-function SearchScreen() {
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const [state, dispatch] = useReducer(reduceSearch, undefined, () =>
-    initialSearchState(Date.now()),
-  );
+function SearchRoot() {
   const [index] = useState(createSearchIndex);
   const [times] = useState(createSearchTimeTexts);
+  const [screen] = useState(() => createSearchStore(index.cancelPrebuild));
+  useLayoutEffect(() => {
+    screen.start();
+    return () => screen.dispose();
+  }, [screen]);
+  useEffect(() => {
+    screen.store.dispatch(actions.viewDidLoad());
+  }, [screen]);
+  return (
+    <ScreenProvider store={screen.store}>
+      <SearchScreen index={index} times={times} />
+    </ScreenProvider>
+  );
+}
+
+function SearchScreen({
+  index,
+  times,
+}: {
+  index: ReturnType<typeof createSearchIndex>;
+  times: ReturnType<typeof createSearchTimeTexts>;
+}) {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const state = useScreenState<SearchState>();
+  const dispatch = useScreenDispatch();
   const input = useRef<TextInput>(null);
   const list = useRef<FlashListRef<SearchListItem>>(null);
   const [progress] = useState(() => new Animated.Value(0));
@@ -99,8 +123,6 @@ function SearchScreen() {
   const isMounted = useRef(false);
   const animation = useRef<Animated.CompositeAnimation | null>(null);
   const [listWidth, setListWidth] = useState(0);
-  const history = useSearchHistory(dispatch);
-  useClips(dispatch, index.cancelPrebuild);
   const dates = useMemo(
     () => state.clips.map((clip) => clip.createdAt),
     [state.clips],
@@ -108,7 +130,7 @@ function SearchScreen() {
   const now = useClipTimeline(dates, true);
   useEffect(() => {
     dispatch({ type: 'timeChanged', now });
-  }, [now]);
+  }, [dispatch, now]);
   useEffect(() => {
     times.retain(state.clips);
     return index.prebuild(state.clips);
@@ -219,16 +241,8 @@ function SearchScreen() {
     list.current?.recomputeViewableItems();
   }, [items, mode]);
 
-  async function copy(clip: ClipRecord) {
-    const copiedQuery = state.query;
-    const result = await copyClipDetail(clip.id);
-    if (!isMounted.current) return;
-    const isSuccess = result === 'copied';
-    showToast(
-      isSuccess ? '클립보드에 복사했습니다' : '클립보드에 복사하지 못했습니다',
-      isSuccess,
-    );
-    if (isSuccess && copiedQuery !== '') history.record(copiedQuery, true);
+  function copy(clip: ClipRecord) {
+    dispatch(actions.copy(clip.id));
   }
 
   function renderItem({ item }: { item: SearchListItem }) {
@@ -320,7 +334,7 @@ function SearchScreen() {
             allowFontScaling={false}
             style={styles.input}
             onSubmitEditing={() => {
-              history.record(state.query);
+              dispatch(actions.submitQuery());
               input.current?.blur();
             }}
           />
@@ -373,8 +387,10 @@ function SearchScreen() {
                 onTermButtonPress={(term) =>
                   dispatch({ type: 'queryChanged', query: term })
                 }
-                onRemoveButtonPress={history.remove}
-                onClearButtonPress={history.clear}
+                onRemoveButtonPress={(term) =>
+                  dispatch(actions.removeRecentTerm(term))
+                }
+                onClearButtonPress={() => dispatch(actions.clearRecentTerms())}
               />
             ) : mode === 'empty' || mode === 'failed' ? (
               <View style={styles.empty}>

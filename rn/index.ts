@@ -1,7 +1,7 @@
 import { AppRegistry } from 'react-native';
 
 import App from './App';
-import { SearchView } from './src/Feature/Search/SearchView';
+import { SearchView } from './src/Feature/Search/View';
 import { HomeView } from './src/Feature/Home/View';
 import { ToastHost } from './src/Shared/UI';
 import { ImageDetailView } from './src/Feature/ImageDetail/View';
