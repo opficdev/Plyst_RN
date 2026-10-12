@@ -312,7 +312,7 @@ function HomeContent({ getState }: { getState: () => HomeState }) {
         >
           <HomeTitleHeader
             onSearchButtonPress={openSearch}
-            isSearchButtonHidden={state.isSearchVisible}
+            isSearchButtonDisabled={state.isSearchVisible}
           />
           <View style={styles.filters}>
             <HomeFilterBar

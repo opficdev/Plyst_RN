@@ -67,6 +67,7 @@ import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 import { useClipTimeline } from '../ClipGrid/useClipTimeline';
 
 let hasPresentedKeyboard = false;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type SearchListItem =
   | { kind: 'header'; key: string }
@@ -339,8 +340,8 @@ function SearchScreen({
             }}
           />
         </Animated.View>
-        <Pressable
-          style={[styles.cancel, { top: insets.top - 5 }]}
+        <AnimatedPressable
+          style={[styles.cancel, { top: insets.top - 5, opacity: progress }]}
           onPress={close}
         >
           <Animated.View
@@ -363,7 +364,7 @@ function SearchScreen({
               style={styles.xmarkIcon}
             />
           </Animated.View>
-        </Pressable>
+        </AnimatedPressable>
       </View>
       <KeyboardAvoidingView
         behavior="padding"
