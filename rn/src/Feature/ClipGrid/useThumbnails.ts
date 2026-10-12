@@ -12,7 +12,7 @@ const viewabilityConfig = {
 
 type ThumbnailState = Pick<
   ClipThumbnails,
-  'thumbnails' | 'loadingThumbnails' | 'failedThumbnails'
+  'thumbnails' | 'thumbnailOrder' | 'loadingThumbnails' | 'failedThumbnails'
 > & { clips: ClipRecord[] };
 type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
 
@@ -26,6 +26,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
   const current = useRef({ state, gridPixels, pinnedPixels, isMeasured });
   const visibleIds = useRef<string[]>([]);
   const pinnedIds = useRef<string[]>([]);
+  const isPinnedVisible = useRef(false);
   const visibleKeys = useRef(new Map<string, { id: string; pixels: number }>());
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
@@ -85,16 +86,30 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
     for (const id of pinnedIds.current) request(id, pinnedPixels);
   }, [state.clips, gridPixels, pinnedPixels, isMeasured, request, updateGrid]);
 
+  useEffect(() => {
+    if (!isPinnedVisible.current) return;
+    for (const id of pinnedIds.current)
+      request(id, current.current.pinnedPixels);
+  }, [state.thumbnailOrder, request]);
+
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken<Item>[] }) => {
+      const wasPinnedVisible = isPinnedVisible.current;
+      isPinnedVisible.current = viewableItems.some(
+        ({ item }) => item.kind === 'pinned',
+      );
       visibleIds.current = viewableItems.flatMap(({ item }) =>
         item.kind === 'card' && 'clip' in item && item.clip.image !== null
           ? [item.clip.id]
           : [],
       );
       updateGrid();
+      if (!wasPinnedVisible && isPinnedVisible.current) {
+        for (const id of pinnedIds.current)
+          request(id, current.current.pinnedPixels);
+      }
     },
-    [updateGrid],
+    [request, updateGrid],
   );
 
   const onViewableIdsChange = useCallback(
