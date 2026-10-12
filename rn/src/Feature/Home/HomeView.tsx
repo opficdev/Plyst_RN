@@ -18,7 +18,6 @@ import {
   openClip,
   openSearch,
   subscribeClipboardSaveRequests,
-  updateClip,
 } from 'plyst-bridge';
 import {
   ActionSheet,
@@ -36,6 +35,7 @@ import {
 import { saveHomeClipboard } from './saveHomeClipboard';
 import { copyClipDetail } from '../../Service/Clip/copyClipDetail';
 import { deleteClipDetail } from '../../Service/Clip/deleteClipDetail';
+import { updateClipDetail } from '../../Service/Clip/updateClipDetail';
 import { homeMenuTitle, homeMenuSummary, homePinTarget } from './homeMenu';
 import { colors, spacing } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/ClipGridCard';
@@ -131,12 +131,14 @@ function HomeContent() {
     if (!menuClip) return;
     const target = homePinTarget(menuClip, clip);
     if (target === null || !clip) return;
-    try {
-      const result = await updateClip(clip.id, clip.name, clip.memo, target);
-      if (result === null) showToast('고정 상태를 바꾸지 못했습니다', false);
-    } catch {
+    const result = await updateClipDetail(
+      clip.id,
+      clip.name,
+      clip.memo,
+      target,
+    );
+    if (result.status !== 'saved')
       showToast('고정 상태를 바꾸지 못했습니다', false);
-    }
   }
 
   function confirmDelete() {
