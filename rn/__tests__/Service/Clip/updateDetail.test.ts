@@ -8,8 +8,6 @@ const updateClipMock = jest.mocked(updateClip);
 const clip: NativeClipRecord = {
   id: 'clip-id',
   text: '원문',
-  characterCount: 2,
-  textPrefix: '원문',
   isWebLink: false,
   image: null,
   name: '이름',

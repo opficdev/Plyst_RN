@@ -8,8 +8,6 @@ const getClipMock = jest.mocked(getClip);
 const clip: NativeClipRecord = {
   id: 'clip-id',
   text: null,
-  characterCount: 0,
-  textPrefix: null,
   isWebLink: false,
   image: {
     contentType: 'public.png',

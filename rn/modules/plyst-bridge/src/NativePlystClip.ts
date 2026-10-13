@@ -13,16 +13,11 @@ export type ClipImageRecord = {
 export type ClipRecord = {
   id: string;
   text: string | null;
-  // Swift String.count로 센 글자 수입니다. 이미지 클립은 0입니다.
-  characterCount: number;
-  // Swift String.prefix(60)의 결과입니다. 이미지 클립은 접두어가 없다고 확정된 값이므로 null입니다.
-  // 이 필드는 항상 전달되므로 undefined는 계약 위반입니다.
-  textPrefix: string | null;
   image: ClipImageRecord | null;
   name: string | null;
   memo: string | null;
   isPinned: boolean;
-  // Foundation URL 검증은 JavaScript에서 재현할 수 없어 Swift에서 판별합니다. 이미지 클립은 false입니다.
+  // Foundation URL 검증 결과입니다. 이미지 클립은 false입니다.
   isWebLink: boolean;
   // 날짜는 Unix epoch 기준 밀리초입니다. JavaScript Date와 같은 단위입니다.
   createdAt: number;
