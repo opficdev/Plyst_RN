@@ -147,6 +147,28 @@ rsync -aL --delete --delete-excluded \
 	--exclude='*' \
 	"$build_directory/" "$destination/"
 
+# BrownfieldLib의 Info.plist에는 App Store Connect 검증에 필요한 CFBundleShortVersionString이 없습니다.
+# Info.plist를 수정하면 서명이 깨지므로 아래 ad-hoc 서명 전에 실행합니다.
+find "$destination/BrownfieldLib.xcframework" -type f \
+	-path '*/ios-*/BrownfieldLib.framework/Info.plist' ! -path '*maccatalyst*' \
+	-exec plutil -replace CFBundleShortVersionString -string 1.0 {} +
+
+# 바이너리가 없는 ReactBrownfield와 PlystBridge에는 Xcode가 앱 배포 대상 버전으로 만든 스텁을 넣습니다.
+# 두 프레임워크의 MinimumOSVersion이 스텁의 최소 버전과 다르면 App Store Connect가 ITMS-90208로 거부합니다.
+deployment_target=$(sed -n 's/^[[:space:]]*IPHONEOS_DEPLOYMENT_TARGET = \(.*\);$/\1/p' \
+	"$repository_root/Plyst/Plyst.xcodeproj/project.pbxproj" | sort -u)
+case "$deployment_target" in
+	'' | *[!0-9.]*)
+		printf '오류: 앱의 IPHONEOS_DEPLOYMENT_TARGET이 하나로 정해지지 않았습니다.\n' >&2
+		exit 1
+		;;
+esac
+for name in ReactBrownfield PlystBridge; do
+	find "$destination/$name.xcframework" -type f \
+		-path "*/ios-*/$name.framework/Info.plist" ! -path '*maccatalyst*' \
+		-exec plutil -replace MinimumOSVersion -string "$deployment_target" {} +
+done
+
 find "$destination" -type d -path '*/ios-*/*.framework' ! -path '*maccatalyst*' \
 	-exec codesign --force --sign - --timestamp=none {} +
 
