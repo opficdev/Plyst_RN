@@ -3,7 +3,7 @@
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
 > Home과 Search에서 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
-<a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EA%B5%AC%ED%98%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 구현" /></a>
+<a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EA%B5%AC%ED%98%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
 <a href="https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7"><img src="https://img.shields.io/badge/Notion-%EC%9E%91%EC%97%85_%EA%B3%B5%EA%B0%84-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion 작업 공간" /></a>
 
 | Home | Search | 텍스트 상세 |
@@ -58,10 +58,10 @@
 > 화면 마운트의 `start()`와 해제의 `dispose()`에서 Listener, 요청 큐, 구독을 한 곳에서 정리
 >
 > **성과**<br>
-> • Home, Search, TextDetail, ImageDetail 화면 컴포넌트에서 Service 호출과 이벤트 구독 제거<br>
-> • 해제된 화면에서는 `dispatch`가 상태를 바꾸지 않아 종료된 화면의 비동기 결과가 새 화면에 반영되지 않음<br>
-> • 이미 시작한 저장과 복사의 결과 토스트는 별도 호스트에서 계속 표시<br>
-> • 렌더링 없이 Store와 Listener를 Jest로 검증
+> ✅ Home, Search, TextDetail, ImageDetail 화면 컴포넌트에서 **Service 호출과 이벤트 구독 제거**<br>
+> ✅ 해제된 화면에서는 `dispatch`가 상태를 바꾸지 않아 **종료된 화면의 비동기 결과가 새 화면에 반영되지 않음**<br>
+> ✅ 이미 시작한 저장과 복사의 결과 토스트는 **별도 호스트에서 계속 표시**<br>
+> ✅ **렌더링 없이** Store와 Listener를 Jest로 검증
 
 ```ts
 export const textDetailActions = {
@@ -84,8 +84,8 @@ scope.listen(actions.save, async () => {
 > RN 결과물과 브리지를 XCFramework로 묶어 PlystReactNative 패키지로 앱에 연결
 >
 > **성과**<br>
-> • RN 의존성에 SQLite, 파일 시스템, 클립보드 모듈 없음<br>
-> • 모든 데이터 호출과 이벤트 전달이 같은 Codegen 스펙을 거치는 구조
+> ✅ RN 의존성에 **SQLite, 파일 시스템, 클립보드 모듈 없음**<br>
+> ✅ 모든 데이터 호출과 이벤트 전달이 **같은 Codegen 스펙을 거치는 구조**
 
 ```ts
 export interface Spec extends TurboModule {
@@ -101,25 +101,25 @@ export interface Spec extends TurboModule {
 > RN 목록은 이미지 디코딩과 화면 밖 요청 누적으로 이미지 수가 늘수록 원본보다 메모리가 빠르게 늘 수 있음
 >
 > **해결**<br>
-> FlashList의 masonry 배치에서 카드 너비와 화면 배율에 맞춘 ImageIO 썸네일 요청<br>
+> 2열 카드 목록(FlashList masonry)에서 카드 너비와 화면 배율에 맞춘 ImageIO 썸네일 요청<br>
 > 화면 밖 대기 요청을 제거하고 실행 중인 요청은 완료 시 결과 폐기<br>
 > 썸네일 URI 보관 수 48개와 요청 큐 동시 실행 수 2개로 제한
 >
 > **성과**<br>
-> • 이미지 2개 대비 150개의 최대 메모리 증가량 원본 +42.80MB, RN +25.48MB<br>
-> • 이미지 150개 목록을 왕복한 뒤 메모리 원본 56.71MB, RN 52.72MB<br>
-> • RN 런타임의 고정 메모리는 이미지 2개에서 +18.78MB로 원본보다 높음
+> ✅ 이미지 2개 대비 150개의 최대 메모리 증가량 원본 **+42.80MB**, RN **+25.48MB**<br>
+> ✅ 이미지 150개 목록을 스크롤하여 복한 뒤 메모리 원본 **56.71MB**, RN **52.72MB**<br>
+> ⚠️ RN 런타임의 고정 메모리는 이미지 2개에서 **+18.78MB**로 원본보다 높음
 
 ```swift
 let thumbnailOptions = [
-    kCGImageSourceCreateThumbnailFromImageAlways: true,
-    kCGImageSourceCreateThumbnailWithTransform: true,
-    kCGImageSourceShouldCacheImmediately: true,
-    kCGImageSourceThumbnailMaxPixelSize: maximumPixelDimension
+    kCGImageSourceCreateThumbnailFromImageAlways: true,         // 파일에 내장된 작은 썸네일 대신 원본에서 새로 생성
+    kCGImageSourceCreateThumbnailWithTransform: true,           // 촬영 방향(EXIF) 정보대로 회전하여 생성
+    kCGImageSourceShouldCacheImmediately: true,                 // 생성 시점에 디코딩하여 스크롤 중 디코딩 지연 방지
+    kCGImageSourceThumbnailMaxPixelSize: maximumPixelDimension  // 썸네일 긴 변의 최대 픽셀 수 (표시 크기에 맞춘 값)
 ] as CFDictionary
 ```
 
-| 이미지 수 | 원본 왕복 후 / 최대 | RN 왕복 후 / 최대 |
+| 이미지 수 | UIKit 왕복 후 / 최대 | RN 왕복 후 / 최대 |
 |:---:|:---:|:---:|
 | 2개 | 19.38 / 20.96MB | 38.16 / 42.04MB |
 | 16개 | 30.80 / 31.59MB | 59.90 / 61.75MB |
@@ -131,11 +131,10 @@ let thumbnailOptions = [
 | 측정 조건 | 값 |
 |:---:|:---:|
 | 기기 | iPhone 16 Pro, iOS 26.7.1, USB 연결 |
-| 빌드 | 서명한 Release, RN은 Hermes 번들 |
+| 빌드 | UIKit: Release / RN: Hermes 번들 |
 | 데이터 | 같은 규칙으로 만든 이미지 2~150개와 텍스트 12개 |
 | 이동 | 목록의 처음과 끝을 2회 왕복, 초당 2,200pt |
 | 메모리 | 앱 안에서 `phys_footprint`를 250ms 간격으로 관측 |
-| 한계 | 지점마다 1회 측정, 16개와 32개 사이의 RN 감소 원인은 반복 측정으로 확인 필요 |
 
 ---
 
