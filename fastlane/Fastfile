@@ -195,6 +195,22 @@ platform :ios do
     end
   end
 
+  # App Store Connect는 널리 쓰이는 서드파티 SDK(SDWebImage 등)에 서명을 요구하므로 XCFramework를 배포 인증서로 서명한다.
+  # 같은 팀의 인증서가 여러 개면 첫 번째를 쓴다.
+  private_lane :sign_xcframeworks do |options|
+    require "shellwords"
+
+    team_id = options[:team_id].to_s
+    identities = sh("security find-identity -v -p codesigning", log: false)
+    identity = identities.lines.grep(/Apple Distribution:.*\(#{Regexp.escape(team_id)}\)/).first.to_s[/\h{40}/]
+    UI.user_error!("Missing Apple Distribution identity for team #{team_id}") if identity.nil?
+
+    directory = File.expand_path("../Plyst/Packages/PlystReactNative/Frameworks", __dir__)
+    Dir.glob(File.join(directory, "*.xcframework")).sort.each do |xcframework|
+      sh("codesign --force --timestamp --sign #{identity} #{Shellwords.escape(xcframework)}")
+    end
+  end
+
   private_lane :build_for_store do |options|
     output_directory = options[:output_directory] || TESTFLIGHT_BUILD_OUTPUT_DIRECTORY
 
@@ -251,6 +267,8 @@ platform :ios do
         )
       end
     end
+
+    sign_xcframeworks(team_id: ENV["APP_STORE_TEAM_ID"])
 
     # 빌드 번호는 프로젝트 파일을 수정하지 않고 앱과 확장 타깃 전체에 빌드 설정으로 주입한다.
     archive_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
