@@ -1,7 +1,7 @@
 # Plyst RN
 
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
-> Home과 Search에서 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
+> 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
 <a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EB%B2%84%EC%A0%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
 <a href="https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7"><img src="https://img.shields.io/badge/Notion-%EC%9E%91%EC%97%85_%EA%B3%B5%EA%B0%84-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion 작업 공간" /></a>
@@ -26,6 +26,7 @@
 | 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
 | 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
 | 앱과 Scene 생명주기, RN 런타임, 화면 호스트 | Swift | iOS 실행 환경 필요 |
+| 상세 화면의 시트와 상단 바 (닫기, 저장 버튼의 Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()`로 적용 (iOS 26 미만은 평면 버튼) |
 | TurboModule 구현과 wire 값 변환 | Swift | Codegen 스펙의 네이티브 구현 |
 | 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
 | 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
@@ -96,9 +97,9 @@ export interface Spec extends TurboModule {
 }
 ```
 
-### **3. 표시 크기 썸네일과 요청 큐 제한으로 이미지 150개 목록의 메모리 증가량을 원본 이하로 유지**
+### **3. 표시 크기 썸네일과 요청 큐 제한으로 이미지 150개 목록의 메모리 증가량을 UIKit 버전 이하로 유지**
 > **문제**<br>
-> RN 목록은 이미지 디코딩과 화면 밖 요청 누적으로 이미지 수가 늘수록 원본보다 메모리가 빠르게 늘 수 있음
+> RN 목록은 이미지 디코딩과 화면 밖 요청 누적으로 이미지 수가 늘수록 UIKit 버전보다 메모리가 빠르게 늘 수 있음
 >
 > **해결**<br>
 > 2열 카드 목록(FlashList masonry)에서 카드 너비와 화면 배율에 맞춘 ImageIO 썸네일 요청<br>
@@ -108,7 +109,7 @@ export interface Spec extends TurboModule {
 > **성과**<br>
 > ✅ 이미지 2개 대비 150개의 최대 메모리 증가량을 비교 시 UIKit **+42.80MB**, RN **+25.48MB**<br>
 > ✅ 이미지 150개 목록을 스크롤하여 왕복한 뒤 메모리 비교 시 UIKit **56.71MB**, RN **52.72MB**<br>
-> ⚠️ RN 런타임의 고정 메모리는 이미지 2개에서 **+18.78MB**로 원본보다 높음
+> ⚠️ RN 런타임의 고정 메모리는 이미지 2개에서 **+18.78MB**로 UIKit 버전보다 높음
 
 | 이미지 수 | UIKit 왕복 후 / 최대 | RN 왕복 후 / 최대 |
 |:---:|:---:|:---:|
