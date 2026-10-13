@@ -228,7 +228,7 @@ platform :ios do
       readonly: true
     )
 
-    if ENV["CI"] == "true"
+    if ENV["CI"] == "true" || ENV["LOCAL_DEPLOY"] == "true"
       profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
       signing_targets = {
         APP_TARGET_NAME => APP_IDENTIFIER,
