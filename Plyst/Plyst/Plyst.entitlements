@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.opfic.PlystRN</string>
+		<string>group.opfic.Plyst</string>
 	</array>
 </dict>
 </plist>

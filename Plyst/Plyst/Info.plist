@@ -10,7 +10,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>opfic.PlystRN</string>
+			<string>opfic.Plyst</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>plystrn</string>

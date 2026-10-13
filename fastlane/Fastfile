@@ -1,12 +1,12 @@
 XCODE_PROJ = "Plyst/Plyst.xcodeproj"
 SCHEME = "Plyst"
 CONFIGURATION = "Release"
-APP_IDENTIFIER = "opfic.PlystRN"
+APP_IDENTIFIER = "opfic.Plyst"
 APP_TARGET_NAME = "Plyst"
 APP_PRODUCT_NAME = "Plyst"
 EXTENSION_TARGETS = {
-  "ShareExtension" => "opfic.PlystRN.ShareExtension",
-  "WidgetExtension" => "opfic.PlystRN.WidgetExtension"
+  "ShareExtension" => "opfic.Plyst.ShareExtension",
+  "WidgetExtension" => "opfic.Plyst.WidgetExtension"
 }
 APP_IDENTIFIERS = [APP_IDENTIFIER, *EXTENSION_TARGETS.values]
 TESTFLIGHT_BUILD_OUTPUT_DIRECTORY = File.expand_path("testflight_build", __dir__)

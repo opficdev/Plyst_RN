@@ -12,7 +12,7 @@ import UIKit
 @MainActor
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "opfic.PlystRN",
+        subsystem: Bundle.main.bundleIdentifier ?? "opfic.Plyst",
         category: String(describing: SceneDelegate.self)
     )
 

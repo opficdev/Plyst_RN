@@ -14,7 +14,7 @@ import SQLiteData
 actor SQLiteClipStorageService: ClipStorageService {
 
     private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "opfic.PlystRN",
+        subsystem: Bundle.main.bundleIdentifier ?? "opfic.Plyst",
         category: String(describing: SQLiteClipStorageService.self)
     )
 
