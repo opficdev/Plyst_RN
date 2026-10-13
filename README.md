@@ -39,18 +39,43 @@
 
 ## 주요 기능
 
-| 화면 | 기능 |
-| --- | --- |
-| Home | 종류와 고정 필터, 고정 클립 영역, 클립보드 저장, 클립 복사, 삭제, 고정 |
-| Search | 이름, 본문, 저장 시각 검색과 검색어 강조, 최근 검색어 관리 |
-| 텍스트 상세 | 이름, 메모, 고정 여부 편집, 저장, 복사, 삭제 |
-| 이미지 상세 | 이미지 표시, 이름과 고정 여부 편집, 저장, 복사, 삭제, 사진 앱 저장 |
-| Widget | 앱을 열고 현재 클립보드 저장 |
-| Share Extension | 텍스트, 웹 URL, 이미지 저장과 실패 시 다시 시도 |
+- Home에서 클립을 종류와 고정 여부로 분류하고 현재 클립보드를 저장
+- Search에서 이름, 본문, 저장 시각으로 검색하고 최근 검색어를 관리
+- 상세 화면에서 이름, 메모, 고정 여부를 편집하고 저장, 복사, 삭제 (이미지는 사진 앱에 저장)
+- Widget에서 앱을 열어 현재 클립보드를 저장
+- Share Extension에서 텍스트, 웹 URL, 이미지를 저장
 
 ## 핵심 성과
 
-### **1. Codegen TurboModule로 RN 화면과 Swift 자원 계층 분리**
+### **1. Redux Toolkit Store와 Listener로 화면의 상태 변경, Service 호출, 구독 정리를 역할별로 분리**
+> **문제**<br>
+> 화면 컴포넌트가 `useReducer`와 `useEffect`로 상태 변경, Service 호출, 이벤트 구독을 함께 처리<br>
+> 화면을 닫은 뒤에도 구독과 비동기 요청이 남으면 종료된 화면의 상태를 갱신할 수 있음
+>
+> **해결**<br>
+> 화면마다 Store를 만들고 `store.ts`, `actions.ts`, `listeners.ts`로 역할 분리<br>
+> 원본 Swift Action 이름을 `action/<이름>`으로 유지해 ReactorKit의 Action, `mutate`, Mutation, `reduce` 흐름과 대응<br>
+> 화면 마운트의 `start()`와 해제의 `dispose()`에서 Listener, 요청 큐, 구독을 한 곳에서 정리
+>
+> **성과**<br>
+> • Home, Search, TextDetail, ImageDetail 화면 컴포넌트에서 Service 호출과 이벤트 구독 제거<br>
+> • 해제된 화면에서는 `dispatch`가 상태를 바꾸지 않아 종료된 화면의 비동기 결과가 새 화면에 반영되지 않음<br>
+> • 이미 시작한 저장과 복사의 결과 토스트는 별도 호스트에서 계속 표시<br>
+> • 렌더링 없이 Store와 Listener를 Jest로 검증
+
+```ts
+export const textDetailActions = {
+  save: createAction('action/save'),
+  // ...
+};
+
+scope.listen(actions.save, async () => {
+  const result = await saveTextDetail(clipID, state.draft);
+  // ...
+});
+```
+
+### **2. Codegen TurboModule로 저장소 접근 경로를 한 곳으로 제한해 RN의 DB와 파일 직접 접근 차단**
 > **문제**<br>
 > RN과 Swift가 호출 형식을 따로 정의하면 한쪽만 바뀌어도 호출이 어긋날 수 있음
 >
@@ -59,7 +84,8 @@
 > RN 결과물과 브리지를 XCFramework로 묶어 PlystReactNative 패키지로 앱에 연결
 >
 > **성과**<br>
-> • 데이터 호출과 이벤트 전달에 같은 Codegen 스펙을 사용하는 구조
+> • RN 의존성에 SQLite, 파일 시스템, 클립보드 모듈 없음<br>
+> • 모든 데이터 호출과 이벤트 전달이 같은 Codegen 스펙을 거치는 구조
 
 ```ts
 export interface Spec extends TurboModule {
@@ -70,18 +96,19 @@ export interface Spec extends TurboModule {
 }
 ```
 
-### **2. 썸네일 48개 제한과 요청 큐로 대용량 이미지 목록 처리**
+### **3. 표시 크기 썸네일과 요청 큐 제한으로 이미지 150개 목록의 메모리 증가량을 원본 이하로 유지**
 > **문제**<br>
-> 원본 해상도 디코딩과 화면 밖 요청 누적으로 표시 크기보다 많은 자원을 사용할 수 있음
+> RN 목록은 이미지 디코딩과 화면 밖 요청 누적으로 이미지 수가 늘수록 원본보다 메모리가 빠르게 늘 수 있음
 >
 > **해결**<br>
 > FlashList의 masonry 배치에서 카드 너비와 화면 배율에 맞춘 ImageIO 썸네일 요청<br>
-> 화면 밖 대기 요청을 제거하고 이미 실행 중인 요청은 완료 시 결과 폐기<br>
-> 보이는 고정 클립의 썸네일 URI가 보관 목록에서 제거되면 다시 요청
+> 화면 밖 대기 요청을 제거하고 실행 중인 요청은 완료 시 결과 폐기<br>
+> 썸네일 URI 보관 수 48개와 요청 큐 동시 실행 수 2개로 제한
 >
 > **성과**<br>
-> • Home과 Search에서 각각 썸네일 URI 보관 수 48개와 요청 큐 동시 실행 수 2개로 제한<br>
-> • 원본 파일을 유지하면서 화면에 표시할 축소본만 전달하는 구조
+> • 이미지 2개 대비 150개의 최대 메모리 증가량 원본 +42.80MB, RN +25.48MB<br>
+> • 이미지 150개 목록을 왕복한 뒤 메모리 원본 56.71MB, RN 52.72MB<br>
+> • RN 런타임의 고정 메모리는 이미지 2개에서 +18.78MB로 원본보다 높음
 
 ```swift
 let thumbnailOptions = [
@@ -92,45 +119,23 @@ let thumbnailOptions = [
 ] as CFDictionary
 ```
 
-### **3. 화면별 Redux Toolkit Store로 상태와 비동기 수명 관리**
-> **문제**<br>
-> 화면을 닫은 뒤 구독과 비동기 요청이 남으면 종료된 화면 상태를 갱신할 수 있음
->
-> **해결**<br>
-> 화면마다 Store를 만들고 createListenerMiddleware에서 Service 호출과 이벤트 구독 처리<br>
-> reducer의 상태 변경과 Listener의 비동기 효과 분리<br>
-> 화면 해제 시 Listener와 요청 큐 및 이벤트 구독 정리
->
-> **성과**<br>
-> • 종료된 세션의 화면 상태 갱신 없음<br>
-> • 이미 시작한 저장과 복사의 결과 토스트는 별도 호스트에서 표시할 수 있음
+| 이미지 수 | 원본 왕복 후 / 최대 | RN 왕복 후 / 최대 |
+|:---:|:---:|:---:|
+| 2개 | 19.38 / 20.96MB | 38.16 / 42.04MB |
+| 16개 | 30.80 / 31.59MB | 59.90 / 61.75MB |
+| 32개 | 44.12 / 45.75MB | 52.59 / 64.85MB |
+| 48개 | 56.90 / 59.05MB | 50.07 / 65.83MB |
+| 64개 | 59.57 / 64.26MB | 49.50 / 63.75MB |
+| 150개 | 56.71 / 63.75MB | 52.72 / 67.52MB |
 
-```ts
-const [screen] = useState(createHomeStore);
-useLayoutEffect(() => {
-  screen.start();
-  return () => screen.dispose();
-}, [screen]);
-```
-
-### **4. Inbox 반입 순서와 정리 후보 복구로 앱과 Extension 저장 무결성 유지**
-> **문제**<br>
-> 앱과 Share Extension이 서로 다른 프로세스에서 저장하므로 이미지 파일과 데이터베이스 쓰기가 한쪽만 완료될 수 있음
->
-> **해결**<br>
-> 앱의 clips.sqlite와 이미지 원본을 ShareInbox.sqlite 및 ShareInboxImages와 분리<br>
-> 본 저장소에 확정한 클립만 Inbox에서 제거하고 저장소 쓰기 확정 뒤 변경 이벤트 전달<br>
-> 이미지 파일의 pending 마커와 메타데이터 참조를 대조해 정리 후보 복구
->
-> **성과**<br>
-> • 반입 실패 항목은 Inbox에 남아 다시 처리되며 같은 식별자의 클립은 중복 추가되지 않음<br>
-> • 참조 중인 파일은 정리 후보에서 해제되고 참조 없는 파일은 삭제됨
-
-```swift
-let copied = try await copy(clip, inboxImages: inboxImages)
-// 집계와 복사 실패 처리 생략
-try await remove(clip, inbox: inbox, inboxImages: inboxImages)
-```
+| 측정 조건 | 값 |
+|:---:|:---:|
+| 기기 | iPhone 16 Pro, iOS 26.7.1, USB 연결 |
+| 빌드 | 서명한 Release, RN은 Hermes 번들 |
+| 데이터 | 같은 규칙으로 만든 이미지 2~150개와 텍스트 12개 |
+| 이동 | 목록의 처음과 끝을 2회 왕복, 초당 2,200pt |
+| 메모리 | 앱 안에서 `phys_footprint`를 250ms 간격으로 관측 |
+| 한계 | 지점마다 1회 측정, 16개와 32개 사이의 RN 감소 원인은 반복 측정으로 확인 필요 |
 
 ---
 
