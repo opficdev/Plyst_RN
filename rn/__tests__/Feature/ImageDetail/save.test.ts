@@ -1,5 +1,5 @@
 import { updateClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { saveImageDetail } from '../../../src/Feature/ImageDetail/save';
 import type { Draft } from '../../../src/Feature/ImageDetail/draft';
 

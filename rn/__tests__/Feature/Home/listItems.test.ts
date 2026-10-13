@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { makeHomeListItems } from '../../../src/Feature/Home/listItems';
 const clip: ClipRecord = {
   id: 'text',

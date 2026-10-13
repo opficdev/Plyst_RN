@@ -3,7 +3,7 @@ import type { ClipFilter } from '../ClipGrid/filter';
 import { clipSectionKind, clipSectionKinds } from '../ClipGrid/section';
 import type { ClipSectionKind } from '../ClipGrid/section';
 import type { ClipLoadPhase } from '../ClipGrid/loadPhase';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 
 export const homeFilterStrings = {
   all: {

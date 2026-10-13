@@ -1,5 +1,5 @@
 import { clipThumbnailLimit } from '../../../src/Feature/ClipGrid/thumbnails';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { initialState, reduce } from '../../../src/Feature/Home/state';
 import type {
   HomeAction,

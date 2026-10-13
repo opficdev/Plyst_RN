@@ -28,7 +28,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import { closeSearch, openClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import {
   ClipImageCard,
   ClipTextCard,

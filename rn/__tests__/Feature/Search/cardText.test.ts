@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { searchCardText } from '../../../src/Feature/Search/cardText';
 import { createSearchIndex } from '../../../src/Feature/Search/match';
 

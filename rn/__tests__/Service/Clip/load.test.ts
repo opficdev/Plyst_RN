@@ -1,10 +1,11 @@
 import { getClips } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord as NativeClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../../src/Model/clipRecord';
 import { loadClips } from '../../../src/Service/Clip/load';
 
 jest.mock('plyst-bridge', () => ({ getClips: jest.fn() }));
 const getClipsMock = jest.mocked(getClips);
-const clip: ClipRecord = {
+const clip: NativeClipRecord = {
   id: 'clip-id',
   text: '원문',
   characterCount: 2,
@@ -23,7 +24,10 @@ beforeEach(() => jest.resetAllMocks());
 test('전체 목록을 받은 순서 그대로 반환한다', async () => {
   const clips = [clip, { ...clip, id: 'second', createdAt: 1 }];
   getClipsMock.mockResolvedValue(clips);
-  await expect(loadClips()).resolves.toEqual({ status: 'loaded', clips });
+  await expect(loadClips()).resolves.toEqual({
+    status: 'loaded',
+    clips: clips.map(makeClipRecord),
+  });
   expect(getClipsMock).toHaveBeenCalledWith();
   expect(getClipsMock).toHaveBeenCalledTimes(1);
 });

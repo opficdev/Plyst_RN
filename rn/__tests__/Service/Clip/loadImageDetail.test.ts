@@ -1,10 +1,11 @@
 import { getClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord as NativeClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../../src/Model/clipRecord';
 import { loadImageDetail } from '../../../src/Service/Clip/loadImageDetail';
 
 jest.mock('plyst-bridge', () => ({ getClip: jest.fn() }));
 const getClipMock = jest.mocked(getClip);
-const clip: ClipRecord = {
+const clip: NativeClipRecord = {
   id: 'clip-id',
   text: null,
   characterCount: 0,
@@ -29,7 +30,7 @@ test('이미지 클립을 반환한다', async () => {
   getClipMock.mockResolvedValue(clip);
   await expect(loadImageDetail(clip.id)).resolves.toEqual({
     status: 'loaded',
-    clip,
+    clip: makeClipRecord(clip),
   });
   expect(getClipMock).toHaveBeenCalledWith(clip.id);
   expect(getClipMock).toHaveBeenCalledTimes(1);

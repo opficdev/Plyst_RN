@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import { formatClipCardTime } from './cardFormat';
 
 export function clipCardValues(

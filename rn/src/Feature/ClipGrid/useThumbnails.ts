@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { Dispatch } from 'react';
 import type { ViewToken } from '@shopify/flash-list';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import type { ClipThumbnails } from './thumbnails';
 import { clipThumbnailActions as actions } from './thumbnailListener';
 

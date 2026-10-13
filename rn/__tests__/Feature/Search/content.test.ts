@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import type { ClipFilter } from '../../../src/Feature/ClipGrid/filter';
 import {
   createSearchTimeTexts,

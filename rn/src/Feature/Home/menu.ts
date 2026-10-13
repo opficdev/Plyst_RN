@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 
 export function homeMenuTitle(clip: ClipRecord) {
   return clip.image === null ? '텍스트' : '이미지';

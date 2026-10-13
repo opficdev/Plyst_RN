@@ -1,10 +1,11 @@
 import { updateClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord as NativeClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../../src/Model/clipRecord';
 import { updateClipDetail } from '../../../src/Service/Clip/updateDetail';
 
 jest.mock('plyst-bridge', () => ({ updateClip: jest.fn() }));
 const updateClipMock = jest.mocked(updateClip);
-const clip: ClipRecord = {
+const clip: NativeClipRecord = {
   id: 'clip-id',
   text: '원문',
   characterCount: 2,
@@ -24,7 +25,7 @@ test('저장에 성공하면 반환된 클립을 포함한 saved이다', async (
   updateClipMock.mockResolvedValue(clip);
   await expect(
     updateClipDetail(clip.id, clip.name, clip.memo, clip.isPinned),
-  ).resolves.toEqual({ status: 'saved', clip });
+  ).resolves.toEqual({ status: 'saved', clip: makeClipRecord(clip) });
   expect(updateClipMock).toHaveBeenCalledWith(
     clip.id,
     clip.name,

@@ -1,10 +1,11 @@
 import { getClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord as NativeClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../../src/Model/clipRecord';
 import { loadTextDetail } from '../../../src/Service/Clip/loadTextDetail';
 
 jest.mock('plyst-bridge', () => ({ getClip: jest.fn() }));
 const getClipMock = jest.mocked(getClip);
-const clip: ClipRecord = {
+const clip: NativeClipRecord = {
   id: 'clip-id',
   text: '원문',
   characterCount: 2,
@@ -24,7 +25,7 @@ test('텍스트 클립을 반환한다', async () => {
   getClipMock.mockResolvedValue(clip);
   await expect(loadTextDetail(clip.id)).resolves.toEqual({
     status: 'loaded',
-    clip,
+    clip: makeClipRecord(clip),
   });
   expect(getClipMock).toHaveBeenCalledWith(clip.id);
   expect(getClipMock).toHaveBeenCalledTimes(1);

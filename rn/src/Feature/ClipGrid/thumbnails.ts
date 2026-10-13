@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 
 export const clipThumbnailLimit = 48;
 export type ClipThumbnails = {

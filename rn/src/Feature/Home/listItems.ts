@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import type { HomeContent } from './content';
 import type { ClipSectionKind } from '../ClipGrid/section';
 
