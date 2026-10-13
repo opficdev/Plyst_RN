@@ -48,4 +48,5 @@ fastlane/README.md
 fastlane/test_output/
 fastlane/testflight_build/
 fastlane/appstore_build/
+fastlane/secrets.json
 vendor/bundle/

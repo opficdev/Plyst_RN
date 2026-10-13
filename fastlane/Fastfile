@@ -1,18 +1,26 @@
 XCODE_PROJ = "Plyst/Plyst.xcodeproj"
 SCHEME = "Plyst"
 CONFIGURATION = "Release"
-APP_IDENTIFIER = "opfic.PlystRN"
+APP_IDENTIFIER = "opfic.Plyst"
 APP_TARGET_NAME = "Plyst"
 APP_PRODUCT_NAME = "Plyst"
 EXTENSION_TARGETS = {
-  "ShareExtension" => "opfic.PlystRN.ShareExtension",
-  "WidgetExtension" => "opfic.PlystRN.WidgetExtension"
+  "ShareExtension" => "opfic.Plyst.ShareExtension",
+  "WidgetExtension" => "opfic.Plyst.WidgetExtension"
 }
 APP_IDENTIFIERS = [APP_IDENTIFIER, *EXTENSION_TARGETS.values]
 TESTFLIGHT_BUILD_OUTPUT_DIRECTORY = File.expand_path("testflight_build", __dir__)
 TESTFLIGHT_IPA_OUTPUT_PATH = File.join(TESTFLIGHT_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
 APPSTORE_BUILD_OUTPUT_DIRECTORY = File.expand_path("appstore_build", __dir__)
 APPSTORE_IPA_OUTPUT_PATH = File.join(APPSTORE_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
+
+# xcodeproj 1.27은 Xcode 27의 확장 복사 위치(dstSubfolder)를 모르면 프로젝트를 저장할 때 지운다.
+# 확장이 앱의 PlugIns가 아닌 아카이브 루트에 설치되므로 프로젝트를 여는 어떤 액션보다 먼저 속성을 등록한다.
+require "xcodeproj"
+copy_phase = Xcodeproj::Project::Object::PBXCopyFilesBuildPhase
+unless copy_phase.method_defined?(:dst_subfolder)
+  copy_phase.class_eval { attribute :dst_subfolder, String }
+end
 
 # 앱 타깃의 MARKETING_VERSION을 읽고 App Store 버전 형식을 검증한다.
 def marketing_version_from_project
@@ -187,6 +195,31 @@ platform :ios do
     end
   end
 
+  # App Store Connect는 널리 쓰이는 서드파티 SDK(SDWebImage 등)에 서명을 요구하므로 XCFramework를 서명한다.
+  # 인증서 출처를 match 저장소 하나로 맞추려고 match가 설치한 프로파일에 들어 있는 인증서로만 서명한다.
+  private_lane :sign_xcframeworks do |options|
+    require "openssl"
+    require "plist"
+    require "shellwords"
+
+    profile_path = options[:profile_path].to_s
+    UI.user_error!("Missing App Store provisioning profile at #{profile_path.inspect}") unless File.file?(profile_path)
+
+    profile = Plist.parse_xml(sh("security cms -D -i #{Shellwords.escape(profile_path)}", log: false))
+    profile_hashes = profile["DeveloperCertificates"].map do |certificate|
+      OpenSSL::Digest::SHA1.hexdigest(OpenSSL::X509::Certificate.new(certificate.string).to_der).upcase
+    end
+
+    identities = sh("security find-identity -v -p codesigning", log: false)
+    identity = identities.scan(/\h{40}/).find { |hash| profile_hashes.include?(hash.upcase) }
+    UI.user_error!("The keychain has no signing identity for the match provisioning profile") if identity.nil?
+
+    directory = File.expand_path("../Plyst/Packages/PlystReactNative/Frameworks", __dir__)
+    Dir.glob(File.join(directory, "*.xcframework")).sort.each do |xcframework|
+      sh("codesign --force --timestamp --sign #{identity} #{Shellwords.escape(xcframework)}")
+    end
+  end
+
   private_lane :build_for_store do |options|
     output_directory = options[:output_directory] || TESTFLIGHT_BUILD_OUTPUT_DIRECTORY
 
@@ -220,14 +253,7 @@ platform :ios do
       readonly: true
     )
 
-    if ENV["CI"] == "true"
-      # xcodeproj 1.27이 서명 설정을 저장할 때 Xcode 27의 확장 복사 위치를 보존한다.
-      require "xcodeproj"
-      copy_phase = Xcodeproj::Project::Object::PBXCopyFilesBuildPhase
-      unless copy_phase.method_defined?(:dst_subfolder)
-        copy_phase.class_eval { attribute :dst_subfolder, String }
-      end
-
+    if ENV["CI"] == "true" || ENV["LOCAL_DEPLOY"] == "true"
       profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
       signing_targets = {
         APP_TARGET_NAME => APP_IDENTIFIER,
@@ -250,6 +276,8 @@ platform :ios do
         )
       end
     end
+
+    sign_xcframeworks(profile_path: ENV["sigh_#{APP_IDENTIFIER}_appstore_profile-path"])
 
     # 빌드 번호는 프로젝트 파일을 수정하지 않고 앱과 확장 타깃 전체에 빌드 설정으로 주입한다.
     archive_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)

@@ -12,7 +12,7 @@ TEST_FLAGS ?= -test-timeouts-enabled YES \
 DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 
-.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-start
+.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-start testflight-build testflight
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -78,3 +78,9 @@ rn-verify: rn-typecheck rn-lint rn-test
 
 rn-start:
 	cd rn && npx expo start
+
+testflight-build:
+	scripts/deploy-testflight-local.sh testflight_build_only
+
+testflight:
+	scripts/deploy-testflight-local.sh deploy_testflight

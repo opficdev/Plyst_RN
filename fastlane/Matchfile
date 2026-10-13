@@ -4,9 +4,9 @@ storage_mode("git")
 git_branch("iOS")
 type("appstore")
 app_identifier([
-  "opfic.PlystRN",
-  "opfic.PlystRN.ShareExtension",
-  "opfic.PlystRN.WidgetExtension"
+  "opfic.Plyst",
+  "opfic.Plyst.ShareExtension",
+  "opfic.Plyst.WidgetExtension"
 ])
 team_id(ENV["APP_STORE_TEAM_ID"])
 readonly(true)
