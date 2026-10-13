@@ -3,7 +3,7 @@
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
 > Home과 Search에서 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
-<a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EA%B5%AC%ED%98%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
+<a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EB%B2%84%EC%A0%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
 <a href="https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7"><img src="https://img.shields.io/badge/Notion-%EC%9E%91%EC%97%85_%EA%B3%B5%EA%B0%84-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion 작업 공간" /></a>
 
 | Home | Search | 텍스트 상세 |
@@ -106,18 +106,9 @@ export interface Spec extends TurboModule {
 > 썸네일 URI 보관 수 48개와 요청 큐 동시 실행 수 2개로 제한
 >
 > **성과**<br>
-> ✅ 이미지 2개 대비 150개의 최대 메모리 증가량 원본 **+42.80MB**, RN **+25.48MB**<br>
-> ✅ 이미지 150개 목록을 스크롤하여 복한 뒤 메모리 원본 **56.71MB**, RN **52.72MB**<br>
+> ✅ 이미지 2개 대비 150개의 최대 메모리 증가량을 비교 시 UIKit **+42.80MB**, RN **+25.48MB**<br>
+> ✅ 이미지 150개 목록을 스크롤하여 왕복한 뒤 메모리 비교 시 UIKit **56.71MB**, RN **52.72MB**<br>
 > ⚠️ RN 런타임의 고정 메모리는 이미지 2개에서 **+18.78MB**로 원본보다 높음
-
-```swift
-let thumbnailOptions = [
-    kCGImageSourceCreateThumbnailFromImageAlways: true,         // 파일에 내장된 작은 썸네일 대신 원본에서 새로 생성
-    kCGImageSourceCreateThumbnailWithTransform: true,           // 촬영 방향(EXIF) 정보대로 회전하여 생성
-    kCGImageSourceShouldCacheImmediately: true,                 // 생성 시점에 디코딩하여 스크롤 중 디코딩 지연 방지
-    kCGImageSourceThumbnailMaxPixelSize: maximumPixelDimension  // 썸네일 긴 변의 최대 픽셀 수 (표시 크기에 맞춘 값)
-] as CFDictionary
-```
 
 | 이미지 수 | UIKit 왕복 후 / 최대 | RN 왕복 후 / 최대 |
 |:---:|:---:|:---:|
