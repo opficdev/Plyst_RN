@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import {
   clipCardValues,
   clipColumnWidth,
@@ -55,7 +55,7 @@ test('격자 이미지에만 해상도를 표시한다', () => {
     image: {
       pixelWidth: 1920,
       pixelHeight: 1080,
-      byteCountText: '1 MB',
+      byteCount: 1_000_000,
       contentType: 'public.png',
     },
   };

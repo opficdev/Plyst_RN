@@ -1,5 +1,6 @@
 import { getClip } from 'plyst-bridge';
-import type { ClipImageRecord, ClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../Model/clipRecord';
+import type { ClipImageRecord, ClipRecord } from '../../Model/clipRecord';
 
 export type ImageDetailResult =
   | { status: 'loaded'; clip: ClipRecord & { image: ClipImageRecord } }
@@ -13,7 +14,10 @@ export async function loadImageDetail(
     const clip = await getClip(clipID);
     if (clip === null) return { status: 'missing' };
     if (clip.image === null) return { status: 'failed' };
-    return { status: 'loaded', clip: { ...clip, image: clip.image } };
+    return {
+      status: 'loaded',
+      clip: { ...makeClipRecord(clip), image: clip.image },
+    };
   } catch {
     return { status: 'failed' };
   }

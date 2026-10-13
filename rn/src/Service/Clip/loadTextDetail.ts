@@ -1,5 +1,6 @@
 import { getClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../Model/clipRecord';
+import type { ClipRecord } from '../../Model/clipRecord';
 
 export type TextDetailResult =
   | { status: 'loaded'; clip: ClipRecord & { text: string } }
@@ -13,7 +14,10 @@ export async function loadTextDetail(
     const clip = await getClip(clipID);
     if (clip === null) return { status: 'missing' };
     if (clip.text === null) return { status: 'failed' };
-    return { status: 'loaded', clip: { ...clip, text: clip.text } };
+    return {
+      status: 'loaded',
+      clip: { ...makeClipRecord(clip), text: clip.text },
+    };
   } catch {
     return { status: 'failed' };
   }

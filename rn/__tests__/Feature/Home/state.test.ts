@@ -1,5 +1,5 @@
 import { clipThumbnailLimit } from '../../../src/Feature/ClipGrid/thumbnails';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { initialState, reduce } from '../../../src/Feature/Home/state';
 import type {
   HomeAction,
@@ -13,7 +13,7 @@ const clip: ClipRecord = {
   textPrefix: null,
   isWebLink: false,
   image: {
-    byteCountText: '1 KB',
+    byteCount: 1000,
     contentType: 'public.png',
     pixelWidth: 10,
     pixelHeight: 10,

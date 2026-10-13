@@ -1,6 +1,6 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
+import { clusters } from '../../../src/Model/clipText';
 import {
-  clusters,
   createSearchIndex,
   normalizeSearchQuery,
   searchRanges,

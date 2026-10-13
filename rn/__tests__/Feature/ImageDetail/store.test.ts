@@ -1,5 +1,5 @@
 import { subscribeClipChanges, subscribeSave } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createImageDetailStore } from '../../../src/Feature/ImageDetail/store';
 import { imageDetailActions as actions } from '../../../src/Feature/ImageDetail/actions';
 import { loadImageDetail } from '../../../src/Service/Clip/loadImageDetail';
@@ -32,7 +32,7 @@ const clip = {
     contentType: 'public.png',
     pixelWidth: 2,
     pixelHeight: 3,
-    byteCountText: '100 bytes',
+    byteCount: 100,
   },
   name: null,
   memo: null,

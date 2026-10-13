@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import { equivalent, normalizedName } from '../../Model/clipDetailValues';
 
 export type Draft = { name: string; isPinned: boolean };

@@ -1,5 +1,5 @@
 import { subscribeClipChanges, subscribeSave } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createTextDetailStore } from '../../../src/Feature/TextDetail/store';
 import { textDetailActions as actions } from '../../../src/Feature/TextDetail/actions';
 import { loadTextDetail } from '../../../src/Service/Clip/loadTextDetail';

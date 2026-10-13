@@ -1,5 +1,5 @@
 import { subscribeClipChanges } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createSearchStore } from '../../../src/Feature/Search/store';
 import { searchActions as actions } from '../../../src/Feature/Search/actions';
 import { loadClips } from '../../../src/Service/Clip/load';

@@ -6,8 +6,8 @@ import {
 } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
-import type { ClipRecord } from 'plyst-bridge';
 import { openClip, openSearch } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import {
   ActionSheet,
   HomeSaveBar,

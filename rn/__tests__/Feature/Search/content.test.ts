@@ -1,4 +1,4 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import type { ClipFilter } from '../../../src/Feature/ClipGrid/filter';
 import {
   createSearchTimeTexts,
@@ -33,7 +33,7 @@ const image: ClipRecord = {
   textPrefix: null,
   name: 'report image',
   image: {
-    byteCountText: '100 B',
+    byteCount: 100,
     contentType: 'public.png',
     pixelWidth: 10,
     pixelHeight: 10,

@@ -3,7 +3,7 @@ import {
   subscribeClipboardSaveRequests,
   subscribeSearchVisibility,
 } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createHomeStore } from '../../../src/Feature/Home/store';
 import { homeActions as actions } from '../../../src/Feature/Home/actions';
 import { loadClips } from '../../../src/Service/Clip/load';

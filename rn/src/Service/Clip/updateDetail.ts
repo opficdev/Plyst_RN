@@ -1,5 +1,6 @@
 import { updateClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../Model/clipRecord';
+import type { ClipRecord } from '../../Model/clipRecord';
 
 export type ClipDetailUpdateResult =
   | { status: 'saved'; clip: ClipRecord }
@@ -15,7 +16,7 @@ export async function updateClipDetail(
   try {
     const clip = await updateClip(clipID, name, memo, isPinned);
     if (clip === null) return { status: 'removed' };
-    return { status: 'saved', clip };
+    return { status: 'saved', clip: makeClipRecord(clip) };
   } catch {
     return { status: 'failed' };
   }

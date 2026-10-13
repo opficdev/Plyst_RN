@@ -35,6 +35,7 @@ import {
 import { createImageDetailStore } from './store';
 import type { ImageDetailStoreState } from './store';
 import { imageDetailActions as actions } from './actions';
+import { formatByteCount } from './formatByteCount';
 
 type ImageDetailViewProps = { clipID: string };
 
@@ -115,7 +116,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
           <View style={styles.card}>
             <Text allowFontScaling={false} style={styles.meta}>
               {image &&
-                `${image.pixelWidth} × ${image.pixelHeight} px, ${image.byteCountText}`}
+                `${image.pixelWidth} × ${image.pixelHeight} px, ${formatByteCount(image.byteCount)}`}
             </Text>
             <View
               style={[styles.preview, { height: previewHeight }]}

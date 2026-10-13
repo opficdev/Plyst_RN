@@ -1,14 +1,13 @@
 import { getClip } from 'plyst-bridge';
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord as NativeClipRecord } from 'plyst-bridge';
+import { makeClipRecord } from '../../../src/Model/clipRecord';
 import { loadTextDetail } from '../../../src/Service/Clip/loadTextDetail';
 
 jest.mock('plyst-bridge', () => ({ getClip: jest.fn() }));
 const getClipMock = jest.mocked(getClip);
-const clip: ClipRecord = {
+const clip: NativeClipRecord = {
   id: 'clip-id',
   text: '원문',
-  characterCount: 2,
-  textPrefix: '원문',
   isWebLink: false,
   image: null,
   name: null,
@@ -24,7 +23,7 @@ test('텍스트 클립을 반환한다', async () => {
   getClipMock.mockResolvedValue(clip);
   await expect(loadTextDetail(clip.id)).resolves.toEqual({
     status: 'loaded',
-    clip,
+    clip: makeClipRecord(clip),
   });
   expect(getClipMock).toHaveBeenCalledWith(clip.id);
   expect(getClipMock).toHaveBeenCalledTimes(1);
@@ -43,6 +42,6 @@ test('브리지 오류가 발생하면 failed이다', async () => {
 });
 
 test('텍스트가 null이면 failed이다', async () => {
-  getClipMock.mockResolvedValue({ ...clip, text: null, textPrefix: null });
+  getClipMock.mockResolvedValue({ ...clip, text: null });
   await expect(loadTextDetail(clip.id)).resolves.toEqual({ status: 'failed' });
 });

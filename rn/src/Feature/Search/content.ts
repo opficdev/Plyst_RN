@@ -1,9 +1,10 @@
-import type { ClipRecord } from 'plyst-bridge';
+import type { ClipRecord } from '../../Model/clipRecord';
 import type { ClipFilter } from '../ClipGrid/filter';
 import type { ClipLoadPhase } from '../ClipGrid/loadPhase';
 import { clipSectionKind, clipSectionTitles } from '../ClipGrid/section';
 import { formatClipCardTime } from '../ClipGrid/cardFormat';
-import { clusters, normalizeSearchQuery } from './match';
+import { clusters } from '../../Model/clipText';
+import { normalizeSearchQuery } from './match';
 import type { SearchIndex } from './match';
 
 export type SearchContent = {

@@ -296,7 +296,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
     private static func dictionary(_ record: ClipBridgeRecord) -> NSDictionary {
         let image = record.image.map {
             [
-                "byteCountText": ByteCountFormatter.string(fromByteCount: Int64($0.byteCount), countStyle: .file),
+                "byteCount": $0.byteCount,
                 "contentType": $0.contentType,
                 "pixelWidth": $0.pixelWidth,
                 "pixelHeight": $0.pixelHeight
@@ -305,8 +305,6 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         return [
             "id": record.id,
             "text": record.text as Any? ?? NSNull(),
-            "characterCount": record.text?.count ?? 0,
-            "textPrefix": record.text.map { String($0.prefix(60)) } as Any? ?? NSNull(),
             "image": image as Any? ?? NSNull(),
             "name": record.name as Any? ?? NSNull(),
             "memo": record.memo as Any? ?? NSNull(),
