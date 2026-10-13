@@ -3,7 +3,8 @@
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
 > Home과 Search에서 기록을 찾고 상세 화면에서 이름과 고정 여부를 관리하는 React Native 앱
 
-[UIKit 구현 보기](https://github.com/opficdev/Plyst)
+[UIKit 구현 보기](https://github.com/opficdev/Plyst)<br>
+[Notion 작업 공간](https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7)
 
 | Home | Search | 텍스트 상세 |
 | :---: | :---: | :---: |
