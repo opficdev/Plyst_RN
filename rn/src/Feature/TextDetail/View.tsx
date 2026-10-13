@@ -108,7 +108,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
         <View ref={contentRef} style={styles.content} collapsable={false}>
           <View style={styles.card}>
             <Text allowFontScaling={false} style={styles.meta}>
-              {`${clip.isPinned ? '고정됨 · ' : ''}${clip.characterCount}자`}
+              {`${clip.pinnedAt !== null ? '고정됨 · ' : ''}${clip.characterCount}자`}
             </Text>
             <Text allowFontScaling={false} style={styles.body}>
               {clip.text}

@@ -8,14 +8,14 @@ const clip: ClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: true,
   createdAt: 1000,
   lastUsedAt: null,
 };
 
 test('고정 행과 구간 제목 및 카드 순서를 유지한다', () => {
-  const pinned = { ...clip, id: 'pinned', isPinned: true };
+  const pinned = { ...clip, id: 'pinned', pinnedAt: 1000 };
   const older = { ...clip, id: 'older' };
   const content = {
     pinnedClips: [pinned],

@@ -17,7 +17,7 @@ const clip: ClipRecord = {
     pixelHeight: 10,
   },
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: false,
   characterCount: 0,
   textPrefix: null,

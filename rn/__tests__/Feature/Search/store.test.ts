@@ -37,7 +37,7 @@ const clip: ClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1,
   lastUsedAt: null,
 };

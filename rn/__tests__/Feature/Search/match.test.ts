@@ -268,7 +268,7 @@ const clip: ClipRecord = {
   name: 'Café',
   image: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: false,
   characterCount: 9,
   textPrefix: 'Straße 한글',

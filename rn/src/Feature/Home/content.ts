@@ -3,6 +3,7 @@ import type { ClipFilter } from '../ClipGrid/filter';
 import { clipSectionKind, clipSectionKinds } from '../ClipGrid/section';
 import type { ClipSectionKind } from '../ClipGrid/section';
 import type { ClipLoadPhase } from '../ClipGrid/loadPhase';
+import { sortPinnedClips } from '../../Model/clipPinOrder';
 import type { ClipRecord } from '../../Model/clipRecord';
 
 export const homeFilterStrings = {
@@ -41,17 +42,19 @@ export function makeHomeContent(
   now: number,
 ): HomeContent {
   const pinnedClips =
-    filter === 'all' ? clips.filter((clip) => clip.isPinned) : [];
+    filter === 'all'
+      ? sortPinnedClips(clips.filter((clip) => clip.pinnedAt !== null))
+      : [];
   const timeline = clips.filter((clip) => {
     switch (filter) {
       case 'all':
-        return !clip.isPinned;
+        return clip.pinnedAt === null;
       case 'text':
         return clip.text !== null;
       case 'image':
         return clip.image !== null;
       case 'pinned':
-        return clip.isPinned;
+        return clip.pinnedAt !== null;
     }
   });
   const groups: Record<ClipSectionKind, ClipRecord[]> = {
@@ -66,7 +69,10 @@ export function makeHomeContent(
   }
   const sections = clipSectionKinds
     .filter((kind) => groups[kind].length !== 0)
-    .map((kind) => ({ kind, clips: groups[kind] }));
+    .map((kind) => ({
+      kind,
+      clips: filter === 'pinned' ? sortPinnedClips(groups[kind]) : groups[kind],
+    }));
   return {
     pinnedClips,
     sections,

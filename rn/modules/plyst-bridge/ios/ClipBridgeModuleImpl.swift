@@ -308,7 +308,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
             "image": image as Any? ?? NSNull(),
             "name": record.name as Any? ?? NSNull(),
             "memo": record.memo as Any? ?? NSNull(),
-            "isPinned": record.isPinned,
+            "pinnedAt": record.pinnedAt as Any? ?? NSNull(),
             "isWebLink": record.isWebLink,
             "createdAt": record.createdAt,
             "lastUsedAt": record.lastUsedAt as Any? ?? NSNull()

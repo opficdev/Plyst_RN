@@ -21,7 +21,7 @@ const clip: ClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1234500,
   lastUsedAt: null,
 };
@@ -117,10 +117,10 @@ test('자정을 지나도 5분 미만이면 방금에 속한다', () => {
 const pinnedText = {
   ...clip,
   id: 'pinned-text',
-  isPinned: true,
+  pinnedAt: 1000,
   createdAt: now,
 };
-const pinnedImage = { ...image, id: 'pinned-image', isPinned: true };
+const pinnedImage = { ...image, id: 'pinned-image', pinnedAt: 1000 };
 const text = { ...clip, id: 'text', createdAt: now - 2000, isWebLink: true };
 const clips = [pinnedText, pinnedImage, image, text];
 
@@ -130,7 +130,7 @@ test.each<[ClipFilter, ClipRecord[], ClipRecord[]]>([
   ['image', [], [pinnedImage, image]],
   ['pinned', [], [pinnedText, pinnedImage]],
 ])(
-  '%s 필터는 입력 순서를 유지하며 전체에서만 고정 목록을 분리한다',
+  '%s 필터는 전체에서만 고정 목록을 분리한다',
   (filter, pinnedClips, timeline) => {
     const before = clips.map((value) => ({ ...value }));
     expect(makeHomeContent(clips, filter, now)).toEqual({
@@ -180,3 +180,33 @@ test.each<[ClipLoadPhase, boolean, boolean, HomeEmptyState]>([
     ).toBe(expected);
   },
 );
+
+test('전체 고정 영역은 최근 고정 순서를 사용하고 일반 목록 순서는 유지한다', () => {
+  const recent = { ...clip, id: 'recent', createdAt: now - 1000 };
+  const older = { ...clip, id: 'older', createdAt: now - 2000 };
+  const first = { ...recent, id: 'first', pinnedAt: now - 100 };
+  const last = { ...older, id: 'last', pinnedAt: now };
+  expect(makeHomeContent([first, recent, older, last], 'all', now)).toEqual({
+    pinnedClips: [last, first],
+    sections: [{ kind: 'recent', clips: [recent, older] }],
+    isEmpty: false,
+  });
+});
+
+test('고정 필터는 생성 시각으로 분류하고 각 섹션 안에서 고정 시각으로 정렬한다', () => {
+  const recent = { ...clip, id: 'recent', createdAt: now, pinnedAt: 1 };
+  const first = { ...clip, id: 'first', createdAt: now - 1000, pinnedAt: 2 };
+  const older = { ...clip, id: 'older', createdAt: 0, pinnedAt: 3 };
+  expect(
+    makeHomeContent([recent, first, older], 'pinned', now).sections,
+  ).toEqual([
+    { kind: 'recent', clips: [first, recent] },
+    { kind: 'earlier', clips: [older] },
+  ]);
+  expect(makeHomeContent([recent, first, older], 'text', now).sections).toEqual(
+    [
+      { kind: 'recent', clips: [recent, first] },
+      { kind: 'earlier', clips: [older] },
+    ],
+  );
+});

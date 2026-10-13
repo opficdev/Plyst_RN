@@ -22,7 +22,7 @@ const clip: ClipRecord = {
   },
   name: null,
   memo: '보존할 메모',
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1000,
   lastUsedAt: null,
 };
@@ -72,7 +72,7 @@ test('외부 변경은 편집하지 않은 초안만 갱신하고 미리보기�
     type: 'previewReady',
     uri: 'file:///preview',
   });
-  const updated = { ...clip, name: '외부 이름', isPinned: true };
+  const updated = { ...clip, name: '외부 이름', pinnedAt: 1000 };
   const loaded = reduce(state, { type: 'clipLoaded', clip: updated });
   expect(loaded.draft).toEqual(draftFromClip(updated));
   expect(loaded.preview).toEqual(state.preview);

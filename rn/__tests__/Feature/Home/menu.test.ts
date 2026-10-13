@@ -13,7 +13,7 @@ const clip: ClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: false,
   createdAt: 1000,
   lastUsedAt: null,
@@ -26,8 +26,8 @@ test('최신 클립이 없으면 고정 상태를 변경하지 않는다', () =>
 test.each([false, true])(
   '메뉴를 열 때 고정 상태가 %s이고 최신 상태가 목표와 같으면 변경하지 않는다',
   (isPinned) => {
-    const menuClip = { ...clip, isPinned };
-    const latest = { ...clip, isPinned: !isPinned };
+    const menuClip = { ...clip, pinnedAt: isPinned ? 1000 : null };
+    const latest = { ...clip, pinnedAt: isPinned ? null : 1000 };
     expect(homePinTarget(menuClip, latest)).toBeNull();
   },
 );
@@ -35,8 +35,8 @@ test.each([false, true])(
 test.each([false, true])(
   '메뉴를 열 때 고정 상태가 %s이고 최신 상태가 같으면 반대 상태를 반환한다',
   (isPinned) => {
-    const menuClip = { ...clip, isPinned };
-    const latest = { ...clip, isPinned };
+    const menuClip = { ...clip, pinnedAt: isPinned ? 1000 : null };
+    const latest = { ...clip, pinnedAt: isPinned ? 1000 : null };
     expect(homePinTarget(menuClip, latest)).toBe(!isPinned);
   },
 );

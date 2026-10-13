@@ -11,7 +11,7 @@ export function draftFromClip(clip: ClipRecord): Draft {
   return {
     name: clip.name ?? '',
     memo: clip.memo ?? '',
-    isPinned: clip.isPinned,
+    isPinned: clip.pinnedAt !== null,
   };
 }
 
@@ -19,7 +19,7 @@ export function differs(draft: Draft, clip: ClipRecord): boolean {
   return (
     !equivalent(normalizedName(draft), clip.name) ||
     !equivalent(normalizedMemo(draft), clip.memo) ||
-    draft.isPinned !== clip.isPinned
+    draft.isPinned !== (clip.pinnedAt !== null)
   );
 }
 

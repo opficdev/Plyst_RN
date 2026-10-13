@@ -19,7 +19,7 @@ const text: ClipRecord = {
   name: null,
   image: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: false,
   characterCount: 11,
   textPrefix: 'report text',
@@ -39,7 +39,7 @@ const image: ClipRecord = {
     pixelHeight: 10,
   },
 };
-const pinned = { ...text, id: 'pinned', isPinned: true };
+const pinned = { ...text, id: 'pinned', pinnedAt: 1000 };
 function content(
   clips: ClipRecord[],
   query: string,
@@ -183,4 +183,13 @@ test('시각 문자열은 동일 시각에 재사용하고 시각 또는 원문 
   expect(times.texts(changed, now)[0]).toContain('어제');
   times.retain([]);
   expect(times.texts(image, now)).not.toBe(before);
+});
+
+test('고정 필터의 검색 결과도 고정 시각과 무관하게 입력 순서를 유지한다', () => {
+  const first = { ...text, id: 'first', pinnedAt: 1 };
+  const recent = { ...text, id: 'recent', pinnedAt: 2 };
+  expect(content([first, recent], 'report', 'pinned').results).toEqual([
+    first,
+    recent,
+  ]);
 });

@@ -56,7 +56,7 @@ export function makeSearchContent(
     : clips.filter((clip) => {
         if (filter === 'text' && clip.text === null) return false;
         if (filter === 'image' && clip.image === null) return false;
-        if (filter === 'pinned' && !clip.isPinned) return false;
+        if (filter === 'pinned' && clip.pinnedAt === null) return false;
         if (index.matches(clip.id, 'name', clip.name ?? '', query)) return true;
         if (clip.image === null)
           return index.matches(clip.id, 'body', clip.text ?? '', query);

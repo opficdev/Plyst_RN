@@ -337,7 +337,10 @@ function HomeContent({ getState }: { getState: () => HomeState }) {
         onClose={() => dispatch({ type: 'menuClosed' })}
         items={[
           {
-            title: state.menuClip?.isPinned ? '고정 해제' : '고정',
+            title:
+              (state.menuClip?.pinnedAt ?? null) !== null
+                ? '고정 해제'
+                : '고정',
             role: 'default',
             handler: () => void togglePin(),
           },

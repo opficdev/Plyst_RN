@@ -36,7 +36,7 @@ final class ClipboardServiceTests: XCTestCase {
         XCTAssertEqual(clip.content, .text(text))
         XCTAssertNil(clip.name)
         XCTAssertNil(clip.memo)
-        XCTAssertFalse(clip.isPinned)
+        XCTAssertNil(clip.pinnedAt)
         XCTAssertNil(clip.lastUsedAt)
         XCTAssertNotEqual(clip.id, previous.id)
         XCTAssertEqual(spy.readCount, 1)

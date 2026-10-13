@@ -6,14 +6,14 @@ export type Draft = { name: string; isPinned: boolean };
 export function draftFromClip(clip: ClipRecord): Draft {
   return {
     name: clip.name ?? '',
-    isPinned: clip.isPinned,
+    isPinned: clip.pinnedAt !== null,
   };
 }
 
 export function differs(draft: Draft, clip: ClipRecord): boolean {
   return (
     !equivalent(normalizedName(draft), clip.name) ||
-    draft.isPinned !== clip.isPinned
+    draft.isPinned !== (clip.pinnedAt !== null)
   );
 }
 

@@ -14,7 +14,7 @@ const clip: ClipRecord = {
   image: null,
   name: '이름',
   memo: ' 메모\n',
-  isPinned: true,
+  pinnedAt: 1000,
   createdAt: 1234500,
   lastUsedAt: null,
 };
@@ -49,7 +49,7 @@ test('브리지 오류가 발생하면 failed이다', async () => {
 });
 
 test('공백뿐인 이름과 메모는 null로 전달한다', async () => {
-  const savedClip = { ...clip, name: null, memo: null, isPinned: false };
+  const savedClip = { ...clip, name: null, memo: null, pinnedAt: null };
   updateClipMock.mockResolvedValue(savedClip);
   await expect(
     saveTextDetail(clip.id, {

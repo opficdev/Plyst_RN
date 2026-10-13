@@ -34,7 +34,7 @@ final class ClipShareServiceTests: XCTestCase {
         XCTAssertEqual(clip.content, .text(text))
         XCTAssertEqual(clip.name, "공유 제목")
         XCTAssertNil(clip.memo)
-        XCTAssertFalse(clip.isPinned)
+        XCTAssertNil(clip.pinnedAt)
         let stored = try await storage.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip])
     }

@@ -32,7 +32,7 @@ public struct ClipBridgeRecord: Sendable {
     public let image: Image?
     public let name: String?
     public let memo: String?
-    public let isPinned: Bool
+    public let pinnedAt: Double?
     public let isWebLink: Bool
     public let createdAt: Double
     public let lastUsedAt: Double?
@@ -43,7 +43,7 @@ public struct ClipBridgeRecord: Sendable {
         image: Image?,
         name: String?,
         memo: String?,
-        isPinned: Bool,
+        pinnedAt: Double?,
         isWebLink: Bool,
         createdAt: Double,
         lastUsedAt: Double?
@@ -53,7 +53,7 @@ public struct ClipBridgeRecord: Sendable {
         self.image = image
         self.name = name
         self.memo = memo
-        self.isPinned = isPinned
+        self.pinnedAt = pinnedAt
         self.isWebLink = isWebLink
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt
