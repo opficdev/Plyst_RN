@@ -57,7 +57,7 @@ test('이미지는 이름을 우선하고 없으면 원본 안내 문구를 사�
     textPrefix: null,
     characterCount: 0,
     image: {
-      byteCountText: '1 KB',
+      byteCount: 1000,
       contentType: 'public.png',
       pixelWidth: 1,
       pixelHeight: 1,

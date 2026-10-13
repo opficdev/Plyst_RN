@@ -15,7 +15,7 @@ const clip: ClipRecord = {
     contentType: 'public.png',
     pixelWidth: 2,
     pixelHeight: 3,
-    byteCountText: '100 bytes',
+    byteCount: 100,
   },
   name: '이름',
   memo: ' 메모\n',

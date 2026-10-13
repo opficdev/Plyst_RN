@@ -32,7 +32,7 @@ const image: ClipRecord = {
   text: null,
   textPrefix: null,
   image: {
-    byteCountText: '1 KB',
+    byteCount: 1000,
     contentType: 'public.png',
     pixelWidth: 10,
     pixelHeight: 10,

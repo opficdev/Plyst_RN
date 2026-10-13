@@ -2,8 +2,8 @@ import type { CodegenTypes, TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 export type ClipImageRecord = {
-  // 원본 바이트 수를 ByteCountFormatter의 file 방식으로 표시한 문자열입니다.
-  byteCountText: string;
+  // 원본 이미지의 바이트 수입니다.
+  byteCount: number;
   // public.png와 같은 원본 타입 식별자입니다.
   contentType: string;
   pixelWidth: number;

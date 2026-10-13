@@ -10,7 +10,7 @@ const clip: ClipRecord = {
   text: null,
   name: null,
   image: {
-    byteCountText: '100 B',
+    byteCount: 100,
     contentType: 'public.png',
     pixelWidth: 10,
     pixelHeight: 10,

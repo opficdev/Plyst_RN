@@ -32,7 +32,7 @@ const clip = {
     contentType: 'public.png',
     pixelWidth: 2,
     pixelHeight: 3,
-    byteCountText: '100 bytes',
+    byteCount: 100,
   },
   name: null,
   memo: null,

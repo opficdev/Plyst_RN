@@ -72,7 +72,7 @@ test('식별자를 전달하고 클립의 필드를 그대로 반환한다', asy
     textPrefix: null,
     isWebLink: false,
     image: {
-      byteCountText: '100 bytes',
+      byteCount: 100,
       contentType: 'public.png',
       pixelWidth: 2,
       pixelHeight: 3,
@@ -409,7 +409,7 @@ test.each(['👨‍👩‍👧‍👦🇰🇷e\u0301'.repeat(20), null])(
       image:
         textPrefix === null
           ? {
-              byteCountText: '1 KB',
+              byteCount: 1000,
               contentType: 'public.png',
               pixelWidth: 1,
               pixelHeight: 1,
