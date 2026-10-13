@@ -21,7 +21,7 @@ test('첫 조회만 초기 조회로 전달한다', async () => {
       image: null,
       name: null,
       memo: null,
-      isPinned: false,
+      pinnedAt: null,
       createdAt: 1234500,
       lastUsedAt: null,
     },

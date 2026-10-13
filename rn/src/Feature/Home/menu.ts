@@ -12,6 +12,6 @@ export function homePinTarget(
   menuClip: ClipRecord,
   latest: ClipRecord | undefined,
 ): boolean | null {
-  const target = !menuClip.isPinned;
-  return !latest || latest.isPinned === target ? null : target;
+  const target = menuClip.pinnedAt === null;
+  return !latest || (latest.pinnedAt !== null) === target ? null : target;
 }

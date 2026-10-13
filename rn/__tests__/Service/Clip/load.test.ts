@@ -12,7 +12,7 @@ const clip: NativeClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1234500,
   lastUsedAt: null,
 };

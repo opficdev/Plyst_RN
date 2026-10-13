@@ -12,7 +12,7 @@ const clip: ClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: true,
   createdAt: 1000,
   lastUsedAt: null,
@@ -43,7 +43,7 @@ test('텍스트 원문과 이름 및 브릿지 링크 판정을 그대로 전달
     name: '이름',
     body: 'https://example.com',
     isWebLink: false,
-    metadata: '텍스트 · 1분 전',
+    metadata: '텍스트',
   });
 });
 
@@ -67,7 +67,7 @@ test('격자 이미지에만 해상도를 표시한다', () => {
   expect(clipCardValues(image, 2000, true)).toEqual({
     kind: 'image',
     name: null,
-    metadata: '이미지 · 지금',
+    metadata: '이미지',
   });
 });
 

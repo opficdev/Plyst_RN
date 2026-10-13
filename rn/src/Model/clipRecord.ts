@@ -13,7 +13,7 @@ type ClipRecordSource = {
   image: ClipImageRecord | null;
   name: string | null;
   memo: string | null;
-  isPinned: boolean;
+  pinnedAt: number | null;
   isWebLink: boolean;
   createdAt: number;
   lastUsedAt: number | null;

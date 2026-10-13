@@ -12,7 +12,7 @@ const clip: NativeClipRecord = {
   image: null,
   name: '이름',
   memo: ' 메모\n',
-  isPinned: true,
+  pinnedAt: 1000,
   createdAt: 1234500,
   lastUsedAt: null,
 };
@@ -22,13 +22,13 @@ beforeEach(() => jest.resetAllMocks());
 test('저장에 성공하면 반환된 클립을 포함한 saved이다', async () => {
   updateClipMock.mockResolvedValue(clip);
   await expect(
-    updateClipDetail(clip.id, clip.name, clip.memo, clip.isPinned),
+    updateClipDetail(clip.id, clip.name, clip.memo, clip.pinnedAt !== null),
   ).resolves.toEqual({ status: 'saved', clip: makeClipRecord(clip) });
   expect(updateClipMock).toHaveBeenCalledWith(
     clip.id,
     clip.name,
     clip.memo,
-    clip.isPinned,
+    clip.pinnedAt !== null,
   );
   expect(updateClipMock).toHaveBeenCalledTimes(1);
 });
@@ -36,7 +36,7 @@ test('저장에 성공하면 반환된 클립을 포함한 saved이다', async (
 test('저장 결과가 null이면 removed이다', async () => {
   updateClipMock.mockResolvedValue(null);
   await expect(
-    updateClipDetail(clip.id, clip.name, clip.memo, clip.isPinned),
+    updateClipDetail(clip.id, clip.name, clip.memo, clip.pinnedAt !== null),
   ).resolves.toEqual({ status: 'removed' });
 });
 
@@ -45,6 +45,6 @@ test('브리지 오류가 발생하면 failed이다', async () => {
     Object.assign(new Error('저장 실패'), { code: 'E_WRITE_FAILED' }),
   );
   await expect(
-    updateClipDetail(clip.id, clip.name, clip.memo, clip.isPinned),
+    updateClipDetail(clip.id, clip.name, clip.memo, clip.pinnedAt !== null),
   ).resolves.toEqual({ status: 'failed' });
 });

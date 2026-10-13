@@ -16,7 +16,8 @@ export type ClipRecord = {
   image: ClipImageRecord | null;
   name: string | null;
   memo: string | null;
-  isPinned: boolean;
+  // 고정한 시각이며 단위는 createdAt과 같은 epoch 밀리초이고 고정하지 않았으면 null입니다.
+  pinnedAt: number | null;
   // Foundation URL 검증 결과입니다. 이미지 클립은 false입니다.
   isWebLink: boolean;
   // 날짜는 Unix epoch 기준 밀리초입니다. JavaScript Date와 같은 단위입니다.

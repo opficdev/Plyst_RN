@@ -22,7 +22,7 @@ const clip: ClipRecord = {
   image: null,
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1234500,
   lastUsedAt: null,
 };
@@ -36,7 +36,7 @@ test('원본의 null을 빈 문자열로 바꾸고 고정 여부를 유지한다
     isPinned: false,
   });
   expect(
-    draftFromClip({ ...clip, name: '이름', memo: '메모', isPinned: true }),
+    draftFromClip({ ...clip, name: '이름', memo: '메모', pinnedAt: 1000 }),
   ).toEqual({ name: '이름', memo: '메모', isPinned: true });
 });
 
@@ -109,7 +109,7 @@ test.each(['isSaving', 'isDeleting', 'isRemoved'] as const)(
   },
 );
 
-const updated = { ...clip, name: '새 이름', memo: '새 메모', isPinned: true };
+const updated = { ...clip, name: '새 이름', memo: '새 메모', pinnedAt: 1000 };
 
 test('clipLoaded는 편집하지 않은 초안을 새 원본에 맞춘다', () => {
   const state = initialState(clip);
@@ -147,7 +147,7 @@ test('saved는 저장된 값과 같은 초안을 정리한다', () => {
   const state = initialState(clip);
   state.isSaving = true;
   state.draft = { name: ' é ', memo: whitespace, isPinned: true };
-  const saved = { ...clip, name: 'e\u0301', isPinned: true };
+  const saved = { ...clip, name: 'e\u0301', pinnedAt: 1000 };
   expect(reduce(state, { type: 'saved', clip: saved })).toEqual({
     ...state,
     clip: saved,

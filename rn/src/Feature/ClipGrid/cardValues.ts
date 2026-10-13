@@ -14,7 +14,7 @@ export function clipCardValues(
       ...common,
       kind: 'image' as const,
       metadata: isPinned
-        ? `이미지 · ${time}`
+        ? '이미지'
         : `이미지 · ${pixelWidth}×${pixelHeight} · ${time}`,
     };
   }
@@ -23,7 +23,7 @@ export function clipCardValues(
     kind: 'text' as const,
     body: clip.text ?? '',
     isWebLink: clip.isWebLink,
-    metadata: `텍스트 · ${time}`,
+    metadata: isPinned ? '텍스트' : `텍스트 · ${time}`,
   };
 }
 

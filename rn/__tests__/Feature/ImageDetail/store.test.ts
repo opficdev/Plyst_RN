@@ -36,7 +36,7 @@ const clip = {
   },
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1,
   lastUsedAt: null,
 } satisfies ClipRecord;

@@ -1,10 +1,7 @@
 import { clipThumbnailLimit } from '../../../src/Feature/ClipGrid/thumbnails';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { initialState, reduce } from '../../../src/Feature/Home/state';
-import type {
-  HomeAction,
-  HomeState,
-} from '../../../src/Feature/Home/state';
+import type { HomeAction, HomeState } from '../../../src/Feature/Home/state';
 
 const clip: ClipRecord = {
   id: 'image',
@@ -20,7 +17,7 @@ const clip: ClipRecord = {
   },
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1234500,
   lastUsedAt: null,
 };

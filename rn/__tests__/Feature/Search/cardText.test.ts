@@ -8,7 +8,7 @@ const clip: ClipRecord = {
   name: 'ALPHA name',
   image: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   isWebLink: false,
   characterCount: 11,
   textPrefix: 'Alpha alpha',

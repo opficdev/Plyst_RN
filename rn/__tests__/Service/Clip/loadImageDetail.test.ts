@@ -17,7 +17,7 @@ const clip: NativeClipRecord = {
   },
   name: null,
   memo: null,
-  isPinned: false,
+  pinnedAt: null,
   createdAt: 1234500,
   lastUsedAt: null,
 };
