@@ -50,7 +50,8 @@ final class ClipBridgeAdapterChangesTests: XCTestCase {
         _ = try await storage.update(id: clip.id, change: .details(
             name: "변경",
             memo: nil,
-            isPinned: false
+            isPinned: false,
+            requestedAt: Date(timeIntervalSince1970: 300)
         ))
         try await storage.delete(id: clip.id)
 

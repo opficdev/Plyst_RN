@@ -31,7 +31,7 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
                     image: nil,
                     name: name,
                     memo: memo,
-                    isPinned: isPinned,
+                    pinnedAt: isPinned ? 100000 : nil,
                     isWebLink: false,
                     createdAt: 1000,
                     lastUsedAt: nil
@@ -53,7 +53,8 @@ final class ClipBridgeWriteModuleImplTests: XCTestCase {
             XCTAssertEqual(record?["id"] as? String, id.uuidString)
             XCTAssertEqual(record?["name"] as? String, " 이름 ")
             XCTAssertTrue(record?["memo"] is NSNull)
-            XCTAssertEqual(record?["isPinned"] as? Bool, true)
+            XCTAssertEqual(record?["pinnedAt"] as? Double, 100000)
+            XCTAssertNil(record?["isPinned"])
             XCTAssertNil(code)
             completion.fulfill()
         }

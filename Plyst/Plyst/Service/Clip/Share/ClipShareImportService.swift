@@ -90,7 +90,7 @@ struct ClipShareImportService: Sendable {
                     id: clip.id,
                     name: clip.name,
                     memo: clip.memo,
-                    isPinned: clip.isPinned,
+                    pinnedAt: clip.pinnedAt,
                     createdAt: clip.createdAt
                 )
                 return (true, result.cleanup != .completed)

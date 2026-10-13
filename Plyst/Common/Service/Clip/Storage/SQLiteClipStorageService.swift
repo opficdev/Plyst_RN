@@ -215,7 +215,8 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     private static func validate(_ clip: Clip) throws {
         guard clip.content.isValid, clip.createdAt.timeIntervalSinceReferenceDate.isFinite,
-              clip.lastUsedAt?.timeIntervalSinceReferenceDate.isFinite != false else {
+              clip.lastUsedAt?.timeIntervalSinceReferenceDate.isFinite != false,
+              clip.pinnedAt?.timeIntervalSinceReferenceDate.isFinite != false else {
             throw ClipStorageError.invalidContent
         }
     }

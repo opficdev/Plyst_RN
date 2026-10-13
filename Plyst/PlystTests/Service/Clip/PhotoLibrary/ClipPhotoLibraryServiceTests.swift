@@ -49,7 +49,7 @@ final class ClipPhotoLibraryServiceTests: XCTestCase {
         let storage = try makeStorage()
         let images = try makeImages(storage: storage)
         let data = try ClipImageTestFixture.data(type: UTType.gif.identifier, count: 2)
-        let clip = try await images.saveImage(data, name: "움직이는 이미지", memo: "메모", isPinned: true).value
+        let clip = try await images.saveImage(data, name: "움직이는 이미지", memo: "메모", pinnedAt: Date(timeIntervalSince1970: 100)).value
         let spy = PhotoLibraryWriterSpy()
         let service = ClipPhotoLibraryService(
             storage: storage,

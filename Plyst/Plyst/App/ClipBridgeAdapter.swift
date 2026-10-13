@@ -121,7 +121,8 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             let change = ClipUpdate.details(
                 name: name,
                 memo: memo,
-                isPinned: isPinned
+                isPinned: isPinned,
+                requestedAt: Date()
             )
             let clip = try await storage.update(id: id, change: change)
             return record(from: clip)
@@ -250,7 +251,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             image: image,
             name: clip.name,
             memo: clip.memo,
-            isPinned: clip.isPinned,
+            pinnedAt: clip.pinnedAt.map { $0.timeIntervalSince1970 * 1000 },
             isWebLink: clip.content.isWebLink,
             createdAt: clip.createdAt.timeIntervalSince1970 * 1000,
             lastUsedAt: clip.lastUsedAt.map { $0.timeIntervalSince1970 * 1000 }

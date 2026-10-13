@@ -26,7 +26,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         let clip = Clip(
             content: .text(" https://example.com 원문 "),
             name: "이름",
-            isPinned: true,
+            pinnedAt: Date(timeIntervalSince1970: 100),
             memo: "메모",
             createdAt: Date(timeIntervalSince1970: 1234.5),
             lastUsedAt: Date(timeIntervalSince1970: 2345.5)
@@ -41,7 +41,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertNil(record.image)
         XCTAssertEqual(record.name, clip.name)
         XCTAssertEqual(record.memo, clip.memo)
-        XCTAssertTrue(record.isPinned)
+        XCTAssertEqual(record.pinnedAt, 100000)
         XCTAssertEqual(record.createdAt, 1234500)
         XCTAssertEqual(record.lastUsedAt, 2345500)
     }
@@ -63,7 +63,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertNil(record.name)
         XCTAssertNil(record.memo)
         XCTAssertNil(record.lastUsedAt)
-        XCTAssertFalse(record.isPinned)
+        XCTAssertNil(record.pinnedAt)
         XCTAssertEqual(record.createdAt, result.value.createdAt.timeIntervalSince1970 * 1000)
         XCTAssertEqual(image.byteCount, metadata.byteCount)
         XCTAssertEqual(image.contentType, metadata.contentType)
@@ -99,7 +99,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         )
         XCTAssertEqual(updated?.name, "새 이름")
         XCTAssertEqual(updated?.memo, "메모")
-        XCTAssertEqual(updated?.isPinned, true)
+        XCTAssertNotNil(updated?.pinnedAt)
         let preserved = try await storage.fetch(id: result.value.id)
         XCTAssertEqual(preserved?.name, "새 이름")
     }
@@ -127,11 +127,11 @@ final class ClipBridgeAdapterTests: XCTestCase {
 
         XCTAssertEqual(stored.name, " 이름 ")
         XCTAssertEqual(stored.memo, "\n 메모 ")
-        XCTAssertTrue(stored.isPinned)
+        XCTAssertNotNil(stored.pinnedAt)
         XCTAssertEqual(record.id, stored.id.uuidString)
         XCTAssertEqual(record.name, stored.name)
         XCTAssertEqual(record.memo, stored.memo)
-        XCTAssertEqual(record.isPinned, stored.isPinned)
+        XCTAssertEqual(record.pinnedAt, stored.pinnedAt.map { $0.timeIntervalSince1970 * 1000 })
         XCTAssertEqual(record.text, "원문")
         XCTAssertEqual(record.createdAt, stored.createdAt.timeIntervalSince1970 * 1000)
         XCTAssertEqual(record.lastUsedAt, 1234000)
@@ -145,7 +145,7 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertNotNil(cleared)
         XCTAssertNil(cleared?.name)
         XCTAssertNil(cleared?.memo)
-        XCTAssertEqual(cleared?.isPinned, false)
+        XCTAssertNil(cleared?.pinnedAt)
     }
 
     func testUpdateMissingClipReturnsNil() async throws {

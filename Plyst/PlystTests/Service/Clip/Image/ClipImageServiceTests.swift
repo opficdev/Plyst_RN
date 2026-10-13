@@ -24,7 +24,7 @@ final class ClipImageServiceTests: XCTestCase {
         let storage = try makeStorage()
         let files = try ClipImageFileStore(rootURL: root)
         let service = ClipImageService(storage: storage, files: files)
-        let result = try await service.saveImage(data, name: "이름", memo: "메모", isPinned: true)
+        let result = try await service.saveImage(data, name: "이름", memo: "메모", pinnedAt: Date(timeIntervalSince1970: 100))
         XCTAssertEqual(result.cleanup, .completed)
         let reopenedStorage = try makeStorage()
         let reopened = ClipImageService(storage: reopenedStorage, files: try ClipImageFileStore(rootURL: root))
@@ -33,7 +33,7 @@ final class ClipImageServiceTests: XCTestCase {
         XCTAssertEqual(restored, data)
         XCTAssertEqual(clip, result.value)
         XCTAssertEqual(clip?.name, "이름")
-        XCTAssertTrue(clip?.isPinned == true)
+        XCTAssertNotNil(clip?.pinnedAt)
         XCTAssertEqual(try files.pendingFileIDs(), [])
     }
 

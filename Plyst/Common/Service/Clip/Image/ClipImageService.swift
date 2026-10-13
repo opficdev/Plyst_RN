@@ -32,7 +32,7 @@ actor ClipImageService {
         id: Clip.ID = UUID(),
         name: String? = nil,
         memo: String? = nil,
-        isPinned: Bool = false,
+        pinnedAt: Date? = nil,
         createdAt: Date = Date()
     ) async throws -> ClipImageMutationResult<Clip> {
         try await acquire()
@@ -42,7 +42,7 @@ actor ClipImageService {
             id: id,
             content: .image(image),
             name: name,
-            isPinned: isPinned,
+            pinnedAt: pinnedAt,
             memo: memo,
             createdAt: createdAt
         )

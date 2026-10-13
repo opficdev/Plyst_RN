@@ -40,7 +40,7 @@ final class ClipboardImageServiceTests: XCTestCase {
         XCTAssertEqual(image.byteCount, data.count)
         XCTAssertNil(clip.name)
         XCTAssertNil(clip.memo)
-        XCTAssertFalse(clip.isPinned)
+        XCTAssertNil(clip.pinnedAt)
         XCTAssertNil(clip.lastUsedAt)
         XCTAssertEqual(reader.readCount, 1)
         let stored = try await storage.fetchAll(order: .createdAt)

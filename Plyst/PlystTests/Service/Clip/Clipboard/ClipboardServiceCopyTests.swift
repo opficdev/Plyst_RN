@@ -26,7 +26,7 @@ final class ClipboardServiceCopyTests: XCTestCase {
         let clip = Clip(
             content: .text(text),
             name: "이름",
-            isPinned: true,
+            pinnedAt: Date(timeIntervalSince1970: 100),
             memo: "메모",
             createdAt: Date(timeIntervalSinceReferenceDate: 100),
             lastUsedAt: Date(timeIntervalSinceReferenceDate: 50)
@@ -205,7 +205,7 @@ final class ClipboardServiceCopyTests: XCTestCase {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let clip = Clip(content: .text("편집 중인 원문"))
         try await storage.insert(clip)
-        let details = ClipUpdate.details(name: "새 이름", memo: "새 메모", isPinned: true)
+        let details = ClipUpdate.details(name: "새 이름", memo: "새 메모", isPinned: true, requestedAt: Date(timeIntervalSince1970: 300))
         let spy = ClipboardStorageServiceSpy(storage: storage, beforeUpdate: {
             _ = try await storage.update(id: clip.id, change: details)
         })
