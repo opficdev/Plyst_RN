@@ -14,6 +14,14 @@ TESTFLIGHT_IPA_OUTPUT_PATH = File.join(TESTFLIGHT_BUILD_OUTPUT_DIRECTORY, "#{APP
 APPSTORE_BUILD_OUTPUT_DIRECTORY = File.expand_path("appstore_build", __dir__)
 APPSTORE_IPA_OUTPUT_PATH = File.join(APPSTORE_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
 
+# xcodeproj 1.27은 Xcode 27의 확장 복사 위치(dstSubfolder)를 모르면 프로젝트를 저장할 때 지운다.
+# 확장이 앱의 PlugIns가 아닌 아카이브 루트에 설치되므로 프로젝트를 여는 어떤 액션보다 먼저 속성을 등록한다.
+require "xcodeproj"
+copy_phase = Xcodeproj::Project::Object::PBXCopyFilesBuildPhase
+unless copy_phase.method_defined?(:dst_subfolder)
+  copy_phase.class_eval { attribute :dst_subfolder, String }
+end
+
 # 앱 타깃의 MARKETING_VERSION을 읽고 App Store 버전 형식을 검증한다.
 def marketing_version_from_project
   version_number = get_version_number(
@@ -221,13 +229,6 @@ platform :ios do
     )
 
     if ENV["CI"] == "true"
-      # xcodeproj 1.27이 서명 설정을 저장할 때 Xcode 27의 확장 복사 위치를 보존한다.
-      require "xcodeproj"
-      copy_phase = Xcodeproj::Project::Object::PBXCopyFilesBuildPhase
-      unless copy_phase.method_defined?(:dst_subfolder)
-        copy_phase.class_eval { attribute :dst_subfolder, String }
-      end
-
       profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
       signing_targets = {
         APP_TARGET_NAME => APP_IDENTIFIER,
