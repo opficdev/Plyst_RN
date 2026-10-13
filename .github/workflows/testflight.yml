@@ -1,0 +1,151 @@
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_to_testflight:
+        description: Upload to TestFlight
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+env:
+  RUBY_VERSION: "3.2"
+  ASC_KEY_PATH: ${{ github.workspace }}/fastlane/AuthKey.p8
+  SPACESHIP_CONNECT_API_IN_HOUSE: "false"
+
+concurrency:
+  group: ios-store-distribution
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  testflight:
+    runs-on: xcode-27
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ${{ env.RUBY_VERSION }}
+
+      - name: Set up Node
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+          install_args: node
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+
+      - name: Read Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Release XCFrameworks
+        id: xcframework-cache
+        uses: actions/cache@v4
+        with:
+          path: Plyst/Packages/PlystReactNative/Frameworks
+          key: rn-xcframework-release-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('rn/package.json', 'rn/package-lock.json', 'rn/app.json', 'rn/tsconfig.json', 'rn/modules/**', 'rn/index.ts', 'rn/App.tsx', 'rn/src/**', 'scripts/build-rn-xcframework.sh', 'Plyst/Packages/PlystReactNative/Package.swift', '.mise.toml') }}
+
+      - name: Build Release XCFrameworks
+        id: xcframework-build
+        env:
+          CACHE_HIT: ${{ steps.xcframework-cache.outputs.cache-hit }}
+        run: |
+          if [ "$CACHE_HIT" = "true" ]; then
+            echo "cache_hit=true" >> "$GITHUB_OUTPUT"
+            echo "xcframework_generation_seconds=0" >> "$GITHUB_OUTPUT"
+          else
+            started_at=$(date +%s)
+            make rn-xcframework RN_CONFIGURATION=Release
+            elapsed=$(($(date +%s) - started_at))
+            echo "cache_hit=false" >> "$GITHUB_OUTPUT"
+            echo "xcframework_generation_seconds=$elapsed" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+        run: |
+          mkdir -p "$(dirname "$ASC_KEY_PATH")"
+          umask 077
+          printf '%s' "$ASC_KEY_CONTENT" | base64 -D > "$ASC_KEY_PATH"
+
+      - name: Build for TestFlight
+        id: build
+        env:
+          APP_STORE_TEAM_ID: ${{ secrets.APP_STORE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: bundle exec fastlane testflight_build_only
+
+      - name: Record build metrics
+        env:
+          CACHE_HIT: ${{ steps.xcframework-build.outputs.cache_hit }}
+          XCFRAMEWORK_GENERATION_SECONDS: ${{ steps.xcframework-build.outputs.xcframework_generation_seconds }}
+          ARCHIVE_DURATION_SECONDS: ${{ steps.build.outputs.archive_duration_seconds }}
+          IPA_SIZE_BYTES: ${{ steps.build.outputs.ipa_size_bytes }}
+          DSYM_SIZE_BYTES: ${{ steps.build.outputs.dsym_size_bytes }}
+        run: |
+          {
+            printf '| Metric | Value |\n| --- | --- |\n'
+            printf '| cache_hit | %s |\n' "${CACHE_HIT:-unavailable}"
+            printf '| xcframework_generation_seconds | %s |\n' "${XCFRAMEWORK_GENERATION_SECONDS:-unavailable}"
+            printf '| archive_duration_seconds | %s |\n' "${ARCHIVE_DURATION_SECONDS:-unavailable}"
+            printf '| ipa_size_bytes | %s |\n' "${IPA_SIZE_BYTES:-unavailable}"
+            printf '| dsym_size_bytes | %s |\n' "${DSYM_SIZE_BYTES:-unavailable}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload TestFlight build log
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: testflight-build-log
+          path: ~/Library/Logs/gym/*.log
+          if-no-files-found: ignore
+
+      - name: Upload TestFlight dSYM
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: testflight-dsym
+          path: fastlane/testflight_build/*.dSYM.zip
+          if-no-files-found: warn
+
+      - name: Skip TestFlight Upload
+        if: inputs.upload_to_testflight != 'true'
+        run: echo "Skipping TestFlight upload"
+
+      - name: Upload to TestFlight
+        if: inputs.upload_to_testflight == 'true'
+        env:
+          APP_STORE_TEAM_ID: ${{ secrets.APP_STORE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: bundle exec fastlane upload_testflight_build
+
+      - name: Remove App Store Connect API key
+        if: always()
+        run: rm -f "$ASC_KEY_PATH"

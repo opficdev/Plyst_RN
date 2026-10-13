@@ -25,6 +25,8 @@ Breakpoints_v2.xcbkptlist
 # Build artifacts
 *.ipa
 *.dSYM.zip
+*.dSYM/
+*.xcarchive/
 .home/
 .module-cache/
 .swift-module-cache/
@@ -36,3 +38,14 @@ rn/ios/
 rn/android/
 rn/.expo/
 Plyst/Packages/PlystReactNative/Frameworks/
+
+# Fastlane
+.bundle/
+.fastlane/
+fastlane/logs/
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/
+fastlane/testflight_build/
+fastlane/appstore_build/
+vendor/bundle/
