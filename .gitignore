@@ -50,3 +50,6 @@ fastlane/testflight_build/
 fastlane/appstore_build/
 fastlane/secrets.json
 vendor/bundle/
+
+# Docs
+docs/data-flow.drawio
