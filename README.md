@@ -1,7 +1,7 @@
 # Plyst RN
 
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
-> Home과 Search에서 기록을 찾고 상세 화면에서 이름과 고정 여부를 관리하는 React Native 앱
+> Home과 Search에서 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
 [UIKit 구현 보기](https://github.com/opficdev/Plyst)<br>
 [Notion 작업 공간](https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7)
@@ -16,11 +16,24 @@
 
 ## 프로젝트 개요
 
-텍스트와 이미지를 클립으로 저장하고 종류와 고정 여부로 분류하며 검색한 내용을 다시 복사해 사용하는 앱
+화면과 상태는 RN이 맡고 iOS 실행 환경과 시스템 자원은 Swift가 맡는 브라운필드 앱
 
-React Native가 앱 화면과 상태를 소유하고 Swift가 앱과 Scene 생명주기, React Native Runtime과 화면 호스트를 담당하는 구조<br>
-Swift에서 TurboModule 구현, 클립보드와 사진 보관함, 이미지 파일과 SQLite 저장소 관리<br>
-Share Extension의 공유 항목 저장과 Widget의 앱 열기도 Swift에서 처리
+| 영역 | 담당 | 이유 |
+| --- | --- | --- |
+| 화면 구성과 화면 상태 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용 |
+| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 JavaScript에서 계산 |
+| 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
+| 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
+| 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
+| 앱과 Scene 생명주기, RN 런타임, 화면 호스트 | Swift | iOS 실행 환경 필요 |
+| TurboModule 구현과 wire 값 변환 | Swift | Codegen 스펙의 네이티브 구현 |
+| 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
+| 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
+| `isWebLink` 판정 | Swift | Foundation `URL`과 WHATWG `URL`의 판정 차이를 재현할 수 없음 |
+| 클립보드 읽기와 쓰기, `lastUsedAt` 갱신 | Swift | 시스템 API와 다른 앱과의 권한 동작에 의존 |
+| 사진 저장 | Swift | RN으로 옮겨도 사진 보관함 권한 판정은 Swift에 남아 책임이 나뉨 |
+| 최근 검색어의 규칙과 저장 | Swift | 대소문자 비교 결과가 달라지고 목록을 원자적으로 교체해야 함 |
+| Share Extension, Widget | Swift | Extension 실행 환경 필요 |
 
 ![클립 데이터 흐름](./docs/data-flow.png)
 
@@ -28,34 +41,33 @@ Share Extension의 공유 항목 저장과 Widget의 앱 열기도 Swift에서 �
 
 | 화면 | 기능 |
 | --- | --- |
-| Home | 전체, 텍스트, 이미지와 고정 필터<br>고정 클립 영역<br>현재 클립보드 저장 버튼<br>클립 복사와 길게 누르기 메뉴의 삭제, 고정 및 고정 해제<br>이미지 썸네일 비동기 로드<br>저장과 복사 결과 및 작업 실패 토스트 |
-| Search | 이름과 텍스트 본문 검색<br>이미지 이름과 저장 시각 검색<br>이름과 텍스트 본문의 검색어 강조<br>최근 검색어 선택, 개별 삭제와 전체 삭제<br>전체, 텍스트, 이미지와 고정 필터 및 클립 복사 |
-| 텍스트 상세 | 이름, 메모와 고정 여부 편집<br>저장, 복사와 삭제<br>저장 시각과 마지막 사용 시각 표시 |
-| 이미지 상세 | 이미지 표시<br>이름과 고정 여부 편집<br>저장, 복사와 삭제<br>사진 앱 저장<br>저장 시각과 마지막 사용 시각 표시 |
-| Widget | 앱을 열고 현재 클립보드 저장 요청 |
-| Share Extension | 지원하는 첫 첨부의 텍스트, 웹 URL과 이미지 저장<br>이미지 URL 내려받기 및 내려받기나 이미지 검증 실패 시 URL을 텍스트로 저장<br>저장 실패 시 다시 시도와 취소 |
+| Home | 종류와 고정 필터, 고정 클립 영역, 클립보드 저장, 클립 복사, 삭제, 고정 |
+| Search | 이름, 본문, 저장 시각 검색과 검색어 강조, 최근 검색어 관리 |
+| 텍스트 상세 | 이름, 메모, 고정 여부 편집, 저장, 복사, 삭제 |
+| 이미지 상세 | 이미지 표시, 이름과 고정 여부 편집, 저장, 복사, 삭제, 사진 앱 저장 |
+| Widget | 앱을 열고 현재 클립보드 저장 |
+| Share Extension | 텍스트, 웹 URL, 이미지 저장과 실패 시 다시 시도 |
 
 ## 핵심 성과
 
-### **1. Codegen TurboModule 단일 계약으로 RN 화면과 Swift 자원 계층 분리**
+### **1. Codegen TurboModule로 RN 화면과 Swift 자원 계층 분리**
 > **문제**<br>
 > RN과 Swift가 호출 형식을 따로 정의하면 한쪽만 바뀌어도 호출이 어긋날 수 있음
 >
 > **해결**<br>
-> PlystClip, PlystHome, PlystScreen의 Codegen 스펙을 RN과 Swift 구현 사이의 단일 계약으로 사용<br>
+> PlystClip, PlystHome, PlystScreen의 Codegen 스펙 하나로 RN 호출과 Swift 구현 연결<br>
 > RN 결과물과 브리지를 XCFramework로 묶어 PlystReactNative 패키지로 앱에 연결
 >
 > **성과**<br>
-> • 데이터 호출과 이벤트 전달에 같은 Codegen 계약을 사용하는 구조
+> • 데이터 호출과 이벤트 전달에 같은 Codegen 스펙을 사용하는 구조
 
-```swift
-ReactNativeBrownfield.shared.bundle = ReactNativeBundle
-ReactNativeBrownfield.shared.ensureExpoModulesProvider()
-ReactNativeBrownfield.shared.startReactNative(
-    launchOptions: launchOptions,
-    preloadBundle: false,
-    onBundleLoaded: nil
-)
+```ts
+export interface Spec extends TurboModule {
+  readonly onClipChange: CodegenTypes.EventEmitter<ClipChange>;  // Swift에서 RN으로 변경 이벤트 전달
+  getClip(id: string): Promise<ClipRecord | null>;               // RN에서 Swift 저장소 조회
+  getClips(): Promise<ClipRecord[]>;
+  // ...
+}
 ```
 
 ### **2. 썸네일 48개 제한과 요청 큐로 대용량 이미지 목록 처리**
@@ -132,7 +144,7 @@ try await remove(clip, inbox: inbox, inboxImages: inboxImages)
 | 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5, UIKit 호스트 |
 | 앱 확장 | Share Extension, WidgetKit, SwiftUI |
 | 상태 관리 | Redux Toolkit 2.13.0, React Redux 9.3.0 (RN 화면)<br>ReactorKit 3.2.0, RxSwift 6.10.2 (Share Extension 상태 관리) |
-| 네이티브 계약 | TurboModule, Codegen |
+| 네이티브 브리지 | TurboModule, Codegen |
 | 앱 통합 | React Native Brownfield 5.3.0, XCFramework |
 | 저장소 | SQLiteData 1.12.0, GRDB 7.11.1, swift-structured-queries 0.39.2 |
 | Apple 프레임워크 | UIKit, Foundation, WidgetKit, SwiftUI, ImageIO, Photos |
