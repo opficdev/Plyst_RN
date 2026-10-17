@@ -52,4 +52,4 @@ fastlane/secrets.json
 vendor/bundle/
 
 # Docs
-docs/data-flow.drawio
+docs/*.drawio
