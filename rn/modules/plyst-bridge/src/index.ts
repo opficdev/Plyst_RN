@@ -90,6 +90,8 @@ export function deleteClip(id: string): Promise<void> {
   return NativePlystClip.deleteClip(id);
 }
 
+export { default as PlystDetailBarButton } from './PlystDetailBarButtonNativeComponent';
+
 export function closeScreen(): void {
   NativePlystScreen.close();
 }

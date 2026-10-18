@@ -60,6 +60,11 @@ jest.mock('../modules/plyst-bridge/src/NativePlystHome', () => ({
     onClipboardSaveRequest: jest.fn(),
   },
 }));
+
+jest.mock(
+  '../modules/plyst-bridge/src/PlystDetailBarButtonNativeComponent',
+  () => ({ __esModule: true, default: 'PlystDetailBarButton' }),
+);
 const native = jest.mocked(NativePlystClip);
 
 beforeEach(() => jest.resetAllMocks());

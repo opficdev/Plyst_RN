@@ -8,8 +8,15 @@
   "react-native": "src/index.ts",
   "codegenConfig": {
     "name": "PlystClipSpec",
-    "type": "modules",
-    "jsSrcsDir": "src"
+    "type": "all",
+    "jsSrcsDir": "src",
+    "ios": {
+      "components": {
+        "PlystDetailBarButton": {
+          "className": "PlystDetailBarButtonComponentView"
+        }
+      }
+    }
   },
   "peerDependencies": {
     "react-native": "0.86.3"
