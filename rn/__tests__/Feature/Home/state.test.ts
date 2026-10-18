@@ -48,7 +48,6 @@ test('초기 상태는 지정한 시각과 빈 목록 및 캐시를 가진다', 
     thumbnailOrder: [],
     loadingThumbnails: {},
     failedThumbnails: {},
-    isSearchVisible: false,
     isSaving: false,
     menuClip: null,
     isMenuVisible: false,
@@ -72,10 +71,6 @@ test.each<[HomeAction, Partial<HomeState>]>([
   [{ type: 'loadFailed' }, { loadPhase: 'failed' }],
   [{ type: 'timeChanged', now: 3000 }, { now: 3000 }],
   [{ type: 'filterSelected', filter: 'image' }, { filter: 'image' }],
-  [
-    { type: 'searchVisibilityChanged', isVisible: true },
-    { isSearchVisible: true },
-  ],
   [{ type: 'thumbnailStarted', key }, { loadingThumbnails: { [key]: true } }],
 ])('%j는 해당 상태만 바꾼다', (action, change) => {
   const state = loaded();
@@ -85,13 +80,6 @@ test.each<[HomeAction, Partial<HomeState>]>([
 test('같은 필터 선택은 동일한 상태를 반환한다', () => {
   const state = loaded();
   expect(reduce(state, { type: 'filterSelected', filter: 'all' })).toBe(state);
-});
-
-test('검색 화면이 닫히면 표시 상태만 해제한다', () => {
-  const state = { ...loaded(), isSearchVisible: true };
-  expect(
-    reduce(state, { type: 'searchVisibilityChanged', isVisible: false }),
-  ).toEqual({ ...state, isSearchVisible: false });
 });
 
 test('시작된 이미지 요청만 캐시에 넣고 로딩 상태를 지운다', () => {
@@ -179,7 +167,6 @@ test('목록 갱신은 이미지로 남아 있는 클립의 모든 크기만 보
   const state: HomeState = {
     ...loaded(),
     filter: 'pinned',
-    isSearchVisible: true,
     thumbnails: {
       'image:100': uri,
       'gone:100': uri,
@@ -241,7 +228,6 @@ test.each<HomeAction>([
   { type: 'thumbnailLoaded', key, uri },
   { type: 'thumbnailFailed', key },
   { type: 'thumbnailCancelled', key },
-  { type: 'searchVisibilityChanged', isVisible: true },
 ])('%j는 입력 상태를 변형하지 않는다', (action) => {
   const state = loadThumbnail(loaded(), key);
   state.loadingThumbnails[key] = true;

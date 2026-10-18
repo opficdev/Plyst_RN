@@ -1,5 +1,7 @@
 import { clipCharacterCount, clipTextPrefix } from './clipText';
 
+export type ClipKind = 'text' | 'image';
+
 export type ClipImageRecord = {
   byteCount: number;
   contentType: string;

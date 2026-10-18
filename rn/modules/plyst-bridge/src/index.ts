@@ -1,5 +1,4 @@
 import NativePlystHome from './NativePlystHome';
-import NativePlystScreen from './NativePlystScreen';
 import NativePlystClip from './NativePlystClip';
 import type { ClipRecord } from './NativePlystClip';
 
@@ -90,44 +89,10 @@ export function deleteClip(id: string): Promise<void> {
   return NativePlystClip.deleteClip(id);
 }
 
-export function closeScreen(): void {
-  NativePlystScreen.close();
-}
-
-export function setSaveEnabled(isEnabled: boolean): void {
-  NativePlystScreen.setSaveEnabled(isEnabled);
-}
-
-export function subscribeSave(listener: () => void) {
-  const subscription = NativePlystScreen.onSave(listener);
-  NativePlystScreen.ready();
-  return subscription;
-}
-
-export function openClip(id: string, kind: 'text' | 'image'): void {
-  NativePlystHome.openClip(id, kind);
-}
-
-export function openSearch(): void {
-  NativePlystHome.openSearch();
-}
-
-export function closeSearch(): void {
-  NativePlystHome.closeSearch();
-}
+export { default as PlystDetailBarButton } from './PlystDetailBarButtonNativeComponent';
 
 export function subscribeClipboardSaveRequests(listener: () => void) {
   const subscription = NativePlystHome.onClipboardSaveRequest(listener);
-  NativePlystHome.ready();
-  return subscription;
-}
-
-export function subscribeSearchVisibility(
-  listener: (isVisible: boolean) => void,
-) {
-  const subscription = NativePlystHome.onSearchVisibilityChange((change) => {
-    listener(change.isVisible);
-  });
   NativePlystHome.ready();
   return subscription;
 }

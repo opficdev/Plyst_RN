@@ -1,4 +1,4 @@
-import { subscribeClipChanges, subscribeSave } from 'plyst-bridge';
+import { subscribeClipChanges } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createImageDetailStore } from '../../../src/Feature/ImageDetail/store';
 import { imageDetailActions as actions } from '../../../src/Feature/ImageDetail/actions';
@@ -10,7 +10,6 @@ import { showToast } from '../../../src/Shared/UI';
 
 jest.mock('plyst-bridge', () => ({
   subscribeClipChanges: jest.fn(),
-  subscribeSave: jest.fn(),
 }));
 jest.mock('../../../src/Shared/UI', () => ({ showToast: jest.fn() }));
 jest.mock('../../../src/Service/Clip/loadImageDetail');
@@ -56,11 +55,6 @@ beforeEach(() => {
     .mockReturnValue({ remove } as unknown as ReturnType<
       typeof subscribeClipChanges
     >);
-  jest
-    .mocked(subscribeSave)
-    .mockReturnValue({ remove } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
   jest.mocked(loadImageDetail).mockResolvedValue({ status: 'loaded', clip });
   jest
     .mocked(loadImageDetailPreview)
@@ -75,7 +69,7 @@ async function mounted() {
   return screen;
 }
 
-test('변경 구독 뒤 최초 조회를 시작하고 로딩 뒤 저장을 구독한다', async () => {
+test('변경 구독 뒤 최초 조회를 시작한다', async () => {
   const pending = deferred<Awaited<ReturnType<typeof loadImageDetail>>>();
   jest.mocked(loadImageDetail).mockReturnValue(pending.promise);
   const screen = createImageDetailStore(clip.id);
@@ -87,12 +81,10 @@ test('변경 구독 뒤 최초 조회를 시작하고 로딩 뒤 저장을 구�
   expect(
     jest.mocked(subscribeClipChanges).mock.invocationCallOrder[0],
   ).toBeLessThan(jest.mocked(loadImageDetail).mock.invocationCallOrder[0]);
-  expect(subscribeSave).not.toHaveBeenCalled();
   pending.resolve({ status: 'loaded', clip });
   await settle();
-  expect(subscribeSave).toHaveBeenCalledTimes(1);
   screen.dispose();
-  expect(remove).toHaveBeenCalledTimes(2);
+  expect(remove).toHaveBeenCalledTimes(1);
 });
 
 test('저장 중 재요청을 막고 실패해도 편집값을 보존한다', async () => {

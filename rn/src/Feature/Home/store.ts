@@ -21,7 +21,6 @@ export function createHomeStore() {
       menuClosed: true,
       deleteConfirmShown: true,
       deleteConfirmClosed: true,
-      searchVisibilityChanged: true,
     },
     start: (scope) => startHomeListeners(scope),
   });

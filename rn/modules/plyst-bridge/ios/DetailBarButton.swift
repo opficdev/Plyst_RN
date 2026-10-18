@@ -1,6 +1,6 @@
 //
 //  DetailBarButton.swift
-//  Plyst
+//  PlystBridge
 //
 //  Created by opfic on 10/1/26.
 //
@@ -9,7 +9,9 @@ import UIKit
 
 /// 상세 화면 상단 바의 원형 아이콘 버튼과 캡슐형 텍스트 버튼입니다.
 /// iOS 26 이상에서는 Liquid Glass를 씁니다. 그보다 낮은 버전에서는 테두리가 있는 평면 버튼으로 표시합니다.
-final class DetailBarButton: UIButton {
+/// 색은 앱 에셋 카탈로그의 이름을 문자열로 참조하므로 앱 타깃에 같은 이름의 색이 있어야 합니다.
+@objc(DetailBarButton)
+public final class DetailBarButton: UIButton {
     enum Style {
         case icon(String)
         case title(String)
@@ -29,6 +31,18 @@ final class DetailBarButton: UIButton {
         makeLayout()
     }
 
+    /// Objective-C++ 컴포넌트 뷰가 SF Symbol 이름으로 원형 아이콘 버튼을 만듭니다.
+    @objc
+    public convenience init(icon: String) {
+        self.init(style: .icon(icon))
+    }
+
+    /// Objective-C++ 컴포넌트 뷰가 제목으로 캡슐형 텍스트 버튼을 만듭니다.
+    @objc
+    public convenience init(title: String) {
+        self.init(style: .title(title))
+    }
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) is unavailable")
@@ -37,6 +51,10 @@ final class DetailBarButton: UIButton {
     private static func baseConfiguration() -> UIButton.Configuration {
         if #available(iOS 26.0, *) { return .glass() }
         return .plain()
+    }
+
+    private static func color(_ name: String) -> UIColor {
+        return UIColor(named: name) ?? .label
     }
 
     private func configureAppearance() {
@@ -63,12 +81,12 @@ final class DetailBarButton: UIButton {
 
         configurationUpdateHandler = { button in
             guard var configuration = button.configuration else { return }
-            let color = UIColor(resource: button.isEnabled ? .homePrimaryText : .homePlaceholder)
+            let color = Self.color(button.isEnabled ? "HomePrimaryText" : "HomePlaceholder")
             configuration.baseForegroundColor = color
             if !Self.usesGlass {
                 configuration.background.strokeWidth = 1
-                configuration.background.backgroundColor = UIColor(resource: .homeCard)
-                configuration.background.strokeColor = UIColor(resource: .homeOutline)
+                configuration.background.backgroundColor = Self.color("HomeCard")
+                configuration.background.strokeColor = Self.color("HomeOutline")
             }
             button.configuration = configuration
         }

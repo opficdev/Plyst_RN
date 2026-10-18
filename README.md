@@ -21,14 +21,14 @@
 
 | 영역 | 담당 | 이유 |
 | --- | --- | --- |
-| 화면 구성과 화면 상태 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용 |
+| 화면 구성과 화면 상태, 화면 전환과 상세 시트 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용하며 `AppRoot` 하나가 전환을 소유 |
 | 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 JavaScript에서 계산 |
 | 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
 | 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
 | 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
-| 앱과 Scene 생명주기, RN 런타임, 화면 호스트 | Swift | iOS 실행 환경 필요 |
-| 상세 화면의 시트와 상단 바 (닫기, 저장 버튼의 Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()`로 적용 (iOS 26 미만은 평면 버튼) |
-| TurboModule 구현과 wire 값 변환 | Swift | Codegen 스펙의 네이티브 구현 |
+| 앱과 Scene 생명주기, RN 런타임, RN 루트 호스트 | Swift | iOS 실행 환경 필요 |
+| 상세 화면의 닫기, 저장 버튼 (Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()` 버튼을 Fabric 컴포넌트로 RN 상단 바에 배치 (iOS 26 미만은 평면 버튼) |
+| TurboModule 구현과 wire 값 변환 | Swift | Codegen 인터페이스의 네이티브 구현 |
 | 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
 | 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
 | `isWebLink` 판정 | Swift | Foundation `URL`과 WHATWG `URL`의 판정 차이를 재현할 수 없음 |
@@ -82,12 +82,12 @@ scope.listen(actions.save, async () => {
 > RN과 Swift가 호출 형식을 따로 정의하면 한쪽만 바뀌어도 호출이 어긋날 수 있음
 >
 > **해결**<br>
-> PlystClip, PlystHome, PlystScreen의 Codegen 스펙 하나로 RN 호출과 Swift 구현 연결<br>
+> PlystClip, PlystHome의 Codegen 인터페이스와 PlystDetailBarButton 컴포넌트로 RN 호출과 Swift 구현 연결<br>
 > RN 결과물과 브리지를 XCFramework로 묶어 PlystReactNative 패키지로 앱에 연결
 >
 > **성과**<br>
 > ✅ RN 의존성에 **SQLite, 파일 시스템, 클립보드 모듈 없음**<br>
-> ✅ 모든 데이터 호출과 이벤트 전달이 **같은 Codegen 스펙을 거치는 구조**
+> ✅ 모든 데이터 호출과 이벤트 전달이 **같은 Codegen 인터페이스를 거치는 구조**
 
 ```ts
 export interface Spec extends TurboModule {

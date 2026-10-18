@@ -1,7 +1,4 @@
-import {
-  subscribeClipboardSaveRequests,
-  subscribeSearchVisibility,
-} from 'plyst-bridge';
+import { subscribeClipboardSaveRequests } from 'plyst-bridge';
 import type { ScreenScope } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
 import { copyClipDetail } from '../../Service/Clip/copyDetail';
@@ -27,10 +24,6 @@ export function startHomeListeners(scope: ScreenScope<HomeState>) {
     );
     scope.onDispose(() => saves.remove());
     startClipReload(scope);
-    const visibility = subscribeSearchVisibility((isVisible) => {
-      scope.dispatch({ type: 'searchVisibilityChanged', isVisible });
-    });
-    scope.onDispose(() => visibility.remove());
   });
   scope.listen(actions.saveCurrentClipboard, async () => {
     if (scope.getState().isSaving) return;
