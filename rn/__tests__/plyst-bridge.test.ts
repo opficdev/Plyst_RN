@@ -1,6 +1,5 @@
 import {
   subscribeClipboardSaveRequests,
-  closeScreen,
   copyClip,
   saveCurrentClipboard,
   deleteClip,
@@ -9,15 +8,12 @@ import {
   getClipImagePreview,
   getClipThumbnail,
   saveClipImageToPhotos,
-  setSaveEnabled,
   subscribeClipChanges,
-  subscribeSave,
   updateClip,
 } from 'plyst-bridge';
 import type { ClipRecord } from 'plyst-bridge';
 
 import NativePlystHome from '../modules/plyst-bridge/src/NativePlystHome';
-import NativePlystScreen from '../modules/plyst-bridge/src/NativePlystScreen';
 import NativePlystClip from '../modules/plyst-bridge/src/NativePlystClip';
 
 jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
@@ -34,16 +30,6 @@ jest.mock('../modules/plyst-bridge/src/NativePlystClip', () => ({
     deleteClip: jest.fn(),
     copyClip: jest.fn(),
     saveCurrentClipboard: jest.fn(),
-  },
-}));
-
-jest.mock('../modules/plyst-bridge/src/NativePlystScreen', () => ({
-  __esModule: true,
-  default: {
-    close: jest.fn(),
-    setSaveEnabled: jest.fn(),
-    onSave: jest.fn(),
-    ready: jest.fn(),
   },
 }));
 
@@ -153,12 +139,6 @@ test.each([
   await expect(getClip('id')).rejects.toBe(error);
 });
 
-test('화면 닫기를 네이티브 모듈에 전달한다', () => {
-  closeScreen();
-  expect(NativePlystScreen.close).toHaveBeenCalledTimes(1);
-  expect(NativePlystScreen.close).toHaveBeenCalledWith();
-});
-
 test('갱신 인자를 그대로 전달하고 저장된 클립을 반환한다', async () => {
   const record: ClipRecord = {
     id: 'clip-id',
@@ -263,36 +243,6 @@ test('클립 변경을 구독한 뒤 준비를 알리고 구독 객체를 반환
     [{ kind: 'updated', id: 'clip-id' }],
     [{ kind: 'deleted', id: 'clip-id' }],
   ]);
-});
-
-test.each([true, false])('저장 버튼 활성 여부 %s를 전달한다', (isEnabled) => {
-  setSaveEnabled(isEnabled);
-
-  expect(NativePlystScreen.setSaveEnabled).toHaveBeenCalledWith(isEnabled);
-  expect(NativePlystScreen.setSaveEnabled).toHaveBeenCalledTimes(1);
-});
-
-test('저장 탭을 구독한 뒤 준비를 알리고 구독 객체를 반환한다', () => {
-  const screen = jest.mocked(NativePlystScreen);
-  const listener = jest.fn();
-  const subscription = { remove: jest.fn() } as unknown as ReturnType<
-    typeof NativePlystScreen.onSave
-  >;
-  screen.onSave.mockImplementation((callback) => {
-    expect(screen.ready).not.toHaveBeenCalled();
-    callback();
-    return subscription;
-  });
-  screen.ready.mockImplementation(() => {
-    expect(screen.onSave).toHaveReturnedWith(subscription);
-  });
-
-  expect(subscribeSave(listener)).toBe(subscription);
-  expect(screen.onSave).toHaveBeenCalledWith(listener);
-  expect(screen.onSave).toHaveBeenCalledTimes(1);
-  expect(screen.ready).toHaveBeenCalledTimes(1);
-  expect(listener).toHaveBeenCalledWith();
-  expect(listener).toHaveBeenCalledTimes(1);
 });
 
 test.each(['file:///images/preview', null])(

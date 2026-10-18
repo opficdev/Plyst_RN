@@ -1,5 +1,4 @@
 import NativePlystHome from './NativePlystHome';
-import NativePlystScreen from './NativePlystScreen';
 import NativePlystClip from './NativePlystClip';
 import type { ClipRecord } from './NativePlystClip';
 
@@ -91,20 +90,6 @@ export function deleteClip(id: string): Promise<void> {
 }
 
 export { default as PlystDetailBarButton } from './PlystDetailBarButtonNativeComponent';
-
-export function closeScreen(): void {
-  NativePlystScreen.close();
-}
-
-export function setSaveEnabled(isEnabled: boolean): void {
-  NativePlystScreen.setSaveEnabled(isEnabled);
-}
-
-export function subscribeSave(listener: () => void) {
-  const subscription = NativePlystScreen.onSave(listener);
-  NativePlystScreen.ready();
-  return subscription;
-}
 
 export function subscribeClipboardSaveRequests(listener: () => void) {
   const subscription = NativePlystHome.onClipboardSaveRequest(listener);
