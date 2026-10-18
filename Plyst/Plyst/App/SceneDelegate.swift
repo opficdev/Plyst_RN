@@ -18,7 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
     private var toastHostWindow: ToastHostWindow?
-    private var composition: HomeSceneComposition?
+    private var composition: SceneComposition?
     private var isClipboardSaveRequested = false
     #if DEBUG
     private var isReactNativeDebugRequested = false
@@ -107,11 +107,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func configureRoot(in window: UIWindow) {
         do {
-            let composition = try HomeSceneComposition()
-            let root = composition.makeRootViewController { [weak self, weak window] in
-                guard let self, let window else { return }
+            let composition = try SceneComposition()
+            guard let root = composition.makeRootViewController() else {
                 Self.logger.error("기록 화면 React Native 루트 생성 실패")
-                self.showStartupFailure(in: window)
+                showStartupFailure(in: window)
+                return
             }
             self.composition = composition
             ClipBridge.register(ClipBridgeAdapter(

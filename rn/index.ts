@@ -1,21 +1,13 @@
 import { AppRegistry } from 'react-native';
 
 import App from './App';
-import { SearchView } from './src/Feature/Search/View';
-import { HomeView } from './src/Feature/Home/View';
+import { AppRoot } from './src/App/Root';
 import { ToastHost } from './src/Shared/UI';
-import { ImageDetailView } from './src/Feature/ImageDetail/View';
-import { TextDetailView } from './src/Feature/TextDetail/View';
 
-// PlystRN 이름은 Swift의 ReactNativeViewController moduleName과 공유하는 계약
+// PlystRN 이름은 Swift의 ReactNativeViewController moduleName과 공유하는 이름
 AppRegistry.registerComponent('PlystRN', () => App);
-
-AppRegistry.registerComponent('TextDetailView', () => TextDetailView);
 
 AppRegistry.registerComponent('ToastHost', () => ToastHost);
 
-AppRegistry.registerComponent('ImageDetailView', () => ImageDetailView);
-
-AppRegistry.registerComponent('HomeView', () => HomeView);
-
-AppRegistry.registerComponent('SearchView', () => SearchView);
+// AppRoot 이름은 SceneComposition이 ReactNativeBrownfield.shared.view에 넘기는 moduleName과 같다
+AppRegistry.registerComponent('AppRoot', () => AppRoot);

@@ -1,4 +1,4 @@
-import { subscribeClipChanges, subscribeSave } from 'plyst-bridge';
+import { subscribeClipChanges } from 'plyst-bridge';
 import type { ScreenScope } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
 import { copyClipDetail } from '../../Service/Clip/copyDetail';
@@ -15,7 +15,6 @@ export function startTextDetailListeners(
   clipID: string,
 ) {
   let started = false;
-  let saveSubscribed = false;
   const current = () => {
     const state = scope.getState();
     return state !== null && state !== 'closed' ? state : null;
@@ -34,13 +33,6 @@ export function startTextDetailListeners(
       if (isStopped()) return;
       if (result.status === 'loaded') {
         scope.dispatch({ type: 'clipLoaded', clip: result.clip });
-        if (!saveSubscribed) {
-          saveSubscribed = true;
-          const subscription = subscribeSave(() =>
-            scope.dispatch(actions.save()),
-          );
-          scope.onDispose(() => subscription.remove());
-        }
       } else if (result.status === 'missing') {
         scope.dispatch({ type: 'removed' });
       } else {

@@ -27,8 +27,7 @@ import {
 } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
-import { closeSearch, openClip } from 'plyst-bridge';
-import type { ClipRecord } from '../../Model/clipRecord';
+import type { ClipKind, ClipRecord } from '../../Model/clipRecord';
 import {
   ClipImageCard,
   ClipTextCard,
@@ -77,15 +76,22 @@ const chips = clipFilters.map((key) => ({
   title: clipFilterTitles[key],
 }));
 
-export function SearchView() {
+export type SearchViewProps = {
+  navigation: {
+    openClip: (id: string, kind: ClipKind) => void;
+    closeSearch: () => void;
+  };
+};
+
+export function SearchView(props: SearchViewProps) {
   return (
     <SafeAreaProvider style={styles.root}>
-      <SearchRoot />
+      <SearchRoot {...props} />
     </SafeAreaProvider>
   );
 }
 
-function SearchRoot() {
+function SearchRoot(props: SearchViewProps) {
   const [index] = useState(createSearchIndex);
   const [times] = useState(createSearchTimeTexts);
   const [screen] = useState(() => createSearchStore(index.cancelPrebuild));
@@ -98,7 +104,7 @@ function SearchRoot() {
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <SearchScreen index={index} times={times} />
+      <SearchScreen index={index} times={times} {...props} />
     </ScreenProvider>
   );
 }
@@ -106,7 +112,8 @@ function SearchRoot() {
 function SearchScreen({
   index,
   times,
-}: {
+  navigation,
+}: SearchViewProps & {
   index: ReturnType<typeof createSearchIndex>;
   times: ReturnType<typeof createSearchTimeTexts>;
 }) {
@@ -189,7 +196,7 @@ function SearchScreen({
       useNativeDriver: false,
     });
     animation.current.start(({ finished }) => {
-      if (finished && isMounted.current) closeSearch();
+      if (finished && isMounted.current) navigation.closeSearch();
     });
   }
 
@@ -259,7 +266,7 @@ function SearchScreen({
       <ClipGridCard
         onPress={() => {
           Keyboard.dismiss();
-          openClip(item.clip.id, values.kind);
+          navigation.openClip(item.clip.id, values.kind);
         }}
       >
         {values.kind === 'text' ? (

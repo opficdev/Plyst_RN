@@ -1,5 +1,5 @@
 //
-//  HomeSceneComposition.swift
+//  SceneComposition.swift
 //  Plyst
 //
 //  Created by opfic on 9/30/26.
@@ -7,13 +7,14 @@
 
 import OSLog
 import PlystBridge
+import ReactBrownfield
 import UIKit
 
 @MainActor
-final class HomeSceneComposition {
+final class SceneComposition {
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "opfic.Plyst",
-        category: String(describing: HomeSceneComposition.self)
+        category: String(describing: SceneComposition.self)
     )
 
     let storage: SQLiteClipStorageService
@@ -70,26 +71,25 @@ final class HomeSceneComposition {
         }
     }
 
-    func makeRootViewController(
-        onRootViewUnavailable: @escaping @MainActor () -> Void
-    ) -> UIViewController {
-        return HomeViewController(
-            makeDetailViewController: { Self.makeDetailViewController(id: $0, kind: $1) },
-            onRootViewUnavailable: onRootViewUnavailable
-        )
-    }
-
-    private static func makeDetailViewController(
-        id: Clip.ID,
-        kind: HomeBridgeClipKind
-    ) -> UIViewController {
-        // 브리지는 텍스트와 이미지 종류만 전달하며 그 밖의 종류는 텍스트 상세로 표시합니다.
-        let isImage = kind == .image
-        return ClipDetailViewController(
-            clipID: id,
-            moduleName: isImage ? "ImageDetailView" : "TextDetailView",
-            title: isImage ? "이미지" : "텍스트"
-        )
+    /// React Native 앱 루트 하나를 담은 창의 루트 뷰 컨트롤러를 만듭니다. 화면 전환은 RN이 소유합니다.
+    /// RN 뷰를 만들지 못하면 nil이며 호출한 쪽이 시작 실패 화면으로 전환합니다.
+    func makeRootViewController() -> UIViewController? {
+        guard let content = ReactNativeBrownfield.shared.view(
+            moduleName: "AppRoot",
+            initialProps: nil,
+            launchOptions: nil
+        ) else { return nil }
+        let root = UIViewController()
+        root.view.backgroundColor = UIColor(resource: .homeCanvas)
+        root.view.addSubview(content)
+        content.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: root.view.topAnchor),
+            content.leadingAnchor.constraint(equalTo: root.view.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: root.view.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: root.view.bottomAnchor)
+        ])
+        return root
     }
 
     /// RN 기록 화면의 저장 버튼과 같은 경로로 현재 클립보드 저장을 요청합니다.

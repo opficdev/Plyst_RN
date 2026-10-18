@@ -6,8 +6,7 @@ import {
 } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
-import { openClip, openSearch } from 'plyst-bridge';
-import type { ClipRecord } from '../../Model/clipRecord';
+import type { ClipKind, ClipRecord } from '../../Model/clipRecord';
 import {
   ActionSheet,
   HomeSaveBar,
@@ -49,15 +48,24 @@ const chips = clipFilters.map((key) => ({
   key,
   title: clipFilterTitles[key],
 }));
-export function HomeView() {
+export type HomeViewProps = {
+  // 검색 오버레이가 열려 있으면 true이며 Home은 시간 갱신과 맨 위로 스크롤을 멈춥니다.
+  isSearchVisible: boolean;
+  navigation: {
+    openClip: (id: string, kind: ClipKind) => void;
+    openSearch: () => void;
+  };
+};
+
+export function HomeView(props: HomeViewProps) {
   return (
     <SafeAreaProvider style={styles.canvas}>
-      <HomeRoot />
+      <HomeRoot {...props} />
     </SafeAreaProvider>
   );
 }
 
-function HomeRoot() {
+function HomeRoot(props: HomeViewProps) {
   const [screen] = useState(createHomeStore);
   useLayoutEffect(() => {
     screen.start();
@@ -68,12 +76,16 @@ function HomeRoot() {
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <HomeContent getState={screen.store.getState} />
+      <HomeContent getState={screen.store.getState} {...props} />
     </ScreenProvider>
   );
 }
 
-function HomeContent({ getState }: { getState: () => HomeState }) {
+function HomeContent({
+  getState,
+  isSearchVisible,
+  navigation,
+}: HomeViewProps & { getState: () => HomeState }) {
   const insets = useSafeAreaInsets();
   const state = useScreenState<HomeState>();
   const dispatch = useScreenDispatch();
@@ -81,7 +93,7 @@ function HomeContent({ getState }: { getState: () => HomeState }) {
   function selectClip(clip: ClipRecord) {
     const current = getState();
     if (current.isMenuVisible || current.isDeleteConfirmVisible) return;
-    openClip(clip.id, clip.image === null ? 'text' : 'image');
+    navigation.openClip(clip.id, clip.image === null ? 'text' : 'image');
   }
   function showMenu(clip: ClipRecord) {
     const current = getState();
@@ -108,7 +120,7 @@ function HomeContent({ getState }: { getState: () => HomeState }) {
     () => state.clips.map((clip) => clip.createdAt),
     [state.clips],
   );
-  const now = useClipTimeline(dates, !state.isSearchVisible);
+  const now = useClipTimeline(dates, !isSearchVisible);
   useEffect(() => {
     dispatch({ type: 'timeChanged', now });
   }, [dispatch, now]);
@@ -262,7 +274,7 @@ function HomeContent({ getState }: { getState: () => HomeState }) {
           }}
           scrollEnabled={0 < geometry.sectionCount}
           showsVerticalScrollIndicator={0 < geometry.sectionCount}
-          scrollsToTop={!state.isSearchVisible}
+          scrollsToTop={!isSearchVisible}
           alwaysBounceVertical
           scrollIndicatorInsets={{
             top: header.indicatorTop,
@@ -307,8 +319,8 @@ function HomeContent({ getState }: { getState: () => HomeState }) {
           ]}
         >
           <HomeTitleHeader
-            onSearchButtonPress={openSearch}
-            isSearchButtonDisabled={state.isSearchVisible}
+            onSearchButtonPress={navigation.openSearch}
+            isSearchButtonDisabled={isSearchVisible}
           />
           <View style={styles.filters}>
             <HomeFilterBar

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -7,11 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-import { closeScreen, setSaveEnabled } from 'plyst-bridge';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionSheet } from '../../Shared/UI';
 import {
   ClipDetailActionBar,
@@ -19,6 +15,7 @@ import {
 } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
+import { ClipDetailSheet } from '../ClipDetail/Sheet';
 import { canSave } from './draft';
 import type { TextDetailState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
@@ -32,17 +29,19 @@ import { createTextDetailStore } from './store';
 import type { TextDetailStoreState } from './store';
 import { textDetailActions as actions } from './actions';
 
-type TextDetailViewProps = { clipID: string };
+type TextDetailViewProps = {
+  clipID: string;
+  navigation: { closeClip: () => void };
+};
 
-export function TextDetailView({ clipID }: TextDetailViewProps) {
+// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 Modal 안에서만 그립니다.
+export function TextDetailView({ clipID, navigation }: TextDetailViewProps) {
   return (
-    <SafeAreaProvider style={styles.canvas}>
-      <TextDetailRoot key={clipID} clipID={clipID} />
-    </SafeAreaProvider>
+    <TextDetailRoot key={clipID} clipID={clipID} navigation={navigation} />
   );
 }
 
-function TextDetailRoot({ clipID }: TextDetailViewProps) {
+function TextDetailRoot({ clipID, navigation }: TextDetailViewProps) {
   const [screen] = useState(() => createTextDetailStore(clipID));
   useLayoutEffect(() => {
     screen.start();
@@ -53,23 +52,31 @@ function TextDetailRoot({ clipID }: TextDetailViewProps) {
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <TextDetailContent />
+      <TextDetailContent closeClip={navigation.closeClip} />
     </ScreenProvider>
   );
 }
 
-function TextDetailContent() {
+function TextDetailContent({ closeClip }: { closeClip: () => void }) {
   const state = useScreenState<TextDetailStoreState>();
-  const didClose = useRef(false);
+  const dispatch = useScreenDispatch();
   const isClosed = state === 'closed' || !!(state?.isRemoved || state?.isSaved);
-  useEffect(() => {
-    if (didClose.current || !isClosed) return;
-    didClose.current = true;
-    closeScreen();
-  }, [isClosed]);
-  if (state === 'closed') return null;
-  if (state === null) return <View style={styles.canvas} />;
-  return <TextDetailEditor state={state} />;
+  const isLoaded = state !== null && state !== 'closed';
+  return (
+    <ClipDetailSheet
+      title="텍스트"
+      isSaveEnabled={isLoaded && canSave(state)}
+      isClosed={isClosed}
+      onSaveButtonPress={() => dispatch(actions.save())}
+      onDismiss={closeClip}
+    >
+      {isLoaded ? (
+        <TextDetailEditor state={state} />
+      ) : (
+        <View style={styles.canvas} />
+      )}
+    </ClipDetailSheet>
+  );
 }
 
 function TextDetailEditor({ state }: { state: TextDetailState }) {
@@ -84,11 +91,6 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
     revealMemo,
     scrollProps,
   } = useScrollFieldIntoView();
-  const isSaveEnabled = canSave(state);
-
-  useEffect(() => {
-    setSaveEnabled(isSaveEnabled);
-  }, [isSaveEnabled]);
 
   function showDeleteSheet() {
     if (state.isDeleting || state.isRemoved || state.isDeleteSheetOpen) return;

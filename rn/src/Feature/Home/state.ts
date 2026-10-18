@@ -15,7 +15,6 @@ export type HomeState = ClipThumbnails & {
   clips: ClipRecord[];
   now: number;
   filter: ClipFilter;
-  isSearchVisible: boolean;
   isSaving: boolean;
   menuClip: ClipRecord | null;
   isMenuVisible: boolean;
@@ -31,7 +30,6 @@ export function initialState(now: number): HomeState {
     thumbnailOrder: [],
     loadingThumbnails: {},
     failedThumbnails: {},
-    isSearchVisible: false,
     isSaving: false,
     menuClip: null,
     isMenuVisible: false,
@@ -49,8 +47,7 @@ export type HomeAction =
   | { type: 'loadFailed' }
   | { type: 'timeChanged'; now: number }
   | { type: 'filterSelected'; filter: ClipFilter }
-  | ClipThumbnailAction
-  | { type: 'searchVisibilityChanged'; isVisible: boolean };
+  | ClipThumbnailAction;
 
 export function reduce(state: HomeState, action: HomeAction): HomeState {
   if (
@@ -109,9 +106,6 @@ export function reduce(state: HomeState, action: HomeAction): HomeState {
     case 'thumbnailFailed':
     case 'thumbnailCancelled':
       Object.assign(next, reduceClipThumbnails(next, action, next.clips));
-      break;
-    case 'searchVisibilityChanged':
-      next.isSearchVisible = action.isVisible;
       break;
   }
   return next;

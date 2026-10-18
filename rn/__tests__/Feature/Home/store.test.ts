@@ -1,7 +1,6 @@
 import {
   subscribeClipChanges,
   subscribeClipboardSaveRequests,
-  subscribeSearchVisibility,
 } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createHomeStore } from '../../../src/Feature/Home/store';
@@ -14,7 +13,6 @@ import { showToast } from '../../../src/Shared/UI';
 jest.mock('plyst-bridge', () => ({
   subscribeClipChanges: jest.fn(),
   subscribeClipboardSaveRequests: jest.fn(),
-  subscribeSearchVisibility: jest.fn(),
 }));
 jest.mock('../../../src/Shared/UI', () => ({ showToast: jest.fn() }));
 jest.mock('../../../src/Service/Clip/load');
@@ -57,18 +55,13 @@ beforeEach(() => {
     .mockReturnValue({ remove } as unknown as ReturnType<
       typeof subscribeClipChanges
     >);
-  jest
-    .mocked(subscribeSearchVisibility)
-    .mockReturnValue({ remove } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
   jest.mocked(loadClips).mockResolvedValue({ status: 'loaded', clips: [clip] });
   jest
     .mocked(saveHomeClipboard)
     .mockResolvedValue({ message: '저장했습니다', isSuccess: true });
 });
 
-test('보관된 저장 요청을 ready 중 전달해도 한 번 처리하고 구독 순서를 지킨다', async () => {
+test('보관된 저장 요청을 ready 중 전달해도 한 번 처리한다', async () => {
   jest.mocked(subscribeClipboardSaveRequests).mockImplementation((listener) => {
     listener();
     return { remove } as unknown as ReturnType<typeof subscribeClipChanges>;
@@ -79,13 +72,8 @@ test('보관된 저장 요청을 ready 중 전달해도 한 번 처리하고 구
   screen.store.dispatch(actions.viewDidLoad());
   await settle();
   expect(saveHomeClipboard).toHaveBeenCalledTimes(1);
-  expect(
-    jest.mocked(subscribeClipboardSaveRequests).mock.invocationCallOrder[0],
-  ).toBeLessThan(
-    jest.mocked(subscribeSearchVisibility).mock.invocationCallOrder[0],
-  );
   screen.dispose();
-  expect(remove).toHaveBeenCalledTimes(3);
+  expect(remove).toHaveBeenCalledTimes(2);
 });
 
 test('구독 중 이벤트와 조회 중 여러 변경을 다음 조회 하나로 합친다', async () => {
