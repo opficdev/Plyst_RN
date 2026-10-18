@@ -14,9 +14,9 @@ final class ClipDetailViewController: UIViewController, ScreenBridgeCloser {
     private let clipID: Clip.ID
     private let moduleName: String
     private let topBar = UIView()
-    private let closeButton = DetailBarButton(style: .icon("xmark"))
+    private let closeButton = DetailBarButton(icon: "xmark")
     private let titleLabel = UILabel()
-    private let saveButton = DetailBarButton(style: .title("저장"))
+    private let saveButton = DetailBarButton(title: "저장")
     private var contentView: UIView?
     private var didClose = false
 
