@@ -16,9 +16,7 @@ RCT_EXPORT_MODULE(PlystHome);
   self = [super init];
   if (self) {
     __weak PlystHomeModule *weakSelf = self;
-    _implementation = [[HomeBridgeModuleImpl alloc] initWithEmit:^(BOOL isVisible) {
-      [weakSelf emitOnSearchVisibilityChange:@{@"isVisible": @(isVisible)}];
-    } requestSave:^{
+    _implementation = [[HomeBridgeModuleImpl alloc] initWithRequestSave:^{
       [weakSelf emitOnClipboardSaveRequest];
     }];
   }
@@ -27,18 +25,6 @@ RCT_EXPORT_MODULE(PlystHome);
 
 + (BOOL)requiresMainQueueSetup {
   return NO;
-}
-
-RCT_EXPORT_METHOD(openClip:(NSString *)identifier kind:(NSString *)kind) {
-  [_implementation openClip:identifier kind:kind];
-}
-
-RCT_EXPORT_METHOD(openSearch) {
-  [_implementation openSearch];
-}
-
-RCT_EXPORT_METHOD(closeSearch) {
-  [_implementation closeSearch];
 }
 
 RCT_EXPORT_METHOD(ready) {

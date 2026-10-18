@@ -106,30 +106,8 @@ export function subscribeSave(listener: () => void) {
   return subscription;
 }
 
-export function openClip(id: string, kind: 'text' | 'image'): void {
-  NativePlystHome.openClip(id, kind);
-}
-
-export function openSearch(): void {
-  NativePlystHome.openSearch();
-}
-
-export function closeSearch(): void {
-  NativePlystHome.closeSearch();
-}
-
 export function subscribeClipboardSaveRequests(listener: () => void) {
   const subscription = NativePlystHome.onClipboardSaveRequest(listener);
-  NativePlystHome.ready();
-  return subscription;
-}
-
-export function subscribeSearchVisibility(
-  listener: (isVisible: boolean) => void,
-) {
-  const subscription = NativePlystHome.onSearchVisibilityChange((change) => {
-    listener(change.isVisible);
-  });
   NativePlystHome.ready();
   return subscription;
 }
