@@ -9,8 +9,27 @@ script_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repository_root=$(CDPATH= cd "$script_directory/.." && pwd)
 configuration=${RN_CONFIGURATION:-Release}
 
+script_started=$(date +%s)
+stage_name=
+stage_started=$script_started
+
+# 단계별 소요 시간을 초 단위로 출력합니다.
+stage_begin() {
+	stage_name=$1
+	stage_started=$(date +%s)
+}
+
+stage_end() {
+	printf '[rn-xcframework] stage=%s status=done seconds=%s\n' \
+		"$stage_name" "$(($(date +%s) - stage_started))"
+}
+
 cd "$repository_root/rn"
+stage_begin npm-ci
 npm ci
+stage_end
+
+stage_begin prebuild
 npx expo prebuild --platform ios --clean
 
 node_binary=$(command -v node 2>/dev/null || :)
@@ -30,7 +49,11 @@ case "$node_binary" in
 esac
 
 printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
+stage_end
+
+stage_begin package-ios
 npx brownfield package:ios --scheme BrownfieldLib --configuration "$configuration"
+stage_end
 
 build_directory=$repository_root/rn/ios/.brownfield/package/build
 set -- "$build_directory"/*.xcframework
@@ -39,6 +62,7 @@ if ! [ -d "$1" ]; then
 	exit 1
 fi
 
+stage_begin bridge-xcframework
 # PlystBridge pod는 BrownfieldLib에 정적으로 링크되어 심볼도 BrownfieldLib에서 제공합니다.
 # 중복 링크를 피하면서 import할 수 있도록 모듈과 헤더만 담고 빈 정적 라이브러리를 사용합니다.
 bridge_directory=$(mktemp -d)
@@ -138,7 +162,9 @@ xcodebuild -create-xcframework \
 	-framework "$bridge_directory/iphoneos/PlystBridge.framework" \
 	-framework "$bridge_directory/iphonesimulator/PlystBridge.framework" \
 	-output "$build_directory/PlystBridge.xcframework"
+stage_end
 
+stage_begin install-frameworks
 destination=$repository_root/Plyst/Packages/PlystReactNative/Frameworks
 mkdir -p "$destination"
 rsync -aL --delete --delete-excluded \
@@ -171,6 +197,9 @@ done
 
 find "$destination" -type d -path '*/ios-*/*.framework' ! -path '*maccatalyst*' \
 	-exec codesign --force --sign - --timestamp=none {} +
+stage_end
+
+stage_begin verify
 
 if [ "$configuration" = Release ]; then
 	brownfield_xcframework=$destination/BrownfieldLib.xcframework
@@ -214,3 +243,5 @@ if ! cmp -s "$expected_frameworks_file" "$actual_frameworks_file"; then
 fi
 
 printf '%s\n' "$configuration" > "$destination/.configuration"
+stage_end
+printf '[rn-xcframework] path=full total=%s\n' "$(($(date +%s) - script_started))"
