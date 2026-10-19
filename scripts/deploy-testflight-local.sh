@@ -72,7 +72,8 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-make -C "$repository_root" rn-xcframework RN_CONFIGURATION=Release
+# 배포 빌드는 입력 해시와 관계없이 처음부터 만듭니다.
+RN_XCFRAMEWORK_CLEAN=1 make -C "$repository_root" rn-xcframework RN_CONFIGURATION=Release
 
 project_backup=$(mktemp)
 cp "$project_file" "$project_backup"

@@ -88,12 +88,16 @@ jobs:
         id: xcode
         run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
 
+      - name: Hash XCFramework inputs
+        id: input-hash
+        run: echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
+
       - name: Cache XCFrameworks
         id: xcframework-cache
         uses: actions/cache@v4
         with:
           path: Plyst/Packages/PlystReactNative/Frameworks
-          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('rn/package.json', 'rn/package-lock.json', 'rn/app.json', 'rn/tsconfig.json', 'rn/modules/**', 'rn/index.ts', 'rn/App.tsx', 'rn/src/**', 'scripts/build-rn-xcframework.sh', 'Plyst/Packages/PlystReactNative/Package.swift', '.mise.toml') }}
+          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ steps.input-hash.outputs.hash }}
 
       - name: Build XCFrameworks
         if: steps.xcframework-cache.outputs.cache-hit != 'true'

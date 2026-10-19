@@ -89,6 +89,7 @@ make testflight
 2. `bundle check`로 Ruby gem 설치 여부 확인
 3. `make rn-xcframework RN_CONFIGURATION=Release`로 Release XCFramework 생성
 	- `scripts/build-rn-xcframework.sh`가 프레임워크 `Info.plist` 키를 보충한 뒤 서명
+	- 배포 스크립트는 `RN_XCFRAMEWORK_CLEAN=1`을 지정해 입력 해시와 관계없이 처음부터 빌드하고 컴파일 캐시를 쓰지 않음
 4. `project.pbxproj` 백업
 5. `ASC_KEY_CONTENT`를 `fastlane/AuthKey.p8`로 복원
 6. `bundle exec fastlane`으로 레인 실행
@@ -141,11 +142,28 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`)이 하는 일
 | ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK(`SDWebImage`)가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
 | ITMS-90208 (처리 단계 거부) | `ReactBrownfield`와 `PlystBridge` 스텁의 최소 버전과 `Info.plist`의 `MinimumOSVersion`이 다름 | 스크립트가 앱의 `IPHONEOS_DEPLOYMENT_TARGET`으로 맞춤 |
 
+## 로컬 XCFramework 빌드
+
+`make rn-xcframework`는 입력에 따라 실행 경로를 고름
+
+- 입력 해시는 `scripts/rn-xcframework-inputs.sh`가 계산하고 CI 캐시 키도 같은 값을 씀
+	- `Plyst/Plyst/**` 같은 앱 소스는 입력이 아니므로 바뀌어도 다시 빌드하지 않음
+- 실행 경로는 마지막에 출력되는 `path=` 값으로 확인
+	- `skip`: 입력 해시가 지난 성공 빌드와 같아 아무것도 하지 않음
+	- `js`: JS 입력만 바뀌어 `main.jsbundle`만 다시 만들어 교체하고 다시 서명함
+	- `full`: 그 밖의 경우로 `rn/ios`를 다시 만들고 두 slice를 빌드함
+- `RN_XCFRAMEWORK_CLEAN=1`을 주면 항상 `full`로 실행하고 `npm ci`도 다시 실행함
+- 로컬 `full` 빌드는 컴파일 결과를 `~/Library/Caches/Plyst/RNCompilationCache`에 캐시함
+	- 위치는 `RN_COMPILATION_CACHE`로 바꿀 수 있음
+	- `CI`가 설정되어 있거나 `RN_XCFRAMEWORK_CLEAN=1`이면 캐시를 쓰지 않음
+- 단계별 소요 시간은 `[rn-xcframework] stage=...` 줄로 출력됨
+
 ## 관련 파일
 
 - `Makefile`: `testflight-build`, `testflight` 타깃
 - `scripts/deploy-testflight-local.sh`: 로컬 실행 스크립트
 - `scripts/build-rn-xcframework.sh`: Release XCFramework 생성과 `Info.plist` 보충
+- `scripts/rn-xcframework-inputs.sh`: XCFramework 빌드 입력 해시 계산
 - `fastlane/Fastfile`: 빌드와 업로드 레인
 - `fastlane/secrets.example.json`: 시크릿 파일 양식
 - `.github/workflows/testflight.yml`: CI 배포 워크플로
