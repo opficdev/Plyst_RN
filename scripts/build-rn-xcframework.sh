@@ -184,8 +184,14 @@ if [ "$path" = full ]; then
 	printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
 	stage_end
 
+	# 로컬 빌드는 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않습니다.
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않습니다.
 	stage_begin package-ios
 	set -- --scheme BrownfieldLib --configuration "$configuration"
+	if [ -z "${CI:-}" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+		cache_directory=${RN_COMPILATION_CACHE:-$HOME/Library/Caches/Plyst/RNCompilationCache}
+		set -- "$@" --extra-params "COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
+	fi
 	npx brownfield package:ios "$@"
 	stage_end
 else
