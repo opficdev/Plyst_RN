@@ -1,6 +1,8 @@
 import { subscribeClipChanges } from 'plyst-bridge';
 import { loadClips } from '../../Service/Clip/load';
-import { clipGridActions as actions } from './actions';
+import type { ClipGridActions } from './reducers';
+
+type ReloadActions = Pick<ClipGridActions, 'clipsLoaded' | 'loadFailed'>;
 
 // 변경 구독을 시작하고 구독을 끊는 정리 함수를 돌려줍니다.
 export function startClipReload(
@@ -8,10 +10,11 @@ export function startClipReload(
     signal: AbortSignal;
     dispatch: (
       action:
-        | ReturnType<typeof actions.clipsLoaded>
-        | ReturnType<typeof actions.loadFailed>,
+        | ReturnType<ReloadActions['clipsLoaded']>
+        | ReturnType<ReloadActions['loadFailed']>,
     ) => unknown;
   },
+  actions: ReloadActions,
   onReload?: () => void,
 ) {
   let subscribed = false;

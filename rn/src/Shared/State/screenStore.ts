@@ -4,7 +4,7 @@ import {
   Tuple,
 } from '@reduxjs/toolkit';
 import type {
-  ActionReducerMapBuilder,
+  CaseReducerActions,
   Dispatch,
   PayloadAction,
   Reducer,
@@ -13,7 +13,8 @@ import type {
 import { useDispatch, useSelector } from 'react-redux';
 
 export { createAction, createSlice, original } from '@reduxjs/toolkit';
-export type { ActionReducerMapBuilder, PayloadAction };
+export type { CaseReducerActions, PayloadAction };
+export type SliceDispatch = Dispatch;
 export { Provider as ScreenProvider } from 'react-redux';
 
 export type SliceListen<State> = TypedStartListening<State>;

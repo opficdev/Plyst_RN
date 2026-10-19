@@ -1,7 +1,7 @@
 import type { ClipRecord } from '../../Model/clipRecord';
 import { createSlice } from '../../Shared/State/screenStore';
 import type { PayloadAction } from '../../Shared/State/screenStore';
-import { addClipGridCases, clipGridInitialState } from '../ClipGrid/reducers';
+import { clipGridInitialState, clipGridReducers } from '../ClipGrid/reducers';
 import type { ClipGridState } from '../ClipGrid/reducers';
 
 export type HomeState = ClipGridState & {
@@ -25,6 +25,7 @@ export const homeSlice = createSlice({
   name: 'home',
   initialState: (): HomeState => initialHomeState(Date.now()),
   reducers: {
+    ...clipGridReducers,
     viewDidLoad() {},
     setPinned() {},
     delete() {},
@@ -54,7 +55,6 @@ export const homeSlice = createSlice({
       state.isDeleteConfirmVisible = false;
     },
   },
-  extraReducers: (builder) => addClipGridCases(builder),
 });
 
 export const homeActions = homeSlice.actions;

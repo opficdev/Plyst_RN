@@ -35,7 +35,6 @@ import type { HomeListItem } from './listItems';
 import { homeActions as actions } from './state';
 import type { HomeState } from './state';
 import { createHomeStore } from './store';
-import { clipGridActions } from '../ClipGrid/actions';
 import {
   ScreenProvider,
   useScreenState,
@@ -123,7 +122,7 @@ function HomeContent({
   );
   const now = useClipTimeline(dates, !isSearchVisible);
   useEffect(() => {
-    dispatch(clipGridActions.timeChanged(now));
+    dispatch(actions.timeChanged(now));
   }, [dispatch, now]);
   const content = useMemo(
     () => makeHomeContent(state.clips, state.filter, state.now),
@@ -170,6 +169,7 @@ function HomeContent({
   const thumbnails = useClipThumbnails<HomeListItem>(
     state,
     dispatch,
+    actions,
     gridPixels,
     pinnedPixels,
     0 < size.width,
@@ -327,9 +327,7 @@ function HomeContent({
             <HomeFilterBar
               chips={chips}
               selectedKey={state.filter}
-              onSelect={(filter) =>
-                dispatch(clipGridActions.filterSelected(filter))
-              }
+              onSelect={(filter) => dispatch(actions.filterSelected(filter))}
             />
           </View>
         </Animated.View>

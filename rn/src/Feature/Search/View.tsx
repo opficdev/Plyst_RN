@@ -57,7 +57,6 @@ import { createSearchIndex } from './match';
 import type { SearchState } from './state';
 import { createSearchStore } from './store';
 import { searchActions as actions } from './state';
-import { clipGridActions } from '../ClipGrid/actions';
 import {
   ScreenProvider,
   useScreenState,
@@ -138,7 +137,7 @@ function SearchScreen({
   );
   const now = useClipTimeline(dates, true);
   useEffect(() => {
-    dispatch(clipGridActions.timeChanged(now));
+    dispatch(actions.timeChanged(now));
   }, [dispatch, now]);
   useEffect(() => {
     times.retain(state.clips);
@@ -242,6 +241,7 @@ function SearchScreen({
   const thumbnails = useClipThumbnails<SearchListItem>(
     state,
     dispatch,
+    actions,
     pixels,
     pixels,
     0 < listWidth && mode === 'results',
@@ -382,9 +382,7 @@ function SearchScreen({
               keyboardShouldPersistTaps="handled"
               chips={chips}
               selectedKey={state.filter}
-              onSelect={(filter) =>
-                dispatch(clipGridActions.filterSelected(filter))
-              }
+              onSelect={(filter) => dispatch(actions.filterSelected(filter))}
             />
           </View>
           <View style={styles.list}>

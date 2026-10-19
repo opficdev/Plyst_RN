@@ -1,7 +1,9 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createScreenStore } from '../../../src/Shared/State/screenStore';
-import { searchSlice } from '../../../src/Feature/Search/state';
-import { clipGridActions as actions } from '../../../src/Feature/ClipGrid/actions';
+import {
+  searchActions as actions,
+  searchSlice,
+} from '../../../src/Feature/Search/state';
 import { startClipThumbnailListener } from '../../../src/Feature/ClipGrid/thumbnailListener';
 import { loadClipThumbnail } from '../../../src/Service/Clip/loadThumbnail';
 import type { ClipThumbnailResult } from '../../../src/Service/Clip/loadThumbnail';
@@ -43,7 +45,8 @@ function setup() {
   });
   const screen = createScreenStore({
     slice: searchSlice,
-    start: startClipThumbnailListener,
+    start: (listen, dispatch) =>
+      startClipThumbnailListener(listen, dispatch, actions),
   });
   screen.start();
   screen.store.dispatch(

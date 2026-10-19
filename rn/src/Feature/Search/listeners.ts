@@ -1,5 +1,8 @@
 import { untilAborted } from '../../Shared/State/screenStore';
-import type { SliceListen } from '../../Shared/State/screenStore';
+import type {
+  SliceDispatch,
+  SliceListen,
+} from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
 import { loadSearchHistory } from '../../Service/Clip/loadSearchHistory';
 import { recordSearchHistoryTerm } from '../../Service/Clip/recordSearchHistoryTerm';
@@ -7,7 +10,6 @@ import type { SearchHistoryWriteResult } from '../../Service/Clip/recordSearchHi
 import { removeSearchHistoryTerm } from '../../Service/Clip/removeSearchHistoryTerm';
 import { clearSearchHistory } from '../../Service/Clip/clearSearchHistory';
 import { copyClipDetail } from '../../Service/Clip/copyDetail';
-import type { ClipGridAction } from '../ClipGrid/actions';
 import { startClipReload } from '../ClipGrid/reload';
 import { startClipThumbnailListener } from '../ClipGrid/thumbnailListener';
 import { createSearchHistoryQueue } from './historyQueue';
@@ -17,18 +19,13 @@ import type { SearchState } from './state';
 // 기록 큐와 썸네일 큐를 비우는 정리 함수를 돌려줍니다.
 export function startSearchListeners(
   listen: SliceListen<SearchState>,
-  dispatch: (
-    action:
-      | ClipGridAction
-      | ReturnType<typeof actions.searchHistoryLoaded>
-      | ReturnType<typeof actions.searchHistoryLoadFailed>,
-  ) => unknown,
+  dispatch: SliceDispatch,
   onReload: () => void,
 ) {
   // effect가 먼저 끝나도 큐 작업이 이어지므로 세션 단위 signal로 종료를 확인합니다.
   const session = new AbortController();
   const queue = createSearchHistoryQueue();
-  const stopThumbnails = startClipThumbnailListener(listen, dispatch);
+  const stopThumbnails = startClipThumbnailListener(listen, dispatch, actions);
   function write(
     operation: () => Promise<SearchHistoryWriteResult>,
     isSilent = false,
@@ -56,7 +53,7 @@ export function startSearchListeners(
             : actions.searchHistoryLoadFailed(),
         );
       });
-      await untilAborted(api.signal, startClipReload(api, onReload));
+      await untilAborted(api.signal, startClipReload(api, actions, onReload));
     },
   });
   listen({

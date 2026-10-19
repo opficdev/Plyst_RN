@@ -3,7 +3,7 @@ import type { Dispatch } from 'react';
 import type { ViewToken } from '@shopify/flash-list';
 import type { ClipRecord } from '../../Model/clipRecord';
 import type { ClipThumbnails } from './thumbnails';
-import { clipGridActions as actions } from './actions';
+import type { ClipGridActions } from './reducers';
 
 const viewabilityConfig = {
   viewAreaCoveragePercentThreshold: 0,
@@ -11,14 +11,19 @@ const viewabilityConfig = {
 };
 
 type ThumbnailState = ClipThumbnails & { clips: ClipRecord[] };
+type ThumbnailRequestActions = Pick<
+  ClipGridActions,
+  'thumbnailRequested' | 'thumbnailCancelRequested'
+>;
 type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
 
 export function useClipThumbnails<Item extends ThumbnailItem>(
   state: ThumbnailState,
   dispatch: Dispatch<
-    | ReturnType<typeof actions.thumbnailRequested>
-    | ReturnType<typeof actions.thumbnailCancelRequested>
+    | ReturnType<ThumbnailRequestActions['thumbnailRequested']>
+    | ReturnType<ThumbnailRequestActions['thumbnailCancelRequested']>
   >,
+  actions: ThumbnailRequestActions,
   gridPixels: number,
   pinnedPixels: number,
   isMeasured: boolean,
@@ -56,7 +61,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
       if (state.clips.some((clip) => clip.id === id && clip.image !== null))
         dispatch(actions.thumbnailRequested({ id, pixels }));
     },
-    [dispatch],
+    [actions, dispatch],
   );
 
   const updateGrid = useCallback(() => {
@@ -80,7 +85,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
       timers.current.add(timer);
     }
     visibleKeys.current = next;
-  }, [dispatch, request]);
+  }, [actions, dispatch, request]);
 
   useEffect(() => {
     updateGrid();

@@ -1,11 +1,13 @@
 import { subscribeClipboardSaveRequests } from 'plyst-bridge';
 import { untilAborted } from '../../Shared/State/screenStore';
-import type { SliceListen } from '../../Shared/State/screenStore';
+import type {
+  SliceDispatch,
+  SliceListen,
+} from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
 import { copyClipDetail } from '../../Service/Clip/copyDetail';
 import { deleteClipDetail } from '../../Service/Clip/deleteDetail';
 import { updateClipDetail } from '../../Service/Clip/updateDetail';
-import type { ClipGridAction } from '../ClipGrid/actions';
 import { startClipReload } from '../ClipGrid/reload';
 import { startClipThumbnailListener } from '../ClipGrid/thumbnailListener';
 import { saveHomeClipboard } from './saveClipboard';
@@ -16,9 +18,9 @@ import type { HomeState } from './state';
 // 썸네일 큐를 비우는 정리 함수를 돌려줍니다.
 export function startHomeListeners(
   listen: SliceListen<HomeState>,
-  dispatch: (action: ClipGridAction) => unknown,
+  dispatch: SliceDispatch,
 ) {
-  const stopThumbnails = startClipThumbnailListener(listen, dispatch);
+  const stopThumbnails = startClipThumbnailListener(listen, dispatch, actions);
   let deleting = false;
   listen({
     actionCreator: actions.viewDidLoad,
@@ -29,7 +31,7 @@ export function startHomeListeners(
       const saves = subscribeClipboardSaveRequests(() =>
         api.dispatch(actions.saveCurrentClipboard()),
       );
-      const stopReload = startClipReload(api);
+      const stopReload = startClipReload(api, actions);
       await untilAborted(api.signal, () => {
         stopReload();
         saves.remove();

@@ -1,13 +1,29 @@
 import type { SliceListen } from '../../Shared/State/screenStore';
 import { loadClipThumbnail } from '../../Service/Clip/loadThumbnail';
-import { clipGridActions as actions } from './actions';
-import type { ClipGridAction } from './actions';
+import type { ClipGridActions } from './reducers';
 import { createThumbnailRequestQueue } from './thumbnailRequests';
+
+type ThumbnailActions = Pick<
+  ClipGridActions,
+  | 'thumbnailStarted'
+  | 'thumbnailLoaded'
+  | 'thumbnailFailed'
+  | 'thumbnailCancelled'
+  | 'thumbnailRequested'
+  | 'thumbnailCancelRequested'
+>;
 
 // 요청 큐를 만들고 세션이 끝날 때 큐를 비우는 정리 함수를 돌려줍니다.
 export function startClipThumbnailListener<State>(
   listen: SliceListen<State>,
-  dispatch: (action: ClipGridAction) => unknown,
+  dispatch: (
+    action:
+      | ReturnType<ThumbnailActions['thumbnailStarted']>
+      | ReturnType<ThumbnailActions['thumbnailLoaded']>
+      | ReturnType<ThumbnailActions['thumbnailFailed']>
+      | ReturnType<ThumbnailActions['thumbnailCancelled']>,
+  ) => unknown,
+  actions: ThumbnailActions,
 ) {
   const queue = createThumbnailRequestQueue({
     load: loadClipThumbnail,

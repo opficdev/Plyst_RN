@@ -1,6 +1,9 @@
 import type { ClipRecord } from '../../Model/clipRecord';
 import { original } from '../../Shared/State/screenStore';
-import { clipGridActions as actions } from './actions';
+import type {
+  CaseReducerActions,
+  PayloadAction,
+} from '../../Shared/State/screenStore';
 import type { ClipFilter } from './filter';
 import type { ClipLoadPhase } from './loadPhase';
 import { reduceClipThumbnails, retainClipThumbnails } from './thumbnails';
@@ -12,6 +15,8 @@ export type ClipGridState = ClipThumbnails & {
   now: number;
   filter: ClipFilter;
 };
+
+type ThumbnailRequest = { id: string; pixels: number };
 
 export function clipGridInitialState(now: number): ClipGridState {
   return {
@@ -47,22 +52,13 @@ function reduceThumbnail(state: ClipGridState, action: ClipThumbnailAction) {
   );
 }
 
-type ActionCreatorLike = {
-  (...args: never[]): { type: string };
-  type: string;
-};
-
-// ActionReducerMapBuilder가 화면 State에 묶여 있어 addCase만 가진 최소 형태로 받습니다.
-type ClipGridCaseBuilder = {
-  addCase<ActionCreator extends ActionCreatorLike>(
-    actionCreator: ActionCreator,
-    reducer: (state: ClipGridState, action: ReturnType<ActionCreator>) => void,
-  ): unknown;
-};
-
-// Home과 Search가 extraReducers로 받는 공통 목록 case입니다.
-export function addClipGridCases(builder: ClipGridCaseBuilder) {
-  builder.addCase(actions.clipsLoaded, (state, { payload }) => {
+// Home과 Search가 각자의 slice reducers에 펼쳐 쓰는 공통 case reducer입니다.
+// action 생성자는 이 객체를 받은 slice가 자기 이름으로 만듭니다.
+export const clipGridReducers = {
+  clipsLoaded(
+    state: ClipGridState,
+    { payload }: PayloadAction<{ clips: ClipRecord[]; now: number }>,
+  ) {
     Object.assign(
       state,
       retainClipThumbnails(thumbnailsOf(state), payload.clips),
@@ -70,26 +66,53 @@ export function addClipGridCases(builder: ClipGridCaseBuilder) {
     state.clips = payload.clips;
     state.now = payload.now;
     state.loadPhase = 'loaded';
-  });
-  builder.addCase(actions.loadFailed, (state) => {
+  },
+  loadFailed(state: ClipGridState) {
     state.loadPhase = 'failed';
-  });
-  builder.addCase(actions.timeChanged, (state, { payload }) => {
+  },
+  timeChanged(state: ClipGridState, { payload }: PayloadAction<number>) {
     state.now = payload;
-  });
-  builder.addCase(actions.filterSelected, (state, { payload }) => {
+  },
+  filterSelected(state: ClipGridState, { payload }: PayloadAction<ClipFilter>) {
     state.filter = payload;
-  });
-  builder.addCase(actions.thumbnailStarted, (state, { payload: key }) => {
+  },
+  thumbnailStarted(
+    state: ClipGridState,
+    { payload: key }: PayloadAction<string>,
+  ) {
     reduceThumbnail(state, { type: 'thumbnailStarted', key });
-  });
-  builder.addCase(actions.thumbnailLoaded, (state, { payload }) => {
+  },
+  thumbnailLoaded(
+    state: ClipGridState,
+    { payload }: PayloadAction<{ key: string; uri: string }>,
+  ) {
     reduceThumbnail(state, { type: 'thumbnailLoaded', ...payload });
-  });
-  builder.addCase(actions.thumbnailFailed, (state, { payload: key }) => {
+  },
+  thumbnailFailed(
+    state: ClipGridState,
+    { payload: key }: PayloadAction<string>,
+  ) {
     reduceThumbnail(state, { type: 'thumbnailFailed', key });
-  });
-  builder.addCase(actions.thumbnailCancelled, (state, { payload: key }) => {
+  },
+  thumbnailCancelled(
+    state: ClipGridState,
+    { payload: key }: PayloadAction<string>,
+  ) {
     reduceThumbnail(state, { type: 'thumbnailCancelled', key });
-  });
-}
+  },
+  // 아래 둘은 listener만 처리하는 효과용 action입니다.
+  thumbnailRequested: {
+    reducer() {},
+    prepare: (request: ThumbnailRequest) => ({ payload: request }),
+  },
+  thumbnailCancelRequested: {
+    reducer() {},
+    prepare: (request: ThumbnailRequest) => ({ payload: request }),
+  },
+};
+
+// 공통 로직이 slice마다 다른 action 생성자를 받을 때 쓰는 형태입니다.
+export type ClipGridActions = CaseReducerActions<
+  typeof clipGridReducers,
+  string
+>;

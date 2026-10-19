@@ -1,5 +1,4 @@
 import { clipThumbnailLimit } from '../../../src/Feature/ClipGrid/thumbnails';
-import { clipGridActions } from '../../../src/Feature/ClipGrid/actions';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import {
   homeActions as actions,
@@ -36,7 +35,7 @@ function reduce(state: HomeState, action: Action) {
 const loaded = () =>
   reduce(
     initialHomeState(1000),
-    clipGridActions.clipsLoaded({ clips: [clip], now: 2000 }),
+    actions.clipsLoaded({ clips: [clip], now: 2000 }),
   );
 
 function loadThumbnail(
@@ -45,8 +44,8 @@ function loadThumbnail(
   uri = 'file:///thumbnail.png',
 ) {
   return reduce(
-    reduce(state, clipGridActions.thumbnailStarted(key)),
-    clipGridActions.thumbnailLoaded({ key, uri }),
+    reduce(state, actions.thumbnailStarted(key)),
+    actions.thumbnailLoaded({ key, uri }),
   );
 }
 
@@ -81,13 +80,10 @@ test('목록을 읽으면 시각과 조회 단계를 갱신한다', () => {
 });
 
 test.each<[Action, Partial<HomeState>]>([
-  [clipGridActions.loadFailed(), { loadPhase: 'failed' }],
-  [clipGridActions.timeChanged(3000), { now: 3000 }],
-  [clipGridActions.filterSelected('image'), { filter: 'image' }],
-  [
-    clipGridActions.thumbnailStarted(key),
-    { loadingThumbnails: { [key]: true } },
-  ],
+  [actions.loadFailed(), { loadPhase: 'failed' }],
+  [actions.timeChanged(3000), { now: 3000 }],
+  [actions.filterSelected('image'), { filter: 'image' }],
+  [actions.thumbnailStarted(key), { loadingThumbnails: { [key]: true } }],
 ])('%j는 해당 상태만 바꾼다', (action, change) => {
   const state = loaded();
   expect(reduce(state, action)).toEqual({ ...state, ...change });
@@ -95,14 +91,12 @@ test.each<[Action, Partial<HomeState>]>([
 
 test('같은 필터 선택은 동일한 상태를 반환한다', () => {
   const state = loaded();
-  expect(reduce(state, clipGridActions.filterSelected('all'))).toBe(state);
+  expect(reduce(state, actions.filterSelected('all'))).toBe(state);
 });
 
 test('시작된 이미지 요청만 캐시에 넣고 로딩 상태를 지운다', () => {
   const state = loaded();
-  expect(reduce(state, clipGridActions.thumbnailLoaded({ key, uri }))).toEqual(
-    state,
-  );
+  expect(reduce(state, actions.thumbnailLoaded({ key, uri }))).toEqual(state);
   expect(loadThumbnail(state, key)).toEqual({
     ...state,
     thumbnails: { [key]: uri },
@@ -120,22 +114,22 @@ test.each<{ clips: ClipRecord[] }>([
     clips,
     loadingThumbnails: { [key]: true as const },
   };
-  expect(reduce(state, clipGridActions.thumbnailLoaded({ key, uri }))).toEqual({
+  expect(reduce(state, actions.thumbnailLoaded({ key, uri }))).toEqual({
     ...state,
     loadingThumbnails: {},
   });
 });
 
 test('실패는 로딩을 지우고 실패 기록을 남긴다', () => {
-  const state = reduce(loaded(), clipGridActions.thumbnailStarted(key));
-  const failed = reduce(state, clipGridActions.thumbnailFailed(key));
+  const state = reduce(loaded(), actions.thumbnailStarted(key));
+  const failed = reduce(state, actions.thumbnailFailed(key));
   expect(failed).toEqual({
     ...state,
     loadingThumbnails: {},
     failedThumbnails: { [key]: true },
   });
   expect(
-    reduce(loaded(), clipGridActions.thumbnailFailed(key)).failedThumbnails,
+    reduce(loaded(), actions.thumbnailFailed(key)).failedThumbnails,
   ).toEqual({ [key]: true });
 });
 
@@ -145,7 +139,7 @@ test('취소는 실패와 캐시를 보존하고 로딩만 지운다', () => {
     loadingThumbnails: { [key]: true as const },
     failedThumbnails: { [key]: true as const },
   };
-  expect(reduce(state, clipGridActions.thumbnailCancelled(key))).toEqual({
+  expect(reduce(state, actions.thumbnailCancelled(key))).toEqual({
     ...state,
     loadingThumbnails: {},
   });
@@ -203,9 +197,7 @@ test('목록 갱신은 이미지로 남아 있는 클립의 모든 크기만 보
     clip,
     { ...clip, id: 'text', image: null, text: '원문', textPrefix: '원문' },
   ];
-  expect(
-    reduce(state, clipGridActions.clipsLoaded({ clips, now: 5000 })),
-  ).toEqual({
+  expect(reduce(state, actions.clipsLoaded({ clips, now: 5000 }))).toEqual({
     ...state,
     clips,
     now: 5000,
@@ -214,9 +206,7 @@ test('목록 갱신은 이미지로 남아 있는 클립의 모든 크기만 보
     loadingThumbnails: { 'image:300': true },
     failedThumbnails: { 'image:400': true },
   });
-  expect(
-    reduce(state, clipGridActions.clipsLoaded({ clips: [], now: 5000 })),
-  ).toEqual({
+  expect(reduce(state, actions.clipsLoaded({ clips: [], now: 5000 }))).toEqual({
     ...state,
     clips: [],
     now: 5000,
@@ -229,12 +219,10 @@ test('목록 갱신은 이미지로 남아 있는 클립의 모든 크기만 보
 
 test('취소 후 도착한 성공 응답은 캐시에 넣지 않는다', () => {
   const state = reduce(
-    reduce(loaded(), clipGridActions.thumbnailStarted(key)),
-    clipGridActions.thumbnailCancelled(key),
+    reduce(loaded(), actions.thumbnailStarted(key)),
+    actions.thumbnailCancelled(key),
   );
-  expect(reduce(state, clipGridActions.thumbnailLoaded({ key, uri }))).toEqual(
-    state,
-  );
+  expect(reduce(state, actions.thumbnailLoaded({ key, uri }))).toEqual(state);
 });
 
 test.each<Action>([
@@ -244,14 +232,14 @@ test.each<Action>([
   actions.menuClosed(),
   actions.deleteConfirmShown(clip),
   actions.deleteConfirmClosed(),
-  clipGridActions.clipsLoaded({ clips: [clip], now: 3000 }),
-  clipGridActions.loadFailed(),
-  clipGridActions.timeChanged(3000),
-  clipGridActions.filterSelected('text'),
-  clipGridActions.thumbnailStarted(key),
-  clipGridActions.thumbnailLoaded({ key, uri }),
-  clipGridActions.thumbnailFailed(key),
-  clipGridActions.thumbnailCancelled(key),
+  actions.clipsLoaded({ clips: [clip], now: 3000 }),
+  actions.loadFailed(),
+  actions.timeChanged(3000),
+  actions.filterSelected('text'),
+  actions.thumbnailStarted(key),
+  actions.thumbnailLoaded({ key, uri }),
+  actions.thumbnailFailed(key),
+  actions.thumbnailCancelled(key),
 ])('%j는 입력 상태를 변형하지 않는다', (action) => {
   const state = loadThumbnail(loaded(), key);
   state.loadingThumbnails[key] = true;
@@ -302,10 +290,7 @@ test('열린 메뉴와 삭제 확인 위에 새 메뉴를 열지 않는다', () 
 
 test('목록에서 삭제되어도 시트가 닫히는 동안 메뉴 내용은 유지한다', () => {
   const menu = reduce(loaded(), actions.menuShown(clip));
-  const refreshed = reduce(
-    menu,
-    clipGridActions.clipsLoaded({ clips: [], now: 3000 }),
-  );
+  const refreshed = reduce(menu, actions.clipsLoaded({ clips: [], now: 3000 }));
   expect(refreshed.menuClip).toEqual(clip);
   expect(refreshed.isMenuVisible).toBe(true);
   expect(refreshed.clips).toEqual([]);

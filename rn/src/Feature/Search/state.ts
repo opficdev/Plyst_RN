@@ -1,6 +1,6 @@
 import { createSlice } from '../../Shared/State/screenStore';
 import type { PayloadAction } from '../../Shared/State/screenStore';
-import { addClipGridCases, clipGridInitialState } from '../ClipGrid/reducers';
+import { clipGridInitialState, clipGridReducers } from '../ClipGrid/reducers';
 import type { ClipGridState } from '../ClipGrid/reducers';
 
 export type SearchState = ClipGridState & {
@@ -22,6 +22,7 @@ export const searchSlice = createSlice({
   name: 'search',
   initialState: (): SearchState => initialSearchState(Date.now()),
   reducers: {
+    ...clipGridReducers,
     viewDidLoad() {},
     submitQuery() {},
     clearRecentTerms() {},
@@ -44,7 +45,6 @@ export const searchSlice = createSlice({
       state.searchHistoryPhase = 'failed';
     },
   },
-  extraReducers: (builder) => addClipGridCases(builder),
 });
 
 export const searchActions = searchSlice.actions;
