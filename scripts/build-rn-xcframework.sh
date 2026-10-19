@@ -178,8 +178,9 @@ if [ "$path" = full ]; then
 		stage_end
 	fi
 
+	# 아래 brownfield의 prebuild가 ios를 다시 만들고 pod install을 실행하므로 여기서는 설치하지 않습니다.
 	stage_begin prebuild
-	npx expo prebuild --platform ios --clean
+	npx expo prebuild --platform ios --clean --no-install
 	printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
 	stage_end
 
