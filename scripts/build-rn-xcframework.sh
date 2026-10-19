@@ -24,13 +24,47 @@ stage_end() {
 		"$stage_name" "$(($(date +%s) - stage_started))"
 }
 
-cd "$repository_root/rn"
-stage_begin npm-ci
-npm ci
-stage_end
+stage_skip() {
+	printf '[rn-xcframework] stage=%s status=skipped seconds=0\n' "$1"
+}
 
-stage_begin prebuild
-npx expo prebuild --platform ios --clean
+marker_value() {
+	if [ -f "$1" ]; then
+		sed -n "s/^$2=//p" "$1"
+	fi
+}
+
+destination=$repository_root/Plyst/Packages/PlystReactNative/Frameworks
+inputs_script=$script_directory/rn-xcframework-inputs.sh
+inputs_marker=$destination/.inputs
+package_manifest=$repository_root/Plyst/Packages/PlystReactNative/Package.swift
+
+# Package.swift의 프레임워크 이름과 산출물 이름이 일치하는지 확인합니다.
+verify_framework_names() {
+	expected_names=$(mktemp)
+	actual_names=$(mktemp)
+
+	sed -n '/^let frameworkNames = \[$/,/^\]$/p' "$package_manifest" \
+		| sed -n 's/^[[:space:]]*"\([^"]*\)",[[:space:]]*$/\1/p' \
+		| LC_ALL=C sort > "$expected_names"
+
+	for xcframework in "$destination"/*.xcframework; do
+		[ -d "$xcframework" ] || continue
+		basename "$xcframework" .xcframework
+	done | LC_ALL=C sort > "$actual_names"
+
+	if cmp -s "$expected_names" "$actual_names"; then
+		rm -f "$expected_names" "$actual_names"
+		return 0
+	fi
+	printf '오류: Package.swift와 XCFramework 이름이 일치하지 않습니다.\n' >&2
+	printf 'Package.swift에만 있는 이름:\n' >&2
+	comm -23 "$expected_names" "$actual_names" | sed 's/^/  /' >&2
+	printf '산출물에만 있는 이름:\n' >&2
+	comm -13 "$expected_names" "$actual_names" | sed 's/^/  /' >&2
+	rm -f "$expected_names" "$actual_names"
+	return 1
+}
 
 node_binary=$(command -v node 2>/dev/null || :)
 if command -v mise >/dev/null 2>&1; then
@@ -48,14 +82,117 @@ case "$node_binary" in
 		;;
 esac
 
-printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
-stage_end
+cd "$repository_root/rn"
 
-stage_begin package-ios
-npx brownfield package:ios --scheme BrownfieldLib --configuration "$configuration"
-stage_end
-
+# 입력 해시와 실행 환경이 지난 성공 빌드와 같으면 단계를 생략합니다.
+# JS 입력만 바뀌었으면 main.jsbundle만 다시 만들어 교체합니다.
+# RN_XCFRAMEWORK_CLEAN이 비어 있지 않으면 항상 처음부터 빌드합니다.
+node_version=$("$node_binary" --version)
+environment="$(xcodebuild -version | tr '\n' ' ')node=$node_version configuration=$configuration"
+all_hash=$("$inputs_script" all)
+native_hash=$("$inputs_script" native)
+npm_state="lock=$("$inputs_script" lock) node=$node_version npm=$(npm --version)"
+npm_marker=node_modules/.plyst-npm-ci
 build_directory=$repository_root/rn/ios/.brownfield/package/build
+products_directory=$repository_root/rn/ios/.brownfield/build/Build/Products
+
+# 앱이 쓰는 BrownfieldLib 프레임워크의 main.jsbundle만 Xcode 번들 단계와 같은 환경으로 다시 만듭니다.
+# 번들에는 Metro 출력 경로가 들어가므로 전체 빌드와 같은 Products 경로를 그대로 씁니다.
+rebuild_bundle() {
+	[ "$configuration" = Release ] || return 1
+	[ -d "$build_directory/BrownfieldLib.xcframework" ] || return 1
+
+	ios_directory=$repository_root/rn/ios
+	entry_file=$("$node_binary" -e "require('expo/scripts/resolveAppEntry')" "$repository_root/rn" ios absolute | tail -n 1)
+	cli_path=$("$node_binary" --print "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })")
+	bundle_script=$("$node_binary" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'")
+
+	for platform in iphoneos iphonesimulator; do
+		products=$products_directory/$configuration-$platform
+		framework=$products/BrownfieldLib.framework
+		[ -d "$framework" ] || return 1
+
+		(
+			export CONFIGURATION=$configuration
+			export PLATFORM_NAME=$platform
+			export CONFIGURATION_BUILD_DIR=$products
+			export UNLOCALIZED_RESOURCES_FOLDER_PATH=BrownfieldLib.framework
+			export PROJECT_DIR=$ios_directory
+			export SRCROOT=$ios_directory
+			export PODS_ROOT=$ios_directory/Pods
+			export PROJECT_ROOT=$repository_root/rn
+			export NODE_BINARY=$node_binary
+			export ENTRY_FILE=$entry_file
+			export CLI_PATH=$cli_path
+			export BUNDLE_COMMAND=export:embed
+			bash "$bundle_script"
+		) > /dev/null 2>&1 || return 1
+
+		# 슬라이스 디렉터리 이름은 simulator 여부로 구분합니다.
+		case $platform in
+			iphoneos) pattern='*/ios-arm64/BrownfieldLib.framework' ;;
+			*) pattern='*/ios-*simulator/BrownfieldLib.framework' ;;
+		esac
+		slice=$(find "$build_directory/BrownfieldLib.xcframework" -type d -path "$pattern" | sed -n '1p')
+		[ -n "$slice" ] || return 1
+
+		# 번들 외에 바뀐 파일이 있으면 교체만으로는 결과가 달라지므로 전체 빌드로 넘어갑니다.
+		diff -rq -x main.jsbundle -x _CodeSignature -x '*-apple-ios*.swiftmodule' "$framework" "$slice" > /dev/null || return 1
+		cp "$framework/main.jsbundle" "$slice/main.jsbundle" || return 1
+	done
+}
+
+path=full
+if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ] \
+	&& [ "$(marker_value "$inputs_marker" environment)" = "$environment" ] \
+	&& [ -f "$destination/.configuration" ]; then
+	if [ "$(marker_value "$inputs_marker" all)" = "$all_hash" ] && verify_framework_names 2>/dev/null; then
+		path=skip
+	elif [ "$(marker_value "$inputs_marker" native)" = "$native_hash" ]; then
+		path=js
+	fi
+fi
+
+if [ "$path" = skip ]; then
+	printf '[rn-xcframework] path=skip total=%s\n' "$(($(date +%s) - script_started))"
+	exit 0
+fi
+
+if [ "$path" = js ]; then
+	stage_begin bundle-js
+	if rebuild_bundle; then
+		stage_end
+	else
+		printf '[rn-xcframework] JS 번들만 교체할 수 없어 전체 빌드로 넘어갑니다.\n'
+		path=full
+	fi
+fi
+
+if [ "$path" = full ]; then
+	stage_begin npm-ci
+	if [ -f "$npm_marker" ] && [ "$(cat "$npm_marker")" = "$npm_state" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+		stage_skip npm-ci
+	else
+		npm ci
+		printf '%s\n' "$npm_state" > "$npm_marker"
+		stage_end
+	fi
+
+	stage_begin prebuild
+	npx expo prebuild --platform ios --clean
+	printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
+	stage_end
+
+	stage_begin package-ios
+	set -- --scheme BrownfieldLib --configuration "$configuration"
+	npx brownfield package:ios "$@"
+	stage_end
+else
+	stage_skip npm-ci
+	stage_skip prebuild
+	stage_skip package-ios
+fi
+
 set -- "$build_directory"/*.xcframework
 if ! [ -d "$1" ]; then
 	printf '오류: 생성된 XCFramework가 없습니다: %s/*.xcframework\n' "$build_directory" >&2
@@ -66,9 +203,7 @@ stage_begin bridge-xcframework
 # PlystBridge pod는 BrownfieldLib에 정적으로 링크되어 심볼도 BrownfieldLib에서 제공합니다.
 # 중복 링크를 피하면서 import할 수 있도록 모듈과 헤더만 담고 빈 정적 라이브러리를 사용합니다.
 bridge_directory=$(mktemp -d)
-expected_frameworks_file=
-actual_frameworks_file=
-trap 'rm -rf "$bridge_directory"; rm -f "$expected_frameworks_file" "$actual_frameworks_file"' EXIT HUP INT TERM
+trap 'rm -rf "$bridge_directory"' EXIT HUP INT TERM
 
 bridge_headers_directory=$repository_root/rn/modules/plyst-bridge/ios
 for header in "$bridge_headers_directory"/*.h; do
@@ -165,7 +300,6 @@ xcodebuild -create-xcframework \
 stage_end
 
 stage_begin install-frameworks
-destination=$repository_root/Plyst/Packages/PlystReactNative/Frameworks
 mkdir -p "$destination"
 rsync -aL --delete --delete-excluded \
 	--include='/*.xcframework/' \
@@ -220,28 +354,17 @@ if [ "$configuration" = Release ]; then
 	fi
 fi
 
-package_manifest=$repository_root/Plyst/Packages/PlystReactNative/Package.swift
-expected_frameworks_file=$(mktemp)
-actual_frameworks_file=$(mktemp)
-
-sed -n '/^let frameworkNames = \[$/,/^\]$/p' "$package_manifest" \
-	| sed -n 's/^[[:space:]]*"\([^"]*\)",[[:space:]]*$/\1/p' \
-	| LC_ALL=C sort > "$expected_frameworks_file"
-
-for xcframework in "$destination"/*.xcframework; do
-	[ -d "$xcframework" ] || continue
-	basename "$xcframework" .xcframework
-done | LC_ALL=C sort > "$actual_frameworks_file"
-
-if ! cmp -s "$expected_frameworks_file" "$actual_frameworks_file"; then
-	printf '오류: Package.swift와 XCFramework 이름이 일치하지 않습니다.\n' >&2
-	printf 'Package.swift에만 있는 이름:\n' >&2
-	comm -23 "$expected_frameworks_file" "$actual_frameworks_file" | sed 's/^/  /' >&2
-	printf '산출물에만 있는 이름:\n' >&2
-	comm -13 "$expected_frameworks_file" "$actual_frameworks_file" | sed 's/^/  /' >&2
-	exit 1
-fi
+verify_framework_names || exit 1
 
 printf '%s\n' "$configuration" > "$destination/.configuration"
+
+# 빌드 중 입력이 바뀌었으면 마커를 쓰지 않아 다음 실행이 다시 빌드합니다.
+if [ "$("$inputs_script" all)" = "$all_hash" ]; then
+	printf 'all=%s\nnative=%s\nenvironment=%s\n' "$all_hash" "$native_hash" "$environment" \
+		> "$inputs_marker.tmp"
+	mv "$inputs_marker.tmp" "$inputs_marker"
+else
+	printf '경고: 빌드 중 입력이 바뀌어 입력 마커를 쓰지 않았습니다.\n' >&2
+fi
 stage_end
-printf '[rn-xcframework] path=full total=%s\n' "$(($(date +%s) - script_started))"
+printf '[rn-xcframework] path=%s total=%s\n' "$path" "$(($(date +%s) - script_started))"
