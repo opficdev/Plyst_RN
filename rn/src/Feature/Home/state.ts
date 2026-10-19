@@ -1,112 +1,60 @@
-import {
-  reduceClipThumbnails,
-  retainClipThumbnails,
-} from '../ClipGrid/thumbnails';
-import type {
-  ClipThumbnailAction,
-  ClipThumbnails,
-} from '../ClipGrid/thumbnails';
 import type { ClipRecord } from '../../Model/clipRecord';
-import type { ClipFilter } from '../ClipGrid/filter';
-import type { ClipLoadPhase } from '../ClipGrid/loadPhase';
+import { createSlice } from '../../Shared/State/screenStore';
+import type { PayloadAction } from '../../Shared/State/screenStore';
+import { addClipGridCases, clipGridInitialState } from '../ClipGrid/reducers';
+import type { ClipGridState } from '../ClipGrid/reducers';
 
-export type HomeState = ClipThumbnails & {
-  loadPhase: ClipLoadPhase;
-  clips: ClipRecord[];
-  now: number;
-  filter: ClipFilter;
+export type HomeState = ClipGridState & {
   isSaving: boolean;
   menuClip: ClipRecord | null;
   isMenuVisible: boolean;
   isDeleteConfirmVisible: boolean;
 };
-export function initialState(now: number): HomeState {
+
+export function initialHomeState(now: number): HomeState {
   return {
-    loadPhase: 'loading',
-    clips: [],
-    now,
-    filter: 'all',
-    thumbnails: {},
-    thumbnailOrder: [],
-    loadingThumbnails: {},
-    failedThumbnails: {},
+    ...clipGridInitialState(now),
     isSaving: false,
     menuClip: null,
     isMenuVisible: false,
     isDeleteConfirmVisible: false,
   };
 }
-export type HomeAction =
-  | { type: 'savingStarted' }
-  | { type: 'savingStopped' }
-  | { type: 'menuShown'; clip: ClipRecord }
-  | { type: 'menuClosed' }
-  | { type: 'deleteConfirmShown'; clip: ClipRecord }
-  | { type: 'deleteConfirmClosed' }
-  | { type: 'clipsLoaded'; clips: ClipRecord[]; now: number }
-  | { type: 'loadFailed' }
-  | { type: 'timeChanged'; now: number }
-  | { type: 'filterSelected'; filter: ClipFilter }
-  | ClipThumbnailAction;
 
-export function reduce(state: HomeState, action: HomeAction): HomeState {
-  if (
-    action.type === 'menuShown' &&
-    (state.isMenuVisible || state.isDeleteConfirmVisible)
-  )
-    return state;
-  if (action.type === 'filterSelected' && state.filter === action.filter)
-    return state;
-  const next = {
-    ...state,
-    thumbnails: { ...state.thumbnails },
-    thumbnailOrder: [...state.thumbnailOrder],
-    loadingThumbnails: { ...state.loadingThumbnails },
-    failedThumbnails: { ...state.failedThumbnails },
-  };
-  switch (action.type) {
-    case 'savingStarted':
-      next.isSaving = true;
-      break;
-    case 'savingStopped':
-      next.isSaving = false;
-      break;
-    case 'menuShown':
-      next.menuClip = action.clip;
-      next.isMenuVisible = true;
-      break;
-    case 'menuClosed':
-      next.isMenuVisible = false;
-      break;
-    case 'deleteConfirmShown':
-      next.menuClip = action.clip;
-      next.isDeleteConfirmVisible = true;
-      break;
-    case 'deleteConfirmClosed':
-      next.isDeleteConfirmVisible = false;
-      break;
-    case 'clipsLoaded': {
-      next.clips = action.clips;
-      next.now = action.now;
-      next.loadPhase = 'loaded';
-      Object.assign(next, retainClipThumbnails(next, action.clips));
-      break;
-    }
-    case 'loadFailed':
-      next.loadPhase = 'failed';
-      break;
-    case 'timeChanged':
-      next.now = action.now;
-      break;
-    case 'filterSelected':
-      next.filter = action.filter;
-      break;
-    case 'thumbnailStarted':
-    case 'thumbnailLoaded':
-    case 'thumbnailFailed':
-    case 'thumbnailCancelled':
-      Object.assign(next, reduceClipThumbnails(next, action, next.clips));
-      break;
-  }
-  return next;
-}
+export const homeSlice = createSlice({
+  name: 'home',
+  initialState: (): HomeState => initialHomeState(Date.now()),
+  reducers: {
+    viewDidLoad() {},
+    setPinned() {},
+    delete() {},
+    copy: {
+      reducer() {},
+      prepare: (id: string) => ({ payload: id }),
+    },
+    saveCurrentClipboard(state) {
+      state.isSaving = true;
+    },
+    savingStopped(state) {
+      state.isSaving = false;
+    },
+    menuShown(state, { payload: clip }: PayloadAction<ClipRecord>) {
+      if (state.isMenuVisible || state.isDeleteConfirmVisible) return;
+      state.menuClip = clip;
+      state.isMenuVisible = true;
+    },
+    menuClosed(state) {
+      state.isMenuVisible = false;
+    },
+    deleteConfirmShown(state, { payload: clip }: PayloadAction<ClipRecord>) {
+      state.menuClip = clip;
+      state.isDeleteConfirmVisible = true;
+    },
+    deleteConfirmClosed(state) {
+      state.isDeleteConfirmVisible = false;
+    },
+  },
+  extraReducers: (builder) => addClipGridCases(builder),
+});
+
+export const homeActions = homeSlice.actions;

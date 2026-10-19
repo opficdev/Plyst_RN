@@ -32,9 +32,10 @@ import {
 } from '../ClipGrid/cardValues';
 import { makeHomeListItems } from './listItems';
 import type { HomeListItem } from './listItems';
+import { homeActions as actions } from './state';
 import type { HomeState } from './state';
 import { createHomeStore } from './store';
-import { homeActions as actions } from './actions';
+import { clipGridActions } from '../ClipGrid/actions';
 import {
   ScreenProvider,
   useScreenState,
@@ -98,7 +99,7 @@ function HomeContent({
   function showMenu(clip: ClipRecord) {
     const current = getState();
     if (current.isMenuVisible || current.isDeleteConfirmVisible) return;
-    dispatch({ type: 'menuShown', clip });
+    dispatch(actions.menuShown(clip));
   }
   function copy(clip: ClipRecord) {
     dispatch(actions.copy(clip.id));
@@ -109,7 +110,7 @@ function HomeContent({
   function confirmDelete() {
     const current = getState();
     const clip = current.clips.find((clip) => clip.id === current.menuClip?.id);
-    if (clip) dispatch({ type: 'deleteConfirmShown', clip });
+    if (clip) dispatch(actions.deleteConfirmShown(clip));
   }
 
   const list = useRef<FlashListRef<HomeListItem>>(null);
@@ -122,7 +123,7 @@ function HomeContent({
   );
   const now = useClipTimeline(dates, !isSearchVisible);
   useEffect(() => {
-    dispatch({ type: 'timeChanged', now });
+    dispatch(clipGridActions.timeChanged(now));
   }, [dispatch, now]);
   const content = useMemo(
     () => makeHomeContent(state.clips, state.filter, state.now),
@@ -327,7 +328,7 @@ function HomeContent({
               chips={chips}
               selectedKey={state.filter}
               onSelect={(filter) =>
-                dispatch({ type: 'filterSelected', filter })
+                dispatch(clipGridActions.filterSelected(filter))
               }
             />
           </View>
@@ -346,7 +347,7 @@ function HomeContent({
         message={
           state.menuClip ? homeMenuSummary(state.menuClip) : '이름 없는 이미지'
         }
-        onClose={() => dispatch({ type: 'menuClosed' })}
+        onClose={() => dispatch(actions.menuClosed())}
         items={[
           {
             title:
@@ -364,7 +365,7 @@ function HomeContent({
         isVisible={state.isDeleteConfirmVisible}
         title={`이 ${state.menuClip ? homeMenuTitle(state.menuClip) : '텍스트'}를 삭제할까요?`}
         message="삭제하면 되돌릴 수 없습니다."
-        onClose={() => dispatch({ type: 'deleteConfirmClosed' })}
+        onClose={() => dispatch(actions.deleteConfirmClosed())}
         items={[
           {
             title: '삭제',

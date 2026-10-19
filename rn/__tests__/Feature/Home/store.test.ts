@@ -4,7 +4,8 @@ import {
 } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createHomeStore } from '../../../src/Feature/Home/store';
-import { homeActions as actions } from '../../../src/Feature/Home/actions';
+import { homeActions as actions } from '../../../src/Feature/Home/state';
+import { clipGridActions } from '../../../src/Feature/ClipGrid/actions';
 import { loadClips } from '../../../src/Service/Clip/load';
 import { saveHomeClipboard } from '../../../src/Feature/Home/saveClipboard';
 import { updateClipDetail } from '../../../src/Service/Clip/updateDetail';
@@ -131,12 +132,13 @@ test('메뉴가 열린 뒤 바뀐 클립의 최신 내용으로 고정한다', a
   jest.mocked(updateClipDetail).mockResolvedValue({ status: 'saved', clip });
   const screen = createHomeStore();
   screen.start();
-  screen.store.dispatch({ type: 'menuShown', clip });
-  screen.store.dispatch({
-    type: 'clipsLoaded',
-    clips: [{ ...clip, name: '최신 이름' }],
-    now: 2,
-  });
+  screen.store.dispatch(actions.menuShown(clip));
+  screen.store.dispatch(
+    clipGridActions.clipsLoaded({
+      clips: [{ ...clip, name: '최신 이름' }],
+      now: 2,
+    }),
+  );
   screen.store.dispatch(actions.setPinned());
   await settle();
   expect(updateClipDetail).toHaveBeenCalledWith(

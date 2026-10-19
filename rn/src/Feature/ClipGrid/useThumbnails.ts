@@ -3,7 +3,7 @@ import type { Dispatch } from 'react';
 import type { ViewToken } from '@shopify/flash-list';
 import type { ClipRecord } from '../../Model/clipRecord';
 import type { ClipThumbnails } from './thumbnails';
-import { clipThumbnailActions as actions } from './thumbnailListener';
+import { clipGridActions as actions } from './actions';
 
 const viewabilityConfig = {
   viewAreaCoveragePercentThreshold: 0,
@@ -15,7 +15,10 @@ type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
 
 export function useClipThumbnails<Item extends ThumbnailItem>(
   state: ThumbnailState,
-  dispatch: Dispatch<ReturnType<(typeof actions)[keyof typeof actions]>>,
+  dispatch: Dispatch<
+    | ReturnType<typeof actions.thumbnailRequested>
+    | ReturnType<typeof actions.thumbnailCancelRequested>
+  >,
   gridPixels: number,
   pinnedPixels: number,
   isMeasured: boolean,
@@ -72,7 +75,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
       const timer = setTimeout(() => {
         timers.current.delete(timer);
         if (!visibleKeys.current.has(key))
-          dispatch(actions.thumbnailCancelled(value));
+          dispatch(actions.thumbnailCancelRequested(value));
       }, 0);
       timers.current.add(timer);
     }
