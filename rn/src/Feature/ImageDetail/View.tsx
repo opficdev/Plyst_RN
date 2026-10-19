@@ -20,8 +20,12 @@ import {
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
 import { ClipDetailSheet } from '../ClipDetail/Sheet';
-import { canSave } from './draft';
-import type { ImageDetailState } from './draft';
+import {
+  imageDetailActions as actions,
+  isClosed,
+  isSaveEnabled,
+} from './draft';
+import type { ImageDetailState, ImageDetailStoreState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
 import {
@@ -30,8 +34,6 @@ import {
   useScreenDispatch,
 } from '../../Shared/State/screenStore';
 import { createImageDetailStore } from './store';
-import type { ImageDetailStoreState } from './store';
-import { imageDetailActions as actions } from './actions';
 import { formatByteCount } from './formatByteCount';
 
 type ImageDetailViewProps = {
@@ -65,17 +67,15 @@ function ImageDetailRoot({ clipID, navigation }: ImageDetailViewProps) {
 function ImageDetailContent({ closeClip }: { closeClip: () => void }) {
   const state = useScreenState<ImageDetailStoreState>();
   const dispatch = useScreenDispatch();
-  const isClosed = state === 'closed' || !!(state?.isRemoved || state?.isSaved);
-  const isLoaded = state !== null && state !== 'closed';
   return (
     <ClipDetailSheet
       title="이미지"
-      isSaveEnabled={isLoaded && canSave(state)}
-      isClosed={isClosed}
+      isSaveEnabled={isSaveEnabled(state)}
+      isClosed={isClosed(state)}
       onSaveButtonPress={() => dispatch(actions.save())}
       onDismiss={closeClip}
     >
-      {isLoaded ? (
+      {state.phase === 'loaded' ? (
         <ImageDetailEditor state={state} />
       ) : (
         <View style={styles.canvas} />
@@ -94,7 +94,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
 
   function showDeleteSheet() {
     if (state.isDeleting || state.isRemoved || state.isDeleteSheetOpen) return;
-    dispatch({ type: 'deleteSheetShown' });
+    dispatch(actions.deleteSheetShown());
   }
   const copy = () => dispatch(actions.copy());
   const startDelete = () => dispatch(actions.delete());
@@ -133,13 +133,14 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
                   cachePolicy="none"
                   contentFit="contain"
                   onLoad={({ source }) =>
-                    dispatch({
-                      type: 'previewLoaded',
-                      width: source.width,
-                      height: source.height,
-                    })
+                    dispatch(
+                      actions.previewLoaded({
+                        width: source.width,
+                        height: source.height,
+                      }),
+                    )
                   }
-                  onError={() => dispatch({ type: 'previewFailed' })}
+                  onError={() => dispatch(actions.previewFailed())}
                 />
               )}
               {preview.status !== 'loaded' && (
@@ -195,7 +196,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
                 placeholder="이름 없음"
                 placeholderTextColor={colors.Placeholder}
                 returnKeyType="done"
-                onChangeText={(name) => dispatch({ type: 'nameChanged', name })}
+                onChangeText={(name) => dispatch(actions.nameChanged(name))}
               />
             </View>
             <View style={styles.divider} />
@@ -206,7 +207,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
               <Switch
                 value={draft.isPinned}
                 onValueChange={(isPinned) => {
-                  dispatch({ type: 'pinnedChanged', isPinned });
+                  dispatch(actions.pinnedChanged(isPinned));
                 }}
                 trackColor={{ true: colors.SwitchOn }}
               />
@@ -234,7 +235,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
           { title: '삭제', role: 'destructive', handler: startDelete },
           { title: '취소', role: 'cancel' },
         ]}
-        onClose={() => dispatch({ type: 'deleteSheetClosed' })}
+        onClose={() => dispatch(actions.deleteSheetClosed())}
       />
     </View>
   );

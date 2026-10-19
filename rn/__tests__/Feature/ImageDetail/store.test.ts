@@ -1,7 +1,7 @@
 import { subscribeClipChanges } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createImageDetailStore } from '../../../src/Feature/ImageDetail/store';
-import { imageDetailActions as actions } from '../../../src/Feature/ImageDetail/actions';
+import { imageDetailActions as actions } from '../../../src/Feature/ImageDetail/draft';
 import { loadImageDetail } from '../../../src/Service/Clip/loadImageDetail';
 import { saveImageDetail } from '../../../src/Feature/ImageDetail/save';
 import { copyClipDetail } from '../../../src/Service/Clip/copyDetail';
@@ -91,7 +91,7 @@ test('저장 중 재요청을 막고 실패해도 편집값을 보존한다', as
   const pending = deferred<Awaited<ReturnType<typeof saveImageDetail>>>();
   jest.mocked(saveImageDetail).mockReturnValue(pending.promise);
   const screen = await mounted();
-  screen.store.dispatch({ type: 'nameChanged', name: '수정' });
+  screen.store.dispatch(actions.nameChanged('수정'));
   screen.store.dispatch(actions.save());
   screen.store.dispatch(actions.save());
   expect(saveImageDetail).toHaveBeenCalledTimes(1);
@@ -122,20 +122,20 @@ test('종료된 저장 결과는 토스트만 표시하고 재시작한 상태�
   const pending = deferred<Awaited<ReturnType<typeof saveImageDetail>>>();
   jest.mocked(saveImageDetail).mockReturnValue(pending.promise);
   const screen = await mounted();
-  screen.store.dispatch({ type: 'nameChanged', name: '수정' });
+  screen.store.dispatch(actions.nameChanged('수정'));
   screen.store.dispatch(actions.save());
   screen.dispose();
   screen.start();
   pending.resolve({ status: 'saved', clip: { ...clip, name: '수정' } });
   await settle();
-  expect(screen.store.getState()).toBeNull();
+  expect(screen.store.getState()).toEqual({ phase: 'loading' });
   expect(showToast).toHaveBeenCalledWith('저장했습니다', true);
   screen.dispose();
 });
 
 test('조회 실패는 최초 화면만 닫고 기존 편집 상태는 보존한다', async () => {
   const screen = await mounted();
-  screen.store.dispatch({ type: 'nameChanged', name: '편집 중' });
+  screen.store.dispatch(actions.nameChanged('편집 중'));
   jest.mocked(loadImageDetail).mockResolvedValue({ status: 'failed' });
   jest
     .mocked(subscribeClipChanges)
@@ -146,7 +146,7 @@ test('조회 실패는 최초 화면만 닫고 기존 편집 상태는 보존한
   screen.start();
   screen.store.dispatch(actions.viewDidLoad());
   await settle();
-  expect(screen.store.getState()).toBe('closed');
+  expect(screen.store.getState()).toEqual({ phase: 'closed' });
   screen.dispose();
 });
 
@@ -189,4 +189,37 @@ test('갱신은 미리보기를 다시 요청하지 않고 사진 저장 재요�
   });
   await settle();
   expect(showToast).toHaveBeenCalledWith('저장 완료', true);
+});
+
+test('조회된 클립이 없으면 최초 화면을 닫는다', async () => {
+  jest.mocked(loadImageDetail).mockResolvedValue({ status: 'missing' });
+  const screen = await mounted();
+  expect(screen.store.getState()).toEqual({ phase: 'closed' });
+  screen.dispose();
+});
+
+test('종료된 뒤 도착한 변경 알림은 조회와 상태 변경을 일으키지 않는다', async () => {
+  const screen = await mounted();
+  const change = jest.mocked(subscribeClipChanges).mock.calls[0][0];
+  const before = screen.store.getState();
+  screen.dispose();
+  change({ id: clip.id, kind: 'updated' });
+  change({ id: clip.id, kind: 'deleted' });
+  await settle();
+  expect(loadImageDetail).toHaveBeenCalledTimes(1);
+  expect(screen.store.getState()).toBe(before);
+});
+
+test('미리보기 결과는 상태에 반영하고 실패하면 미리보기만 실패로 둔다', async () => {
+  const screen = await mounted();
+  expect(screen.store.getState()).toMatchObject({
+    preview: { status: 'loading', uri: 'file://preview' },
+  });
+  screen.dispose();
+  jest.mocked(loadImageDetailPreview).mockResolvedValue({ status: 'failed' });
+  const failed = await mounted();
+  expect(failed.store.getState()).toMatchObject({
+    preview: { status: 'failed', uri: null },
+  });
+  failed.dispose();
 });
