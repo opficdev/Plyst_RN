@@ -1,7 +1,7 @@
 import { subscribeClipChanges } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createSearchStore } from '../../../src/Feature/Search/store';
-import { searchActions as actions } from '../../../src/Feature/Search/actions';
+import { searchActions as actions } from '../../../src/Feature/Search/state';
 import { loadClips } from '../../../src/Service/Clip/load';
 import { loadSearchHistory } from '../../../src/Service/Clip/loadSearchHistory';
 import { recordSearchHistoryTerm } from '../../../src/Service/Clip/recordSearchHistoryTerm';
@@ -70,7 +70,7 @@ test('초기 검색 기록 조회가 끝난 뒤 쓰기를 순서대로 실행한
   const screen = createSearchStore(jest.fn());
   screen.start();
   screen.store.dispatch(actions.viewDidLoad());
-  screen.store.dispatch({ type: 'queryChanged', query: '검색' });
+  screen.store.dispatch(actions.queryChanged('검색'));
   screen.store.dispatch(actions.submitQuery());
   screen.store.dispatch(actions.removeRecentTerm('검색'));
   screen.store.dispatch(actions.clearRecentTerms());
@@ -97,9 +97,9 @@ test('복사 완료 시점이 아닌 요청 시점의 검색어를 기록한다'
   const screen = createSearchStore(jest.fn());
   screen.start();
   screen.store.dispatch(actions.viewDidLoad());
-  screen.store.dispatch({ type: 'queryChanged', query: '  한글 검색  ' });
+  screen.store.dispatch(actions.queryChanged('  한글 검색  '));
   screen.store.dispatch(actions.copy(clip.id));
-  screen.store.dispatch({ type: 'queryChanged', query: '다음 검색' });
+  screen.store.dispatch(actions.queryChanged('다음 검색'));
   copy.resolve('copied');
   await settle();
   expect(recordSearchHistoryTerm).toHaveBeenCalledWith('  한글 검색  ');
@@ -111,7 +111,7 @@ test('화면 종료 뒤 복사는 토스트와 후속 검색 기록을 남기지
   jest.mocked(copyClipDetail).mockReturnValue(copy.promise);
   const screen = createSearchStore(jest.fn());
   screen.start();
-  screen.store.dispatch({ type: 'queryChanged', query: '검색' });
+  screen.store.dispatch(actions.queryChanged('검색'));
   screen.store.dispatch(actions.copy(clip.id));
   screen.dispose();
   copy.resolve('copied');
@@ -141,7 +141,7 @@ test('검색 기록 실패는 사용자 요청만 알리고 복사 뒤 기록 �
   const screen = createSearchStore(jest.fn());
   screen.start();
   screen.store.dispatch(actions.viewDidLoad());
-  screen.store.dispatch({ type: 'queryChanged', query: '검색' });
+  screen.store.dispatch(actions.queryChanged('검색'));
   screen.store.dispatch(actions.submitQuery());
   await settle();
   expect(showToast).toHaveBeenCalledWith(

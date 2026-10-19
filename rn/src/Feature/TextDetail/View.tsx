@@ -16,8 +16,8 @@ import {
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
 import { ClipDetailSheet } from '../ClipDetail/Sheet';
-import { canSave } from './draft';
-import type { TextDetailState } from './draft';
+import { isClosed, isSaveEnabled, textDetailActions as actions } from './draft';
+import type { TextDetailState, TextDetailStoreState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
 import {
@@ -26,8 +26,6 @@ import {
   useScreenDispatch,
 } from '../../Shared/State/screenStore';
 import { createTextDetailStore } from './store';
-import type { TextDetailStoreState } from './store';
-import { textDetailActions as actions } from './actions';
 
 type TextDetailViewProps = {
   clipID: string;
@@ -60,17 +58,15 @@ function TextDetailRoot({ clipID, navigation }: TextDetailViewProps) {
 function TextDetailContent({ closeClip }: { closeClip: () => void }) {
   const state = useScreenState<TextDetailStoreState>();
   const dispatch = useScreenDispatch();
-  const isClosed = state === 'closed' || !!(state?.isRemoved || state?.isSaved);
-  const isLoaded = state !== null && state !== 'closed';
   return (
     <ClipDetailSheet
       title="텍스트"
-      isSaveEnabled={isLoaded && canSave(state)}
-      isClosed={isClosed}
+      isSaveEnabled={isSaveEnabled(state)}
+      isClosed={isClosed(state)}
       onSaveButtonPress={() => dispatch(actions.save())}
       onDismiss={closeClip}
     >
-      {isLoaded ? (
+      {state.phase === 'loaded' ? (
         <TextDetailEditor state={state} />
       ) : (
         <View style={styles.canvas} />
@@ -94,7 +90,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
 
   function showDeleteSheet() {
     if (state.isDeleting || state.isRemoved || state.isDeleteSheetOpen) return;
-    dispatch({ type: 'deleteSheetShown' });
+    dispatch(actions.deleteSheetShown());
   }
   const copy = () => dispatch(actions.copy());
   const startDelete = () => dispatch(actions.delete());
@@ -129,7 +125,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
                 placeholder="이름 없음"
                 placeholderTextColor={colors.Placeholder}
                 returnKeyType="done"
-                onChangeText={(name) => dispatch({ type: 'nameChanged', name })}
+                onChangeText={(name) => dispatch(actions.nameChanged(name))}
               />
             </View>
             <View style={styles.divider} />
@@ -140,7 +136,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
               <Switch
                 value={draft.isPinned}
                 onValueChange={(isPinned) => {
-                  dispatch({ type: 'pinnedChanged', isPinned });
+                  dispatch(actions.pinnedChanged(isPinned));
                 }}
                 trackColor={{ true: colors.SwitchOn }}
               />
@@ -160,7 +156,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
                 multiline
                 scrollEnabled={false}
                 onChangeText={(memo) => {
-                  dispatch({ type: 'memoChanged', memo });
+                  dispatch(actions.memoChanged(memo));
                   revealMemo();
                 }}
               />
@@ -188,7 +184,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
           { title: '삭제', role: 'destructive', handler: startDelete },
           { title: '취소', role: 'cancel' },
         ]}
-        onClose={() => dispatch({ type: 'deleteSheetClosed' })}
+        onClose={() => dispatch(actions.deleteSheetClosed())}
       />
     </View>
   );

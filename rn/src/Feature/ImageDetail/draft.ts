@@ -1,5 +1,7 @@
 import type { ClipRecord } from '../../Model/clipRecord';
 import { equivalent, normalizedName } from '../../Model/clipDetailValues';
+import { createSlice } from '../../Shared/State/screenStore';
+import type { PayloadAction } from '../../Shared/State/screenStore';
 
 export type Draft = { name: string; isPinned: boolean };
 
@@ -35,8 +37,15 @@ export type ImageDetailState = {
   isDeleteSheetOpen: boolean;
 };
 
-export function initialState(clip: ClipRecord): ImageDetailState {
+export type ImageDetailLoaded = { phase: 'loaded' } & ImageDetailState;
+
+// closed는 최초 조회 실패나 조회 전 삭제로 화면이 열리지 못한 경우입니다.
+export type ImageDetailStoreState =
+  { phase: 'loading' } | { phase: 'closed' } | ImageDetailLoaded;
+
+export function loadedState(clip: ClipRecord): ImageDetailLoaded {
   return {
+    phase: 'loaded',
     clip,
     draft: draftFromClip(clip),
     isSavingToPhotos: false,
@@ -62,109 +71,140 @@ export function canSave(state: ImageDetailState): boolean {
   );
 }
 
-export type ImageDetailAction =
-  | { type: 'clipLoaded'; clip: ClipRecord }
-  | { type: 'removed' }
-  | { type: 'nameChanged'; name: string }
-  | { type: 'pinnedChanged'; isPinned: boolean }
-  | { type: 'saveStarted' }
-  | { type: 'saved'; clip: ClipRecord }
-  | { type: 'saveFailed' }
-  | { type: 'deleteSheetShown' }
-  | { type: 'deleteSheetClosed' }
-  | { type: 'deleteStarted' }
-  | { type: 'deleteFailed' }
-  | { type: 'photoSaveStarted' }
-  | { type: 'photoSaveFinished' }
-  | { type: 'previewReady'; uri: string }
-  | { type: 'previewLoaded'; width: number; height: number }
-  | { type: 'previewFailed' };
+export function isSaveEnabled(state: ImageDetailStoreState): boolean {
+  return state.phase === 'loaded' && canSave(state);
+}
 
-export function reduce(
-  state: ImageDetailState,
-  action: ImageDetailAction,
-): ImageDetailState {
-  const next = { ...state, draft: { ...state.draft } };
-  switch (action.type) {
-    case 'clipLoaded': {
+export function isClosed(state: ImageDetailStoreState): boolean {
+  return (
+    state.phase === 'closed' ||
+    (state.phase === 'loaded' && (state.isRemoved || state.isSaved))
+  );
+}
+
+// reducer는 변경 전 상태로, listener는 getOriginalState로 같은 조건을 판정합니다.
+export function canStartSave(
+  state: ImageDetailStoreState,
+): state is ImageDetailLoaded {
+  return state.phase === 'loaded' && !state.isSaved && canSave(state);
+}
+
+export function canStartDelete(
+  state: ImageDetailStoreState,
+): state is ImageDetailLoaded {
+  return state.phase === 'loaded' && !state.isDeleting && !state.isRemoved;
+}
+
+export function canStartPhotoSave(
+  state: ImageDetailStoreState,
+): state is ImageDetailLoaded {
+  return (
+    state.phase === 'loaded' &&
+    !state.isSavingToPhotos &&
+    !state.isDeleting &&
+    !state.isRemoved
+  );
+}
+
+export const imageDetailSlice = createSlice({
+  name: 'imageDetail',
+  initialState: (): ImageDetailStoreState => ({ phase: 'loading' }),
+  reducers: {
+    viewDidLoad() {},
+    copy() {},
+    previewRequested() {},
+    save(state) {
+      if (canStartSave(state)) state.isSaving = true;
+    },
+    delete(state) {
+      if (!canStartDelete(state)) return;
+      state.isDeleting = true;
+      state.isDeleteSheetOpen = false;
+    },
+    saveToPhotos(state) {
+      if (canStartPhotoSave(state)) state.isSavingToPhotos = true;
+    },
+    clipLoaded(state, { payload: clip }: PayloadAction<ClipRecord>) {
+      if (state.phase === 'closed') return;
+      if (state.phase === 'loading') return loadedState(clip);
+      if (state.isRemoved || state.isSaved) return;
       const original = draftFromClip(state.clip);
       if (
         equivalent(state.draft.name, original.name) &&
         state.draft.isPinned === original.isPinned
       ) {
-        next.draft = draftFromClip(action.clip);
+        state.draft = draftFromClip(clip);
       }
-      next.clip = action.clip;
-      break;
-    }
-    case 'removed':
-      next.isSavingToPhotos = false;
-      next.isSaving = false;
-      next.isDeleting = false;
-      next.isRemoved = true;
-      next.isDeleteSheetOpen = false;
-      break;
-    case 'nameChanged':
-      next.draft.name = action.name;
-      break;
-    case 'pinnedChanged':
-      next.draft.isPinned = action.isPinned;
-      break;
-    case 'saveStarted':
-      next.isSaving = true;
-      break;
-    case 'saved':
-      next.isSaving = false;
-      next.isSaved = true;
-      next.clip = action.clip;
-      if (!differs(state.draft, action.clip)) {
-        next.draft = draftFromClip(action.clip);
+      state.clip = clip;
+    },
+    loadFailed(state) {
+      if (state.phase === 'loading') return { phase: 'closed' };
+    },
+    removed(state) {
+      if (state.phase === 'loading') return { phase: 'closed' };
+      if (state.phase === 'closed') return;
+      state.isSavingToPhotos = false;
+      state.isSaving = false;
+      state.isDeleting = false;
+      state.isRemoved = true;
+      state.isDeleteSheetOpen = false;
+    },
+    nameChanged(state, { payload: name }: PayloadAction<string>) {
+      if (state.phase === 'loaded') state.draft.name = name;
+    },
+    pinnedChanged(state, { payload: isPinned }: PayloadAction<boolean>) {
+      if (state.phase === 'loaded') state.draft.isPinned = isPinned;
+    },
+    saved(state, { payload: clip }: PayloadAction<ClipRecord>) {
+      if (state.phase !== 'loaded') return;
+      state.isSaving = false;
+      state.isSaved = true;
+      state.clip = clip;
+      if (!differs(state.draft, clip)) state.draft = draftFromClip(clip);
+    },
+    saveFailed(state) {
+      if (state.phase === 'loaded') state.isSaving = false;
+    },
+    deleteSheetShown(state) {
+      if (state.phase === 'loaded') state.isDeleteSheetOpen = true;
+    },
+    deleteSheetClosed(state) {
+      if (state.phase === 'loaded') state.isDeleteSheetOpen = false;
+    },
+    deleteFailed(state) {
+      if (state.phase === 'loaded') state.isDeleting = false;
+    },
+    photoSaveFinished(state) {
+      if (state.phase === 'loaded') state.isSavingToPhotos = false;
+    },
+    previewReady(state, { payload: uri }: PayloadAction<string>) {
+      if (state.phase === 'loaded' && !state.isRemoved) {
+        state.preview.uri = uri;
       }
-      break;
-    case 'saveFailed':
-      next.isSaving = false;
-      break;
-    case 'deleteSheetShown':
-      next.isDeleteSheetOpen = true;
-      break;
-    case 'deleteSheetClosed':
-      next.isDeleteSheetOpen = false;
-      break;
-    case 'deleteStarted':
-      next.isDeleting = true;
-      next.isDeleteSheetOpen = false;
-      break;
-    case 'photoSaveStarted':
-      next.isSavingToPhotos = true;
-      break;
-    case 'photoSaveFinished':
-      next.isSavingToPhotos = false;
-      break;
-    case 'previewReady':
-      if (!state.isRemoved) {
-        next.preview = { ...state.preview, uri: action.uri };
+    },
+    previewLoaded(
+      state,
+      { payload }: PayloadAction<{ width: number; height: number }>,
+    ) {
+      if (
+        state.phase !== 'loaded' ||
+        state.isRemoved ||
+        state.preview.status === 'failed'
+      ) {
+        return;
       }
-      break;
-    case 'previewLoaded':
-      if (!state.isRemoved && state.preview.status !== 'failed') {
-        next.preview = {
-          ...state.preview,
-          status: 'loaded',
-          aspectRatio:
-            0 < action.width && 0 < action.height
-              ? action.width / action.height
-              : state.preview.aspectRatio,
-        };
+      state.preview.status = 'loaded';
+      if (0 < payload.width && 0 < payload.height) {
+        state.preview.aspectRatio = payload.width / payload.height;
       }
-      break;
-    case 'previewFailed':
-      if (!state.isRemoved) {
-        next.preview = { ...state.preview, status: 'failed', uri: null };
+    },
+    previewFailed(state) {
+      if (state.phase === 'loaded' && !state.isRemoved) {
+        state.preview.status = 'failed';
+        state.preview.uri = null;
       }
-      break;
-    case 'deleteFailed':
-      next.isDeleting = false;
-      break;
-  }
-  return next;
-}
+    },
+  },
+});
+
+export const imageDetailActions = imageDetailSlice.actions;

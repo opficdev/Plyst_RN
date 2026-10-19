@@ -55,25 +55,35 @@
 > 화면을 닫은 뒤에도 구독과 비동기 요청이 남으면 종료된 화면의 상태를 갱신할 수 있음
 >
 > **해결**<br>
-> 화면마다 Store를 만들고 `store.ts`, `actions.ts`, `listeners.ts`로 역할 분리<br>
-> 원본 Swift Action 이름을 `action/<이름>`으로 유지해 ReactorKit의 Action, `mutate`, Mutation, `reduce` 흐름과 대응<br>
-> 화면 마운트의 `start()`와 해제의 `dispose()`에서 Listener, 요청 큐, 구독을 한 곳에서 정리
+> 화면마다 Store를 만들고 `createSlice`로 State와 Action을 정의하고 `listeners.ts`에 Service 호출과 구독을 분리<br>
+> `dispatch(textDetailActions.nameChanged(name))`처럼 Action 생성자를 호출해 문자열 `type`을 직접 쓰지 않음<br>
+> 화면 마운트의 `start()`와 해제의 `dispose()`에서 Listener를 끊고 요청 큐와 구독을 한 곳에서 정리
 >
 > **성과**<br>
 > ✅ Home, Search, TextDetail, ImageDetail 화면 컴포넌트에서 **Service 호출과 이벤트 구독 제거**<br>
-> ✅ 해제된 화면에서는 `dispatch`가 상태를 바꾸지 않아 **종료된 화면의 비동기 결과가 새 화면에 반영되지 않음**<br>
+> ✅ Action 이름과 payload의 오타를 **컴파일에서 검출**<br>
+> ✅ 해제된 화면의 Listener는 `signal`이 abort된 뒤 `dispatch`하지 않아 **종료된 화면의 비동기 결과가 새 화면에 반영되지 않음**<br>
 > ✅ 이미 시작한 저장과 복사의 결과 토스트는 **별도 호스트에서 계속 표시**<br>
 > ✅ **렌더링 없이** Store와 Listener를 Jest로 검증
 
 ```ts
-export const textDetailActions = {
-  save: createAction('action/save'),
-  // ...
-};
+export const textDetailSlice = createSlice({
+  name: 'textDetail',
+  reducers: {
+    nameChanged(state, { payload }: PayloadAction<string>) {
+      if (state.phase === 'loaded') state.draft.name = payload;
+    },
+    // ...
+  },
+});
 
-scope.listen(actions.save, async () => {
-  const result = await saveTextDetail(clipID, state.draft);
-  // ...
+listen({
+  actionCreator: textDetailActions.save,
+  effect: async (_, api) => {
+    const result = await saveTextDetail(clipID, draft);
+    if (!api.signal.aborted) api.dispatch(textDetailActions.saved(result.clip));
+    // ...
+  },
 });
 ```
 

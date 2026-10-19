@@ -1,16 +1,21 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import {
   canSave,
+  canStartDelete,
+  canStartSave,
   differs,
   draftFromClip,
   hasChanges,
-  initialState,
-  reduce,
+  isClosed,
+  isSaveEnabled,
+  loadedState,
+  textDetailActions as actions,
+  textDetailSlice,
 } from '../../../src/Feature/TextDetail/draft';
 import type {
   Draft,
-  TextDetailAction,
-  TextDetailState,
+  TextDetailLoaded,
+  TextDetailStoreState,
 } from '../../../src/Feature/TextDetail/draft';
 
 const clip: ClipRecord = {
@@ -76,8 +81,25 @@ test.each(['name', 'memo'] as const)(
   },
 );
 
-test('초기 상태는 원본의 초안과 모두 꺼진 플래그를 가진다', () => {
-  expect(initialState(clip)).toEqual({
+type Action = Parameters<typeof textDetailSlice.reducer>[1];
+
+function reduce(state: TextDetailStoreState, action: Action) {
+  return textDetailSlice.reducer(state, action);
+}
+function reduceLoaded(state: TextDetailLoaded, action: Action) {
+  return reduce(state, action) as TextDetailLoaded;
+}
+
+const loading = { phase: 'loading' } as const;
+const closed = { phase: 'closed' } as const;
+
+test('초기 상태는 조회 전이다', () => {
+  expect(textDetailSlice.getInitialState()).toEqual(loading);
+});
+
+test('조회된 상태는 원본의 초안과 모두 꺼진 플래그를 가진다', () => {
+  expect(loadedState(clip)).toEqual({
+    phase: 'loaded',
     clip,
     draft: draftFromClip(clip),
     isSaving: false,
@@ -89,7 +111,7 @@ test('초기 상태는 원본의 초안과 모두 꺼진 플래그를 가진다'
 });
 
 test('변경이 있을 때만 저장할 수 있다', () => {
-  const state = initialState(clip);
+  const state = loadedState(clip);
   expect(hasChanges(state)).toBe(false);
   expect(canSave(state)).toBe(false);
   const changed = { ...state, draft: { ...state.draft, name: '이름' } };
@@ -103,17 +125,90 @@ test('변경이 있을 때만 저장할 수 있다', () => {
 test.each(['isSaving', 'isDeleting', 'isRemoved'] as const)(
   '%s이면 변경이 있어도 저장할 수 없다',
   (flag) => {
-    const state = initialState(clip);
+    const state = loadedState(clip);
     state.draft.name = '이름';
     expect(canSave({ ...state, [flag]: true })).toBe(false);
   },
 );
 
+test('저장 버튼은 저장 뒤에도 켜져 있지만 저장 시작은 막는다', () => {
+  const state = {
+    ...loadedState(clip),
+    draft: { name: '이름', memo: '', isPinned: false },
+  };
+  expect(isSaveEnabled(state)).toBe(true);
+  expect(canStartSave(state)).toBe(true);
+  const saved = { ...state, isSaved: true };
+  expect(isSaveEnabled(saved)).toBe(true);
+  expect(canStartSave(saved)).toBe(false);
+  expect(isSaveEnabled(loading)).toBe(false);
+  expect(canStartSave(closed)).toBe(false);
+});
+
+test.each(['isDeleting', 'isRemoved'] as const)(
+  '%s이면 삭제를 시작할 수 없다',
+  (flag) => {
+    const state = loadedState(clip);
+    expect(canStartDelete(state)).toBe(true);
+    expect(canStartDelete({ ...state, [flag]: true })).toBe(false);
+    expect(canStartDelete(loading)).toBe(false);
+  },
+);
+
+test('닫힘은 조회 실패나 삭제 또는 저장 완료로 판정한다', () => {
+  const state = loadedState(clip);
+  expect(isClosed(loading)).toBe(false);
+  expect(isClosed(closed)).toBe(true);
+  expect(isClosed(state)).toBe(false);
+  expect(isClosed({ ...state, isRemoved: true })).toBe(true);
+  expect(isClosed({ ...state, isSaved: true })).toBe(true);
+});
+
 const updated = { ...clip, name: '새 이름', memo: '새 메모', pinnedAt: 1000 };
 
+test('조회 전에는 편집과 저장과 삭제 시작이 상태를 바꾸지 않는다', () => {
+  for (const action of [
+    actions.nameChanged('이름'),
+    actions.memoChanged('메모'),
+    actions.pinnedChanged(true),
+    actions.save(),
+    actions.delete(),
+    actions.saved(updated),
+    actions.saveFailed(),
+    actions.deleteSheetShown(),
+    actions.deleteSheetClosed(),
+    actions.deleteFailed(),
+  ]) {
+    expect(reduce(loading, action)).toEqual(loading);
+  }
+});
+
+test('조회 전 clipLoaded는 조회된 상태가 되고 removed와 loadFailed는 화면을 닫는다', () => {
+  expect(reduce(loading, actions.clipLoaded(clip))).toEqual(loadedState(clip));
+  expect(reduce(loading, actions.removed())).toEqual(closed);
+  expect(reduce(loading, actions.loadFailed())).toEqual(closed);
+});
+
+test('닫힌 상태는 어떤 action에도 바뀌지 않는다', () => {
+  for (const action of [
+    actions.clipLoaded(clip),
+    actions.removed(),
+    actions.loadFailed(),
+    actions.nameChanged('이름'),
+    actions.save(),
+  ]) {
+    expect(reduce(closed, action)).toEqual(closed);
+  }
+});
+
+test('조회된 뒤의 loadFailed는 상태를 바꾸지 않는다', () => {
+  const state = loadedState(clip);
+  expect(reduceLoaded(state, actions.loadFailed())).toEqual(state);
+});
+
 test('clipLoaded는 편집하지 않은 초안을 새 원본에 맞춘다', () => {
-  const state = initialState(clip);
-  expect(reduce(state, { type: 'clipLoaded', clip: updated })).toEqual({
+  const state = loadedState(clip);
+  expect(reduceLoaded(state, actions.clipLoaded(updated))).toEqual({
     ...state,
     clip: updated,
     draft: draftFromClip(updated),
@@ -126,29 +221,37 @@ test.each<Partial<Draft>>([
   { isPinned: true },
   { name: ' ' },
 ])('clipLoaded는 편집 중인 초안 %j을 유지한다', (change) => {
-  const state = initialState(clip);
+  const state = loadedState(clip);
   state.draft = { ...state.draft, ...change };
-  expect(reduce(state, { type: 'clipLoaded', clip: updated })).toEqual({
+  expect(reduceLoaded(state, actions.clipLoaded(updated))).toEqual({
     ...state,
     clip: updated,
   });
 });
 
+test.each(['isRemoved', 'isSaved'] as const)(
+  'clipLoaded는 %s인 상태를 바꾸지 않는다',
+  (flag) => {
+    const state = { ...loadedState(clip), [flag]: true };
+    expect(reduceLoaded(state, actions.clipLoaded(updated))).toEqual(state);
+  },
+);
+
 test('clipLoaded의 초안 비교는 정준 동등성을 적용하지 않는다', () => {
-  const state = initialState({ ...clip, name: 'é' });
+  const state = loadedState({ ...clip, name: 'é' });
   state.draft.name = 'e\u0301';
   expect(hasChanges(state)).toBe(false);
-  expect(reduce(state, { type: 'clipLoaded', clip: updated }).draft).toEqual(
+  expect(reduceLoaded(state, actions.clipLoaded(updated)).draft).toEqual(
     state.draft,
   );
 });
 
 test('saved는 저장된 값과 같은 초안을 정리한다', () => {
-  const state = initialState(clip);
+  const state = loadedState(clip);
   state.isSaving = true;
   state.draft = { name: ' é ', memo: whitespace, isPinned: true };
   const saved = { ...clip, name: 'e\u0301', pinnedAt: 1000 };
-  expect(reduce(state, { type: 'saved', clip: saved })).toEqual({
+  expect(reduceLoaded(state, actions.saved(saved))).toEqual({
     ...state,
     clip: saved,
     draft: draftFromClip(saved),
@@ -162,10 +265,10 @@ test.each<Partial<Draft>>([
   { memo: '추가 메모' },
   { isPinned: false },
 ])('saved는 저장 중 추가 편집 %j을 보존한다', (change) => {
-  const state = initialState(clip);
+  const state = loadedState(clip);
   state.isSaving = true;
   state.draft = { ...draftFromClip(updated), ...change };
-  expect(reduce(state, { type: 'saved', clip: updated })).toEqual({
+  expect(reduceLoaded(state, actions.saved(updated))).toEqual({
     ...state,
     clip: updated,
     isSaving: false,
@@ -173,34 +276,55 @@ test.each<Partial<Draft>>([
   });
 });
 
-test.each<[TextDetailAction, Partial<TextDetailState>]>([
+test.each<[Action, Partial<TextDetailLoaded>]>([
   [
-    { type: 'nameChanged', name: '이름' },
+    actions.nameChanged('이름'),
     { draft: { name: '이름', memo: '', isPinned: false } },
   ],
   [
-    { type: 'memoChanged', memo: '메모' },
+    actions.memoChanged('메모'),
     { draft: { name: '', memo: '메모', isPinned: false } },
   ],
   [
-    { type: 'pinnedChanged', isPinned: true },
+    actions.pinnedChanged(true),
     { draft: { name: '', memo: '', isPinned: true } },
   ],
-  [{ type: 'saveStarted' }, { isSaving: true }],
-  [{ type: 'deleteSheetShown' }, { isDeleteSheetOpen: true }],
-  [{ type: 'deleteStarted' }, { isDeleting: true, isDeleteSheetOpen: false }],
+  [actions.deleteSheetShown(), { isDeleteSheetOpen: true }],
 ])('%j는 해당 상태만 변경한다', (action, change) => {
-  const state = initialState(clip);
-  expect(reduce(state, action)).toEqual({ ...state, ...change });
+  const state = loadedState(clip);
+  expect(reduceLoaded(state, action)).toEqual({ ...state, ...change });
 });
 
-test.each<[TextDetailAction, Partial<TextDetailState>]>([
-  [{ type: 'saveFailed' }, { isSaving: false }],
-  [{ type: 'deleteFailed' }, { isDeleting: false }],
-  [{ type: 'deleteSheetClosed' }, { isDeleteSheetOpen: false }],
-  [{ type: 'deleteStarted' }, { isDeleting: true, isDeleteSheetOpen: false }],
+test('save는 저장할 수 있을 때만 저장 중으로 바꾼다', () => {
+  const state = loadedState(clip);
+  expect(reduceLoaded(state, actions.save())).toEqual(state);
+  const edited = { ...state, draft: { ...state.draft, name: '이름' } };
+  expect(reduceLoaded(edited, actions.save())).toEqual({
+    ...edited,
+    isSaving: true,
+  });
+  const saving = { ...edited, isSaving: true };
+  expect(reduceLoaded(saving, actions.save())).toEqual(saving);
+});
+
+test('delete는 삭제를 시작하면서 시트를 닫고 진행 중에는 다시 시작하지 않는다', () => {
+  const state = { ...loadedState(clip), isDeleteSheetOpen: true };
+  const started = reduceLoaded(state, actions.delete());
+  expect(started).toEqual({
+    ...state,
+    isDeleting: true,
+    isDeleteSheetOpen: false,
+  });
+  expect(canStartDelete(started)).toBe(false);
+  expect(reduceLoaded(started, actions.delete())).toEqual(started);
+});
+
+test.each<[Action, Partial<TextDetailLoaded>]>([
+  [actions.saveFailed(), { isSaving: false }],
+  [actions.deleteFailed(), { isDeleting: false }],
+  [actions.deleteSheetClosed(), { isDeleteSheetOpen: false }],
   [
-    { type: 'removed' },
+    actions.removed(),
     {
       isSaving: false,
       isDeleting: false,
@@ -210,30 +334,31 @@ test.each<[TextDetailAction, Partial<TextDetailState>]>([
   ],
 ])('%j는 진행 중인 플래그와 시트를 규칙에 따라 해제한다', (action, change) => {
   const state = {
-    ...initialState(clip),
+    ...loadedState(clip),
     isSaving: true,
     isDeleting: true,
     isDeleteSheetOpen: true,
     isSaved: true,
   };
-  expect(reduce(state, action)).toEqual({ ...state, ...change });
+  expect(reduceLoaded(state, action)).toEqual({ ...state, ...change });
 });
 
-test.each<TextDetailAction>([
-  { type: 'clipLoaded', clip: updated },
-  { type: 'removed' },
-  { type: 'nameChanged', name: '이름' },
-  { type: 'memoChanged', memo: '메모' },
-  { type: 'pinnedChanged', isPinned: true },
-  { type: 'saveStarted' },
-  { type: 'saved', clip: updated },
-  { type: 'saveFailed' },
-  { type: 'deleteSheetShown' },
-  { type: 'deleteSheetClosed' },
-  { type: 'deleteStarted' },
-  { type: 'deleteFailed' },
-])('%j는 입력을 변형하지 않고 새 상태와 초안을 반환한다', (action) => {
-  const state = initialState(Object.freeze({ ...clip }));
+test.each<Action>([
+  actions.clipLoaded(updated),
+  actions.removed(),
+  actions.nameChanged('이름'),
+  actions.memoChanged('메모'),
+  actions.pinnedChanged(true),
+  actions.save(),
+  actions.saved(updated),
+  actions.saveFailed(),
+  actions.deleteSheetShown(),
+  actions.deleteSheetClosed(),
+  actions.delete(),
+  actions.deleteFailed(),
+])('%j는 입력 상태를 변형하지 않는다', (action) => {
+  const state = loadedState(Object.freeze({ ...clip }));
+  state.draft.name = '편집';
   const before = {
     ...state,
     clip: { ...state.clip },
@@ -241,9 +366,6 @@ test.each<TextDetailAction>([
   };
   Object.freeze(state.draft);
   Object.freeze(state);
-  if ('clip' in action) Object.freeze(action.clip);
-  const next = reduce(state, Object.freeze(action));
+  reduce(state, action);
   expect(state).toEqual(before);
-  expect(next).not.toBe(state);
-  expect(next.draft).not.toBe(state.draft);
 });

@@ -1,7 +1,7 @@
 import { subscribeClipChanges } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createTextDetailStore } from '../../../src/Feature/TextDetail/store';
-import { textDetailActions as actions } from '../../../src/Feature/TextDetail/actions';
+import { textDetailActions as actions } from '../../../src/Feature/TextDetail/draft';
 import { loadTextDetail } from '../../../src/Service/Clip/loadTextDetail';
 import { saveTextDetail } from '../../../src/Feature/TextDetail/save';
 import { copyClipDetail } from '../../../src/Service/Clip/copyDetail';
@@ -79,7 +79,7 @@ test('저장 중 재요청을 막고 실패해도 편집값을 보존한다', as
   const pending = deferred<Awaited<ReturnType<typeof saveTextDetail>>>();
   jest.mocked(saveTextDetail).mockReturnValue(pending.promise);
   const screen = await mounted();
-  screen.store.dispatch({ type: 'nameChanged', name: '수정' });
+  screen.store.dispatch(actions.nameChanged('수정'));
   screen.store.dispatch(actions.save());
   screen.store.dispatch(actions.save());
   expect(saveTextDetail).toHaveBeenCalledTimes(1);
@@ -110,20 +110,20 @@ test('종료된 저장 결과는 토스트만 표시하고 재시작한 상태�
   const pending = deferred<Awaited<ReturnType<typeof saveTextDetail>>>();
   jest.mocked(saveTextDetail).mockReturnValue(pending.promise);
   const screen = await mounted();
-  screen.store.dispatch({ type: 'nameChanged', name: '수정' });
+  screen.store.dispatch(actions.nameChanged('수정'));
   screen.store.dispatch(actions.save());
   screen.dispose();
   screen.start();
   pending.resolve({ status: 'saved', clip: { ...clip, name: '수정' } });
   await settle();
-  expect(screen.store.getState()).toBeNull();
+  expect(screen.store.getState()).toEqual({ phase: 'loading' });
   expect(showToast).toHaveBeenCalledWith('저장했습니다', true);
   screen.dispose();
 });
 
 test('조회 실패는 최초 화면만 닫고 기존 편집 상태는 보존한다', async () => {
   const screen = await mounted();
-  screen.store.dispatch({ type: 'nameChanged', name: '편집 중' });
+  screen.store.dispatch(actions.nameChanged('편집 중'));
   jest.mocked(loadTextDetail).mockResolvedValue({ status: 'failed' });
   jest
     .mocked(subscribeClipChanges)
@@ -134,7 +134,7 @@ test('조회 실패는 최초 화면만 닫고 기존 편집 상태는 보존한
   screen.start();
   screen.store.dispatch(actions.viewDidLoad());
   await settle();
-  expect(screen.store.getState()).toBe('closed');
+  expect(screen.store.getState()).toEqual({ phase: 'closed' });
   screen.dispose();
 });
 
@@ -154,4 +154,23 @@ test('화면 종료 뒤에도 이미 요청한 복사와 삭제 실패를 알린
   await settle();
   expect(showToast).toHaveBeenCalledWith('클립보드에 복사했습니다', true);
   expect(showToast).toHaveBeenCalledWith('삭제하지 못했습니다', false);
+});
+
+test('조회된 클립이 없으면 최초 화면을 닫는다', async () => {
+  jest.mocked(loadTextDetail).mockResolvedValue({ status: 'missing' });
+  const screen = await mounted();
+  expect(screen.store.getState()).toEqual({ phase: 'closed' });
+  screen.dispose();
+});
+
+test('종료된 뒤 도착한 변경 알림은 조회와 상태 변경을 일으키지 않는다', async () => {
+  const screen = await mounted();
+  const change = jest.mocked(subscribeClipChanges).mock.calls[0][0];
+  const before = screen.store.getState();
+  screen.dispose();
+  change({ id: clip.id, kind: 'updated' });
+  change({ id: clip.id, kind: 'deleted' });
+  await settle();
+  expect(loadTextDetail).toHaveBeenCalledTimes(1);
+  expect(screen.store.getState()).toBe(before);
 });

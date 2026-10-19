@@ -56,7 +56,7 @@ import {
 import { createSearchIndex } from './match';
 import type { SearchState } from './state';
 import { createSearchStore } from './store';
-import { searchActions as actions } from './actions';
+import { searchActions as actions } from './state';
 import {
   ScreenProvider,
   useScreenState,
@@ -137,7 +137,7 @@ function SearchScreen({
   );
   const now = useClipTimeline(dates, true);
   useEffect(() => {
-    dispatch({ type: 'timeChanged', now });
+    dispatch(actions.timeChanged(now));
   }, [dispatch, now]);
   useEffect(() => {
     times.retain(state.clips);
@@ -241,6 +241,7 @@ function SearchScreen({
   const thumbnails = useClipThumbnails<SearchListItem>(
     state,
     dispatch,
+    actions,
     pixels,
     pixels,
     0 < listWidth && mode === 'results',
@@ -329,9 +330,7 @@ function SearchScreen({
           <TextInput
             ref={input}
             value={state.query}
-            onChangeText={(value) =>
-              dispatch({ type: 'queryChanged', query: value })
-            }
+            onChangeText={(value) => dispatch(actions.queryChanged(value))}
             placeholder="복사한 내용 검색"
             placeholderTextColor={colors.SecondaryText}
             returnKeyType="search"
@@ -383,9 +382,7 @@ function SearchScreen({
               keyboardShouldPersistTaps="handled"
               chips={chips}
               selectedKey={state.filter}
-              onSelect={(filter) =>
-                dispatch({ type: 'filterSelected', filter })
-              }
+              onSelect={(filter) => dispatch(actions.filterSelected(filter))}
             />
           </View>
           <View style={styles.list}>
@@ -393,7 +390,7 @@ function SearchScreen({
               <SearchRecent
                 {...recent}
                 onTermButtonPress={(term) =>
-                  dispatch({ type: 'queryChanged', query: term })
+                  dispatch(actions.queryChanged(term))
                 }
                 onRemoveButtonPress={(term) =>
                   dispatch(actions.removeRecentTerm(term))

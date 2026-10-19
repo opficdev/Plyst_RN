@@ -1,130 +1,150 @@
 import { subscribeClipChanges } from 'plyst-bridge';
-import type { ScreenScope } from '../../Shared/State/screenStore';
+import { untilAborted } from '../../Shared/State/screenStore';
+import type { SliceListen } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
 import { copyClipDetail } from '../../Service/Clip/copyDetail';
 import { deleteClipDetail } from '../../Service/Clip/deleteDetail';
 import { loadImageDetail } from '../../Service/Clip/loadImageDetail';
+import { loadImageDetailPreview } from '../../Service/Clip/loadImageDetailPreview';
 import { createClipDetailRefresher } from '../ClipDetail/refresher';
 import { saveImageDetail } from './save';
-import { canSave } from './draft';
-import type { ImageDetailState } from './draft';
-import { imageDetailActions as actions } from './actions';
-import { loadImageDetailPreview } from '../../Service/Clip/loadImageDetailPreview';
 import { saveImageDetailToPhotos } from './saveToPhotos';
+import {
+  canStartDelete,
+  canStartPhotoSave,
+  canStartSave,
+  imageDetailActions as actions,
+  isClosed,
+} from './draft';
+import type { ImageDetailStoreState } from './draft';
 
 export function startImageDetailListeners(
-  scope: ScreenScope<ImageDetailState | null | 'closed'>,
+  listen: SliceListen<ImageDetailStoreState>,
   clipID: string,
 ) {
-  let started = false;
-  const current = () => {
-    const state = scope.getState();
-    return state !== null && state !== 'closed' ? state : null;
-  };
-  const isStopped = () => {
-    const state = scope.getState();
-    return (
-      scope.isDisposed() ||
-      state === 'closed' ||
-      !!(state?.isRemoved || state?.isSaved)
-    );
-  };
-  const refresher = createClipDetailRefresher({
-    load: () => loadImageDetail(clipID),
-    onResult(result) {
-      if (isStopped()) return;
-      if (result.status === 'loaded') {
-        scope.dispatch({ type: 'clipLoaded', clip: result.clip });
-        scope.dispatch(actions.previewRequested());
-      } else if (result.status === 'missing') {
-        scope.dispatch({ type: 'removed' });
-      } else {
-        scope.dispatch({ type: 'loadFailed' });
+  listen({
+    actionCreator: actions.viewDidLoad,
+    effect: async (_, api) => {
+      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유합니다.
+      api.unsubscribe();
+      const isStopped = () => api.signal.aborted || isClosed(api.getState());
+      const refresher = createClipDetailRefresher({
+        load: () => loadImageDetail(clipID),
+        onResult(result) {
+          if (isStopped()) return;
+          if (result.status === 'loaded') {
+            api.dispatch(actions.clipLoaded(result.clip));
+            api.dispatch(actions.previewRequested());
+          } else if (result.status === 'missing') {
+            api.dispatch(actions.removed());
+          } else {
+            api.dispatch(actions.loadFailed());
+          }
+        },
+      });
+      const subscription = subscribeClipChanges((change) => {
+        if (change.id !== clipID || isStopped()) return;
+        if (change.kind === 'updated') void refresher.refresh();
+        else if (change.kind === 'deleted') {
+          refresher.invalidate();
+          api.dispatch(actions.removed());
+        }
+      });
+      const aborted = untilAborted(api.signal, () => {
+        subscription.remove();
+        refresher.dispose();
+      });
+      if (!isStopped()) void refresher.refresh();
+      await aborted;
+    },
+  });
+  listen({
+    actionCreator: actions.save,
+    effect: async (_, api) => {
+      const before = api.getOriginalState();
+      if (!canStartSave(before)) return;
+      const result = await saveImageDetail(
+        clipID,
+        before.draft,
+        before.clip.memo,
+      );
+      // 이미 시작한 쓰기의 결과 토스트는 화면이 닫힌 뒤에도 유지합니다.
+      const isActive = !api.signal.aborted;
+      switch (result.status) {
+        case 'saved':
+          if (isActive) api.dispatch(actions.saved(result.clip));
+          showToast('저장했습니다', true);
+          break;
+        case 'removed':
+          if (isActive) api.dispatch(actions.removed());
+          break;
+        case 'failed':
+          if (isActive) api.dispatch(actions.saveFailed());
+          showToast('저장하지 못했습니다', false);
+          break;
       }
     },
   });
-  scope.onDispose(() => refresher.dispose());
-  scope.listen(actions.viewDidLoad, () => {
-    if (started) return;
-    started = true;
-    const subscription = subscribeClipChanges((change) => {
-      if (change.id !== clipID || isStopped()) return;
-      if (change.kind === 'updated') void refresher.refresh();
-      else if (change.kind === 'deleted') {
-        refresher.invalidate();
-        scope.dispatch({ type: 'removed' });
+  listen({
+    actionCreator: actions.copy,
+    effect: async (_, api) => {
+      const state = api.getState();
+      if (state.phase !== 'loaded' || state.isDeleting || state.isRemoved) {
+        return;
       }
-    });
-    scope.onDispose(() => subscription.remove());
-    if (!isStopped()) void refresher.refresh();
+      const result = await copyClipDetail(clipID);
+      // 복사 결과는 화면 수명과 관계없이 기존 토스트 창에 표시합니다.
+      showToast(
+        result === 'copied'
+          ? '클립보드에 복사했습니다'
+          : '클립보드에 복사하지 못했습니다',
+        result === 'copied',
+      );
+    },
   });
-  scope.listen(actions.save, async () => {
-    const state = current();
-    if (isStopped() || !state || !canSave(state)) return;
-    scope.dispatch({ type: 'saveStarted' });
-    const result = await saveImageDetail(clipID, state.draft, state.clip.memo);
-    // 이미 시작한 쓰기의 결과 토스트는 화면이 닫힌 뒤에도 유지합니다.
-    const disposed = scope.isDisposed();
-    switch (result.status) {
-      case 'saved':
-        if (!disposed) scope.dispatch({ type: 'saved', clip: result.clip });
-        showToast('저장했습니다', true);
-        break;
-      case 'removed':
-        if (!disposed) scope.dispatch({ type: 'removed' });
-        break;
-      case 'failed':
-        if (!disposed) scope.dispatch({ type: 'saveFailed' });
-        showToast('저장하지 못했습니다', false);
-        break;
-    }
+  listen({
+    actionCreator: actions.delete,
+    effect: async (_, api) => {
+      if (!canStartDelete(api.getOriginalState())) return;
+      const result = await deleteClipDetail(clipID);
+      if (!api.signal.aborted) {
+        api.dispatch(
+          result === 'deleted' ? actions.removed() : actions.deleteFailed(),
+        );
+      }
+      if (result === 'failed') showToast('삭제하지 못했습니다', false);
+    },
   });
-  scope.listen(actions.copy, async () => {
-    const state = current();
-    if (!state || state.isDeleting || state.isRemoved) return;
-    const result = await copyClipDetail(clipID);
-    // 복사 결과는 화면 수명과 관계없이 기존 토스트 창에 표시합니다.
-    showToast(
-      result === 'copied'
-        ? '클립보드에 복사했습니다'
-        : '클립보드에 복사하지 못했습니다',
-      result === 'copied',
-    );
+  listen({
+    actionCreator: actions.previewRequested,
+    effect: async (_, api) => {
+      // 중단된 화면은 다시 살아나지 않으므로 그대로 끝냅니다.
+      if (api.signal.aborted || isClosed(api.getState())) return;
+      api.unsubscribe();
+      const preview = await loadImageDetailPreview(clipID);
+      if (api.signal.aborted || isClosed(api.getState())) return;
+      api.dispatch(
+        preview.status === 'loaded'
+          ? actions.previewReady(preview.uri)
+          : actions.previewFailed(),
+      );
+    },
   });
-  scope.listen(actions.delete, async () => {
-    const state = current();
-    if (!state || state.isDeleting || state.isRemoved) return;
-    scope.dispatch({ type: 'deleteStarted' });
-    const result = await deleteClipDetail(clipID);
-    if (!scope.isDisposed())
-      scope.dispatch({
-        type: result === 'deleted' ? 'removed' : 'deleteFailed',
-      });
-    if (result === 'failed') showToast('삭제하지 못했습니다', false);
-  });
-  let previewRequested = false;
-  scope.listen(actions.previewRequested, async () => {
-    if (previewRequested || isStopped()) return;
-    previewRequested = true;
-    const preview = await loadImageDetailPreview(clipID);
-    if (isStopped()) return;
-    scope.dispatch(
-      preview.status === 'loaded'
-        ? { type: 'previewReady', uri: preview.uri }
-        : { type: 'previewFailed' },
-    );
-  });
-  scope.listen(actions.saveToPhotos, async () => {
-    const state = current();
-    if (!state || state.isSavingToPhotos || state.isDeleting || state.isRemoved)
-      return;
-    scope.dispatch({ type: 'photoSaveStarted' });
-    const result = await saveImageDetailToPhotos(clipID);
-    if (!scope.isDisposed())
-      scope.dispatch({
-        type: result.status === 'removed' ? 'removed' : 'photoSaveFinished',
-      });
-    if (result.status !== 'removed')
-      showToast(result.message, result.isSuccess);
+  listen({
+    actionCreator: actions.saveToPhotos,
+    effect: async (_, api) => {
+      if (!canStartPhotoSave(api.getOriginalState())) return;
+      const result = await saveImageDetailToPhotos(clipID);
+      if (!api.signal.aborted) {
+        api.dispatch(
+          result.status === 'removed'
+            ? actions.removed()
+            : actions.photoSaveFinished(),
+        );
+      }
+      if (result.status !== 'removed') {
+        showToast(result.message, result.isSuccess);
+      }
+    },
   });
 }
