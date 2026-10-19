@@ -1,18 +1,16 @@
+import { navigationActions as actions } from '../../src/App/navigation';
 import { createAppStore } from '../../src/App/store';
 
 test('이동 상태를 store에서 바꾸고 다시 시작하면 처음 상태로 돌아간다', () => {
   const screen = createAppStore();
   screen.start();
-  screen.store.dispatch({ type: 'searchOpened' });
-  screen.store.dispatch({
-    type: 'clipOpened',
-    detail: { clipID: 'clip', kind: 'image' },
-  });
+  screen.store.dispatch(actions.searchOpened());
+  screen.store.dispatch(actions.clipOpened({ clipID: 'clip', kind: 'image' }));
   expect(screen.store.getState()).toEqual({
     isSearchVisible: true,
     detail: { clipID: 'clip', kind: 'image' },
   });
-  screen.store.dispatch({ type: 'clipClosed' });
+  screen.store.dispatch(actions.clipClosed());
   expect(screen.store.getState().detail).toBeNull();
   screen.dispose();
   screen.start();

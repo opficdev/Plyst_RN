@@ -10,6 +10,7 @@ import { HomeView } from '../Feature/Home/View';
 import { SearchView } from '../Feature/Search/View';
 import { ImageDetailView } from '../Feature/ImageDetail/View';
 import { TextDetailView } from '../Feature/TextDetail/View';
+import { navigationActions as actions } from './navigation';
 import type { AppNavigation } from './navigation';
 import { createAppStore } from './store';
 
@@ -34,19 +35,19 @@ function AppContent() {
   const dispatch = useScreenDispatch();
   const openClip = useCallback(
     (clipID: string, kind: ClipKind) =>
-      dispatch({ type: 'clipOpened', detail: { clipID, kind } }),
+      dispatch(actions.clipOpened({ clipID, kind })),
     [dispatch],
   );
   const closeClip = useCallback(
-    () => dispatch({ type: 'clipClosed' }),
+    () => dispatch(actions.clipClosed()),
     [dispatch],
   );
   const openSearch = useCallback(
-    () => dispatch({ type: 'searchOpened' }),
+    () => dispatch(actions.searchOpened()),
     [dispatch],
   );
   const closeSearch = useCallback(
-    () => dispatch({ type: 'searchClosed' }),
+    () => dispatch(actions.searchClosed()),
     [dispatch],
   );
   // 화면마다 필요한 동작만 타입으로 받으므로 모든 동작을 담은 객체를 한 번만 만들어 넘깁니다.
