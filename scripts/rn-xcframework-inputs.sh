@@ -82,8 +82,10 @@ bundle_lines() {
 		rn/src
 }
 
+# 파이프라인 안에서는 exit가 스크립트를 끝내지 못하므로 줄을 먼저 변수에 받아 실패를 전달합니다.
 hash_of() {
-	"$1" | shasum -a 256 | cut -d ' ' -f 1
+	lines=$("$1")
+	printf '%s\n' "$lines" | shasum -a 256 | cut -d ' ' -f 1
 }
 
 all_lines() {
@@ -95,7 +97,10 @@ case "${1:-all}" in
 	lock) hash_of lock_lines ;;
 	native) hash_of native_lines ;;
 	all) hash_of all_lines ;;
-	files) all_lines | grep -v '^deployment_target' | cut -d ' ' -f 3- ;;
+	files)
+		lines=$(all_lines)
+		printf '%s\n' "$lines" | grep -v '^deployment_target' | cut -d ' ' -f 3-
+		;;
 	*)
 		printf '사용법: %s [lock|native|all|files]\n' "$0" >&2
 		exit 1
