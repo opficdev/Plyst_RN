@@ -14,6 +14,9 @@
       "components": {
         "PlystDetailBarButton": {
           "className": "PlystDetailBarButtonComponentView"
+        },
+        "PlystNavigationBarButton": {
+          "className": "PlystNavigationBarButtonComponentView"
         }
       }
     }

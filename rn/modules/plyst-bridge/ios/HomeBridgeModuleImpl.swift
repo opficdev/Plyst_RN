@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Objective-C++ 모듈이 JavaScript의 저장 요청 구독을 전달합니다.
+/// Objective-C++ 모듈이 JavaScript의 저장 요청 구독과 기기 종류 조회를 전달합니다.
 @objc(HomeBridgeModuleImpl)
 public final class HomeBridgeModuleImpl: NSObject, Sendable {
     private let id = UUID()
@@ -28,6 +28,12 @@ public final class HomeBridgeModuleImpl: NSObject, Sendable {
             guard !isInvalidated else { return }
             HomeBridge.register(id: id, requestSave: requestSave)
         }
+    }
+
+    /// JavaScript가 iPhone Duo 여부를 동기로 읽습니다. 등록과 관계없으므로 ready() 전에도 호출할 수 있습니다.
+    @objc
+    public nonisolated func isDuoDevice() -> Bool {
+        DeviceModel.isDuo
     }
 
     /// 네이티브 모듈이 종료될 때 호출합니다. 자신의 이벤트 등록을 해제하고 이후 요청을 무시합니다.
