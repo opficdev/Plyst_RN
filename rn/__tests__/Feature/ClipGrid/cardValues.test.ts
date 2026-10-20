@@ -2,6 +2,7 @@ import type { ClipRecord } from '../../../src/Model/clipRecord';
 import {
   clipCardValues,
   clipColumnWidth,
+  clipListRightMargin,
   clipThumbnailPixels,
 } from '../../../src/Feature/ClipGrid/cardValues';
 const clip: ClipRecord = {
@@ -84,4 +85,12 @@ test('썸네일 픽셀은 올림하며 최소 1이고 고정 카드는 열 너�
   expect(clipThumbnailPixels(200, 2.76, true)).toBe(155);
   expect(clipColumnWidth(0)).toBe(1);
   expect(clipThumbnailPixels(1, 3)).toBe(1);
+});
+
+test('오른쪽 safe area가 있으면 목록 틀은 카드 바깥 여백만큼 safe area 안으로 들어간다', () => {
+  expect(clipListRightMargin(0)).toBe(0);
+  expect(clipListRightMargin(84)).toBe(68);
+  // 오른쪽 열 카드의 오른쪽 끝은 목록 틀 끝에서 카드 바깥 여백 16을 뺀 곳이다.
+  const width = 466 - clipListRightMargin(84);
+  expect(width - 16).toBe(466 - 84);
 });

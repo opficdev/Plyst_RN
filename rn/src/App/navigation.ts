@@ -13,8 +13,8 @@ export function initialNavigation(): AppNavigation {
   return { isSearchVisible: false, detail: null };
 }
 
-// clipClosed는 시트의 dismiss가 끝난 뒤에만 보냅니다.
-// 시트 present가 실패하면 detail이 남아 앱을 다시 시작할 때까지 상세와 검색이 열리지 않는 한계가 있습니다.
+// clipClosed는 닫기 버튼, 스와이프 dismiss, 저장·삭제 완료 중 먼저 온 것으로 보내며 여러 번 보내도 같습니다.
+// detail을 비우면 스택 항목이 빠지면서 시스템이 시트를 dismiss합니다.
 export const navigationSlice = createSlice({
   name: 'navigation',
   initialState: initialNavigation,

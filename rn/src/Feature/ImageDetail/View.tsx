@@ -38,17 +38,31 @@ import { formatByteCount } from './formatByteCount';
 
 type ImageDetailViewProps = {
   clipID: string;
+  usesSystemBar: boolean;
   navigation: { closeClip: () => void };
 };
 
-// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 Modal 안에서만 그립니다.
-export function ImageDetailView({ clipID, navigation }: ImageDetailViewProps) {
+// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 시트 안에서만 그립니다.
+export function ImageDetailView({
+  clipID,
+  usesSystemBar,
+  navigation,
+}: ImageDetailViewProps) {
   return (
-    <ImageDetailRoot key={clipID} clipID={clipID} navigation={navigation} />
+    <ImageDetailRoot
+      key={clipID}
+      clipID={clipID}
+      usesSystemBar={usesSystemBar}
+      navigation={navigation}
+    />
   );
 }
 
-function ImageDetailRoot({ clipID, navigation }: ImageDetailViewProps) {
+function ImageDetailRoot({
+  clipID,
+  usesSystemBar,
+  navigation,
+}: ImageDetailViewProps) {
   const [screen] = useState(() => createImageDetailStore(clipID));
   useLayoutEffect(() => {
     screen.start();
@@ -59,21 +73,31 @@ function ImageDetailRoot({ clipID, navigation }: ImageDetailViewProps) {
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <ImageDetailContent closeClip={navigation.closeClip} />
+      <ImageDetailContent
+        usesSystemBar={usesSystemBar}
+        closeClip={navigation.closeClip}
+      />
     </ScreenProvider>
   );
 }
 
-function ImageDetailContent({ closeClip }: { closeClip: () => void }) {
+function ImageDetailContent({
+  usesSystemBar,
+  closeClip,
+}: {
+  usesSystemBar: boolean;
+  closeClip: () => void;
+}) {
   const state = useScreenState<ImageDetailStoreState>();
   const dispatch = useScreenDispatch();
   return (
     <ClipDetailSheet
       title="이미지"
+      usesSystemBar={usesSystemBar}
       isSaveEnabled={isSaveEnabled(state)}
       isClosed={isClosed(state)}
       onSaveButtonPress={() => dispatch(actions.save())}
-      onDismiss={closeClip}
+      onClose={closeClip}
     >
       {state.phase === 'loaded' ? (
         <ImageDetailEditor state={state} />
@@ -110,7 +134,8 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
   return (
     <View style={styles.canvas}>
       <ScrollView
-        style={styles.scroll}
+        // 본문은 오른쪽 안전 영역 앞에서 끝내고 하단 액션 바는 전체 너비를 씁니다.
+        style={[styles.scroll, { marginRight: insets.right }]}
         {...scrollProps}
         contentInsetAdjustmentBehavior="never"
       >

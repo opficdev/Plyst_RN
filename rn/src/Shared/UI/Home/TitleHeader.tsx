@@ -6,7 +6,8 @@ export function HomeTitleHeader({
   onSearchButtonPress,
   isSearchButtonDisabled = false,
 }: {
-  onSearchButtonPress: () => void;
+  // 지정하지 않으면 검색 버튼을 그리지 않습니다.
+  onSearchButtonPress?: () => void;
   isSearchButtonDisabled?: boolean;
 }) {
   return (
@@ -19,17 +20,19 @@ export function HomeTitleHeader({
       <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
         Plyst
       </Text>
-      <Pressable
-        style={styles.searchButton}
-        disabled={isSearchButtonDisabled}
-        onPress={onSearchButtonPress}
-      >
-        <Image
-          source="sf:magnifyingglass"
-          contentFit="contain"
-          style={styles.searchIcon}
-        />
-      </Pressable>
+      {onSearchButtonPress !== undefined && (
+        <Pressable
+          style={styles.searchButton}
+          disabled={isSearchButtonDisabled}
+          onPress={onSearchButtonPress}
+        >
+          <Image
+            source="sf:magnifyingglass"
+            contentFit="contain"
+            style={styles.searchIcon}
+          />
+        </Pressable>
+      )}
     </View>
   );
 }
