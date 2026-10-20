@@ -29,7 +29,7 @@ export const navigationSlice = createSlice({
       state.isSearchVisible = false;
     },
     clipOpened(state, { payload: detail }: PayloadAction<AppDetail>) {
-      // 상세가 열려 있거나 닫히는 중이면 다시 열지 않습니다.
+      // 상세가 열려 있으면 다시 열지 않습니다.
       if (state.detail === null) state.detail = detail;
     },
     clipClosed(state) {
