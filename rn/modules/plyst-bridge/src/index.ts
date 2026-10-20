@@ -90,6 +90,11 @@ export function deleteClip(id: string): Promise<void> {
 }
 
 export { default as PlystDetailBarButton } from './PlystDetailBarButtonNativeComponent';
+export { default as PlystNavigationBarButton } from './PlystNavigationBarButtonNativeComponent';
+
+export function isDuoDevice(): boolean {
+  return NativePlystHome.isDuoDevice();
+}
 
 export function subscribeClipboardSaveRequests(listener: () => void) {
   const subscription = NativePlystHome.onClipboardSaveRequest(listener);

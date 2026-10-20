@@ -41,6 +41,7 @@ import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
 import {
   clipCardValues,
   clipColumnWidth,
+  clipListRightMargin,
   clipThumbnailPixels,
 } from '../ClipGrid/cardValues';
 import { clipFilters, clipFilterTitles } from '../ClipGrid/filter';
@@ -64,6 +65,7 @@ import {
 } from '../../Shared/State/screenStore';
 import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 import { useClipTimeline } from '../ClipGrid/useTimeline';
+import { NavigationBarButton } from './NavigationBarButton';
 
 let hasPresentedKeyboard = false;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -77,6 +79,8 @@ const chips = clipFilters.map((key) => ({
 }));
 
 export type SearchViewProps = {
+  // iPhone Duo이면 true이며 닫기 버튼은 시스템 헤더 항목이 맡으므로 RN 취소 버튼을 그리지 않습니다.
+  usesSystemBar: boolean;
   navigation: {
     openClip: (id: string, kind: ClipKind) => void;
     closeSearch: () => void;
@@ -112,6 +116,7 @@ function SearchRoot(props: SearchViewProps) {
 function SearchScreen({
   index,
   times,
+  usesSystemBar,
   navigation,
 }: SearchViewProps & {
   index: ReturnType<typeof createSearchIndex>;
@@ -346,31 +351,35 @@ function SearchScreen({
             }}
           />
         </Animated.View>
-        <AnimatedPressable
-          style={[styles.cancel, { top: insets.top - 5, opacity: progress }]}
-          onPress={close}
-        >
-          <Animated.View
-            style={[
-              styles.buttonIcon,
-              {
-                opacity: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 0],
-                }),
-              },
-            ]}
+        {usesSystemBar ? (
+          <NavigationBarButton side="right" icon="xmark" onPress={close} />
+        ) : (
+          <AnimatedPressable
+            style={[styles.cancel, { top: insets.top - 5, opacity: progress }]}
+            onPress={close}
           >
-            <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
-          </Animated.View>
-          <Animated.View style={[styles.buttonIcon, { opacity: progress }]}>
-            <Image
-              source="sf:xmark"
-              contentFit="none"
-              style={styles.xmarkIcon}
-            />
-          </Animated.View>
-        </AnimatedPressable>
+            <Animated.View
+              style={[
+                styles.buttonIcon,
+                {
+                  opacity: progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
+                  }),
+                },
+              ]}
+            >
+              <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
+            </Animated.View>
+            <Animated.View style={[styles.buttonIcon, { opacity: progress }]}>
+              <Image
+                source="sf:xmark"
+                contentFit="none"
+                style={styles.xmarkIcon}
+              />
+            </Animated.View>
+          </AnimatedPressable>
+        )}
       </View>
       <KeyboardAvoidingView
         behavior="padding"
@@ -385,7 +394,13 @@ function SearchScreen({
               onSelect={(filter) => dispatch(actions.filterSelected(filter))}
             />
           </View>
-          <View style={styles.list}>
+          {/* iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝낸다. */}
+          <View
+            style={[
+              styles.list,
+              { marginRight: clipListRightMargin(insets.right) },
+            ]}
+          >
             {mode === 'recent' ? (
               <SearchRecent
                 {...recent}
@@ -427,6 +442,9 @@ function SearchScreen({
                 maintainVisibleContentPosition={{ disabled: true }}
                 contentInsetAdjustmentBehavior="never"
                 automaticallyAdjustsScrollIndicatorInsets={false}
+                scrollIndicatorInsets={{
+                  right: insets.right - clipListRightMargin(insets.right),
+                }}
                 contentContainerStyle={{ paddingBottom: 16 }}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
@@ -456,9 +474,13 @@ function SearchRecent({
   onRemoveButtonPress: (term: string) => void;
   onClearButtonPress: () => void;
 }) {
+  // 본문 틀이 safe area 안으로 16 들어오면 오른쪽 여백을 16으로 줄여 구분선과 칩을 safe area 경계에서 끝낸다.
+  const isRightInset = 0 < useSafeAreaInsets().right;
   return (
     <View>
-      <View style={styles.recentHeader}>
+      <View
+        style={[styles.recentHeader, isRightInset && styles.insetRecentHeader]}
+      >
         <Text allowFontScaling={false} style={styles.recentTitle}>
           최근 검색어
         </Text>
@@ -477,7 +499,11 @@ function SearchRecent({
             horizontal
             keyboardShouldPersistTaps="handled"
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chips}
+            style={isRightInset && styles.insetChipScroll}
+            contentContainerStyle={[
+              styles.chips,
+              isRightInset && styles.insetChips,
+            ]}
           >
             {terms.map((term) => (
               <SearchTermChip
@@ -586,6 +612,9 @@ const styles = StyleSheet.create({
   clear: { ...typography.label, color: colors.SecondaryText },
   recentTerms: { height: 36, marginTop: 14 },
   chips: { paddingHorizontal: 20, gap: 8, alignItems: 'center' },
+  insetRecentHeader: { marginRight: 16 },
+  insetChipScroll: { marginRight: 16 },
+  insetChips: { paddingRight: 0 },
   message: { marginHorizontal: 20, fontSize: 14, color: colors.SecondaryText },
   hint: {
     marginTop: 42,

@@ -31,6 +31,10 @@ RCT_EXPORT_METHOD(ready) {
   [_implementation ready];
 }
 
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSNumber *, isDuoDevice) {
+  return @([_implementation isDuoDevice]);
+}
+
 - (void)invalidate {
   [_implementation invalidate];
 }

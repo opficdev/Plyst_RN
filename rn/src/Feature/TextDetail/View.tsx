@@ -29,17 +29,31 @@ import { createTextDetailStore } from './store';
 
 type TextDetailViewProps = {
   clipID: string;
+  usesSystemBar: boolean;
   navigation: { closeClip: () => void };
 };
 
-// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 Modal 안에서만 그립니다.
-export function TextDetailView({ clipID, navigation }: TextDetailViewProps) {
+// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 시트 안에서만 그립니다.
+export function TextDetailView({
+  clipID,
+  usesSystemBar,
+  navigation,
+}: TextDetailViewProps) {
   return (
-    <TextDetailRoot key={clipID} clipID={clipID} navigation={navigation} />
+    <TextDetailRoot
+      key={clipID}
+      clipID={clipID}
+      usesSystemBar={usesSystemBar}
+      navigation={navigation}
+    />
   );
 }
 
-function TextDetailRoot({ clipID, navigation }: TextDetailViewProps) {
+function TextDetailRoot({
+  clipID,
+  usesSystemBar,
+  navigation,
+}: TextDetailViewProps) {
   const [screen] = useState(() => createTextDetailStore(clipID));
   useLayoutEffect(() => {
     screen.start();
@@ -50,21 +64,31 @@ function TextDetailRoot({ clipID, navigation }: TextDetailViewProps) {
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <TextDetailContent closeClip={navigation.closeClip} />
+      <TextDetailContent
+        usesSystemBar={usesSystemBar}
+        closeClip={navigation.closeClip}
+      />
     </ScreenProvider>
   );
 }
 
-function TextDetailContent({ closeClip }: { closeClip: () => void }) {
+function TextDetailContent({
+  usesSystemBar,
+  closeClip,
+}: {
+  usesSystemBar: boolean;
+  closeClip: () => void;
+}) {
   const state = useScreenState<TextDetailStoreState>();
   const dispatch = useScreenDispatch();
   return (
     <ClipDetailSheet
       title="텍스트"
+      usesSystemBar={usesSystemBar}
       isSaveEnabled={isSaveEnabled(state)}
       isClosed={isClosed(state)}
       onSaveButtonPress={() => dispatch(actions.save())}
-      onDismiss={closeClip}
+      onClose={closeClip}
     >
       {state.phase === 'loaded' ? (
         <TextDetailEditor state={state} />
@@ -99,7 +123,8 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
   return (
     <View style={styles.canvas}>
       <ScrollView
-        style={styles.scroll}
+        // 본문은 오른쪽 안전 영역 앞에서 끝내고 하단 액션 바는 전체 너비를 씁니다.
+        style={[styles.scroll, { marginRight: insets.right }]}
         {...scrollProps}
         contentInsetAdjustmentBehavior="never"
       >

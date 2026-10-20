@@ -7,6 +7,7 @@ import {
   getClips,
   getClipImagePreview,
   getClipThumbnail,
+  isDuoDevice,
   saveClipImageToPhotos,
   subscribeClipChanges,
   updateClip,
@@ -37,6 +38,7 @@ jest.mock('../modules/plyst-bridge/src/NativePlystHome', () => ({
   __esModule: true,
   default: {
     ready: jest.fn(),
+    isDuoDevice: jest.fn(),
     onClipboardSaveRequest: jest.fn(),
   },
 }));
@@ -45,6 +47,12 @@ jest.mock(
   '../modules/plyst-bridge/src/PlystDetailBarButtonNativeComponent',
   () => ({ __esModule: true, default: 'PlystDetailBarButton' }),
 );
+
+jest.mock(
+  '../modules/plyst-bridge/src/PlystNavigationBarButtonNativeComponent',
+  () => ({ __esModule: true, default: 'PlystNavigationBarButton' }),
+);
+
 const native = jest.mocked(NativePlystClip);
 
 beforeEach(() => jest.resetAllMocks());
@@ -366,3 +374,15 @@ test('클립보드 저장 요청 리스너를 등록한 뒤 준비를 알리고 
   expect(listener).toHaveBeenCalledWith();
   expect(listener).toHaveBeenCalledTimes(1);
 });
+
+test.each([true, false])(
+  'iPhone Duo 여부는 준비를 알리지 않고 네이티브 값 %s를 그대로 돌려준다',
+  (value) => {
+    const home = jest.mocked(NativePlystHome);
+    home.isDuoDevice.mockReturnValue(value);
+
+    expect(isDuoDevice()).toBe(value);
+    expect(home.isDuoDevice).toHaveBeenCalledTimes(1);
+    expect(home.ready).not.toHaveBeenCalled();
+  },
+);

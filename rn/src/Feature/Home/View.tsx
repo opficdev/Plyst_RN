@@ -28,6 +28,7 @@ import { clipSectionTitles } from '../ClipGrid/section';
 import {
   clipCardValues,
   clipColumnWidth,
+  clipListRightMargin,
   clipThumbnailPixels,
 } from '../ClipGrid/cardValues';
 import { makeHomeListItems } from './listItems';
@@ -42,6 +43,7 @@ import {
 } from '../../Shared/State/screenStore';
 import { useClipTimeline } from '../ClipGrid/useTimeline';
 import { useHomeHeaderScroll } from './useHeaderScroll';
+import { NavigationBarButton } from './NavigationBarButton';
 import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 
 const chips = clipFilters.map((key) => ({
@@ -51,6 +53,8 @@ const chips = clipFilters.map((key) => ({
 export type HomeViewProps = {
   // 검색 오버레이가 열려 있으면 true이며 Home은 시간 갱신과 맨 위로 스크롤을 멈춥니다.
   isSearchVisible: boolean;
+  // iPhone Duo이면 true이며 검색 버튼은 시스템 헤더 항목이 맡으므로 RN 버튼을 그리지 않습니다.
+  usesSystemBar: boolean;
   navigation: {
     openClip: (id: string, kind: ClipKind) => void;
     openSearch: () => void;
@@ -84,6 +88,7 @@ function HomeRoot(props: HomeViewProps) {
 function HomeContent({
   getState,
   isSearchVisible,
+  usesSystemBar,
   navigation,
 }: HomeViewProps & { getState: () => HomeState }) {
   const insets = useSafeAreaInsets();
@@ -138,6 +143,9 @@ function HomeContent({
     [state.loadPhase, state.clips, content],
   );
   const items = useMemo(() => makeHomeListItems(content), [content]);
+  // iPhone Duo의 위 inset은 높이 0인 내비게이션 바가 만든 값이라 가리는 것이 없다.
+  // 헤더는 그만큼 위로 늘려 그리고 숨은 헤더와 목록은 화면 끝에서 사라지도록 위 페이드를 두지 않는다.
+  const fadeHeight = usesSystemBar ? 0 : insets.top;
   const geometry = useMemo(
     () => ({
       headerHeight,
@@ -247,6 +255,8 @@ function HomeContent({
       <View style={styles.list}>
         <FlashList
           ref={list}
+          // iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝낸다.
+          style={{ marginRight: clipListRightMargin(insets.right) }}
           data={items}
           renderItem={renderItem}
           extraData={state}
@@ -280,6 +290,7 @@ function HomeContent({
           scrollIndicatorInsets={{
             top: header.indicatorTop,
             bottom: 0,
+            right: insets.right - clipListRightMargin(insets.right),
           }}
           onLayout={({ nativeEvent: { layout } }) =>
             setSize({ width: layout.width, height: layout.height })
@@ -320,7 +331,9 @@ function HomeContent({
           ]}
         >
           <HomeTitleHeader
-            onSearchButtonPress={navigation.openSearch}
+            onSearchButtonPress={
+              usesSystemBar ? undefined : navigation.openSearch
+            }
             isSearchButtonDisabled={isSearchVisible}
           />
           <View style={styles.filters}>
@@ -331,7 +344,15 @@ function HomeContent({
             />
           </View>
         </Animated.View>
-        <EdgeFade height={insets.top} />
+        <EdgeFade height={fadeHeight} />
+        {/* 검색이 열리면 Search의 닫기 항목이 바 자리를 쓰므로 Home 항목을 내립니다. 헤더 스크롤 숨김과는 관계없습니다. */}
+        {usesSystemBar && !isSearchVisible && (
+          <NavigationBarButton
+            side="right"
+            icon="magnifyingglass"
+            onPress={navigation.openSearch}
+          />
+        )}
       </View>
       <View style={{ paddingBottom: insets.bottom + spacing.card }}>
         <HomeSaveBar

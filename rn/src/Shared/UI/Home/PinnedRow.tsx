@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../../Theme';
 import { ClipPinnedCard, clipCardLongPressDelay } from '../ClipCard';
 
@@ -21,9 +22,12 @@ export function HomePinnedRow({
   clips,
   onViewableIdsChange,
 }: HomePinnedRowProps) {
+  // 오른쪽 safe area가 있으면 목록 틀이 safe area 안으로 16 들어온다.
+  // 이때는 구분선과 카드가 잘리는 위치를 safe area 경계에 맞춘다.
+  const isRightInset = 0 < useSafeAreaInsets().right;
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, isRightInset && styles.insetHeader]}>
         <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
           고정
         </Text>
@@ -33,8 +37,11 @@ export function HomePinnedRow({
         horizontal
         data={clips}
         keyExtractor={(item) => item.id}
-        style={styles.scrollView}
-        contentContainerStyle={styles.stack}
+        style={[styles.scrollView, isRightInset && styles.insetScrollView]}
+        contentContainerStyle={[
+          styles.stack,
+          isRightInset && styles.insetStack,
+        ]}
         showsHorizontalScrollIndicator={false}
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={({ viewableItems }) =>
@@ -75,4 +82,7 @@ const styles = StyleSheet.create({
   rule: { height: 1, flex: 1, backgroundColor: colors.Outline },
   scrollView: { height: 76, flexGrow: 0 },
   stack: { paddingHorizontal: spacing.screen, gap: 10 },
+  insetHeader: { paddingRight: 16 },
+  insetScrollView: { marginRight: 16 },
+  insetStack: { paddingRight: 0 },
 });

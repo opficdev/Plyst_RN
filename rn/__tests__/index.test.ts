@@ -7,6 +7,7 @@ jest.mock('plyst-bridge', () => ({
   saveClipImageToPhotos: jest.fn(),
   copyClip: jest.fn(),
   deleteClip: jest.fn(),
+  isDuoDevice: jest.fn(() => false),
   subscribeClipboardSaveRequests: jest.fn(() => ({ remove: jest.fn() })),
   subscribeClipChanges: jest.fn(() => ({ remove: jest.fn() })),
   updateClip: jest.fn(),

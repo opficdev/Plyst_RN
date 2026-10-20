@@ -1,5 +1,8 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { ScreenStack, ScreenStackItem } from 'react-native-screens';
+import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
+import { isDuoDevice } from 'plyst-bridge';
 import type { ClipKind } from '../Model/clipRecord';
 import {
   ScreenProvider,
@@ -16,6 +19,18 @@ import { createAppStore } from './store';
 
 const Home = memo(HomeView);
 const Search = memo(SearchView);
+
+// iPhone Duo는 오른쪽 위 카메라를 피해 시스템이 내비게이션 바 항목을 놓도록 헤더를 보이고 RN 버튼은 그리지 않습니다.
+// 다른 기기는 헤더를 숨기고 지금처럼 RN 버튼을 그립니다. 값은 프로세스가 끝날 때까지 바뀌지 않습니다.
+const usesSystemBar = isDuoDevice();
+
+// 항목은 각 화면이 PlystNavigationBarButton으로 넣으므로 헤더 설정에는 항목을 두지 않습니다.
+const homeHeader: ScreenStackHeaderConfigProps = {
+  hidden: !usesSystemBar,
+  translucent: true,
+  hideShadow: true,
+  backgroundColor: 'transparent',
+};
 
 export function AppRoot() {
   const [screen] = useState(createAppStore);
@@ -56,20 +71,38 @@ function AppContent() {
     [openClip, openSearch, closeSearch, closeClip],
   );
   return (
-    <View style={styles.root}>
-      <Home isSearchVisible={isSearchVisible} navigation={navigation} />
-      {isSearchVisible && (
-        <View style={StyleSheet.absoluteFill}>
-          <Search navigation={navigation} />
-        </View>
-      )}
+    <ScreenStack style={styles.root}>
+      <ScreenStackItem
+        screenId="home"
+        headerConfig={homeHeader}
+        style={StyleSheet.absoluteFill}
+      >
+        <Home
+          isSearchVisible={isSearchVisible}
+          usesSystemBar={usesSystemBar}
+          navigation={navigation}
+        />
+        {isSearchVisible && (
+          <View style={StyleSheet.absoluteFill}>
+            <Search usesSystemBar={usesSystemBar} navigation={navigation} />
+          </View>
+        )}
+      </ScreenStackItem>
       {detail?.kind === 'text' && (
-        <TextDetailView clipID={detail.clipID} navigation={navigation} />
+        <TextDetailView
+          clipID={detail.clipID}
+          usesSystemBar={usesSystemBar}
+          navigation={navigation}
+        />
       )}
       {detail?.kind === 'image' && (
-        <ImageDetailView clipID={detail.clipID} navigation={navigation} />
+        <ImageDetailView
+          clipID={detail.clipID}
+          usesSystemBar={usesSystemBar}
+          navigation={navigation}
+        />
       )}
-    </View>
+    </ScreenStack>
   );
 }
 

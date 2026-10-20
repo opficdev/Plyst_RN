@@ -31,6 +31,12 @@ export function clipColumnWidth(width: number) {
   return Math.max(1, (width - 42) / 2);
 }
 
+// 오른쪽 safe area가 있으면 목록 틀을 카드 바깥 여백 16만큼 safe area 안으로 넓힌다.
+// 그러면 오른쪽 열 카드가 safe area 경계에서 끝난다. 오른쪽 safe area가 없으면 0이다.
+export function clipListRightMargin(safeAreaRight: number) {
+  return 0 < safeAreaRight ? safeAreaRight - 16 : 0;
+}
+
 export function clipThumbnailPixels(
   columnWidth: number,
   scale: number,
