@@ -4,22 +4,12 @@ import PackageDescription
 
 let frameworkNames = [
     "BrownfieldLib",
-    "ExpoFileSystem",
-    "ExpoFont",
-    "ExpoImage",
-    "ExpoModulesCore",
     "ExpoModulesJSI",
-    "ExpoModulesWorklets",
     "hermesvm",
-    "libavif",
     "PlystBridge",
     "React",
     "ReactBrownfield",
     "ReactNativeDependencies",
-    "SDWebImage",
-    "SDWebImageAVIFCoder",
-    "SDWebImageSVGCoder",
-    "SDWebImageWebPCoder",
 ]
 
 let package = Package(

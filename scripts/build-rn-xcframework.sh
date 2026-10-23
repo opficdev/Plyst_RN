@@ -187,7 +187,10 @@ if [ "$path" = full ]; then
 	# 로컬 빌드는 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않습니다.
 	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않습니다.
 	stage_begin package-ios
-	set -- --scheme BrownfieldLib --configuration "$configuration"
+	# 사전 컴파일 Expo 모듈은 쓰지 않는 모듈까지 별도 프레임워크로 싣습니다.
+	# Expo 모듈을 소스로 빌드해 BrownfieldLib에 정적으로 합치고 autolinking 제외 설정을 적용합니다.
+	export EXPO_USE_PRECOMPILED_MODULES=0
+	set -- --scheme BrownfieldLib --configuration "$configuration" --use-prebuilt-expo false
 	if [ -z "${CI:-}" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		cache_directory=${RN_COMPILATION_CACHE:-$HOME/Library/Caches/Plyst/RNCompilationCache}
 		set -- "$@" --extra-params "COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
@@ -221,14 +224,14 @@ for header in "$bridge_headers_directory"/*.h; do
 done
 
 for platform in iphoneos iphonesimulator; do
-	products=$repository_root/rn/ios/.brownfield/build/Build/Products/$configuration-$platform/PlystBridge
-	for directory in "$products" "$products/PlystBridge.swiftmodule"; do
+	products=$repository_root/rn/ios/.brownfield/build/Build/Products/$configuration-$platform/PlystBridge/PlystBridge.framework
+	for directory in "$products" "$products/Modules/PlystBridge.swiftmodule"; do
 		if ! [ -d "$directory" ]; then
 			printf '오류: PlystBridge 빌드 산출물 디렉터리가 없습니다: %s\n' "$directory" >&2
 			exit 1
 		fi
 	done
-	for header in "$products/PlystBridge-umbrella.h" "$products/Swift Compatibility Header/PlystBridge-Swift.h"; do
+	for header in "$products/Headers/PlystBridge-umbrella.h" "$products/Headers/PlystBridge-Swift.h"; do
 		if ! [ -f "$header" ]; then
 			printf '오류: PlystBridge 빌드 헤더가 없습니다: %s\n' "$header" >&2
 			exit 1
@@ -243,7 +246,7 @@ for platform in iphoneos iphonesimulator; do
 	fi
 	for architecture in $architectures; do
 		for extension in swiftmodule swiftdoc; do
-			module=$products/PlystBridge.swiftmodule/$architecture-apple-ios$suffix.$extension
+			module=$products/Modules/PlystBridge.swiftmodule/$architecture-apple-ios$suffix.$extension
 			if ! [ -f "$module" ]; then
 				printf '오류: PlystBridge Swift 모듈 파일이 없습니다: %s\n' "$module" >&2
 				exit 1
@@ -253,9 +256,9 @@ for platform in iphoneos iphonesimulator; do
 
 	framework=$bridge_directory/$platform/PlystBridge.framework
 	mkdir -p "$framework/Headers" "$framework/Modules"
-	cp "$bridge_headers_directory"/*.h "$products/PlystBridge-umbrella.h" \
-		"$products/Swift Compatibility Header/PlystBridge-Swift.h" "$framework/Headers/"
-	cp -R "$products/PlystBridge.swiftmodule" "$framework/Modules/"
+	cp "$bridge_headers_directory"/*.h "$products/Headers/PlystBridge-umbrella.h" \
+		"$products/Headers/PlystBridge-Swift.h" "$framework/Headers/"
+	cp -R "$products/Modules/PlystBridge.swiftmodule" "$framework/Modules/"
 	cat > "$framework/Modules/module.modulemap" <<'EOF'
 framework module PlystBridge {
   umbrella header "PlystBridge-umbrella.h"
