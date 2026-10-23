@@ -20,11 +20,6 @@
 		DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00024306A4A9700115D10 /* PlystReactNative */; };
 		DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFC00002306A4A9700115D10 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFD00002306A4A9700115D10 /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		DFD00020306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00010306A4A9700115D10 /* ReactorKit */; };
-		DFD00021306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00011306A4A9700115D10 /* RxSwift */; };
-		DFD00022306A4A9700115D10 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00012306A4A9700115D10 /* SQLiteData */; };
-		DFD00023306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */; };
-		DFD00024306A4A9700115D10 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = DFD00014306A4A9700115D10 /* GRDB */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +81,13 @@
 			);
 			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
 		};
+		DFE00002306A4A9700115D10 /* Exceptions for "Common" folder in "WidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Model/AppLink.swift,
+			);
+			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
+		};
 		DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -114,6 +116,9 @@
 		};
 		DFE00001306A4A9700115D10 /* Common */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFE00002306A4A9700115D10 /* Exceptions for "Common" folder in "WidgetExtension" target */,
+			);
 			path = Common;
 			sourceTree = "<group>";
 		};
@@ -146,11 +151,6 @@
 		DFD00006306A4A9700115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				DFD00020306A4A9700115D10 /* ReactorKit in Frameworks */,
-				DFD00021306A4A9700115D10 /* RxSwift in Frameworks */,
-				DFD00022306A4A9700115D10 /* SQLiteData in Frameworks */,
-				DFD00023306A4A9700115D10 /* StructuredQueriesSQLite in Frameworks */,
-				DFD00024306A4A9700115D10 /* GRDB in Frameworks */,
 			);
 		};
 		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
@@ -236,15 +236,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				DFD00003306A4A9700115D10 /* WidgetExtension */,
-				DFE00001306A4A9700115D10 /* Common */,
 			);
 			name = WidgetExtension;
 			packageProductDependencies = (
-				DFD00010306A4A9700115D10 /* ReactorKit */,
-				DFD00011306A4A9700115D10 /* RxSwift */,
-				DFD00012306A4A9700115D10 /* SQLiteData */,
-				DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */,
-				DFD00014306A4A9700115D10 /* GRDB */,
 			);
 			productName = WidgetExtension;
 			productReference = DFD00002306A4A9700115D10 /* WidgetExtension.appex */;
@@ -962,31 +956,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */;
 			productName = PlystReactNative;
-		};
-		DFD00010306A4A9700115D10 /* ReactorKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
-			productName = ReactorKit;
-		};
-		DFD00011306A4A9700115D10 /* RxSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
-			productName = RxSwift;
-		};
-		DFD00012306A4A9700115D10 /* SQLiteData */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA0000F306A4A9700115D10 /* XCRemoteSwiftPackageReference "sqlite-data" */;
-			productName = SQLiteData;
-		};
-		DFD00013306A4A9700115D10 /* StructuredQueriesSQLite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00012306A4A9700115D10 /* XCRemoteSwiftPackageReference "swift-structured-queries" */;
-			productName = StructuredQueriesSQLite;
-		};
-		DFD00014306A4A9700115D10 /* GRDB */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00017306A4A9700115D10 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
-			productName = GRDB;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
