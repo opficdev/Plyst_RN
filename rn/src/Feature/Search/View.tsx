@@ -577,6 +577,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.Outline,
     backgroundColor: colors.Card,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
