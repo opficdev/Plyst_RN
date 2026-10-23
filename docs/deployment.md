@@ -105,7 +105,7 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`)이 하는 일
 - `Plyst/Packages/PlystReactNative/Frameworks`의 모든 XCFramework를 `match` 프로파일의 인증서로 서명
 	- `match`가 설치한 프로파일에 들어 있는 인증서와 같은 키체인 인증서만 사용
 	- 키체인에 다른 Apple Distribution 인증서가 있어도 인증서 출처는 `match` 저장소 하나로 유지
-	- App Store Connect가 SDWebImage 같은 널리 쓰이는 서드파티 SDK에 서명을 요구하기 때문
+	- App Store Connect가 널리 쓰이는 서드파티 SDK에 서명을 요구하기 때문
 - Archive 후 Export
 - IPA의 번들 ID, `ITSAppUsesNonExemptEncryption`, RN 프레임워크와 `main.jsbundle` 검증
 
@@ -139,7 +139,7 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`)이 하는 일
 | `exportArchive ... expected one {} but found app-store` | 서명 설정 저장 때 확장 임베드 위치(`dstSubfolder`)가 지워져 확장이 앱의 `PlugIns` 밖에 설치됨 | `fastlane/Fastfile` 최상단의 `dst_subfolder` 속성 등록 유지. 프로젝트를 여는 액션보다 앞에 있어야 함 |
 | 업로드 오류 90360, 90530 | 프레임워크 `Info.plist`에 `MinimumOSVersion` 없음 | `scripts/build-rn-xcframework.sh`가 보충. XCFramework를 다시 생성 |
 | 업로드 오류 90057 | `BrownfieldLib.framework`에 `CFBundleShortVersionString` 없음 | 위와 같음 |
-| ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK(`SDWebImage`)가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
+| ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
 | ITMS-90208 (처리 단계 거부) | `ReactBrownfield`와 `PlystBridge` 스텁의 최소 버전과 `Info.plist`의 `MinimumOSVersion`이 다름 | 스크립트가 앱의 `IPHONEOS_DEPLOYMENT_TARGET`으로 맞춤 |
 
 ## 로컬 XCFramework 빌드

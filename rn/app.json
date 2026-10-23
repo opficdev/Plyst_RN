@@ -9,7 +9,7 @@
     },
     "plugins": [
       "@callstack/react-native-brownfield",
-      "expo-image"
+      ["expo-image", { "disableLibdav1d": true }]
     ]
   }
 }

@@ -43,5 +43,15 @@
       "customExportConditions": ["node", "node-addons"]
     }
   },
+  "expo": {
+    "autolinking": {
+      "exclude": [
+        "@expo/dom-webview",
+        "expo-file-system",
+        "expo-font",
+        "expo-keep-awake"
+      ]
+    }
+  },
   "private": true
 }

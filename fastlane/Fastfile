@@ -195,7 +195,7 @@ platform :ios do
     end
   end
 
-  # App Store Connect는 널리 쓰이는 서드파티 SDK(SDWebImage 등)에 서명을 요구하므로 XCFramework를 서명한다.
+  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 XCFramework를 서명한다.
   # 인증서 출처를 match 저장소 하나로 맞추려고 match가 설치한 프로파일에 들어 있는 인증서로만 서명한다.
   private_lane :sign_xcframeworks do |options|
     require "openssl"
