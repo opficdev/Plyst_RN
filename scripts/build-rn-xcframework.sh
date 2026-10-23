@@ -339,15 +339,22 @@ for name in ReactBrownfield PlystBridge; do
 		-exec plutil -replace MinimumOSVersion -string "$deployment_target" {} +
 done
 
-# 앱에 임베드하는 프레임워크는 Xcode가 스트립하지 않으므로 기기 슬라이스의 동적 라이브러리에서 디버그 심볼과 로컬 심볼을 지웁니다.
+# 앱에 임베드하는 프레임워크는 Xcode가 스트립하지 않으므로 Release에서 기기 슬라이스의 동적 라이브러리에 있는 디버그 심볼과 로컬 심볼을 지웁니다.
+# Debug 빌드는 디버그 정보를 유지하려고 건너뜁니다.
 # 정적 스텁인 ReactBrownfield와 PlystBridge와 시뮬레이터 슬라이스는 대상이 아닙니다.
 # 스트립은 서명을 무효로 만들므로 아래 ad-hoc 서명 전에 실행합니다.
-for framework in "$destination"/*.xcframework/ios-arm64/*.framework; do
-	binary=$framework/$(basename "$framework" .framework)
-	if file -b "$binary" | grep -q 'dynamically linked shared library'; then
-		xcrun strip -S -x "$binary" 2> /dev/null
-	fi
-done
+if [ "$configuration" = Release ]; then
+	for framework in "$destination"/*.xcframework/ios-arm64/*.framework; do
+		binary=$framework/$(basename "$framework" .framework)
+		if file -b "$binary" | grep -q 'dynamically linked shared library'; then
+			# strip이 서명 무효화 경고를 매번 출력하므로 실패했을 때만 출력을 보여 줍니다.
+			if ! strip_output=$(xcrun strip -S -x "$binary" 2>&1); then
+				printf '오류: 스트립에 실패했습니다: %s\n%s\n' "$binary" "$strip_output" >&2
+				exit 1
+			fi
+		fi
+	done
+fi
 
 find "$destination" -type d -path '*/ios-*/*.framework' ! -path '*maccatalyst*' \
 	-exec codesign --force --sign - --timestamp=none {} +
