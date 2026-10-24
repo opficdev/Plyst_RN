@@ -77,7 +77,7 @@ const chips = clipFilters.map((key) => ({
 }));
 
 export type SearchViewProps = {
-  // iPhone Duo이면 true이며 닫기 버튼은 시스템 헤더 항목이 맡으므로 RN 취소 버튼을 그리지 않습니다.
+  // iPhone Duo이면 true이며 닫기 버튼은 시스템 헤더 항목이 맡으므로 RN 취소 버튼을 그리지 않음
   usesSystemBar: boolean;
   navigation: {
     openClip: (id: string, kind: ClipKind) => void;
@@ -157,9 +157,10 @@ function SearchScreen({
     };
   }, []);
 
-  // 페이드와 서치바 확장은 PlystSearchTransition이 렌더 서버에서 0.3초 동안 움직인다.
-  // 앱을 켠 뒤 처음 키보드를 띄울 때는 메인 스레드를 막으므로 서치바 확장이 끝난 뒤에 포커스를 준다.
-  // 그 뒤로는 원본처럼 확장과 동시에 포커스를 준다. 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 온다.
+  // 페이드와 서치바 확장은 PlystSearchTransition이 렌더 서버에서 0.3초 동안 움직임
+  // 앱을 켠 뒤 처음 키보드를 띄울 때는 메인 스레드를 막으므로 서치바 확장이 끝난 뒤에 포커스를 줌
+  // 그 뒤로는 원본처럼 확장과 동시에 포커스를 줌
+  // 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 옴
   function startOpen() {
     if (hasStarted.current || !isMounted.current || isClosing.current) return;
     hasStarted.current = true;
@@ -184,7 +185,7 @@ function SearchScreen({
     navigation.closeSearch();
   }
 
-  // 닫기 애니메이션 완료 신호가 오지 않아도 닫히도록 대체 타이머를 둔다.
+  // 닫기 애니메이션 완료 신호가 오지 않아도 닫히도록 대체 타이머를 둠
   function close() {
     if (isClosing.current) return;
     isClosing.current = true;
@@ -402,7 +403,7 @@ function SearchScreen({
               onSelect={(filter) => dispatch(actions.filterSelected(filter))}
             />
           </View>
-          {/* iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝낸다. */}
+          {/* iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝냄 */}
           <View
             style={[
               styles.list,
@@ -482,7 +483,7 @@ function SearchRecent({
   onRemoveButtonPress: (term: string) => void;
   onClearButtonPress: () => void;
 }) {
-  // 본문 틀이 safe area 안으로 16 들어오면 오른쪽 여백을 16으로 줄여 구분선과 칩을 safe area 경계에서 끝낸다.
+  // 본문 틀이 safe area 안으로 16 들어오면 오른쪽 여백을 16으로 줄여 구분선과 칩을 safe area 경계에서 끝냄
   const isRightInset = 0 < useSafeAreaInsets().right;
   return (
     <View>

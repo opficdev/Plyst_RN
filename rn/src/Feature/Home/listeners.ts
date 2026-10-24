@@ -15,7 +15,7 @@ import { homePinTarget } from './menu';
 import { homeActions as actions } from './state';
 import type { HomeState } from './state';
 
-// 썸네일 큐를 비우는 정리 함수를 돌려줍니다.
+// 썸네일 큐를 비우는 정리 함수를 돌려줌
 export function startHomeListeners(
   listen: SliceListen<HomeState>,
   dispatch: SliceDispatch,
@@ -25,9 +25,9 @@ export function startHomeListeners(
   listen({
     actionCreator: actions.viewDidLoad,
     effect: async (_, api) => {
-      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유합니다.
+      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유함
       api.unsubscribe();
-      // ready()가 보관한 저장 요청을 전달하기 전에 저장 listener를 등록합니다.
+      // ready()가 보관한 저장 요청을 전달하기 전에 저장 listener를 등록함
       const saves = subscribeClipboardSaveRequests(() =>
         api.dispatch(actions.saveCurrentClipboard()),
       );

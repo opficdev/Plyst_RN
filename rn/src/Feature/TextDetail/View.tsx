@@ -33,7 +33,7 @@ type TextDetailViewProps = {
   navigation: { closeClip: () => void };
 };
 
-// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 시트 안에서만 그립니다.
+// 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 시트 안에서만 그림
 export function TextDetailView({
   clipID,
   usesSystemBar,
@@ -123,7 +123,7 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
   return (
     <View style={styles.canvas}>
       <ScrollView
-        // 본문은 오른쪽 안전 영역 앞에서 끝내고 하단 액션 바는 전체 너비를 씁니다.
+        // 본문은 오른쪽 안전 영역 앞에서 끝내고 하단 액션 바는 전체 너비를 씀
         style={[styles.scroll, { marginRight: insets.right }]}
         {...scrollProps}
         contentInsetAdjustmentBehavior="never"

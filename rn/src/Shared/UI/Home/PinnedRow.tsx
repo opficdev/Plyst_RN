@@ -5,7 +5,7 @@ import { colors, spacing, typography } from '../../Theme';
 import { ClipPinnedCard, clipCardLongPressDelay } from '../ClipCard';
 
 type HomePinnedRowProps = {
-  // 원본 configure(clips:)와 HomePinnedRowViewAction.select의 이름을 유지한다.
+  // 원본 configure(clips:)와 HomePinnedRowViewAction.select의 이름을 유지함
   clips: (ComponentProps<typeof ClipPinnedCard> & {
     id: string;
     onSelect: () => void;
@@ -14,16 +14,17 @@ type HomePinnedRowProps = {
   onViewableIdsChange: (ids: string[]) => void;
 };
 
-// 원본 visibleClips()처럼 일부만 보이는 카드도 포함한다.
-// FlatList의 노출 판정으로 최초 배치와 가로 스크롤을 처리한다. 요청 취소는 하지 않는다.
+// 원본 visibleClips()처럼 일부만 보이는 카드도 포함함
+// FlatList의 노출 판정으로 최초 배치와 가로 스크롤을 처리함
+// 요청 취소는 하지 않음
 const viewabilityConfig = { viewAreaCoveragePercentThreshold: 0 };
 
 export function HomePinnedRow({
   clips,
   onViewableIdsChange,
 }: HomePinnedRowProps) {
-  // 오른쪽 safe area가 있으면 목록 틀이 safe area 안으로 16 들어온다.
-  // 이때는 구분선과 카드가 잘리는 위치를 safe area 경계에 맞춘다.
+  // 오른쪽 safe area가 있으면 목록 틀이 safe area 안으로 16 들어옴
+  // 이때는 구분선과 카드가 잘리는 위치를 safe area 경계에 맞춤
   const isRightInset = 0 < useSafeAreaInsets().right;
   return (
     <View style={styles.container}>
@@ -64,7 +65,7 @@ export function HomePinnedRow({
 const styles = StyleSheet.create({
   container: {
     paddingTop: spacing.screen,
-    paddingBottom: spacing.detail + 0.6667, // 원본의 레이블 높이 올림에 따른 행 높이를 맞춘다.
+    paddingBottom: spacing.detail + 0.6667, // 원본의 레이블 높이 올림에 따른 행 높이를 맞춤
   },
   header: {
     flexDirection: 'row',
@@ -75,7 +76,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.sectionLabel,
-    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영한다.
+    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영함
     color: colors.SecondaryText,
     flexShrink: 1,
   },

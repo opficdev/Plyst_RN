@@ -52,7 +52,7 @@ export function ClipCardLabel({
   }
   parts.push(text.slice(cursor));
 
-  // RN 대체 글꼴로 짧아지는 한글 줄 높이를 맞추고 원본처럼 레이블 높이를 올림합니다.
+  // RN 대체 글꼴로 짧아지는 한글 줄 높이를 맞추고 원본처럼 레이블 높이를 올림함
   return (
     <Text
       {...props}

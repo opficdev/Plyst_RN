@@ -11,8 +11,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    // 원본 EdgeFadeView의 위쪽 그라데이션이다.
-    // React Native는 transparent를 직전 색상의 알파 0 값으로 변환한다.
+    // 원본 EdgeFadeView의 위쪽 그라데이션
+    // React Native는 transparent를 직전 색상의 알파 0 값으로 변환함
     experimental_backgroundImage: [
       {
         type: 'linear-gradient',

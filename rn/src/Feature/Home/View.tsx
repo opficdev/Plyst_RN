@@ -51,9 +51,9 @@ const chips = clipFilters.map((key) => ({
   title: clipFilterTitles[key],
 }));
 export type HomeViewProps = {
-  // 검색 오버레이가 열려 있으면 true이며 Home은 시간 갱신과 맨 위로 스크롤을 멈춥니다.
+  // 검색 오버레이가 열려 있으면 true이며 Home은 시간 갱신과 맨 위로 스크롤을 멈춤
   isSearchVisible: boolean;
-  // iPhone Duo이면 true이며 검색 버튼은 시스템 헤더 항목이 맡으므로 RN 버튼을 그리지 않습니다.
+  // iPhone Duo이면 true이며 검색 버튼은 시스템 헤더 항목이 맡으므로 RN 버튼을 그리지 않음
   usesSystemBar: boolean;
   navigation: {
     openClip: (id: string, kind: ClipKind) => void;
@@ -150,7 +150,8 @@ function HomeContent({
     () => ({
       headerHeight,
       safeTop: insets.top,
-      // 상단 여백을 contentInset 대신 padding으로 줍니다. 스크롤 시작점은 0이므로 insetTop도 0입니다.
+      // 상단 여백을 contentInset 대신 padding으로 줌
+      // 스크롤 시작점은 0이므로 insetTop도 0
       insetTop: 0,
       insetBottom: 0,
       contentHeight,
@@ -255,7 +256,7 @@ function HomeContent({
       <View style={styles.list}>
         <FlashList
           ref={list}
-          // iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝낸다.
+          // iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝냄
           style={{ marginRight: clipListRightMargin(insets.right) }}
           data={items}
           renderItem={renderItem}

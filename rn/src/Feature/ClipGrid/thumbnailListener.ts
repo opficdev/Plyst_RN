@@ -13,7 +13,7 @@ type ThumbnailActions = Pick<
   | 'thumbnailCancelRequested'
 >;
 
-// 요청 큐를 만들고 세션이 끝날 때 큐를 비우는 정리 함수를 돌려줍니다.
+// 요청 큐를 만들고 세션이 끝날 때 큐를 비우는 정리 함수를 돌려줌
 export function startClipThumbnailListener<State>(
   listen: SliceListen<State>,
   dispatch: (

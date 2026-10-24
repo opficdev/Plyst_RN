@@ -35,7 +35,7 @@ export function createThumbnailRequestQueue({
     if (!disposed && !request.cancelled) {
       if (result.status === 'failed') onFailed(request.key);
       else if (result.status === 'loaded') onLoaded(request.key, result.uri);
-      // missing이면 실패로 처리하지 않고 로딩 상태만 해제합니다.
+      // missing이면 실패로 처리하지 않고 로딩 상태만 해제함
       else onCancelled(request.key);
     }
     start();
@@ -78,7 +78,8 @@ export function createThumbnailRequestQueue({
         queued.splice(index, 1);
         requests.delete(key);
       }
-      // 실행 중인 요청은 완료될 때까지 자리를 차지합니다. 결과만 버립니다.
+      // 실행 중인 요청은 완료될 때까지 자리를 차지함
+      // 결과만 버림
       onCancelled(key);
     },
     dispose() {

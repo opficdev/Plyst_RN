@@ -9,7 +9,7 @@ type HomeFilterBarProps<Key extends string> = Pick<
 > & {
   chips: { key: Key; title: string }[];
   selectedKey: Key;
-  // HomeFilterBarViewAction.select의 의미를 유지한다.
+  // HomeFilterBarViewAction.select의 의미를 유지함
   onSelect: (key: Key) => void;
 };
 

@@ -3,8 +3,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../Theme';
 
 export function SectionTitle({ title }: { title: string }) {
-  // 오른쪽 safe area가 있으면 목록 틀이 safe area 안으로 16 들어온다.
-  // 이때는 오른쪽 여백을 16으로 줄여 구분선을 safe area 경계에서 끝낸다.
+  // 오른쪽 safe area가 있으면 목록 틀이 safe area 안으로 16 들어옴
+  // 이때는 오른쪽 여백을 16으로 줄여 구분선을 safe area 경계에서 끝냄
   const isRightInset = 0 < useSafeAreaInsets().right;
   return (
     <View style={[styles.container, isRightInset && styles.insetContainer]}>
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.sectionLabel,
-    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영한다.
+    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영함
     color: colors.SecondaryText,
     flexShrink: 1,
   },

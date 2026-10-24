@@ -9,5 +9,5 @@ AppRegistry.registerComponent('PlystRN', () => App);
 
 AppRegistry.registerComponent('ToastHost', () => ToastHost);
 
-// AppRoot 이름은 SceneComposition이 ReactNativeBrownfield.shared.view에 넘기는 moduleName과 같다
+// AppRoot 이름은 SceneComposition이 ReactNativeBrownfield.shared.view에 넘기는 moduleName과 같음
 AppRegistry.registerComponent('AppRoot', () => AppRoot);
