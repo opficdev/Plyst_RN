@@ -52,6 +52,10 @@ jest.mock(
   '../modules/plyst-bridge/src/PlystNavigationBarButtonNativeComponent',
   () => ({ __esModule: true, default: 'PlystNavigationBarButton' }),
 );
+jest.mock(
+  '../modules/plyst-bridge/src/PlystSearchTransitionNativeComponent',
+  () => ({ __esModule: true, default: 'PlystSearchTransition' }),
+);
 
 const native = jest.mocked(NativePlystClip);
 

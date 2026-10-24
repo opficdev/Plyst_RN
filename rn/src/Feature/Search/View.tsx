@@ -7,8 +7,6 @@ import {
   useState,
 } from 'react';
 import {
-  Animated,
-  Easing,
   Keyboard,
   KeyboardAvoidingView,
   PixelRatio,
@@ -66,9 +64,9 @@ import {
 import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 import { useClipTimeline } from '../ClipGrid/useTimeline';
 import { NavigationBarButton } from './NavigationBarButton';
+import { SearchTransition } from './Transition';
 
 let hasPresentedKeyboard = false;
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type SearchListItem =
   | { kind: 'header'; key: string }
@@ -128,13 +126,14 @@ function SearchScreen({
   const dispatch = useScreenDispatch();
   const input = useRef<TextInput>(null);
   const list = useRef<FlashListRef<SearchListItem>>(null);
-  const [progress] = useState(() => new Animated.Value(0));
+  const [isPresented, setIsPresented] = useState(false);
   const hasEntered = useRef(false);
   const hasStarted = useRef(false);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isClosing = useRef(false);
   const isMounted = useRef(false);
-  const animation = useRef<Animated.CompositeAnimation | null>(null);
+  const isFocusPending = useRef(false);
   const [listWidth, setListWidth] = useState(0);
   const dates = useMemo(
     () => state.clips.map((clip) => clip.createdAt),
@@ -153,33 +152,22 @@ function SearchScreen({
     isMounted.current = true;
     return () => {
       isMounted.current = false;
-      animation.current?.stop();
       if (openTimer.current !== null) clearTimeout(openTimer.current);
+      if (closeTimer.current !== null) clearTimeout(closeTimer.current);
     };
-  }, [progress]);
+  }, []);
 
-  // 앱을 켠 뒤 처음 키보드를 띄울 때는 메인 스레드를 막아 페이드가 한 프레임에 끝나므로 페이드 뒤에 포커스를 준다.
-  // 그 뒤로는 원본처럼 페이드와 동시에 포커스를 준다. 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 온다.
+  // 페이드와 서치바 확장은 PlystSearchTransition이 렌더 서버에서 0.3초 동안 움직인다.
+  // 앱을 켠 뒤 처음 키보드를 띄울 때는 메인 스레드를 막으므로 서치바 확장이 끝난 뒤에 포커스를 준다.
+  // 그 뒤로는 원본처럼 확장과 동시에 포커스를 준다. 시작 신호는 돋보기 이미지가 화면에 그려진 뒤에 온다.
   function startOpen() {
     if (hasStarted.current || !isMounted.current || isClosing.current) return;
     hasStarted.current = true;
-    animation.current = Animated.timing(progress, {
-      toValue: 1,
-      duration: 300,
-      easing: Easing.bezier(0.42, 0, 0.58, 1),
-      useNativeDriver: false,
-    });
+    setIsPresented(true);
     if (hasPresentedKeyboard) {
-      animation.current.start();
-      hasPresentedKeyboard = true;
       input.current?.focus();
     } else {
-      animation.current.start(({ finished }) => {
-        if (finished && isMounted.current && !isClosing.current) {
-          hasPresentedKeyboard = true;
-          input.current?.focus();
-        }
-      });
+      isFocusPending.current = true;
     }
   }
 
@@ -189,20 +177,37 @@ function SearchScreen({
     openTimer.current = setTimeout(startOpen, 800);
   }
 
+  function finishClose() {
+    if (!isMounted.current) return;
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+    navigation.closeSearch();
+  }
+
+  // 닫기 애니메이션 완료 신호가 오지 않아도 닫히도록 대체 타이머를 둔다.
   function close() {
     if (isClosing.current) return;
     isClosing.current = true;
     input.current?.blur();
-    animation.current?.stop();
-    animation.current = Animated.timing(progress, {
-      toValue: 0,
-      duration: 300,
-      easing: Easing.bezier(0.42, 0, 0.58, 1),
-      useNativeDriver: false,
-    });
-    animation.current.start(({ finished }) => {
-      if (finished && isMounted.current) navigation.closeSearch();
-    });
+    if (!hasStarted.current) {
+      finishClose();
+      return;
+    }
+    setIsPresented(false);
+    closeTimer.current = setTimeout(finishClose, 800);
+  }
+
+  function transitionEnded(didPresent: boolean) {
+    if (!isMounted.current) return;
+    if (!didPresent) {
+      finishClose();
+      return;
+    }
+    if (isFocusPending.current && !isClosing.current) {
+      isFocusPending.current = false;
+      hasPresentedKeyboard = true;
+      input.current?.focus();
+    }
   }
 
   const query = useDeferredValue(state.query);
@@ -307,22 +312,20 @@ function SearchScreen({
 
   return (
     <View style={styles.root} onLayout={enter}>
-      <Animated.View
+      <SearchTransition
+        effect="fadeIn"
+        isPresented={isPresented}
         pointerEvents="none"
-        style={[styles.backdrop, { opacity: progress }]}
+        style={styles.backdrop}
       />
       <View style={{ height: insets.top + 48 }}>
-        <Animated.View
+        <SearchTransition
+          effect="expand"
+          isPresented={isPresented}
+          onTransitionEnd={transitionEnded}
           style={[
             styles.searchBar,
-            {
-              top: insets.top - 5,
-              opacity: progress,
-              width: progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, Math.max(0, width - 96)],
-              }),
-            },
+            { top: insets.top - 5, width: Math.max(0, width - 96) },
           ]}
         >
           <Image
@@ -350,42 +353,47 @@ function SearchScreen({
               input.current?.blur();
             }}
           />
-        </Animated.View>
+        </SearchTransition>
         {usesSystemBar ? (
           <NavigationBarButton side="right" icon="xmark" onPress={close} />
         ) : (
-          <AnimatedPressable
-            style={[styles.cancel, { top: insets.top - 5, opacity: progress }]}
-            onPress={close}
+          <SearchTransition
+            effect="fadeIn"
+            isPresented={isPresented}
+            style={[styles.cancel, { top: insets.top - 5 }]}
           >
-            <Animated.View
-              style={[
-                styles.buttonIcon,
-                {
-                  opacity: progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [1, 0],
-                  }),
-                },
-              ]}
-            >
-              <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
-            </Animated.View>
-            <Animated.View style={[styles.buttonIcon, { opacity: progress }]}>
-              <Image
-                source="sf:xmark"
-                contentFit="none"
-                style={styles.xmarkIcon}
-              />
-            </Animated.View>
-          </AnimatedPressable>
+            <Pressable style={styles.cancelPress} onPress={close}>
+              <SearchTransition
+                effect="fadeOut"
+                isPresented={isPresented}
+                style={styles.buttonIcon}
+              >
+                <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
+              </SearchTransition>
+              <SearchTransition
+                effect="fadeIn"
+                isPresented={isPresented}
+                style={styles.buttonIcon}
+              >
+                <Image
+                  source="sf:xmark"
+                  contentFit="none"
+                  style={styles.xmarkIcon}
+                />
+              </SearchTransition>
+            </Pressable>
+          </SearchTransition>
         )}
       </View>
       <KeyboardAvoidingView
         behavior="padding"
         style={[styles.root, { marginBottom: insets.bottom }]}
       >
-        <Animated.View style={[styles.root, { opacity: progress }]}>
+        <SearchTransition
+          effect="fadeIn"
+          isPresented={isPresented}
+          style={styles.root}
+        >
           <View style={styles.filters}>
             <HomeFilterBar
               keyboardShouldPersistTaps="handled"
@@ -456,7 +464,7 @@ function SearchScreen({
               />
             )}
           </View>
-        </Animated.View>
+        </SearchTransition>
       </KeyboardAvoidingView>
     </View>
   );
@@ -569,6 +577,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.Outline,
     backgroundColor: colors.Card,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelPress: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

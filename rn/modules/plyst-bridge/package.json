@@ -17,6 +17,9 @@
         },
         "PlystNavigationBarButton": {
           "className": "PlystNavigationBarButtonComponentView"
+        },
+        "PlystSearchTransition": {
+          "className": "PlystSearchTransitionComponentView"
         }
       }
     }
