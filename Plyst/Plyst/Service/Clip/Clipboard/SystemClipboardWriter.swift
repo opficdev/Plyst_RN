@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import UniformTypeIdentifiers
 
-/// 기기 간 전송 여부와 만료일을 명시적으로 구성하는 시스템 클립보드 쓰기 구현입니다.
+/// 기기 간 전송 여부와 만료일을 명시적으로 구성하는 시스템 클립보드 쓰기 구현
 struct SystemClipboardWriter: ClipboardWriter {
     private let localOnly: Bool
     private let expirationDate: Date?
@@ -22,7 +22,7 @@ struct SystemClipboardWriter: ClipboardWriter {
         self.expirationDate = expirationDate
     }
 
-    /// 호출자의 actor 밖에서 쓰기와 기록된 표현의 확인을 수행합니다.
+    /// 호출자의 actor 밖에서 쓰기와 기록된 표현의 확인을 수행함
     @concurrent
     func write(_ content: ClipboardWriteContent) async throws -> ClipboardWriteResult {
         try Task.checkCancellation()
@@ -31,8 +31,8 @@ struct SystemClipboardWriter: ClipboardWriter {
         options[.localOnly] = localOnly
         if let expirationDate { options[.expirationDate] = expirationDate }
 
-        // setItems는 성공값을 반환하지 않으며 changeCount 갱신은 지연될 수 있어 같은 표현을 다시 읽습니다.
-        // 쓰기가 시작된 이후에는 취소를 다시 확인하거나 이전 클립보드 내용을 복구하지 않습니다.
+        // setItems는 성공값을 반환하지 않으며 changeCount 갱신은 지연될 수 있어 같은 표현을 다시 읽음
+        // 쓰기가 시작된 이후에는 취소를 다시 확인하거나 이전 클립보드 내용을 복구하지 않음
         switch content {
         case .text(let text):
             let type = UTType.utf8PlainText.identifier

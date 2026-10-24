@@ -7,7 +7,7 @@
 
 import WidgetKit
 
-/// 표시할 내용이 변하지 않으므로 항목 하나로 타임라인을 구성하고 다시 불러오지 않습니다.
+/// 표시할 내용이 변하지 않으므로 항목 하나로 타임라인을 구성하고 다시 불러오지 않음
 struct WidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> WidgetEntry {
         WidgetEntry(date: .now)

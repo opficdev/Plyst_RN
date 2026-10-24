@@ -21,7 +21,8 @@ final class SceneComposition {
     let images: ClipImageService
     let clipboard: ClipboardService
     let photos: ClipPhotoLibraryService
-    /// App Group 컨테이너를 찾지 못하면 nil입니다. 본 저장소가 정상이므로 시작은 계속하고 반입만 건너뜁니다.
+    /// App Group 컨테이너를 찾지 못하면 nil
+    /// 본 저장소가 정상이므로 시작은 계속하고 반입만 건너뜀
     private let imports: ClipShareImportService?
     private var importTask: Task<Void, Never>?
 
@@ -71,8 +72,9 @@ final class SceneComposition {
         }
     }
 
-    /// React Native 앱 루트 하나를 담은 창의 루트 뷰 컨트롤러를 만듭니다. 화면 전환은 RN이 소유합니다.
-    /// RN 뷰를 만들지 못하면 nil이며 호출한 쪽이 시작 실패 화면으로 전환합니다.
+    /// React Native 앱 루트 하나를 담은 창의 루트 뷰 컨트롤러를 만듦
+    /// 화면 전환은 RN이 소유함
+    /// RN 뷰를 만들지 못하면 nil이며 호출한 쪽이 시작 실패 화면으로 전환함
     func makeRootViewController() -> UIViewController? {
         guard let content = ReactNativeBrownfield.shared.view(
             moduleName: "AppRoot",
@@ -92,13 +94,15 @@ final class SceneComposition {
         return root
     }
 
-    /// RN 기록 화면의 저장 버튼과 같은 경로로 현재 클립보드 저장을 요청합니다.
+    /// RN 기록 화면의 저장 버튼과 같은 경로로 현재 클립보드 저장을 요청함
     func saveCurrentClipboard() {
         HomeBridge.requestClipboardSave()
     }
 
-    /// Share Extension이 저장한 클립을 본 저장소로 옮깁니다. 이미 실행 중이면 새로 시작하지 않습니다.
-    /// 실패해도 화면 상태와 Inbox는 유지되며 다음 활성화에서 다시 시도합니다. 해제되면 진행 중인 반입을 취소합니다.
+    /// Share Extension이 저장한 클립을 본 저장소로 옮김
+    /// 이미 실행 중이면 새로 시작하지 않음
+    /// 실패해도 화면 상태와 Inbox는 유지되며 다음 활성화에서 다시 시도함
+    /// 해제되면 진행 중인 반입을 취소함
     func importSharedClips() {
         guard importTask == nil, let imports else { return }
         importTask = Task { [weak self, imports] in
@@ -109,7 +113,7 @@ final class SceneComposition {
                 }
                 if result.hasPendingCleanup { self?.startPendingCleanupRecovery() }
             } catch is CancellationError {
-                // 해제에 따른 정상적인 중단입니다.
+                // 해제에 따른 정상적인 중단
             } catch {
                 Self.logger.error("공유 클립 반입 실패: \(String(describing: type(of: error)), privacy: .public)")
             }

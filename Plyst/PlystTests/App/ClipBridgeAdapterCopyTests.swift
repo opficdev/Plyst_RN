@@ -255,7 +255,7 @@ final class ClipBridgeAdapterSaveTests: XCTestCase {
         }
         let stored = try await adapter.images.loadImage(image)
         XCTAssertEqual(stored, data)
-        // 정리 재시도 후에도 저장된 원본이 남아 있는지 확인합니다.
+        // 정리 재시도 후에도 저장된 원본이 남아 있는지 확인함
         _ = try await adapter.images.recoverPendingCleanup()
         try ClipImageFileSystemTestFixture.restorePermissions(at: root)
         _ = try await adapter.images.recoverPendingCleanup()

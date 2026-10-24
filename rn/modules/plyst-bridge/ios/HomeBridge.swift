@@ -7,8 +7,8 @@
 
 import Foundation
 
-/// 호스트가 클립보드 저장 요청을 전달하는 진입점입니다.
-/// ready()에서 보관된 저장 요청을 전달합니다.
+/// 호스트가 클립보드 저장 요청을 전달하는 진입점
+/// ready()에서 보관된 저장 요청을 전달함
 @MainActor
 public enum HomeBridge {
     private static var registration: (
@@ -28,7 +28,8 @@ public enum HomeBridge {
         }
     }
 
-    /// 호스트가 클립보드 저장을 요청합니다. ready() 전에는 요청 하나를 만료 없이 보관합니다.
+    /// 호스트가 클립보드 저장을 요청함
+    /// ready() 전에는 요청 하나를 만료 없이 보관함
     public static func requestClipboardSave() {
         guard let registration else {
             isClipboardSaveRequested = true

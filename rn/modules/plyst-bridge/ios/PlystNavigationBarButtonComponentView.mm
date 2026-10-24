@@ -16,15 +16,17 @@ using namespace facebook::react;
   NSString *_side;
   NSString *_icon;
   NSString *_title;
-  // 항목을 넣고 관찰 중인 navigationItem입니다. 뺄 때는 응답자 체인이 끊겼을 수 있으므로 다시 찾지 않습니다.
-  // 관찰자를 해제하기 전에 해제되지 않도록 강한 참조로 둡니다.
+  // 항목을 넣고 관찰 중인 navigationItem
+  // 뺄 때는 응답자 체인이 끊겼을 수 있으므로 다시 찾지 않음
+  // 관찰자를 해제하기 전에 해제되지 않도록 강한 참조로 둠
   UINavigationItem *_navigationItem;
   BOOL _isRight;
 }
 
 static void *ItemsObservationContext = &ItemsObservationContext;
 
-// 정적 링크된 클래스가 링커에서 제거되지 않도록 합니다. https://github.com/facebook/react-native/pull/37274
+// 정적 링크된 클래스가 링커에서 제거되지 않도록 함
+// https://github.com/facebook/react-native/pull/37274
 + (void)load
 {
   [super load];
@@ -53,7 +55,7 @@ static void *ItemsObservationContext = &ItemsObservationContext;
   NSString *icon = newProps.icon.empty() ? nil : [NSString stringWithUTF8String:newProps.icon.c_str()];
   NSString *title = newProps.title.empty() ? nil : [NSString stringWithUTF8String:newProps.title.c_str()];
 
-  // 모양은 항목을 만들 때만 정하므로 side, icon, title이 바뀌면 항목을 새로 만들어 바꿔 넣습니다.
+  // 모양은 항목을 만들 때만 정하므로 side, icon, title이 바뀌면 항목을 새로 만들어 바꿔 넣음
   if (!_item || ![side isEqualToString:_side] || ![icon ?: @"" isEqualToString:_icon ?: @""] ||
       ![title ?: @"" isEqualToString:_title ?: @""]) {
     [self uninstallItem];
@@ -116,7 +118,7 @@ static void *ItemsObservationContext = &ItemsObservationContext;
   return item;
 }
 
-// window에 붙어 있고 가장 가까운 뷰 컨트롤러가 내비게이션 컨트롤러 안에 있을 때만 항목을 넣습니다.
+// window에 붙어 있고 가장 가까운 뷰 컨트롤러가 내비게이션 컨트롤러 안에 있을 때만 항목을 넣음
 - (void)installItem
 {
   if (_item == nil || self.window == nil) {
@@ -143,8 +145,8 @@ static void *ItemsObservationContext = &ItemsObservationContext;
   }
 }
 
-// react-native-screens는 헤더 설정을 갱신할 때마다 navigationItem의 좌우 항목을 nil로 비웁니다.
-// 비워진 자리에 우리 항목이 없으면 다시 넣고 다른 항목이 차지한 자리는 건드리지 않습니다.
+// react-native-screens는 헤더 설정을 갱신할 때마다 navigationItem의 좌우 항목을 nil로 비움
+// 비워진 자리에 우리 항목이 없으면 다시 넣고 다른 항목이 차지한 자리는 건드리지 않음
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary *)change
@@ -175,7 +177,8 @@ static void *ItemsObservationContext = &ItemsObservationContext;
   _navigationItem = nil;
 }
 
-// 다른 화면의 항목이 이미 자리를 차지했으면 그대로 둡니다. 그래서 마운트 순서와 관계없이 항목 하나만 남습니다.
+// 다른 화면의 항목이 이미 자리를 차지했으면 그대로 둠
+// 그래서 마운트 순서와 관계없이 항목 하나만 남음
 - (void)uninstallItem
 {
   UINavigationItem *navigationItem = _navigationItem;

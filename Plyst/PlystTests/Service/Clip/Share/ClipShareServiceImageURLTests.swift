@@ -19,7 +19,7 @@ final class ClipShareServiceImageURLTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        // 이미지 URL이 아닌 공유에서는 요청이 없어야 하므로 요청이 생기면 실패하도록 둡니다.
+        // 이미지 URL이 아닌 공유에서는 요청이 없어야 하므로 요청이 생기면 실패하도록 둠
         ClipImageDownloadURLProtocolStub.reset(.failure(.notConnectedToInternet))
     }
 
@@ -230,7 +230,8 @@ final class ClipShareServiceImageURLTests: XCTestCase {
         )
     }
 
-    /// 이미지 루트 아래의 항목 수입니다. 저장된 이미지 하나당 디렉터리 하나가 있습니다.
+    /// 이미지 루트 아래의 항목 수
+    /// 저장된 이미지 하나당 디렉터리 하나가 있음
     private func imageEntryCount() throws -> Int {
         try FileManager.default.contentsOfDirectory(atPath: imagesDirectory.path).count
     }

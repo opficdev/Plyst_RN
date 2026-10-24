@@ -7,7 +7,7 @@
 
 import UIKit
 
-/// 공유 상태 표시와 재시도 및 취소 버튼을 요구합니다.
+/// 공유 상태 표시와 재시도 및 취소 버튼을 요구함
 @MainActor
 protocol ShareStatusLike: UIView {
     var checkmarkView: UIImageView { get }

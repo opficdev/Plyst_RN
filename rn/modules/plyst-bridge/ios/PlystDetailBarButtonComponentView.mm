@@ -22,7 +22,8 @@ using namespace facebook::react;
   NSString *_title;
 }
 
-// 정적 링크된 클래스가 링커에서 제거되지 않도록 합니다. https://github.com/facebook/react-native/pull/37274
+// 정적 링크된 클래스가 링커에서 제거되지 않도록 함
+// https://github.com/facebook/react-native/pull/37274
 + (void)load
 {
   [super load];
@@ -50,7 +51,7 @@ using namespace facebook::react;
   NSString *icon = newProps.icon.empty() ? nil : [NSString stringWithUTF8String:newProps.icon.c_str()];
   NSString *title = newProps.title.empty() ? nil : [NSString stringWithUTF8String:newProps.title.c_str()];
 
-  // 스타일은 버튼을 만들 때만 정해지므로 icon이나 title이 바뀌면 버튼을 새로 만듭니다.
+  // 스타일은 버튼을 만들 때만 정해지므로 icon이나 title이 바뀌면 버튼을 새로 만듦
   if (!_button || ![icon ?: @"" isEqualToString:_icon ?: @""] || ![title ?: @"" isEqualToString:_title ?: @""]) {
     [self replaceButtonWithIcon:icon title:title];
   }
@@ -82,7 +83,7 @@ using namespace facebook::react;
   _button = icon != nil ? [[DetailBarButton alloc] initWithIcon:icon] : [[DetailBarButton alloc] initWithTitle:title];
   [_button addTarget:self action:@selector(handlePress) forControlEvents:UIControlEventTouchUpInside];
   [self addSubview:_button];
-  // 버튼은 자기 크기를 유지하므로 Yoga 상자의 중앙에 둡니다.
+  // 버튼은 자기 크기를 유지하므로 Yoga 상자의 중앙에 둠
   [NSLayoutConstraint activateConstraints:@[
     [_button.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
     [_button.centerYAnchor constraintEqualToAnchor:self.centerYAnchor]

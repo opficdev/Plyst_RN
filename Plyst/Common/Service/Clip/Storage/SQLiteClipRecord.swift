@@ -9,7 +9,8 @@ import Foundation
 import GRDB
 import SQLiteData
 
-/// 영구 저장 필드와 도메인 값을 분리합니다. 날짜는 기준 시각으로부터의 간격을 저장하여 정밀도를 보존합니다.
+/// 영구 저장 필드와 도메인 값을 분리함
+/// 날짜는 기준 시각으로부터의 간격을 저장하여 정밀도를 보존함
 @Table("clips")
 struct SQLiteClipRecord: Sendable {
     let id: UUID
@@ -88,8 +89,9 @@ extension SQLiteClipRecord {
         )
     }
 
-    /// clips.sqlite의 모든 스키마 마이그레이션을 이 마이그레이터 하나에 등록합니다.
-    /// 별도의 DatabaseMigrator를 만들면 hasBeenSuperseded 판정으로 기존 저장소가 corruptedData가 되므로, 새 마이그레이션은 이 목록 끝에 추가합니다.
+    /// clips.sqlite의 모든 스키마 마이그레이션을 이 마이그레이터 하나에 등록함
+    /// 별도의 DatabaseMigrator를 만들면 hasBeenSuperseded 판정으로 기존 저장소가 corruptedData가 됨
+    /// 새 마이그레이션은 이 목록 끝에 추가함
     static func migrate(_ database: DatabaseQueue) throws {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("CreateClips") { connection in

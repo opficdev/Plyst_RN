@@ -7,9 +7,10 @@
 
 import UIKit
 
-/// 상세 화면 상단 바의 원형 아이콘 버튼과 캡슐형 텍스트 버튼입니다.
-/// iOS 26 이상에서는 Liquid Glass를 씁니다. 그보다 낮은 버전에서는 테두리가 있는 평면 버튼으로 표시합니다.
-/// 색은 앱 에셋 카탈로그의 이름을 문자열로 참조하므로 앱 타깃에 같은 이름의 색이 있어야 합니다.
+/// 상세 화면 상단 바의 원형 아이콘 버튼과 캡슐형 텍스트 버튼
+/// iOS 26 이상에서는 Liquid Glass를 씀
+/// 그보다 낮은 버전에서는 테두리가 있는 평면 버튼으로 표시함
+/// 색은 앱 에셋 카탈로그의 이름을 문자열로 참조하므로 앱 타깃에 같은 이름의 색이 있어야 함
 @objc(DetailBarButton)
 public final class DetailBarButton: UIButton {
     enum Style {
@@ -31,13 +32,13 @@ public final class DetailBarButton: UIButton {
         makeLayout()
     }
 
-    /// Objective-C++ 컴포넌트 뷰가 SF Symbol 이름으로 원형 아이콘 버튼을 만듭니다.
+    /// Objective-C++ 컴포넌트 뷰가 SF Symbol 이름으로 원형 아이콘 버튼을 만듦
     @objc
     public convenience init(icon: String) {
         self.init(style: .icon(icon))
     }
 
-    /// Objective-C++ 컴포넌트 뷰가 제목으로 캡슐형 텍스트 버튼을 만듭니다.
+    /// Objective-C++ 컴포넌트 뷰가 제목으로 캡슐형 텍스트 버튼을 만듦
     @objc
     public convenience init(title: String) {
         self.init(style: .title(title))

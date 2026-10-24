@@ -7,11 +7,15 @@
 
 import Foundation
 
-/// 같은 루트의 이미지 쓰기와 복구를 하나의 인스턴스에서 조율합니다. 별도 프로세스의 변경은 조율하지 않습니다.
+/// 같은 루트의 이미지 쓰기와 복구를 하나의 인스턴스에서 조율함
+/// 별도 프로세스의 변경은 조율하지 않음
 ///
-/// `ShareInboxImages`는 두 프로세스가 다룹니다. 저장과 `recoverPendingCleanup`은 Share Extension만 실행합니다.
-/// 본 앱은 읽기와 `delete(id:)`만 실행합니다. 본 앱이 복구를 실행하면 Extension이 저장 중이라 아직 참조되지 않은 파일을 지울 수 있습니다.
-/// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일입니다. 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않습니다.
+/// `ShareInboxImages`는 두 프로세스가 다룸
+/// 저장과 `recoverPendingCleanup`은 Share Extension만 실행함
+/// 본 앱은 읽기와 `delete(id:)`만 실행함
+/// 본 앱이 복구를 실행하면 Extension이 저장 중이라 아직 참조되지 않은 파일을 지울 수 있음
+/// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일
+/// 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않음
 actor ClipImageService {
     private static let previewPixelDimension = 1600
     private let storage: any ClipStorageService
@@ -62,21 +66,23 @@ actor ClipImageService {
         return ClipImageMutationResult(value: clip, cleanup: cleanup)
     }
 
-    /// 클립을 재조회하지 않고 전달받은 메타데이터에 대응하는 원본을 검증합니다.
+    /// 클립을 재조회하지 않고 전달받은 메타데이터에 대응하는 원본을 검증함
     func loadImage(_ image: ClipImageMetadata) async throws -> Data {
         try await acquire()
         defer { release() }
         return try files.load(image: image)
     }
 
-    /// 본 앱 이미지 루트에서만 호출합니다. 삭제와 직렬화하여 원본에서 미리보기 파일을 매번 다시 만듭니다.
+    /// 본 앱 이미지 루트에서만 호출함
+    /// 삭제와 직렬화하여 원본에서 미리보기 파일을 매번 다시 만듦
     func makePreviewFileURL(_ image: ClipImageMetadata) async throws -> URL {
         try await acquire()
         defer { release() }
         return try files.writePreview(image: image, maximumPixelDimension: Self.previewPixelDimension)
     }
 
-    /// 본 앱 이미지 루트에서만 호출합니다. 삭제와 직렬화하여 요청한 크기의 썸네일 파일을 매번 다시 만듭니다.
+    /// 본 앱 이미지 루트에서만 호출함
+    /// 삭제와 직렬화하여 요청한 크기의 썸네일 파일을 매번 다시 만듦
     func makeThumbnailFileURL(
         _ image: ClipImageMetadata,
         maximumPixelDimension: Int
@@ -86,7 +92,7 @@ actor ClipImageService {
         return try files.writeThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
     }
 
-    /// 카드 표시용 축소 데이터만 반환하며 원본 파일은 유지합니다.
+    /// 카드 표시용 축소 데이터만 반환하며 원본 파일은 유지함
     func loadThumbnail(
         _ image: ClipImageMetadata,
         maximumPixelDimension: Int
@@ -96,7 +102,7 @@ actor ClipImageService {
         return try files.loadThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
     }
 
-    /// DB 삭제 확정 후 파일 정리에 실패해도 확정된 삭제를 실패로 반환하지 않습니다.
+    /// DB 삭제 확정 후 파일 정리에 실패해도 확정된 삭제를 실패로 반환하지 않음
     func delete(id: Clip.ID) async throws -> ClipImageMutationResult<Clip.ID> {
         try await acquire()
         defer { release() }
@@ -108,8 +114,9 @@ actor ClipImageService {
         return ClipImageMutationResult(value: id, cleanup: cleanup)
     }
 
-    /// 초기화 이후 명시적으로 호출합니다. 이번에 정리하지 못한 fileID만 반환합니다.
-    /// DB 조회에 실패하면 후보를 변경하지 않고 오류를 반환합니다.
+    /// 초기화 이후 명시적으로 호출함
+    /// 이번에 정리하지 못한 fileID만 반환함
+    /// DB 조회에 실패하면 후보를 변경하지 않고 오류를 반환함
     func recoverPendingCleanup() async throws -> [UUID] {
         try await acquire()
         defer { release() }
@@ -152,7 +159,7 @@ actor ClipImageService {
         } else { try files.delete(fileID: fileID) }
     }
 
-    /// actor는 await 중에 재진입할 수 있으므로 외부 호출을 포함한 작업 전체의 순서를 보호합니다.
+    /// actor는 await 중에 재진입할 수 있으므로 외부 호출을 포함한 작업 전체의 순서를 보호함
     private func acquire() async throws {
         try Task.checkCancellation()
         if isBusy {

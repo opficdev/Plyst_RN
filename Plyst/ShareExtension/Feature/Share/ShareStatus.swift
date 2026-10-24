@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// 공유 시트 화면이 표시하는 저장 진행 상태입니다.
+/// 공유 시트 화면이 표시하는 저장 진행 상태
 enum ShareStatus {
     case saving
     case completed
