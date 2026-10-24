@@ -13,7 +13,7 @@ script_started=$(date +%s)
 stage_name=
 stage_started=$script_started
 
-# 단계별 소요 시간을 초 단위로 출력합니다.
+# 단계별 소요 시간을 초 단위로 출력함
 stage_begin() {
 	stage_name=$1
 	stage_started=$(date +%s)
@@ -39,7 +39,7 @@ inputs_script=$script_directory/rn-xcframework-inputs.sh
 inputs_marker=$destination/.inputs
 package_manifest=$repository_root/Plyst/Packages/PlystReactNative/Package.swift
 
-# Package.swift의 프레임워크 이름과 산출물 이름이 일치하는지 확인합니다.
+# Package.swift의 프레임워크 이름과 산출물 이름이 일치하는지 확인함
 verify_framework_names() {
 	expected_names=$(mktemp)
 	actual_names=$(mktemp)
@@ -84,9 +84,9 @@ esac
 
 cd "$repository_root/rn"
 
-# 입력 해시와 실행 환경이 지난 성공 빌드와 같으면 단계를 생략합니다.
-# JS 입력만 바뀌었으면 main.jsbundle만 다시 만들어 교체합니다.
-# RN_XCFRAMEWORK_CLEAN이 비어 있지 않으면 항상 처음부터 빌드합니다.
+# 입력 해시와 실행 환경이 지난 성공 빌드와 같으면 단계를 생략함
+# JS 입력만 바뀌었으면 main.jsbundle만 다시 만들어 교체함
+# RN_XCFRAMEWORK_CLEAN이 비어 있지 않으면 항상 처음부터 빌드함
 node_version=$("$node_binary" --version)
 environment="$(xcodebuild -version | tr '\n' ' ')node=$node_version configuration=$configuration"
 all_hash=$("$inputs_script" all)
@@ -96,8 +96,8 @@ npm_marker=node_modules/.plyst-npm-ci
 build_directory=$repository_root/rn/ios/.brownfield/package/build
 products_directory=$repository_root/rn/ios/.brownfield/build/Build/Products
 
-# 앱이 쓰는 BrownfieldLib 프레임워크의 main.jsbundle만 Xcode 번들 단계와 같은 환경으로 다시 만듭니다.
-# 번들에는 Metro 출력 경로가 들어가므로 전체 빌드와 같은 Products 경로를 그대로 씁니다.
+# 앱이 쓰는 BrownfieldLib 프레임워크의 main.jsbundle만 Xcode 번들 단계와 같은 환경으로 다시 만듦
+# 번들에는 Metro 출력 경로가 들어가므로 전체 빌드와 같은 Products 경로를 그대로 씀
 rebuild_bundle() {
 	[ "$configuration" = Release ] || return 1
 	[ -d "$build_directory/BrownfieldLib.xcframework" ] || return 1
@@ -128,7 +128,7 @@ rebuild_bundle() {
 			bash "$bundle_script"
 		) > /dev/null 2>&1 || return 1
 
-		# 슬라이스 디렉터리 이름은 simulator 여부로 구분합니다.
+		# 슬라이스 디렉터리 이름은 simulator 여부로 구분함
 		case $platform in
 			iphoneos) pattern='*/ios-arm64/BrownfieldLib.framework' ;;
 			*) pattern='*/ios-*simulator/BrownfieldLib.framework' ;;
@@ -136,7 +136,7 @@ rebuild_bundle() {
 		slice=$(find "$build_directory/BrownfieldLib.xcframework" -type d -path "$pattern" | sed -n '1p')
 		[ -n "$slice" ] || return 1
 
-		# 번들 외에 바뀐 파일이 있으면 교체만으로는 결과가 달라지므로 전체 빌드로 넘어갑니다.
+		# 번들 외에 바뀐 파일이 있으면 교체만으로는 결과가 달라지므로 전체 빌드로 넘어감
 		diff -rq -x main.jsbundle -x _CodeSignature -x '*-apple-ios*.swiftmodule' "$framework" "$slice" > /dev/null || return 1
 		cp "$framework/main.jsbundle" "$slice/main.jsbundle" || return 1
 	done
@@ -178,17 +178,17 @@ if [ "$path" = full ]; then
 		stage_end
 	fi
 
-	# 아래 brownfield package:ios가 ios를 다시 만든 뒤 pod install을 한 번 실행하므로 여기서는 설치하지 않습니다.
+	# 아래 brownfield package:ios가 ios를 다시 만든 뒤 pod install을 한 번 실행하므로 여기서는 설치하지 않음
 	stage_begin prebuild
 	npx expo prebuild --platform ios --clean --no-install
 	printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
 	stage_end
 
-	# 로컬 빌드는 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않습니다.
-	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않습니다.
+	# 로컬 빌드는 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않음
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않음
 	stage_begin package-ios
-	# 사전 컴파일 Expo 모듈은 쓰지 않는 모듈까지 별도 프레임워크로 싣습니다.
-	# Expo 모듈을 소스로 빌드해 BrownfieldLib에 정적으로 합치고 autolinking 제외 설정을 적용합니다.
+	# 사전 컴파일 Expo 모듈은 쓰지 않는 모듈까지 별도 프레임워크로 실음
+	# Expo 모듈을 소스로 빌드해 BrownfieldLib에 정적으로 합치고 autolinking 제외 설정을 적용함
 	export EXPO_USE_PRECOMPILED_MODULES=0
 	set -- --scheme BrownfieldLib --configuration "$configuration" --use-prebuilt-expo false
 	if [ -z "${CI:-}" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
@@ -210,8 +210,8 @@ if ! [ -d "$1" ]; then
 fi
 
 stage_begin bridge-xcframework
-# PlystBridge pod는 BrownfieldLib에 정적으로 링크되어 심볼도 BrownfieldLib에서 제공합니다.
-# 중복 링크를 피하면서 import할 수 있도록 모듈과 헤더만 담고 빈 정적 라이브러리를 사용합니다.
+# PlystBridge pod는 BrownfieldLib에 정적으로 링크되어 심볼도 BrownfieldLib에서 제공함
+# 중복 링크를 피하면서 import할 수 있도록 모듈과 헤더만 담고 빈 정적 라이브러리를 사용함
 bridge_directory=$(mktemp -d)
 trap 'rm -rf "$bridge_directory"' EXIT HUP INT TERM
 
@@ -317,14 +317,14 @@ rsync -aL --delete --delete-excluded \
 	--exclude='*' \
 	"$build_directory/" "$destination/"
 
-# BrownfieldLib의 Info.plist에는 App Store Connect 검증에 필요한 CFBundleShortVersionString이 없습니다.
-# Info.plist를 수정하면 서명이 깨지므로 아래 ad-hoc 서명 전에 실행합니다.
+# BrownfieldLib의 Info.plist에는 App Store Connect 검증에 필요한 CFBundleShortVersionString이 없음
+# Info.plist를 수정하면 서명이 깨지므로 아래 ad-hoc 서명 전에 실행함
 find "$destination/BrownfieldLib.xcframework" -type f \
 	-path '*/ios-*/BrownfieldLib.framework/Info.plist' ! -path '*maccatalyst*' \
 	-exec plutil -replace CFBundleShortVersionString -string 1.0 {} +
 
-# 바이너리가 없는 ReactBrownfield와 PlystBridge에는 Xcode가 앱 배포 대상 버전으로 만든 스텁을 넣습니다.
-# 두 프레임워크의 MinimumOSVersion이 스텁의 최소 버전과 다르면 App Store Connect가 ITMS-90208로 거부합니다.
+# 바이너리가 없는 ReactBrownfield와 PlystBridge에는 Xcode가 앱 배포 대상 버전으로 만든 스텁을 넣음
+# 두 프레임워크의 MinimumOSVersion이 스텁의 최소 버전과 다르면 App Store Connect가 ITMS-90208로 거부함
 deployment_target=$(sed -n 's/^[[:space:]]*IPHONEOS_DEPLOYMENT_TARGET = \(.*\);$/\1/p' \
 	"$repository_root/Plyst/Plyst.xcodeproj/project.pbxproj" | sort -u)
 case "$deployment_target" in
@@ -339,15 +339,15 @@ for name in ReactBrownfield PlystBridge; do
 		-exec plutil -replace MinimumOSVersion -string "$deployment_target" {} +
 done
 
-# 앱에 임베드하는 프레임워크는 Xcode가 스트립하지 않으므로 Release에서 기기 슬라이스의 동적 라이브러리에 있는 디버그 심볼과 로컬 심볼을 지웁니다.
-# Debug 빌드는 디버그 정보를 유지하려고 건너뜁니다.
-# 정적 스텁인 ReactBrownfield와 PlystBridge와 시뮬레이터 슬라이스는 대상이 아닙니다.
-# 스트립은 서명을 무효로 만들므로 아래 ad-hoc 서명 전에 실행합니다.
+# 앱에 임베드하는 프레임워크는 Xcode가 스트립하지 않으므로 Release에서 기기 슬라이스의 동적 라이브러리에 있는 디버그 심볼과 로컬 심볼을 지움
+# Debug 빌드는 디버그 정보를 유지하려고 건너뜀
+# 정적 스텁인 ReactBrownfield와 PlystBridge와 시뮬레이터 슬라이스는 대상이 아님
+# 스트립은 서명을 무효로 만들므로 아래 ad-hoc 서명 전에 실행함
 if [ "$configuration" = Release ]; then
 	for framework in "$destination"/*.xcframework/ios-arm64/*.framework; do
 		binary=$framework/$(basename "$framework" .framework)
 		if file -b "$binary" | grep -q 'dynamically linked shared library'; then
-			# strip이 서명 무효화 경고를 매번 출력하므로 실패했을 때만 출력을 보여 줍니다.
+			# strip이 서명 무효화 경고를 매번 출력하므로 실패했을 때만 출력을 보여 줌
 			if ! strip_output=$(xcrun strip -S -x "$binary" 2>&1); then
 				printf '오류: 스트립에 실패했습니다: %s\n%s\n' "$binary" "$strip_output" >&2
 				exit 1
@@ -385,7 +385,7 @@ verify_framework_names || exit 1
 
 printf '%s\n' "$configuration" > "$destination/.configuration"
 
-# 빌드 중 입력이 바뀌었으면 마커를 쓰지 않아 다음 실행이 다시 빌드합니다.
+# 빌드 중 입력이 바뀌었으면 마커를 쓰지 않아 다음 실행이 다시 빌드함
 if [ "$("$inputs_script" all)" = "$all_hash" ]; then
 	printf 'all=%s\nnative=%s\nenvironment=%s\n' "$all_hash" "$native_hash" "$environment" \
 		> "$inputs_marker.tmp"

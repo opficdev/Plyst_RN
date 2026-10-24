@@ -46,7 +46,7 @@ if [ -n "$missing_keys" ]; then
 	exit 1
 fi
 
-# 오래 걸리는 XCFramework 빌드 전에 Fastlane 실행 환경을 확인한다.
+# 오래 걸리는 XCFramework 빌드 전에 Fastlane 실행 환경을 확인함
 if ! (cd "$repository_root" && bundle check >/dev/null 2>&1); then
 	printf '오류: Bundler gem이 설치되어 있지 않습니다. 저장소 루트에서 bundle install을 실행하세요.\n' >&2
 	exit 1
@@ -54,12 +54,12 @@ fi
 
 export ASC_KEY_PATH="$repository_root/fastlane/AuthKey.p8"
 export SPACESHIP_CONNECT_API_IN_HOUSE=false
-# Fastfile이 로컬 실행에서도 수동 서명 설정을 적용하도록 알린다.
+# Fastfile이 로컬 실행에서도 수동 서명 설정을 적용하도록 알림
 export LOCAL_DEPLOY=true
 
 project_backup=
 
-# 성공과 실패 및 인터럽트 모두에서 API 키 파일을 지우고 프로젝트 파일을 되돌린다.
+# 성공과 실패 및 인터럽트 모두에서 API 키 파일을 지우고 프로젝트 파일을 되돌림
 cleanup() {
 	rm -f "$ASC_KEY_PATH"
 	if [ -n "$project_backup" ] && [ -f "$project_backup" ]; then
@@ -72,7 +72,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# 배포 빌드는 입력 해시와 관계없이 처음부터 만듭니다.
+# 배포 빌드는 입력 해시와 관계없이 처음부터 만듦
 RN_XCFRAMEWORK_CLEAN=1 make -C "$repository_root" rn-xcframework RN_CONFIGURATION=Release
 
 project_backup=$(mktemp)

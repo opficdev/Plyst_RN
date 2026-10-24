@@ -14,15 +14,15 @@ TESTFLIGHT_IPA_OUTPUT_PATH = File.join(TESTFLIGHT_BUILD_OUTPUT_DIRECTORY, "#{APP
 APPSTORE_BUILD_OUTPUT_DIRECTORY = File.expand_path("appstore_build", __dir__)
 APPSTORE_IPA_OUTPUT_PATH = File.join(APPSTORE_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
 
-# xcodeproj 1.27은 Xcode 27의 확장 복사 위치(dstSubfolder)를 모르면 프로젝트를 저장할 때 지운다.
-# 확장이 앱의 PlugIns가 아닌 아카이브 루트에 설치되므로 프로젝트를 여는 어떤 액션보다 먼저 속성을 등록한다.
+# xcodeproj 1.27은 Xcode 27의 확장 복사 위치(dstSubfolder)를 모르면 프로젝트를 저장할 때 지움
+# 확장이 앱의 PlugIns가 아닌 아카이브 루트에 설치되므로 프로젝트를 여는 어떤 액션보다 먼저 속성을 등록함
 require "xcodeproj"
 copy_phase = Xcodeproj::Project::Object::PBXCopyFilesBuildPhase
 unless copy_phase.method_defined?(:dst_subfolder)
   copy_phase.class_eval { attribute :dst_subfolder, String }
 end
 
-# 앱 타깃의 MARKETING_VERSION을 읽고 App Store 버전 형식을 검증한다.
+# 앱 타깃의 MARKETING_VERSION을 읽고 App Store 버전 형식을 검증함
 def marketing_version_from_project
   version_number = get_version_number(
     xcodeproj: XCODE_PROJ,
@@ -168,7 +168,7 @@ platform :ios do
     end
   end
 
-  # ReactBrownfield와 PlystBridge는 정적으로 링크되므로 IPA 임베딩 대상에서 제외한다.
+  # ReactBrownfield와 PlystBridge는 정적으로 링크되므로 IPA 임베딩 대상에서 제외함
   private_lane :verify_embedded_react_native do |options|
     require "shellwords"
 
@@ -195,8 +195,8 @@ platform :ios do
     end
   end
 
-  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 XCFramework를 서명한다.
-  # 인증서 출처를 match 저장소 하나로 맞추려고 match가 설치한 프로파일에 들어 있는 인증서로만 서명한다.
+  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 XCFramework를 서명함
+  # 인증서 출처를 match 저장소 하나로 맞추려고 match가 설치한 프로파일에 들어 있는 인증서로만 서명함
   private_lane :sign_xcframeworks do |options|
     require "openssl"
     require "plist"
@@ -279,7 +279,7 @@ platform :ios do
 
     sign_xcframeworks(profile_path: ENV["sigh_#{APP_IDENTIFIER}_appstore_profile-path"])
 
-    # 빌드 번호는 프로젝트 파일을 수정하지 않고 앱과 확장 타깃 전체에 빌드 설정으로 주입한다.
+    # 빌드 번호는 프로젝트 파일을 수정하지 않고 앱과 확장 타깃 전체에 빌드 설정으로 주입함
     archive_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     build_app(
       project: XCODE_PROJ,
@@ -364,7 +364,7 @@ platform :ios do
 
   lane :upload_testflight_build do
     api_key = asc_api_key
-    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용한다.
+    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용함
     ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
     ipa_output_path = TESTFLIGHT_IPA_OUTPUT_PATH if ipa_output_path.empty?
 
@@ -381,7 +381,7 @@ platform :ios do
 
   lane :upload_appstore_build do
     api_key = asc_api_key
-    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용한다.
+    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용함
     ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
     ipa_output_path = APPSTORE_IPA_OUTPUT_PATH if ipa_output_path.empty?
 
