@@ -1,38 +1,29 @@
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { colors, spacing } from '../../Theme';
+import { HomeTitle } from './Title';
 
 export function HomeTitleHeader({
   onSearchButtonPress,
   isSearchButtonDisabled = false,
 }: {
-  // 지정하지 않으면 검색 버튼을 그리지 않습니다.
-  onSearchButtonPress?: () => void;
+  onSearchButtonPress: () => void;
   isSearchButtonDisabled?: boolean;
 }) {
   return (
     <View style={styles.container}>
-      <Image
-        source={{ uri: 'HomeLogo' }}
-        contentFit="cover"
-        style={styles.mark}
-      />
-      <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
-        Plyst
-      </Text>
-      {onSearchButtonPress !== undefined && (
-        <Pressable
-          style={styles.searchButton}
-          disabled={isSearchButtonDisabled}
-          onPress={onSearchButtonPress}
-        >
-          <Image
-            source="sf:magnifyingglass"
-            contentFit="contain"
-            style={styles.searchIcon}
-          />
-        </Pressable>
-      )}
+      <HomeTitle />
+      <Pressable
+        style={styles.searchButton}
+        disabled={isSearchButtonDisabled}
+        onPress={onSearchButtonPress}
+      >
+        <Image
+          source="sf:magnifyingglass"
+          contentFit="contain"
+          style={styles.searchIcon}
+        />
+      </Pressable>
     </View>
   );
 }
@@ -45,20 +36,6 @@ const styles = StyleSheet.create({
     paddingBottom: 13,
     marginTop: -5,
     gap: 10,
-  },
-  mark: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    overflow: 'hidden',
-    flexShrink: 0,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -1.12,
-    color: colors.PrimaryText,
-    flexShrink: 1,
   },
   searchButton: {
     marginLeft: 'auto',

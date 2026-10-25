@@ -143,9 +143,6 @@ function HomeContent({
     [state.loadPhase, state.clips, content],
   );
   const items = useMemo(() => makeHomeListItems(content), [content]);
-  // iPhone Duo의 위 inset은 높이 0인 내비게이션 바가 만든 값이라 가리는 것이 없다.
-  // 헤더는 그만큼 위로 늘려 그리고 숨은 헤더와 목록은 화면 끝에서 사라지도록 위 페이드를 두지 않는다.
-  const fadeHeight = usesSystemBar ? 0 : insets.top;
   const geometry = useMemo(
     () => ({
       headerHeight,
@@ -331,13 +328,14 @@ function HomeContent({
             },
           ]}
         >
-          <HomeTitleHeader
-            onSearchButtonPress={
-              usesSystemBar ? undefined : navigation.openSearch
-            }
-            isSearchButtonDisabled={isSearchVisible}
-          />
-          <View style={styles.filters}>
+          {/* iPhone Duo는 로고와 제목과 검색 버튼을 시스템 바가 그리므로 제목 줄을 그리지 않음 */}
+          {!usesSystemBar && (
+            <HomeTitleHeader
+              onSearchButtonPress={navigation.openSearch}
+              isSearchButtonDisabled={isSearchVisible}
+            />
+          )}
+          <View style={usesSystemBar ? undefined : styles.filters}>
             <HomeFilterBar
               chips={chips}
               selectedKey={state.filter}
@@ -345,7 +343,7 @@ function HomeContent({
             />
           </View>
         </Animated.View>
-        <EdgeFade height={fadeHeight} />
+        <EdgeFade height={insets.top} />
         {/* 검색이 열리면 Search의 닫기 항목이 바 자리를 쓰므로 Home 항목을 내립니다. 헤더 스크롤 숨김과는 관계없습니다. */}
         {usesSystemBar && !isSearchVisible && (
           <NavigationBarButton

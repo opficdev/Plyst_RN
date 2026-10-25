@@ -10,6 +10,7 @@ import {
   useScreenState,
 } from '../Shared/State/screenStore';
 import { HomeView } from '../Feature/Home/View';
+import { NavigationBarTitle } from '../Feature/Home/NavigationBarTitle';
 import { SearchView } from '../Feature/Search/View';
 import { ImageDetailView } from '../Feature/ImageDetail/View';
 import { TextDetailView } from '../Feature/TextDetail/View';
@@ -26,11 +27,13 @@ const Search = memo(SearchView);
 const usesSystemBar = isDuoDevice();
 
 // 항목은 각 화면이 PlystNavigationBarButton으로 넣으므로 헤더 설정에는 항목을 두지 않음
+// iPhone Duo는 로고와 제목도 시스템이 검색 항목과 같은 바 줄에 놓도록 왼쪽 항목으로 넣음
 const homeHeader: ScreenStackHeaderConfigProps = {
   hidden: !usesSystemBar,
   translucent: true,
   hideShadow: true,
   backgroundColor: 'transparent',
+  children: usesSystemBar ? <NavigationBarTitle /> : undefined,
 };
 
 export function AppRoot() {
