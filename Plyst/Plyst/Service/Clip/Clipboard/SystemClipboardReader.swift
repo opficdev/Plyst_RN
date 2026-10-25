@@ -8,9 +8,10 @@
 import UIKit
 import UniformTypeIdentifiers
 
-/// 호출자의 actor 밖에서 첫 항목의 형식을 확인하고 읽습니다. 변경을 감시하거나 읽기를 재시도하지 않습니다.
+/// 호출자의 actor 밖에서 첫 항목의 형식을 확인하고 읽음
+/// 변경을 감시하거나 읽기를 재시도하지 않음
 struct SystemClipboardReader: ClipboardReader {
-    // UIPasteboard.typeListString과 typeListURL은 Swift 6에서 공유 가변 상태로 취급되어 같은 형식 목록을 값으로 둡니다.
+    // UIPasteboard.typeListString과 typeListURL은 Swift 6에서 공유 가변 상태로 취급되어 같은 형식 목록을 값으로 둠
     private static let textTypes = [UTType.utf8PlainText.identifier, UTType.plainText.identifier]
     private static let urlTypes = [UTType.url.identifier]
 
@@ -27,7 +28,7 @@ struct SystemClipboardReader: ClipboardReader {
 
     private func readFirstItem(from pasteboard: UIPasteboard) -> ClipboardReadResult {
         guard pasteboard.numberOfItems != 0 else { return .empty }
-        // 첫 항목에 등록된 이미지 표현을 우선 선택하고 읽기 실패 시 텍스트나 URL로 대체하지 않습니다.
+        // 첫 항목에 등록된 이미지 표현을 우선 선택하고 읽기 실패 시 텍스트나 URL로 대체하지 않음
         let imageType = pasteboard.itemProviders.first?.registeredTypeIdentifiers.first {
             UTType($0)?.conforms(to: .image) == true
         }
@@ -35,7 +36,7 @@ struct SystemClipboardReader: ClipboardReader {
             guard let data = pasteboard.data(forPasteboardType: imageType) else { return .accessFailed }
             return .image(data)
         }
-        // hasStrings와 hasURLs는 전체 항목을 확인하므로 첫 항목의 형식만 검사합니다.
+        // hasStrings와 hasURLs는 전체 항목을 확인하므로 첫 항목의 형식만 검사함
         let hasText = pasteboard.contains(pasteboardTypes: Self.textTypes)
         let hasURL = pasteboard.contains(pasteboardTypes: Self.urlTypes)
         guard hasText || hasURL else { return .unsupported }

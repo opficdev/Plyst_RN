@@ -91,7 +91,7 @@ export function homeEmptyState({
   clips: ClipRecord[];
   content: HomeContent;
 }): HomeEmptyState {
-  // 전체 목록이 비었으면 content의 빈 상태보다 우선합니다.
+  // 전체 목록이 비었으면 content의 빈 상태보다 우선함
   switch (loadPhase) {
     case 'loading':
       return 'none';

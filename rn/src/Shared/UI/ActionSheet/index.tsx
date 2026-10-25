@@ -17,7 +17,8 @@ import { ActionSheetButton } from './Button';
 import type { ActionSheetItem } from './Item';
 
 export type ActionSheetProps = {
-  // 항상 마운트하고 isVisible로만 열고 닫는다. 조건부로 렌더링하면 닫힘 뒤에 실행되어야 할 handler가 사라진다.
+  // 항상 마운트하고 isVisible로만 열고 닫음
+  // 조건부로 렌더링하면 닫힘 뒤에 실행되어야 할 handler가 사라짐
   isVisible: boolean;
   title: string;
   message: string;
@@ -55,7 +56,7 @@ export function ActionSheet({
 
   function dismiss() {
     const item = pendingItem.current;
-    // handler가 화면을 다시 표시할 때 새 선택 상태가 지워지지 않도록 호출 전에 대기 중인 항목을 초기화한다.
+    // handler가 화면을 다시 표시할 때 새 선택 상태가 지워지지 않도록 호출 전에 대기 중인 항목을 초기화함
     pendingItem.current = undefined;
     item?.handler?.();
   }

@@ -18,18 +18,19 @@ import { ClipDetailTopBar } from './TopBar';
 
 type ClipDetailSheetProps = {
   title: string;
-  // true이면 시스템 내비게이션 바가 닫기, 제목, 저장을 그리고 false이면 RN 상단 바가 그립니다.
+  // true이면 시스템 내비게이션 바가 닫기, 제목, 저장을 그리고 false이면 RN 상단 바가 그림
   usesSystemBar: boolean;
   isSaveEnabled: boolean;
-  // 화면이 저장, 삭제, 조회 실패로 닫혀야 하면 true입니다.
+  // 화면이 저장, 삭제, 조회 실패로 닫혀야 하면 true
   isClosed: boolean;
   onSaveButtonPress: () => void;
-  // 닫기 버튼, 스와이프, isClosed 중 먼저 온 것으로 한 번 이상 호출하며 여러 번 호출해도 같은 결과여야 합니다.
+  // 닫기 버튼, 스와이프, isClosed 중 먼저 온 것으로 한 번 이상 호출하며 여러 번 호출해도 같은 결과여야 함
   onClose: () => void;
   children: ReactNode;
 };
 
-// 시트는 스택 항목이므로 부모가 항목을 빼면 시스템이 dismiss합니다. 그래서 닫기 요청은 곧 onClose입니다.
+// 시트는 스택 항목이므로 부모가 항목을 빼면 시스템이 dismiss함
+// 그래서 닫기 요청은 곧 onClose
 export function ClipDetailSheet({
   title,
   usesSystemBar,
@@ -124,13 +125,13 @@ function SheetBody({
           onSaveButtonPress={onSaveButtonPress}
         />
       )}
-      {/* 시트는 창 아래에 붙어 있으므로 시트의 창 안 y는 창 높이에서 시트 높이를 뺀 값입니다. */}
+      {/* 시트는 창 아래에 붙어 있으므로 시트의 창 안 y는 창 높이에서 시트 높이를 뺀 값 */}
       <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={Math.max(0, window.height - height)}
         style={[styles.content, { marginBottom: insets.bottom }]}
       >
-        {/* 내용 영역은 상단 바 아래부터 안전 영역 하단까지이므로 안전 영역 여백이 0입니다. */}
+        {/* 내용 영역은 상단 바 아래부터 안전 영역 하단까지이므로 안전 영역 여백이 0 */}
         <SafeAreaProvider
           initialMetrics={contentMetrics}
           style={styles.content}

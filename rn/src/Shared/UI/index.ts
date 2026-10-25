@@ -3,6 +3,7 @@ export type { ClipCardProps, ClipTextRange } from './ClipCard';
 export { SectionTitle } from './SectionTitle';
 export {
   HomeEmptyState,
+  HomeTitle,
   HomeTitleHeader,
   HomeFilterBar,
   HomePinnedRow,

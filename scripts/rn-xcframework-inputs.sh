@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# RN XCFramework 빌드 입력의 해시를 한 곳에서 정의합니다.
-# 로컬 빌드 스크립트와 CI 캐시 키가 같은 파일 집합을 쓰도록 이 스크립트의 출력만 사용합니다.
+# RN XCFramework 빌드 입력의 해시를 한 곳에서 정의함
+# 로컬 빌드 스크립트와 CI 캐시 키가 같은 파일 집합을 쓰도록 이 스크립트의 출력만 사용함
 #
 # 사용법: rn-xcframework-inputs.sh [lock|native|all|files]
 #   lock     rn/package-lock.json의 해시
@@ -18,7 +18,7 @@ script_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repository_root=$(CDPATH= cd "$script_directory/.." && pwd)
 cd "$repository_root"
 
-# 추적 중이거나 무시되지 않은 새 파일 중 작업 트리에 실제로 있는 파일만 모읍니다.
+# 추적 중이거나 무시되지 않은 새 파일 중 작업 트리에 실제로 있는 파일만 모음
 list_files() {
 	git ls-files --cached --others --exclude-standard -- "$@" | while IFS= read -r file; do
 		if [ -f "$file" ]; then
@@ -51,7 +51,7 @@ lock_lines() {
 	content_lines rn/package-lock.json
 }
 
-# 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 plyst-bridge ios 소스는 이름만 포함합니다.
+# 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 plyst-bridge ios 소스는 이름만 포함함
 base_lines() {
 	content_lines \
 		rn/package.json \
@@ -82,7 +82,7 @@ bundle_lines() {
 		rn/src
 }
 
-# 파이프라인 안에서는 exit가 스크립트를 끝내지 못하므로 줄을 먼저 변수에 받아 실패를 전달합니다.
+# 파이프라인 안에서는 exit가 스크립트를 끝내지 못하므로 줄을 먼저 변수에 받아 실패를 전달함
 hash_of() {
 	lines=$("$1")
 	printf '%s\n' "$lines" | shasum -a 256 | cut -d ' ' -f 1

@@ -89,7 +89,7 @@ final class ClipboardServiceTests: XCTestCase {
         XCTAssertEqual(insertCount, 0)
         XCTAssertEqual(reader.readCount, cases.count)
         XCTAssertEqual(stored, [previous])
-        // 후속 확정 이벤트까지 비교하여 저장하지 않은 요청이 이벤트를 발행하지 않았는지 확인합니다.
+        // 후속 확정 이벤트까지 비교하여 저장하지 않은 요청이 이벤트를 발행하지 않았는지 확인함
         let sentinel = Clip(content: .text("검증"))
         try await storage.insert(sentinel)
         await assertEvents(stream, expected: [.inserted(sentinel)])

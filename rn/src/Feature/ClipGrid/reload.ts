@@ -4,7 +4,7 @@ import type { ClipGridActions } from './reducers';
 
 type ReloadActions = Pick<ClipGridActions, 'clipsLoaded' | 'loadFailed'>;
 
-// 변경 구독을 시작하고 구독을 끊는 정리 함수를 돌려줍니다.
+// 변경 구독을 시작하고 구독을 끊는 정리 함수를 돌려줌
 export function startClipReload(
   api: {
     signal: AbortSignal;

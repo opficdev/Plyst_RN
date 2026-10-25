@@ -9,8 +9,8 @@ import Foundation
 import os
 @testable import Plyst
 
-/// 네트워크 없이 `ClipImageDownloadService`의 세션 응답을 대신하는 URLProtocol입니다.
-/// 상태는 정적이므로 테스트마다 `reset(_:)`으로 초기화합니다.
+/// 네트워크 없이 `ClipImageDownloadService`의 세션 응답을 대신하는 URLProtocol
+/// 상태는 정적이므로 테스트마다 `reset(_:)`으로 초기화함
 final class ClipImageDownloadURLProtocolStub: URLProtocol, @unchecked Sendable {
     enum Behavior: Sendable {
         case response(
@@ -19,7 +19,8 @@ final class ClipImageDownloadURLProtocolStub: URLProtocol, @unchecked Sendable {
             body: Data
         )
         case failure(URLError.Code)
-        /// 응답하지 않고 대기합니다. 취소로 전송이 중단되는지 확인할 때 사용합니다.
+        /// 응답하지 않고 대기함
+        /// 취소로 전송이 중단되는지 확인할 때 사용함
         case stall
     }
 
@@ -43,7 +44,7 @@ final class ClipImageDownloadURLProtocolStub: URLProtocol, @unchecked Sendable {
         state.withLock { $0 = State(behavior: behavior) }
     }
 
-    /// 앱이 쓰는 구성에 이 스텁만 더한 세션입니다.
+    /// 앱이 쓰는 구성에 이 스텁만 더한 세션
     static func makeSession() -> URLSession {
         let configuration = ClipImageDownloadService.configuration
         configuration.protocolClasses = [ClipImageDownloadURLProtocolStub.self]

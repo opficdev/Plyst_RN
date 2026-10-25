@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 import XCTest
 @testable import Plyst
 
-/// 기존 클립보드 복구 절차를 공유하고 시스템 클립보드를 쓰는 검증을 같은 XCTestCase에 배치합니다.
+/// 기존 클립보드 복구 절차를 공유하고 시스템 클립보드를 쓰는 검증을 같은 XCTestCase에 배치함
 extension SystemClipboardReaderTests {
     func testWriterCopiesOriginalTextAndReplacesPreviousItems() async throws {
         UIPasteboard.general.items = [
@@ -52,7 +52,7 @@ extension SystemClipboardReaderTests {
 
         let result = try await writer.write(.text("만료 정책이 있는 원문"))
 
-        // 공개 API는 적용된 옵션을 조회하지 못하므로 해당 옵션을 전달한 쓰기와 기기 내부 표현만 확인합니다.
+        // 공개 API는 적용된 옵션을 조회하지 못하므로 해당 옵션을 전달한 쓰기와 기기 내부 표현만 확인함
         XCTAssertEqual(result, .observed)
         XCTAssertEqual(UIPasteboard.general.string, "만료 정책이 있는 원문")
     }

@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   dimmed: { opacity: 0.55 },
   title: { ...typography.title, color: colors.BottomText },
   icon: { width: 18, height: 18 },
-  // UIKit의 경로 중앙에 그린 테두리를 View의 바깥 경계로 옮깁니다.
+  // UIKit의 경로 중앙에 그린 테두리를 View의 바깥 경계로 옮김
   board: {
     position: 'absolute',
     left: 2.65,

@@ -73,7 +73,7 @@ final class SystemClipboardReaderTests: XCTestCase {
 
         let result = try await SystemClipboardReader().read()
 
-        // 이미지 검증은 저장 서비스의 책임이며 읽기 단계에서 URL로 대체하지 않습니다.
+        // 이미지 검증은 저장 서비스의 책임이며 읽기 단계에서 URL로 대체하지 않음
         XCTAssertEqual(result, .image(data))
     }
 

@@ -38,7 +38,7 @@ export function ClipDetailTopBar({
 }
 
 const styles = StyleSheet.create({
-  // 글래스 버튼의 그림자가 아래 내용에 잘리지 않도록 위에 두고 overflow를 자르지 않습니다.
+  // 글래스 버튼의 그림자가 아래 내용에 잘리지 않도록 위에 두고 overflow를 자르지 않음
   bar: {
     zIndex: 1,
     flexDirection: 'row',

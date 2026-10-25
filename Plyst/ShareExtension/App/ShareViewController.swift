@@ -21,10 +21,11 @@ final class ShareViewController: UIViewController {
         frame: .zero,
         send: { [weak self] in self?.handle($0) }
     )
-    /// 저장 완료를 보여 준 뒤 요청을 종료하기까지의 시간입니다.
+    /// 저장 완료를 보여 준 뒤 요청을 종료하기까지의 시간
     private static let completionDelay = Duration.seconds(2)
 
-    /// 이미지 URL 내려받기에 쓰는 세션입니다. 화면이 해제될 때 진행 중인 전송과 함께 무효화합니다.
+    /// 이미지 URL 내려받기에 쓰는 세션
+    /// 화면이 해제될 때 진행 중인 전송과 함께 무효화함
     private let downloadSession = URLSession(configuration: ClipImageDownloadService.configuration)
     private var reactor: ShareReactor?
     private var task: Task<Void, Never>?
@@ -48,7 +49,7 @@ final class ShareViewController: UIViewController {
         prepare()
     }
 
-    /// 시스템이 principal class를 직접 생성하므로 저장소를 열 수 없는 경우를 고려해 viewDidLoad에서 조립합니다.
+    /// 시스템이 principal class를 직접 생성하므로 저장소를 열 수 없는 경우를 고려해 viewDidLoad에서 조립함
     private func prepare() {
         do {
             let directory = try ClipAppGroupDirectory()
@@ -69,8 +70,9 @@ final class ShareViewController: UIViewController {
         }
     }
 
-    /// 이전 실행에서 중단된 저장이 남긴 불완전한 이미지 파일을 정리합니다.
-    /// 같은 ClipImageService 안에서는 정리와 저장이 직렬화됩니다. 화면이 해제되면 정리를 중단하고 다음 실행에서 다시 시도합니다.
+    /// 이전 실행에서 중단된 저장이 남긴 불완전한 이미지 파일을 정리함
+    /// 같은 ClipImageService 안에서는 정리와 저장이 직렬화됨
+    /// 화면이 해제되면 정리를 중단하고 다음 실행에서 다시 시도함
     private func startPendingCleanupRecovery(_ images: ClipImageService) {
         recoveryTask?.cancel()
         recoveryTask = Task {
@@ -80,7 +82,7 @@ final class ShareViewController: UIViewController {
                     Self.logger.warning("이미지 정리 보류: \(pending.count, privacy: .public)개")
                 }
             } catch is CancellationError {
-                // 화면 생명주기에 따른 정상적인 중단입니다.
+                // 화면 생명주기에 따른 정상적인 중단
             } catch {
                 Self.logger.error("이미지 정리 재시도 실패: \(String(describing: type(of: error)), privacy: .public)")
             }
@@ -90,7 +92,7 @@ final class ShareViewController: UIViewController {
     private func bind(_ reactor: ShareReactor) {
         task?.cancel()
         self.reactor = reactor
-        // 값을 기다리는 동안에는 Reactor나 ViewController가 아니라 스트림만 캡처합니다.
+        // 값을 기다리는 동안에는 Reactor나 ViewController가 아니라 스트림만 캡처함
         let values = reactor.state.values
         task = Task { [weak self] in
             do {
@@ -99,7 +101,7 @@ final class ShareViewController: UIViewController {
                     self?.render(state.status)
                 }
             } catch is CancellationError {
-                // 관찰 취소는 화면 생명주기의 정상적인 일부입니다.
+                // 관찰 취소는 화면 생명주기의 정상적인 일부
             } catch {
                 Self.logger.error("상태 구독 실패: \(String(describing: type(of: error)), privacy: .public)")
             }
@@ -121,7 +123,7 @@ final class ShareViewController: UIViewController {
     private func handle(_ action: ShareStatusViewAction) {
         switch action {
         case .cancel:
-            // 진행 중인 저장을 먼저 중단한 뒤 요청을 종료합니다.
+            // 진행 중인 저장을 먼저 중단한 뒤 요청을 종료함
             reactor?.action.onNext(.cancel)
             extensionContext?.cancelRequest(withError: CocoaError(.userCancelled))
         case .retry:

@@ -37,7 +37,7 @@ export type TextDetailState = {
 
 export type TextDetailLoaded = { phase: 'loaded' } & TextDetailState;
 
-// closed는 최초 조회 실패나 조회 전 삭제로 화면이 열리지 못한 경우입니다.
+// closed는 최초 조회 실패나 조회 전 삭제로 화면이 열리지 못한 경우
 export type TextDetailStoreState =
   { phase: 'loading' } | { phase: 'closed' } | TextDetailLoaded;
 
@@ -78,7 +78,8 @@ export function isClosed(state: TextDetailStoreState): boolean {
   );
 }
 
-// reducer는 변경 전 상태로, listener는 getOriginalState로 같은 조건을 판정합니다.
+// reducer는 변경 전 상태로 판정함
+// listener는 getOriginalState로 같은 조건을 판정함
 export function canStartSave(
   state: TextDetailStoreState,
 ): state is TextDetailLoaded {

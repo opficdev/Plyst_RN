@@ -7,7 +7,8 @@ import { clipCardLongPressDelay } from '../../Shared/UI/ClipCard';
 
 const leftColumn = createContext(true);
 
-// 항목 순번 대신 실제 열 위치를 사용합니다. 전체 너비 항목에는 여백을 적용하지 않습니다.
+// 항목 순번 대신 실제 열 위치를 사용함
+// 전체 너비 항목에는 여백을 적용하지 않음
 export function ClipListCell({
   children,
   style,

@@ -51,9 +51,9 @@ const chips = clipFilters.map((key) => ({
   title: clipFilterTitles[key],
 }));
 export type HomeViewProps = {
-  // 검색 오버레이가 열려 있으면 true이며 Home은 시간 갱신과 맨 위로 스크롤을 멈춥니다.
+  // 검색 오버레이가 열려 있으면 true이며 Home은 시간 갱신과 맨 위로 스크롤을 멈춤
   isSearchVisible: boolean;
-  // iPhone Duo이면 true이며 검색 버튼은 시스템 헤더 항목이 맡으므로 RN 버튼을 그리지 않습니다.
+  // iPhone Duo이면 true이며 검색 버튼은 시스템 헤더 항목이 맡으므로 RN 버튼을 그리지 않음
   usesSystemBar: boolean;
   navigation: {
     openClip: (id: string, kind: ClipKind) => void;
@@ -143,14 +143,12 @@ function HomeContent({
     [state.loadPhase, state.clips, content],
   );
   const items = useMemo(() => makeHomeListItems(content), [content]);
-  // iPhone Duo의 위 inset은 높이 0인 내비게이션 바가 만든 값이라 가리는 것이 없다.
-  // 헤더는 그만큼 위로 늘려 그리고 숨은 헤더와 목록은 화면 끝에서 사라지도록 위 페이드를 두지 않는다.
-  const fadeHeight = usesSystemBar ? 0 : insets.top;
   const geometry = useMemo(
     () => ({
       headerHeight,
       safeTop: insets.top,
-      // 상단 여백을 contentInset 대신 padding으로 줍니다. 스크롤 시작점은 0이므로 insetTop도 0입니다.
+      // 상단 여백을 contentInset 대신 padding으로 줌
+      // 스크롤 시작점은 0이므로 insetTop도 0
       insetTop: 0,
       insetBottom: 0,
       contentHeight,
@@ -255,7 +253,7 @@ function HomeContent({
       <View style={styles.list}>
         <FlashList
           ref={list}
-          // iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝낸다.
+          // iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝냄
           style={{ marginRight: clipListRightMargin(insets.right) }}
           data={items}
           renderItem={renderItem}
@@ -330,13 +328,14 @@ function HomeContent({
             },
           ]}
         >
-          <HomeTitleHeader
-            onSearchButtonPress={
-              usesSystemBar ? undefined : navigation.openSearch
-            }
-            isSearchButtonDisabled={isSearchVisible}
-          />
-          <View style={styles.filters}>
+          {/* iPhone Duo는 로고와 제목과 검색 버튼을 시스템 바가 그리므로 제목 줄을 그리지 않음 */}
+          {!usesSystemBar && (
+            <HomeTitleHeader
+              onSearchButtonPress={navigation.openSearch}
+              isSearchButtonDisabled={isSearchVisible}
+            />
+          )}
+          <View style={usesSystemBar ? undefined : styles.filters}>
             <HomeFilterBar
               chips={chips}
               selectedKey={state.filter}
@@ -344,9 +343,10 @@ function HomeContent({
             />
           </View>
         </Animated.View>
-        <EdgeFade height={fadeHeight} />
-        {/* 검색이 열리면 Search의 닫기 항목이 바 자리를 쓰므로 Home 항목을 내립니다. 헤더 스크롤 숨김과는 관계없습니다. */}
-        {usesSystemBar && !isSearchVisible && (
+        <EdgeFade height={insets.top} />
+        {/* 검색 화면은 자기 스택 항목에 닫기 항목을 두므로 Home 항목은 검색이 열려도 빼지 않음 */}
+        {/* 헤더 스크롤 숨김과는 관계없음 */}
+        {usesSystemBar && (
           <NavigationBarButton
             side="right"
             icon="magnifyingglass"

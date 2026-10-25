@@ -6,7 +6,7 @@ import {
   searchRanges,
 } from '../../../src/Feature/Search/match';
 
-// 실기기 Swift 원본의 23개 기대값을 고정합니다.
+// 실기기 Swift 원본의 23개 기대값을 고정함
 const cases = [
   {
     id: 'nfc_text_nfd_query',
@@ -244,7 +244,7 @@ test.each([
   ['ㄱㄴㄷ ABC', 'abc'],
   ['한글 café 한글', '한글'],
 ])('빠른 경로와 복잡 경로는 같은 범위를 반환한다: %s', (text, query) => {
-  // 선두 이모지는 복잡 경로를 선택하게 하고 원문 오프셋만 2만큼 옮깁니다.
+  // 선두 이모지는 복잡 경로를 선택하게 하고 원문 오프셋만 2만큼 옮김
   const general = searchRanges(`😀${text}`, query).map((range) => ({
     ...range,
     location: range.location - 2,

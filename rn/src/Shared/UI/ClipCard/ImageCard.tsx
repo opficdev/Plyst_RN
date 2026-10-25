@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     overflow: 'hidden',
   },
-  // margin이 정사각형 상자의 너비를 줄이지 않도록 바깥 View에 여백을 둡니다.
+  // margin이 정사각형 상자의 너비를 줄이지 않도록 바깥 View에 여백을 둠
   thumbnailInset: { padding: 5, paddingBottom: 0 },
   content: {
     paddingLeft: 13,

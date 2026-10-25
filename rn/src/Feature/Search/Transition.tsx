@@ -7,7 +7,7 @@ export type SearchTransitionProps = ViewProps & {
   onTransitionEnd?: (isPresented: boolean) => void;
 };
 
-// 네이티브가 자기 layer의 알파를 정하므로 style에 opacity를 넘기지 않습니다.
+// 네이티브가 자기 layer의 알파를 정하므로 style에 opacity를 넘기지 않음
 export function SearchTransition({
   onTransitionEnd,
   ...props
