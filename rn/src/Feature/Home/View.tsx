@@ -344,8 +344,9 @@ function HomeContent({
           </View>
         </Animated.View>
         <EdgeFade height={insets.top} />
-        {/* 검색이 열리면 Search의 닫기 항목이 바 자리를 쓰므로 Home 항목을 내립니다. 헤더 스크롤 숨김과는 관계없습니다. */}
-        {usesSystemBar && !isSearchVisible && (
+        {/* 검색 화면은 자기 스택 항목에 닫기 항목을 두므로 Home 항목은 검색이 열려도 빼지 않음 */}
+        {/* 헤더 스크롤 숨김과는 관계없음 */}
+        {usesSystemBar && (
           <NavigationBarButton
             side="right"
             icon="magnifyingglass"

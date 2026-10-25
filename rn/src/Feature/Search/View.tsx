@@ -1,4 +1,5 @@
 import {
+  useContext,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -20,9 +21,16 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import {
+  SafeAreaInsetsContext,
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import type { EdgeInsets } from 'react-native-safe-area-context';
+import {
+  ScreenStackHeaderLeftView,
+  ScreenStackItem,
+} from 'react-native-screens';
+import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import type { ClipKind, ClipRecord } from '../../Model/clipRecord';
@@ -34,7 +42,7 @@ import {
   SearchTermChip,
   SectionTitle,
 } from '../../Shared/UI';
-import { colors, typography } from '../../Shared/Theme';
+import { colors, spacing, typography } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
 import {
   clipCardValues,
@@ -68,6 +76,22 @@ import { SearchTransition } from './Transition';
 
 let hasPresentedKeyboard = false;
 
+// iPhone Duo의 시스템 바는 서치바와 xmark 항목이 한 줄에 들어가지 않으면 둘 다 넘침 메뉴로 접음
+// 폭을 바꾸는 순간에도 넘침 메뉴가 잠깐 나타나므로 처음부터 정답 폭을 정해야 함
+// 카메라가 오른쪽 옆면에 있는 상태(오른쪽 안전 영역이 있음)는 xmark가 옆면 열로 가서 시스템이 한계를 넘는 폭을 눌러 줌
+// 눌리지 않는 최대 폭은 접힘(창 폭 466)과 펼친 가로(창 폭 951)에서 창 폭에서 오른쪽 안전 영역의 두 배와 왼쪽 여백을 뺀 값과 같았음
+// 카메라가 위쪽 줄에 있는 펼친 세로(창 폭 669 오른쪽 안전 영역 0)는 xmark가 같은 줄에 놓이고 눌리지 않고 바로 접히므로 측정한 상수를 씀
+// 같은 줄에서 접히지 않는 최대 폭 426에 2를 여유로 더한 값
+const duoTopCameraMargin = 245;
+
+const noInsets = { top: 0, left: 0, bottom: 0, right: 0 };
+
+const searchHeader: ScreenStackHeaderConfigProps = {
+  translucent: true,
+  hideShadow: true,
+  backgroundColor: 'transparent',
+};
+
 type SearchListItem =
   | { kind: 'header'; key: string }
   | { kind: 'card'; key: string; clip: ClipRecord };
@@ -86,6 +110,8 @@ export type SearchViewProps = {
 };
 
 export function SearchView(props: SearchViewProps) {
+  // iPhone Duo는 SearchScreen이 자기 스택 항목 안에서 SafeAreaProvider를 둠
+  if (props.usesSystemBar) return <SearchRoot {...props} />;
   return (
     <SafeAreaProvider style={styles.root}>
       <SearchRoot {...props} />
@@ -120,7 +146,8 @@ function SearchScreen({
   index: ReturnType<typeof createSearchIndex>;
   times: ReturnType<typeof createSearchTimeTexts>;
 }) {
-  const insets = useSafeAreaInsets();
+  const insets = useContext(SafeAreaInsetsContext) ?? noInsets;
+  // iPhone Duo는 서치바가 안전 영역 provider 바깥의 헤더에 있으므로 앱 전체 provider의 오른쪽 안전 영역으로 카메라 위치를 가림
   const { width } = useWindowDimensions();
   const state = useScreenState<SearchState>();
   const dispatch = useScreenDispatch();
@@ -186,11 +213,12 @@ function SearchScreen({
   }
 
   // 닫기 애니메이션 완료 신호가 오지 않아도 닫히도록 대체 타이머를 둠
+  // iPhone Duo는 스택 항목이 빠지면서 시스템이 페이드하므로 바로 닫음
   function close() {
     if (isClosing.current) return;
     isClosing.current = true;
     input.current?.blur();
-    if (!hasStarted.current) {
+    if (usesSystemBar || !hasStarted.current) {
       finishClose();
       return;
     }
@@ -311,50 +339,77 @@ function SearchScreen({
     state.searchHistory,
   );
 
-  return (
-    <View style={styles.root} onLayout={enter}>
-      <SearchTransition
-        effect="fadeIn"
-        isPresented={isPresented}
-        pointerEvents="none"
-        style={styles.backdrop}
+  // iPhone Duo는 서치바를 시스템 바 왼쪽 항목으로 그리므로 위치는 시스템이 정하고 너비만 정함
+  const searchPill = (
+    <SearchTransition
+      effect="expand"
+      isPresented={isPresented}
+      onTransitionEnd={transitionEnded}
+      style={
+        usesSystemBar
+          ? [
+              styles.searchPill,
+              {
+                width: Math.max(
+                  0,
+                  0 < insets.right
+                    ? width - 2 * insets.right - spacing.screen
+                    : width - duoTopCameraMargin,
+                ),
+              },
+            ]
+          : [
+              styles.searchPill,
+              styles.searchPillPosition,
+              { top: insets.top - 5, width: Math.max(0, width - 96) },
+            ]
+      }
+    >
+      <Image
+        source="sf:magnifyingglass"
+        contentFit="contain"
+        style={styles.searchIcon}
+        onDisplay={startOpen}
+        onLoad={startOpen}
       />
-      <View style={{ height: insets.top + 48 }}>
-        <SearchTransition
-          effect="expand"
-          isPresented={isPresented}
-          onTransitionEnd={transitionEnded}
-          style={[
-            styles.searchBar,
-            { top: insets.top - 5, width: Math.max(0, width - 96) },
-          ]}
-        >
-          <Image
-            source="sf:magnifyingglass"
-            contentFit="contain"
-            style={styles.searchIcon}
-            onDisplay={startOpen}
-            onLoad={startOpen}
-          />
-          <TextInput
-            ref={input}
-            value={state.query}
-            onChangeText={(value) => dispatch(actions.queryChanged(value))}
-            placeholder="복사한 내용 검색"
-            placeholderTextColor={colors.SecondaryText}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-            autoCorrect={false}
-            spellCheck={false}
-            autoCapitalize="none"
-            allowFontScaling={false}
-            style={styles.input}
-            onSubmitEditing={() => {
-              dispatch(actions.submitQuery());
-              input.current?.blur();
-            }}
-          />
-        </SearchTransition>
+      <TextInput
+        ref={input}
+        value={state.query}
+        onChangeText={(value) => dispatch(actions.queryChanged(value))}
+        placeholder="복사한 내용 검색"
+        placeholderTextColor={colors.SecondaryText}
+        returnKeyType="search"
+        clearButtonMode="while-editing"
+        autoCorrect={false}
+        spellCheck={false}
+        autoCapitalize="none"
+        allowFontScaling={false}
+        style={styles.input}
+        onSubmitEditing={() => {
+          dispatch(actions.submitQuery());
+          input.current?.blur();
+        }}
+      />
+    </SearchTransition>
+  );
+
+  // iPhone Duo는 push 전환의 페이드를 시스템이 하므로 배경과 본문을 처음부터 보이게 함
+  const isShown = usesSystemBar || isPresented;
+  const backdrop = (
+    <SearchTransition
+      effect="fadeIn"
+      isPresented={isShown}
+      pointerEvents="none"
+      style={styles.backdrop}
+    />
+  );
+
+  // iPhone Duo는 본문이 서치바 아래에 놓이도록 바 안쪽 안전 영역을 넘겨 받음
+  // 바가 배치되기 전의 안쪽 위쪽 값은 앱 전체 값과 같아 그때 그리면 본문이 위에 찍혔다가 내려오므로 바 높이가 더해진 뒤에 그림
+  const renderBody = (insets: EdgeInsets) => (
+    <>
+      <View style={{ height: usesSystemBar ? insets.top : insets.top + 48 }}>
+        {!usesSystemBar && searchPill}
         {usesSystemBar ? (
           <NavigationBarButton side="right" icon="xmark" onPress={close} />
         ) : (
@@ -392,7 +447,7 @@ function SearchScreen({
       >
         <SearchTransition
           effect="fadeIn"
-          isPresented={isPresented}
+          isPresented={isShown}
           style={styles.root}
         >
           <View style={styles.filters}>
@@ -467,7 +522,47 @@ function SearchScreen({
           </View>
         </SearchTransition>
       </KeyboardAvoidingView>
-    </View>
+    </>
+  );
+  if (!usesSystemBar) {
+    return (
+      <View style={styles.root} onLayout={enter}>
+        {backdrop}
+        {renderBody(insets)}
+      </View>
+    );
+  }
+  // 바깥 스택의 한 항목이며 서치바가 시스템 바 항목이 되도록 헤더를 이 화면이 가짐
+  return (
+    <ScreenStackItem
+      screenId="search"
+      stackAnimation="fade"
+      transitionDuration={300}
+      gestureEnabled={false}
+      headerConfig={{
+        ...searchHeader,
+        hideBackButton: true,
+        children: (
+          <ScreenStackHeaderLeftView hidesSharedBackground>
+            {searchPill}
+          </ScreenStackHeaderLeftView>
+        ),
+      }}
+      style={StyleSheet.absoluteFill}
+    >
+      <View style={styles.root} onLayout={enter}>
+        {backdrop}
+        <SafeAreaProvider style={styles.root}>
+          <SafeAreaInsetsContext.Consumer>
+            {(inner) =>
+              inner && (isPresented || insets.top < inner.top)
+                ? renderBody(inner)
+                : null
+            }
+          </SafeAreaInsetsContext.Consumer>
+        </SafeAreaProvider>
+      </View>
+    </ScreenStackItem>
   );
 }
 
@@ -542,9 +637,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.Canvas,
   },
-  searchBar: {
+  searchPillPosition: {
     position: 'absolute',
     right: 76,
+  },
+  searchPill: {
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
