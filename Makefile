@@ -11,8 +11,9 @@ TEST_FLAGS ?= -test-timeouts-enabled YES \
 	-maximum-test-execution-time-allowance 120
 DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
+MATCH_FORCE ?= false
 
-.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-start testflight-build testflight
+.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -79,8 +80,27 @@ rn-verify: rn-typecheck rn-lint rn-test
 rn-start:
 	cd rn && npx expo start
 
+deploy-setup:
+	mise trust
+	mise install node
+	bundle config set --local path vendor/bundle
+	bundle install
+	test -f fastlane/secrets.json || cp fastlane/secrets.example.json fastlane/secrets.json
+
+deploy-check:
+	mise exec -- scripts/deploy-local.sh check
+
 testflight-build:
-	scripts/deploy-testflight-local.sh testflight_build_only
+	mise exec -- scripts/deploy-local.sh testflight_build_only
 
 testflight:
-	scripts/deploy-testflight-local.sh deploy_testflight
+	mise exec -- scripts/deploy-local.sh deploy_testflight
+
+appstore-build:
+	mise exec -- scripts/deploy-local.sh appstore_build_only
+
+appstore:
+	mise exec -- scripts/deploy-local.sh deploy_appstore
+
+signing-sync:
+	MATCH_FORCE="$(MATCH_FORCE)" mise exec -- scripts/deploy-local.sh sync_appstore_profiles
