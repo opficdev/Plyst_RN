@@ -105,7 +105,7 @@ fi
 
 export ASC_KEY_PATH="$repository_root/fastlane/AuthKey.p8"
 export SPACESHIP_CONNECT_API_IN_HOUSE=false
-# Fastfile이 로컬 실행에서도 수동 서명 설정을 적용하도록 알림
+# Fastfile의 before_all이 로컬 실행으로 인정하는 표지
 export LOCAL_DEPLOY=true
 
 project_backup=
