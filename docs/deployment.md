@@ -1,40 +1,52 @@
 # 배포 방법
 
-로컬 Mac에서 TestFlight에 빌드를 올리는 절차와 문제 해결 방법
+로컬 Mac에서 TestFlight와 App Store Connect에 빌드를 올리는 절차와 문제 해결 방법
 
 ## 한눈에 보기
 
-- 빌드만 실행: `make testflight-build`
-- 빌드 후 TestFlight 업로드: `make testflight`
+- 배포는 로컬 Mac의 `make` 타깃으로만 실행하며 GitHub Actions에는 배포 워크플로가 없음
+- 새 Mac 준비: `make deploy-setup`
+- 배포 환경 확인: `make deploy-check`
+- TestFlight
+	- 빌드만 실행: `make testflight-build`
+	- 빌드 후 업로드: `make testflight`
+- App Store Connect
+	- 빌드만 실행: `make appstore-build`
+	- 빌드 후 업로드: `make appstore`
+- 인증서와 프로파일 생성 및 갱신: `make signing-sync`
 - 서명 인증서와 프로파일: Fastlane `match`가 읽기 전용으로 가져옴
 - 시크릿: `fastlane/secrets.json` 한 파일로 관리
 - 번들 ID: `opfic.Plyst`, `opfic.Plyst.ShareExtension`, `opfic.Plyst.WidgetExtension`
 
-## 준비
+## 새 Mac 준비
 
-### 도구
+### 직접 설치할 것
 
 - Xcode 27 (`xcodebuild -version`으로 확인)
-- mise로 설치한 Node (`.mise.toml`에 버전 지정)
-	- 처음 쓰는 저장소 경로면 `mise trust` 필요
-- Ruby gem
-	- 저장소 루트에서 한 번 실행하며 워크트리마다 다시 필요
+	- 설치 후 라이선스 동의와 `sudo xcodebuild -runFirstLaunch` 필요
+	- `xcode-select`가 Xcode 27을 가리켜야 함
+- Homebrew, mise, Ruby, CocoaPods
+	- CocoaPods 버전은 저장소에 고정되어 있지 않음
+- 시크릿 값
+	- 저장소 밖 경로로 안전하게 옮겨 와야 함
+	- 로그인 키체인이 잠금 해제된 GUI 세션에서 실행해야 함
+
+### `make deploy-setup`
 
 ```bash
-bundle config set --local path vendor/bundle
+make deploy-setup
 ```
 
-```bash
-bundle install
-```
+- `mise trust`와 `mise install node`로 `.mise.toml`의 Node 설치
+- `bundle config set --local path vendor/bundle`과 `bundle install`로 Ruby gem 설치
+	- 워크트리마다 다시 필요
+- `fastlane/secrets.json`이 없을 때만 `fastlane/secrets.example.json`을 복사
+	- 이미 있는 파일은 덮어쓰지 않음
+- 저장소 추적 파일은 바꾸지 않음
 
 ### 시크릿 파일
 
-`fastlane/secrets.example.json`을 복사한 뒤 값 채우기
-
-```bash
-cp fastlane/secrets.example.json fastlane/secrets.json
-```
+`fastlane/secrets.json`에 값 채우기
 
 | 키 | 내용 |
 | --- | --- |
@@ -46,7 +58,6 @@ cp fastlane/secrets.example.json fastlane/secrets.json
 | `MATCH_PASSWORD` | `match` 저장소 암호화 암호 |
 | `MATCH_GIT_BASIC_AUTHORIZATION` | `match` 저장소 접근 인증 값 |
 
-- 키 이름은 GitHub Secret 이름과 같음
 - `fastlane/secrets.json`은 `.gitignore` 대상이라 커밋되지 않음
 - 다른 위치의 파일은 `SECRETS_FILE=/경로/secrets.json make testflight-build`로 지정
 
@@ -56,47 +67,104 @@ cp fastlane/secrets.example.json fastlane/secrets.json
 base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n'
 ```
 
+### `make deploy-check`
+
+```bash
+make deploy-check
+```
+
+- 읽기만 하며 시크릿 값과 인증 헤더를 출력하지 않고 파일과 키체인을 바꾸지 않음
+- 실패한 항목을 모두 출력한 뒤 종료
+- 확인하는 항목
+	- Xcode 27 선택 여부와 첫 실행 설정
+	- `.mise.toml`에 지정한 Node 실행 여부
+	- `pod` 설치 여부
+	- Ruby gem 설치 여부
+	- 시크릿 파일의 존재와 JSON 형식과 키 7개 값
+	- `ASC_KEY_CONTENT`가 읽을 수 있는 `.p8` 키인지
+	- `MATCH_GIT_URL` 저장소 접근 가능 여부 (네트워크 사용)
+- 키체인의 서명 인증서는 확인하지 않음
+	- 새 Mac에서는 첫 배포의 `match`가 인증서를 설치함
+
+### 첫 실행
+
+- 새 Mac의 첫 실행은 업로드하지 않는 `make testflight-build`로 시작
+	- `MATCH_PASSWORD`, 인증서 설치, 서명, IPA 검증까지 확인
+- 첫 `codesign` 때 키 접근 허용 창이 뜨면 허용해야 함
+- Apple ID 로그인은 필요 없으며 모든 레인이 App Store Connect API 키를 씀
+
 ## 실행
 
-### 빌드만 실행
+### TestFlight
 
 ```bash
 make testflight-build
 ```
 
-- 서명된 IPA 생성 후 IPA 내용 검증까지 실행
-- 업로드는 하지 않음
+- 서명된 IPA 생성 후 IPA 내용 검증까지 실행하고 업로드는 하지 않음
 - 결과물
 	- `fastlane/testflight_build/Plyst.ipa`
 	- `fastlane/testflight_build/Plyst.app.dSYM.zip`
-
-### 빌드 후 업로드
 
 ```bash
 make testflight
 ```
 
 - `make testflight-build`의 모든 단계 실행 후 `upload_to_testflight`로 업로드
-- 이미 만든 IPA만 올리는 `make` 타깃은 없음
 - 업로드가 끝나면 Apple의 처리 완료를 기다리지 않고 종료
+
+### App Store Connect
+
+```bash
+make appstore-build
+```
+
+- 서명된 IPA 생성 후 IPA 내용 검증까지 실행하고 업로드는 하지 않음
+- 결과물
+	- `fastlane/appstore_build/Plyst.ipa`
+	- `fastlane/appstore_build/Plyst.app.dSYM.zip`
+
+```bash
+make appstore
+```
+
+- `make appstore-build`의 모든 단계 실행 후 `upload_to_app_store`로 업로드
+- 메타데이터와 스크린샷은 올리지 않으며 심사 제출과 자동 출시도 하지 않음
+	- 심사 제출은 App Store Connect에서 직접 실행
+
+### 인증서와 프로파일 갱신
+
+```bash
+make signing-sync
+```
+
+- App Store 인증서와 세 프로파일을 `match`로 생성하거나 갱신
+	- `match` 저장소에 쓰므로 `readonly`를 끈 유일한 실행
+- 이미 있는 항목을 강제로 다시 만들려면 `make signing-sync MATCH_FORCE=true`
+- 앱을 빌드하지 않으므로 XCFramework 생성과 `project.pbxproj` 백업은 하지 않음
+
+이미 만든 IPA만 올리는 `make` 타깃은 없음
 
 ## 실행 흐름
 
-`scripts/deploy-testflight-local.sh`가 순서대로 실행하는 단계
+`scripts/deploy-local.sh`가 순서대로 실행하는 단계
 
-1. 시크릿 파일 검증
+1. 모드 검사
+	- 허용 모드는 `check`, `testflight_build_only`, `deploy_testflight`, `appstore_build_only`, `deploy_appstore`, `sync_appstore_profiles`
+2. 시크릿 파일 검증
 	- 파일이 없거나 JSON이 올바르지 않거나 키가 비어 있으면 키 이름을 알려 주고 종료
-2. `bundle check`로 Ruby gem 설치 여부 확인
-3. `make rn-xcframework RN_CONFIGURATION=Release`로 Release XCFramework 생성
+3. `check` 모드는 환경 확인 후 종료
+4. `bundle check`로 Ruby gem 설치 여부 확인
+5. `make rn-xcframework RN_CONFIGURATION=Release`로 Release XCFramework 생성 (`sync_appstore_profiles` 제외)
 	- `scripts/build-rn-xcframework.sh`가 프레임워크 `Info.plist` 키를 보충한 뒤 서명
 	- 배포 스크립트는 `RN_XCFRAMEWORK_CLEAN=1`을 지정해 입력 해시와 관계없이 처음부터 빌드하고 컴파일 캐시를 쓰지 않음
-4. `project.pbxproj` 백업
-5. `ASC_KEY_CONTENT`를 `fastlane/AuthKey.p8`로 복원
-6. `bundle exec fastlane`으로 레인 실행
-7. 종료 시 `AuthKey.p8` 삭제와 `project.pbxproj` 원복
+6. `project.pbxproj` 백업 (`sync_appstore_profiles` 제외)
+7. `ASC_KEY_CONTENT`를 `fastlane/AuthKey.p8`로 복원
+8. `bundle exec fastlane`으로 레인 실행
+9. 종료 시 `AuthKey.p8` 삭제와 `project.pbxproj` 원복
 	- 실패하거나 Ctrl+C로 중단해도 실행
 
-Fastlane 레인(`testflight_build_only`, `deploy_testflight`)이 하는 일
+Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_only`, `deploy_appstore`)이 하는 일
 
 - Release XCFramework 여부 확인
 - App Store Connect에서 최신 빌드 번호를 읽어 1을 더한 번호를 `CURRENT_PROJECT_VERSION`으로 주입
@@ -109,32 +177,43 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`)이 하는 일
 - Archive 후 Export
 - IPA의 번들 ID, `ITSAppUsesNonExemptEncryption`, RN 프레임워크와 `main.jsbundle` 검증
 
-관측한 소요 시간 (2026-10-13 로컬 실행)
+로컬 실행 강제
+
+- 모든 Fastlane 레인은 `before_all`에서 `LOCAL_DEPLOY=true`를 확인하고 `CI`가 설정되어 있으면 멈춤
+- `scripts/deploy-local.sh`만 `LOCAL_DEPLOY=true`를 설정하므로 `fastlane`을 직접 실행하면 거부됨
+	- 스크립트의 정리 단계 없이 서명 설정이 `project.pbxproj`에 남는 경로를 막기 위함
+
+관측한 소요 시간 (2026-10-13 로컬 실행, TestFlight)
 
 - Release XCFramework 생성: 약 5분
 - Archive와 Export: 약 7분
 
-## CI와의 차이
+## 버전과 태그
 
-- `.github/workflows/testflight.yml`은 같은 `fastlane/Fastfile`을 사용
-- 로컬 실행만 `LOCAL_DEPLOY=true`로 수동 서명 설정을 적용
-- 임시 Keychain(`setup_ci`)은 CI에서만 만들며 로컬 Mac의 기본 Keychain은 바꾸지 않음
-- 시크릿은 CI에서 GitHub Secret으로 읽고 로컬에서는 `fastlane/secrets.json`으로 읽음
+- 앱 버전은 앱 타깃의 `MARKETING_VERSION`을 읽고 빌드 번호는 App Store Connect 최신값에 1을 더함
+- `.github/workflows/release.yml`은 `develop`에서 `main`으로 병합된 PR의 태그와 GitHub Release만 만들며 배포와 독립적
+- 권장 순서
+	- `MARKETING_VERSION`을 올린 커밋을 병합
+	- 그 커밋에서 `make appstore` 실행
 
 ## 업로드 뒤 확인
 
 - 업로드 성공 후에도 Apple이 처리 단계에서 빌드를 거부할 수 있음
 - 거부 사유는 App Store Connect 메일로 전달됨
-- 처리가 끝나면 TestFlight 빌드 목록에 표시됨
+- 처리가 끝나면 TestFlight 빌드 목록 또는 App Store Connect의 빌드 목록에 표시됨
 
 ## 문제 해결
 
 | 증상 | 원인 | 해결 |
 | --- | --- | --- |
+| `Run through make: ...` | `fastlane`을 직접 실행했거나 `CI`가 설정된 환경 | `make` 타깃으로 실행하고 `CI` 환경 변수 제거 |
 | `시크릿 파일이 올바른 JSON이 아닙니다` | 문자열 안 줄바꿈 또는 문법 오류 | 출력된 줄과 열 위치 확인. `ASC_KEY_CONTENT`는 `tr -d '\n'`으로 한 줄 생성 |
 | `비었거나 없는 키` 목록 출력 | 시크릿 파일에서 해당 키가 비어 있음 | 목록의 키 채우기 |
-| `Bundler gem이 설치되어 있지 않습니다` | 워크트리에 `vendor/bundle` 없음 | `bundle config set --local path vendor/bundle` 후 `bundle install` |
-| `mise ERROR ... not trusted` | 새 경로의 `.mise.toml` 미신뢰 | `mise trust` |
+| `Bundler gem이 설치되어 있지 않습니다` | 워크트리에 `vendor/bundle` 없음 | `make deploy-setup` |
+| `mise ERROR ... not trusted` | 새 경로의 `.mise.toml` 미신뢰 | `make deploy-setup` 또는 `mise trust` |
+| `CocoaPods(pod)가 설치되어 있지 않습니다` | 새 Mac에 `pod` 없음 | CocoaPods 설치 |
+| `MATCH_GIT_URL 저장소에 접근할 수 없습니다` | 주소 오류 또는 인증 값 오류 | `MATCH_GIT_URL`과 `MATCH_GIT_BASIC_AUTHORIZATION` 확인 |
+| `The keychain has no signing identity ...` | 키체인에 `match` 프로파일의 인증서 없음 | `match` 설치가 끝났는지 확인하고 키 접근 허용 창에서 허용 |
 | `make: No rule to make target` | 저장소 루트가 아닌 곳에서 실행 | 저장소 루트로 이동 |
 | `exportArchive ... expected one {} but found app-store` | 서명 설정 저장 때 확장 임베드 위치(`dstSubfolder`)가 지워져 확장이 앱의 `PlugIns` 밖에 설치됨 | `fastlane/Fastfile` 최상단의 `dst_subfolder` 속성 등록 유지. 프로젝트를 여는 액션보다 앞에 있어야 함 |
 | 업로드 오류 90360, 90530 | 프레임워크 `Info.plist`에 `MinimumOSVersion` 없음 | `scripts/build-rn-xcframework.sh`가 보충. XCFramework를 다시 생성 |
@@ -160,10 +239,9 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`)이 하는 일
 
 ## 관련 파일
 
-- `Makefile`: `testflight-build`, `testflight` 타깃
-- `scripts/deploy-testflight-local.sh`: 로컬 실행 스크립트
+- `Makefile`: `deploy-setup`, `deploy-check`, `testflight-build`, `testflight`, `appstore-build`, `appstore`, `signing-sync` 타깃
+- `scripts/deploy-local.sh`: 로컬 실행 스크립트
 - `scripts/build-rn-xcframework.sh`: Release XCFramework 생성과 `Info.plist` 보충
 - `scripts/rn-xcframework-inputs.sh`: XCFramework 빌드 입력 해시 계산
 - `fastlane/Fastfile`: 빌드와 업로드 레인
 - `fastlane/secrets.example.json`: 시크릿 파일 양식
-- `.github/workflows/testflight.yml`: CI 배포 워크플로
