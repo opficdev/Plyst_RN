@@ -44,6 +44,13 @@ end
 default_platform(:ios)
 
 platform :ios do
+  # 모든 레인은 scripts/deploy-local.sh를 거친 로컬 실행에서만 허용함
+  before_all do
+    if ENV["CI"] || ENV["LOCAL_DEPLOY"] != "true"
+      UI.user_error!("Run through make: testflight, testflight-build, appstore, appstore-build, signing-sync")
+    end
+  end
+
   private_lane :fetch_latest_app_store_connect_build_number do |options|
     require "spaceship"
 
@@ -242,8 +249,6 @@ platform :ios do
       version: version_number
     )
 
-    setup_ci if ENV["CI"]
-
     next_build_number = latest_build_number + 1
 
     match(
@@ -253,28 +258,26 @@ platform :ios do
       readonly: true
     )
 
-    if ENV["CI"] == "true" || ENV["LOCAL_DEPLOY"] == "true"
-      profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
-      signing_targets = {
-        APP_TARGET_NAME => APP_IDENTIFIER,
-        **EXTENSION_TARGETS
-      }
+    profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
+    signing_targets = {
+      APP_TARGET_NAME => APP_IDENTIFIER,
+      **EXTENSION_TARGETS
+    }
 
-      signing_targets.each do |target_name, app_identifier|
-        provisioning_profile_specifier = profile_mapping[app_identifier].to_s
-        UI.user_error!("Missing App Store provisioning profile mapping for #{app_identifier}") if provisioning_profile_specifier.empty?
+    signing_targets.each do |target_name, app_identifier|
+      provisioning_profile_specifier = profile_mapping[app_identifier].to_s
+      UI.user_error!("Missing App Store provisioning profile mapping for #{app_identifier}") if provisioning_profile_specifier.empty?
 
-        update_code_signing_settings(
-          use_automatic_signing: false,
-          path: XCODE_PROJ,
-          sdk: "iphoneos*",
-          team_id: ENV["APP_STORE_TEAM_ID"],
-          targets: [target_name],
-          build_configurations: [CONFIGURATION],
-          code_sign_identity: "Apple Distribution",
-          profile_name: provisioning_profile_specifier
-        )
-      end
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: XCODE_PROJ,
+        sdk: "iphoneos*",
+        team_id: ENV["APP_STORE_TEAM_ID"],
+        targets: [target_name],
+        build_configurations: [CONFIGURATION],
+        code_sign_identity: "Apple Distribution",
+        profile_name: provisioning_profile_specifier
+      )
     end
 
     sign_xcframeworks(profile_path: ENV["sigh_#{APP_IDENTIFIER}_appstore_profile-path"])
@@ -294,13 +297,6 @@ platform :ios do
     archive_duration_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - archive_started_at
     UI.message("Archive duration seconds: #{archive_duration_seconds}")
 
-    github_output = ENV["GITHUB_OUTPUT"].to_s
-    unless github_output.empty?
-      File.open(github_output, "a") do |output|
-        output.puts("archive_duration_seconds=#{archive_duration_seconds}")
-      end
-    end
-
     ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
     ipa_output_path = File.join(output_directory, "#{APP_PRODUCT_NAME}.ipa") if ipa_output_path.empty?
 
@@ -310,15 +306,6 @@ platform :ios do
     archive_path = lane_context[SharedValues::XCODEBUILD_ARCHIVE]
     UI.message("dSYM output path: #{dsym_output_path}") unless dsym_output_path.to_s.empty?
     UI.message("Xcode archive path: #{archive_path}") unless archive_path.to_s.empty?
-
-    unless github_output.empty?
-      File.open(github_output, "a") do |output|
-        output.puts("ipa_size_bytes=#{File.size(ipa_output_path)}") if File.file?(ipa_output_path)
-        if File.file?(dsym_output_path.to_s) && dsym_output_path.to_s.end_with?(".dSYM.zip")
-          output.puts("dsym_size_bytes=#{File.size(dsym_output_path)}")
-        end
-      end
-    end
 
     next api_key
   end
@@ -344,14 +331,8 @@ platform :ios do
   end
 
   lane :sync_appstore_profiles do
-    unless ENV["GITHUB_EVENT_NAME"] == "workflow_dispatch" && ENV["GITHUB_WORKFLOW"] == "iOS Code Signing"
-      UI.user_error!("Profile updates require a manual iOS Code Signing workflow dispatch")
-    end
-
     api_key = asc_api_key
     match_force = ENV.fetch("MATCH_FORCE", "false") == "true"
-
-    setup_ci if ENV["CI"]
 
     match(
       api_key: api_key,
@@ -364,7 +345,7 @@ platform :ios do
 
   lane :upload_testflight_build do
     api_key = asc_api_key
-    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용함
+    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 단독 실행에서는 고정 ipa 경로를 사용함
     ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
     ipa_output_path = TESTFLIGHT_IPA_OUTPUT_PATH if ipa_output_path.empty?
 
@@ -381,7 +362,7 @@ platform :ios do
 
   lane :upload_appstore_build do
     api_key = asc_api_key
-    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 별도 CI step에서는 고정 ipa 경로를 사용함
+    # lane_context는 같은 fastlane 실행 내에서만 유지되므로 단독 실행에서는 고정 ipa 경로를 사용함
     ipa_output_path = lane_context[SharedValues::IPA_OUTPUT_PATH].to_s
     ipa_output_path = APPSTORE_IPA_OUTPUT_PATH if ipa_output_path.empty?
 
