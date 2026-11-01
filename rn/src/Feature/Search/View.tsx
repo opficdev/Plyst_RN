@@ -1,4 +1,6 @@
 import {
+  memo,
+  useCallback,
   useContext,
   useDeferredValue,
   useEffect,
@@ -289,46 +291,57 @@ function SearchScreen({
     list.current?.recomputeViewableItems();
   }, [items, mode]);
 
+  function selectClip(clip: ClipRecord) {
+    Keyboard.dismiss();
+    navigation.openClip(clip.id, clip.image === null ? 'text' : 'image');
+  }
   function copy(clip: ClipRecord) {
     dispatch(actions.copy(clip.id));
   }
+  // 카드가 받는 핸들러를 고정해 memo 비교에서 바뀌지 않게 함
+  // 호출 시점에는 최신 렌더의 함수를 실행함
+  const handlers = useRef({ selectClip, copy });
+  useLayoutEffect(() => {
+    handlers.current = { selectClip, copy };
+  });
+  const [cardHandlers] = useState<SearchCardHandlers>(() => ({
+    onSelect: (clip) => handlers.current.selectClip(clip),
+    onCopy: (clip) => handlers.current.copy(clip),
+  }));
 
-  function renderItem({ item }: { item: SearchListItem }) {
-    if (item.kind === 'header')
+  // 셀은 renderItem이 바뀔 때만 다시 렌더되므로 카드 표시에 쓰는 값만 의존함
+  // 로딩 상태와 최근 검색어가 바뀌어도 셀을 다시 렌더하지 않음
+  const { now: cardNow, thumbnails: thumbnailUris, failedThumbnails } = state;
+  const renderItem = useCallback(
+    ({ item }: { item: SearchListItem }) => {
+      if (item.kind === 'header')
+        return (
+          <View style={styles.resultHeader}>
+            <SectionTitle title={searchHeaderTitle(content)} />
+          </View>
+        );
       return (
-        <View style={styles.resultHeader}>
-          <SectionTitle title={searchHeaderTitle(content)} />
-        </View>
+        <SearchGridItem
+          clip={item.clip}
+          now={cardNow}
+          query={content.query}
+          index={index}
+          thumbnailUri={thumbnailUris[`${item.clip.id}:${pixels}`] ?? null}
+          isThumbnailFailed={!!failedThumbnails[`${item.clip.id}:${pixels}`]}
+          handlers={cardHandlers}
+        />
       );
-    const values = clipCardValues(item.clip, state.now);
-    const text = searchCardText(item.clip, content.query, index);
-    return (
-      <ClipGridCard
-        onPress={() => {
-          Keyboard.dismiss();
-          navigation.openClip(item.clip.id, values.kind);
-        }}
-      >
-        {values.kind === 'text' ? (
-          <ClipTextCard
-            {...values}
-            {...text}
-            onCopyButtonPress={() => void copy(item.clip)}
-          />
-        ) : (
-          <ClipImageCard
-            {...values}
-            nameHighlights={text.nameHighlights}
-            thumbnailUri={state.thumbnails[`${item.clip.id}:${pixels}`] ?? null}
-            isThumbnailFailed={
-              !!state.failedThumbnails[`${item.clip.id}:${pixels}`]
-            }
-            onCopyButtonPress={() => void copy(item.clip)}
-          />
-        )}
-      </ClipGridCard>
-    );
-  }
+    },
+    [
+      cardHandlers,
+      cardNow,
+      content,
+      failedThumbnails,
+      index,
+      pixels,
+      thumbnailUris,
+    ],
+  );
   const empty = searchEmptyStrings(
     content.query,
     state.filter,
@@ -488,7 +501,6 @@ function SearchScreen({
                 ref={list}
                 data={items}
                 renderItem={renderItem}
-                extraData={state}
                 masonry
                 numColumns={2}
                 CellRendererComponent={ClipListCell}
@@ -630,6 +642,52 @@ function SearchRecent({
     </View>
   );
 }
+
+type SearchCardHandlers = {
+  onSelect: (clip: ClipRecord) => void;
+  onCopy: (clip: ClipRecord) => void;
+};
+
+// 다른 카드의 썸네일이 바뀌어 셀이 다시 렌더되어도 이 카드의 표시 값과 검색어가 같으면 렌더를 건너뜀
+const SearchGridItem = memo(function SearchGridItem({
+  clip,
+  now,
+  query,
+  index,
+  thumbnailUri,
+  isThumbnailFailed,
+  handlers,
+}: {
+  clip: ClipRecord;
+  now: number;
+  query: string;
+  index: ReturnType<typeof createSearchIndex>;
+  thumbnailUri: string | null;
+  isThumbnailFailed: boolean;
+  handlers: SearchCardHandlers;
+}) {
+  const values = clipCardValues(clip, now);
+  const text = searchCardText(clip, query, index);
+  return (
+    <ClipGridCard onPress={() => handlers.onSelect(clip)}>
+      {values.kind === 'text' ? (
+        <ClipTextCard
+          {...values}
+          {...text}
+          onCopyButtonPress={() => handlers.onCopy(clip)}
+        />
+      ) : (
+        <ClipImageCard
+          {...values}
+          nameHighlights={text.nameHighlights}
+          thumbnailUri={thumbnailUri}
+          isThumbnailFailed={isThumbnailFailed}
+          onCopyButtonPress={() => handlers.onCopy(clip)}
+        />
+      )}
+    </ClipGridCard>
+  );
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
