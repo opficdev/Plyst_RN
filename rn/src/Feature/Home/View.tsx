@@ -120,7 +120,7 @@ function HomeContent({
   const list = useRef<FlashListRef<HomeListItem>>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [headerHeight, setHeaderHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
+  const contentHeight = useRef(0);
   const dates = useMemo(
     () => state.clips.map((clip) => clip.createdAt),
     [state.clips],
@@ -151,16 +151,15 @@ function HomeContent({
       // 스크롤 시작점은 0이므로 insetTop도 0
       insetTop: 0,
       insetBottom: 0,
-      contentHeight,
       viewportHeight: size.height,
       sectionCount:
         empty === 'none'
           ? content.sections.length + Number(content.pinnedClips.length !== 0)
           : 0,
     }),
-    [headerHeight, insets.top, contentHeight, size.height, content, empty],
+    [headerHeight, insets.top, size.height, content, empty],
   );
-  const header = useHomeHeaderScroll(list, geometry, items);
+  const header = useHomeHeaderScroll(list, geometry, contentHeight, items);
   const { reset } = header;
   const previousFilter = useRef(state.filter);
   useEffect(() => {
@@ -293,7 +292,9 @@ function HomeContent({
           onLayout={({ nativeEvent: { layout } }) =>
             setSize({ width: layout.width, height: layout.height })
           }
-          onContentSizeChange={(_, height) => setContentHeight(height)}
+          onContentSizeChange={(_, height) => {
+            contentHeight.current = height;
+          }}
           scrollEventThrottle={16}
           onScroll={header.onScroll}
           onScrollBeginDrag={header.onScrollBeginDrag}
