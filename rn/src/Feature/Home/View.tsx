@@ -1,4 +1,12 @@
-import { useLayoutEffect, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Animated, PixelRatio, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -116,6 +124,17 @@ function HomeContent({
     const clip = current.clips.find((clip) => clip.id === current.menuClip?.id);
     if (clip) dispatch(actions.deleteConfirmShown(clip));
   }
+  // 카드가 받는 핸들러를 고정해 memo 비교에서 바뀌지 않게 함
+  // 호출 시점에는 최신 렌더의 함수를 실행함
+  const handlers = useRef({ selectClip, showMenu, copy });
+  useLayoutEffect(() => {
+    handlers.current = { selectClip, showMenu, copy };
+  });
+  const [cardHandlers] = useState<HomeCardHandlers>(() => ({
+    onSelect: (clip) => handlers.current.selectClip(clip),
+    onShowMenu: (clip) => handlers.current.showMenu(clip),
+    onCopy: (clip) => handlers.current.copy(clip),
+  }));
 
   const list = useRef<FlashListRef<HomeListItem>>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -182,10 +201,6 @@ function HomeContent({
   useEffect(() => {
     list.current?.recomputeViewableItems();
   }, [items]);
-  const thumbnail = (id: string, pixels: number) => ({
-    thumbnailUri: state.thumbnails[`${id}:${pixels}`] ?? null,
-    isThumbnailFailed: !!state.failedThumbnails[`${id}:${pixels}`],
-  });
   const strings =
     empty === 'failed'
       ? {
@@ -194,58 +209,63 @@ function HomeContent({
         }
       : homeFilterStrings[empty === 'empty' ? 'all' : state.filter];
 
-  function renderItem({ item }: { item: HomeListItem }) {
-    if (item.kind === 'pinned')
+  // 셀은 renderItem이 바뀔 때만 다시 렌더되므로 카드 표시에 쓰는 값만 의존함
+  // 로딩 상태와 메뉴 상태가 바뀌어도 셀을 다시 렌더하지 않음
+  const { now: cardNow, thumbnails: thumbnailUris, failedThumbnails } = state;
+  const { onViewableIdsChange } = thumbnails;
+  const renderItem = useCallback(
+    ({ item }: { item: HomeListItem }) => {
+      const thumbnail = (id: string, pixels: number) => ({
+        thumbnailUri: thumbnailUris[`${id}:${pixels}`] ?? null,
+        isThumbnailFailed: !!failedThumbnails[`${id}:${pixels}`],
+      });
+      if (item.kind === 'pinned')
+        return (
+          <HomePinnedRow
+            clips={item.clips.map((clip) => {
+              const values = clipCardValues(clip, cardNow, true);
+              return {
+                ...values,
+                ...thumbnail(clip.id, pinnedPixels),
+                id: clip.id,
+                onSelect: () => cardHandlers.onSelect(clip),
+                onShowMenu: () => cardHandlers.onShowMenu(clip),
+                onCopyButtonPress: () => cardHandlers.onCopy(clip),
+              };
+            })}
+            onViewableIdsChange={onViewableIdsChange}
+          />
+        );
+      if (item.kind === 'section')
+        return (
+          <View
+            style={[
+              styles.section,
+              item.hasPreviousSection && styles.nextSection,
+            ]}
+          >
+            <SectionTitle title={clipSectionTitles[item.section]} />
+          </View>
+        );
       return (
-        <HomePinnedRow
-          clips={item.clips.map((clip) => {
-            const values = clipCardValues(clip, state.now, true);
-            return {
-              ...values,
-              ...thumbnail(clip.id, pinnedPixels),
-              id: clip.id,
-              onSelect: () => selectClip(clip),
-              onShowMenu: () => showMenu(clip),
-              onCopyButtonPress: () => void copy(clip),
-            };
-          })}
-          onViewableIdsChange={thumbnails.onViewableIdsChange}
+        <HomeGridItem
+          clip={item.clip}
+          now={cardNow}
+          {...thumbnail(item.clip.id, gridPixels)}
+          handlers={cardHandlers}
         />
       );
-    if (item.kind === 'section')
-      return (
-        <View
-          style={[
-            styles.section,
-            item.hasPreviousSection && styles.nextSection,
-          ]}
-        >
-          <SectionTitle title={clipSectionTitles[item.section]} />
-        </View>
-      );
-    const values = clipCardValues(item.clip, state.now);
-    return (
-      <ClipGridCard
-        onPress={() => selectClip(item.clip)}
-        onShowMenu={() => showMenu(item.clip)}
-      >
-        {values.kind === 'text' ? (
-          <ClipTextCard
-            {...values}
-            onCopyButtonPress={() => void copy(item.clip)}
-            onCopyButtonLongPress={() => showMenu(item.clip)}
-          />
-        ) : (
-          <ClipImageCard
-            {...values}
-            {...thumbnail(item.clip.id, gridPixels)}
-            onCopyButtonPress={() => void copy(item.clip)}
-            onCopyButtonLongPress={() => showMenu(item.clip)}
-          />
-        )}
-      </ClipGridCard>
-    );
-  }
+    },
+    [
+      cardHandlers,
+      cardNow,
+      failedThumbnails,
+      gridPixels,
+      onViewableIdsChange,
+      pinnedPixels,
+      thumbnailUris,
+    ],
+  );
 
   return (
     <View style={styles.canvas}>
@@ -256,7 +276,6 @@ function HomeContent({
           style={{ marginRight: clipListRightMargin(insets.right) }}
           data={items}
           renderItem={renderItem}
-          extraData={state}
           masonry
           numColumns={2}
           CellRendererComponent={ClipListCell}
@@ -398,6 +417,51 @@ function HomeContent({
     </View>
   );
 }
+
+type HomeCardHandlers = {
+  onSelect: (clip: ClipRecord) => void;
+  onShowMenu: (clip: ClipRecord) => void;
+  onCopy: (clip: ClipRecord) => void;
+};
+
+// 다른 카드의 썸네일이 바뀌어 셀이 다시 렌더되어도 이 카드의 표시 값이 같으면 렌더를 건너뜀
+const HomeGridItem = memo(function HomeGridItem({
+  clip,
+  now,
+  thumbnailUri,
+  isThumbnailFailed,
+  handlers,
+}: {
+  clip: ClipRecord;
+  now: number;
+  thumbnailUri: string | null;
+  isThumbnailFailed: boolean;
+  handlers: HomeCardHandlers;
+}) {
+  const values = clipCardValues(clip, now);
+  return (
+    <ClipGridCard
+      onPress={() => handlers.onSelect(clip)}
+      onShowMenu={() => handlers.onShowMenu(clip)}
+    >
+      {values.kind === 'text' ? (
+        <ClipTextCard
+          {...values}
+          onCopyButtonPress={() => handlers.onCopy(clip)}
+          onCopyButtonLongPress={() => handlers.onShowMenu(clip)}
+        />
+      ) : (
+        <ClipImageCard
+          {...values}
+          thumbnailUri={thumbnailUri}
+          isThumbnailFailed={isThumbnailFailed}
+          onCopyButtonPress={() => handlers.onCopy(clip)}
+          onCopyButtonLongPress={() => handlers.onShowMenu(clip)}
+        />
+      )}
+    </ClipGridCard>
+  );
+});
 
 const styles = StyleSheet.create({
   list: { flex: 1, marginBottom: spacing.card },
