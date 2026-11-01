@@ -38,59 +38,59 @@ export interface Spec extends TurboModule {
   ready(): void;
   // 클립이 없으면 null
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE,
-  // E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   getClip(id: string): Promise<ClipRecord | null>;
-  // 페이지 구분 없이 전체 클립을 생성 시각 내림차순으로 반환함
+  // 페이지 구분 없이 전체 클립을 생성 시각 내림차순으로 반환
   // 동률이면 id.uuidString 오름차순
-  // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   getClips(): Promise<ClipRecord[]>;
-  // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // 실패하면 E_UNAVAILABLE, E_READ_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   getSearchHistory(): Promise<string[]>;
   // Swift가 정규화한 뒤 저장한 목록
-  // 공백뿐이면 쓰지 않고 null을 반환함
-  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // 공백뿐이면 쓰지 않고 null을 반환
+  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   recordSearchTerm(term: string): Promise<string[] | null>;
-  // 없거나 공백뿐인 검색어는 현재 목록을 반환함
-  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // 없거나 공백뿐인 검색어는 현재 목록을 반환
+  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   removeSearchTerm(term: string): Promise<string[]>;
-  // 저장값을 해석하지 않고 삭제함
-  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED 중 하나로 거부함
+  // 저장값을 해석하지 않고 삭제
+  // 실패하면 E_UNAVAILABLE, E_WRITE_FAILED 중 하나로 거부
   removeAllSearchTerms(): Promise<void>;
   // 결과는 saved, empty, unsupported, accessFailed, invalidImage 중 하나
-  // 실패하면 E_UNAVAILABLE, E_SAVE_FAILED 중 하나로 거부함
+  // 실패하면 E_UNAVAILABLE, E_SAVE_FAILED 중 하나로 거부
   saveCurrentClipboard(): Promise<string>;
   // 매번 다시 만든 미리보기의 file:// URI
   // 클립이 없거나 이미지가 아니면 null
-  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부함
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부
   getClipImagePreview(id: string): Promise<string | null>;
   // 매 호출마다 다시 쓰는 <fileID>/thumbnail-<px> 파일의 file:// URI
-  // 호출자가 크기를 선택하며 크기마다 별도 파일을 사용함
+  // 호출자가 크기를 선택하며 크기마다 별도 파일을 사용
   // 클립이 없거나 이미지가 아니면 null
   // 크기 인자 없이 고정 크기를 사용하는 getClipImagePreview와 다름
-  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부함
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부
   getClipThumbnail(
     id: string,
     maximumPixelDimension: number,
   ): Promise<string | null>;
   // 결과는 saved, denied, restricted 중 하나
   // 클립이 없으면 null
-  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_PHOTO_SAVE_FAILED 중 하나로 거부함
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_PHOTO_SAVE_FAILED 중 하나로 거부
   saveClipImageToPhotos(id: string): Promise<string | null>;
-  // 저장이 확정된 클립을 반환함
+  // 저장이 확정된 클립을 반환
   // 클립이 없으면 null
-  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   updateClip(
     id: string,
     name: string | null,
     memo: string | null,
     isPinned: boolean,
   ): Promise<ClipRecord | null>;
-  // 삭제했거나 이미 없으면 반환값 없이 성공함
-  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부함
+  // 삭제했거나 이미 없으면 반환값 없이 성공
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   deleteClip(id: string): Promise<void>;
   // 복사 결과는 copied, copiedWithoutLastUsedAt, writeNotObserved 중 하나
   // 클립이 없으면 null
-  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_COPY_FAILED 중 하나로 거부함
+  // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_COPY_FAILED 중 하나로 거부
   copyClip(id: string): Promise<string | null>;
 }
 

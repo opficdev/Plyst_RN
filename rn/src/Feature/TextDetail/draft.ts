@@ -78,8 +78,8 @@ export function isClosed(state: TextDetailStoreState): boolean {
   );
 }
 
-// reducer는 변경 전 상태로 판정함
-// listener는 getOriginalState로 같은 조건을 판정함
+// reducer는 변경 전 상태로 판정
+// listener는 getOriginalState로 같은 조건을 판정
 export function canStartSave(
   state: TextDetailStoreState,
 ): state is TextDetailLoaded {

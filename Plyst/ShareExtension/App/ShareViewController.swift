@@ -25,7 +25,7 @@ final class ShareViewController: UIViewController {
     private static let completionDelay = Duration.seconds(2)
 
     /// 이미지 URL 내려받기에 쓰는 세션
-    /// 화면이 해제될 때 진행 중인 전송과 함께 무효화함
+    /// 화면이 해제될 때 진행 중인 전송과 함께 무효화
     private let downloadSession = URLSession(configuration: ClipImageDownloadService.configuration)
     private var reactor: ShareReactor?
     private var task: Task<Void, Never>?
@@ -49,7 +49,7 @@ final class ShareViewController: UIViewController {
         prepare()
     }
 
-    /// 시스템이 principal class를 직접 생성하므로 저장소를 열 수 없는 경우를 고려해 viewDidLoad에서 조립함
+    /// 시스템이 principal class를 직접 생성하므로 저장소를 열 수 없는 경우를 고려해 viewDidLoad에서 조립
     private func prepare() {
         do {
             let directory = try ClipAppGroupDirectory()
@@ -70,9 +70,9 @@ final class ShareViewController: UIViewController {
         }
     }
 
-    /// 이전 실행에서 중단된 저장이 남긴 불완전한 이미지 파일을 정리함
+    /// 이전 실행에서 중단된 저장이 남긴 불완전한 이미지 파일을 정리
     /// 같은 ClipImageService 안에서는 정리와 저장이 직렬화됨
-    /// 화면이 해제되면 정리를 중단하고 다음 실행에서 다시 시도함
+    /// 화면이 해제되면 정리를 중단하고 다음 실행에서 다시 시도
     private func startPendingCleanupRecovery(_ images: ClipImageService) {
         recoveryTask?.cancel()
         recoveryTask = Task {
@@ -92,7 +92,7 @@ final class ShareViewController: UIViewController {
     private func bind(_ reactor: ShareReactor) {
         task?.cancel()
         self.reactor = reactor
-        // 값을 기다리는 동안에는 Reactor나 ViewController가 아니라 스트림만 캡처함
+        // 값을 기다리는 동안에는 Reactor나 ViewController가 아니라 스트림만 캡처
         let values = reactor.state.values
         task = Task { [weak self] in
             do {
@@ -123,7 +123,7 @@ final class ShareViewController: UIViewController {
     private func handle(_ action: ShareStatusViewAction) {
         switch action {
         case .cancel:
-            // 진행 중인 저장을 먼저 중단한 뒤 요청을 종료함
+            // 진행 중인 저장을 먼저 중단한 뒤 요청을 종료
             reactor?.action.onNext(.cancel)
             extensionContext?.cancelRequest(withError: CocoaError(.userCancelled))
         case .retry:

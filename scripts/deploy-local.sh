@@ -46,7 +46,7 @@ if [ -n "$missing_keys" ]; then
 	exit 1
 fi
 
-# 배포 환경을 읽기만 하며 확인함
+# 배포 환경을 읽기만 하며 확인
 # 시크릿 값과 인증 헤더는 출력하지 않고 파일과 키체인을 바꾸지 않음
 if [ "$lane" = check ]; then
 	check_failed=
@@ -97,7 +97,7 @@ if [ "$lane" = check ]; then
 	exit 0
 fi
 
-# 오래 걸리는 XCFramework 빌드 전에 Fastlane 실행 환경을 확인함
+# 오래 걸리는 XCFramework 빌드 전에 Fastlane 실행 환경을 확인
 if ! (cd "$repository_root" && bundle check >/dev/null 2>&1); then
 	printf '오류: Bundler gem이 설치되어 있지 않습니다. 저장소 루트에서 bundle install을 실행하세요.\n' >&2
 	exit 1

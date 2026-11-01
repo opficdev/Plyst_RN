@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.sectionLabel,
-    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영함
+    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영
     color: colors.SecondaryText,
     flexShrink: 1,
   },

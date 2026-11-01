@@ -18,7 +18,7 @@ enum SQLiteSynchronousMode: Int, Sendable {
 
 extension Database {
 
-    /// 활성 트랜잭션 밖에서 호출하여 현재 연결의 동기화 수준을 설정함
+    /// 활성 트랜잭션 밖에서 호출하여 현재 연결의 동기화 수준을 설정
     func setSynchronousMode(_ mode: SQLiteSynchronousMode) throws {
         try execute(sql: "PRAGMA synchronous = \(mode.rawValue)")
     }

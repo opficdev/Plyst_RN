@@ -22,7 +22,7 @@ struct SystemClipboardWriter: ClipboardWriter {
         self.expirationDate = expirationDate
     }
 
-    /// 호출자의 actor 밖에서 쓰기와 기록된 표현의 확인을 수행함
+    /// 호출자의 actor 밖에서 쓰기와 기록된 표현의 확인을 수행
     @concurrent
     func write(_ content: ClipboardWriteContent) async throws -> ClipboardWriteResult {
         try Task.checkCancellation()

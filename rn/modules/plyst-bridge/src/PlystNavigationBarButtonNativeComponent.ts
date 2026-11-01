@@ -10,9 +10,9 @@ export interface NativeProps extends ViewProps {
   // left나 right
   side: string;
   // 항목에 표시할 SF Symbol 이름
-  // 지정하면 title보다 우선함
+  // 지정하면 title보다 우선
   icon?: string;
-  // 지정하면 텍스트 항목으로 표시함
+  // 지정하면 텍스트 항목으로 표시
   title?: string;
   isEnabled?: WithDefault<boolean, true>;
   onPress?: DirectEventHandler<Readonly<{}>>;

@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   message: { fontSize: 14, color: colors.SecondaryText, textAlign: 'center' },
   photoButton: {
     marginTop: spacing.card,
-    // 아이콘 영역이 실제 기호보다 높아 세로 여백을 줄여 원본 높이 49pt를 유지함
+    // 아이콘 영역이 실제 기호보다 높아 세로 여백을 줄여 원본 높이 49pt를 유지
     paddingVertical: 10.5,
     paddingHorizontal: spacing.card,
     borderRadius: radius.button,

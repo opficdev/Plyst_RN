@@ -7,7 +7,7 @@ export function nextClipTimelineChange(
   end.setHours(24, 0, 0, 0);
   let next = end.getTime();
   for (const createdAt of createdAtList) {
-    // 상대 시각 문구와 방금 구간이 바뀌는 첫 시점만 비교함
+    // 상대 시각 문구와 방금 구간이 바뀌는 첫 시점만 비교
     for (const seconds of [0, 60, 120, 180, 240, 300]) {
       const transition = createdAt + seconds * 1000;
       if (now < transition) {

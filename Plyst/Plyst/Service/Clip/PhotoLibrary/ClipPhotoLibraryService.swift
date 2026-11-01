@@ -13,8 +13,8 @@ enum ClipPhotoLibrarySaveResult: Equatable, Sendable {
     case restricted
 }
 
-/// 명시적인 사용자 요청에서만 사진 앱에 원본을 추가함
-/// storage와 images는 같은 저장소를 사용함
+/// 명시적인 사용자 요청에서만 사진 앱에 원본을 추가
+/// storage와 images는 같은 저장소를 사용
 struct ClipPhotoLibraryService: Sendable {
     private let storage: any ClipStorageService
     private let images: ClipImageService

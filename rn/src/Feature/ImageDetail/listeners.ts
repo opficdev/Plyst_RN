@@ -25,7 +25,7 @@ export function startImageDetailListeners(
   listen({
     actionCreator: actions.viewDidLoad,
     effect: async (_, api) => {
-      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유함
+      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유
       api.unsubscribe();
       const isStopped = () => api.signal.aborted || isClosed(api.getState());
       const refresher = createClipDetailRefresher({
@@ -68,7 +68,7 @@ export function startImageDetailListeners(
         before.draft,
         before.clip.memo,
       );
-      // 이미 시작한 쓰기의 결과 토스트는 화면이 닫힌 뒤에도 유지함
+      // 이미 시작한 쓰기의 결과 토스트는 화면이 닫힌 뒤에도 유지
       const isActive = !api.signal.aborted;
       switch (result.status) {
         case 'saved':
@@ -93,7 +93,7 @@ export function startImageDetailListeners(
         return;
       }
       const result = await copyClipDetail(clipID);
-      // 복사 결과는 화면 수명과 관계없이 기존 토스트 창에 표시함
+      // 복사 결과는 화면 수명과 관계없이 기존 토스트 창에 표시
       showToast(
         result === 'copied'
           ? '클립보드에 복사했습니다'

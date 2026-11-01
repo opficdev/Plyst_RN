@@ -8,7 +8,7 @@
 import Foundation
 
 /// 앱 밖에서 앱으로 진입할 때 사용하는 URL 호출 형식
-/// 위젯이 만들고 앱이 해석함
+/// 위젯이 만들고 앱이 해석
 enum AppLink: Equatable, Sendable {
     case saveClipboard
 

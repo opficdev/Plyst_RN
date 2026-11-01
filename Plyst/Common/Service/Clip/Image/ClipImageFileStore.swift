@@ -10,10 +10,10 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-/// 주입한 전용 루트에서 원본 바이트를 관리함
+/// 주입한 전용 루트에서 원본 바이트를 관리
 /// 같은 루트의 변경은 ClipImageService 하나가 조율해야 함
 /// `ShareInboxImages`는 예외
-/// 저장과 정리 복구는 Share Extension만 실행하고 본 앱은 읽기와 삭제만 실행함
+/// 저장과 정리 복구는 Share Extension만 실행하고 본 앱은 읽기와 삭제만 실행
 /// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일
 /// 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않음
 struct ClipImageFileStore: Sendable {
@@ -34,7 +34,7 @@ struct ClipImageFileStore: Sendable {
         try validateRoot()
     }
 
-    /// 검증한 원본을 재인코딩 없이 저장함
+    /// 검증한 원본을 재인코딩 없이 저장
     /// 반환된 fileID의 정리 후보는 메타데이터 저장 확정 후 해제해야 함
     func save(_ data: Data) throws -> ClipImageMetadata {
         let properties = try imageProperties(data)
@@ -47,7 +47,7 @@ struct ClipImageFileStore: Sendable {
             try markPending(fileID: fileID)
             try data.write(to: directory.appendingPathComponent("original"), options: .atomic)
         } catch {
-            // 원자적 쓰기의 임시 파일까지 함께 정리함
+            // 원자적 쓰기의 임시 파일까지 함께 정리
             // 실패한 정리는 후보 또는 불완전한 디렉터리로 남음
             try? delete(fileID: fileID)
             throw ClipImageFileError.writeFailed
@@ -85,7 +85,7 @@ struct ClipImageFileStore: Sendable {
         }
     }
 
-    /// 원본을 Data로 적재하지 않고 첫 프레임을 표시 크기로 축소함
+    /// 원본을 Data로 적재하지 않고 첫 프레임을 표시 크기로 축소
     /// 저장된 파일은 변경하지 않음
     func loadThumbnail(
         image: ClipImageMetadata,
@@ -125,7 +125,7 @@ struct ClipImageFileStore: Sendable {
         return output as Data
     }
 
-    /// 본 앱 이미지 루트에서만 호출함
+    /// 본 앱 이미지 루트에서만 호출
     /// 원본에서 만든 축소본을 매번 원자적으로 덮어씀
     func writePreview(
         image: ClipImageMetadata,
@@ -134,7 +134,7 @@ struct ClipImageFileStore: Sendable {
         try writeDerivedFile(named: "preview", image: image, maximumPixelDimension: maximumPixelDimension)
     }
 
-    /// 본 앱 이미지 루트에서만 호출함
+    /// 본 앱 이미지 루트에서만 호출
     /// 요청한 크기의 축소본을 매번 원자적으로 덮어씀
     func writeThumbnail(
         image: ClipImageMetadata,
@@ -179,7 +179,7 @@ struct ClipImageFileStore: Sendable {
         return original
     }
 
-    /// 이미 존재하지 않는 파일은 삭제된 것으로 처리함
+    /// 이미 존재하지 않는 파일은 삭제된 것으로 처리
     func delete(fileID: UUID) throws {
         guard let directory = try directory(for: fileID) else { return }
         do {
@@ -189,7 +189,7 @@ struct ClipImageFileStore: Sendable {
             for entry in entries where entry.lastPathComponent != "pending" {
                 try FileManager.default.removeItem(at: entry)
             }
-            // 원본과 임시 파일이 모두 제거된 후에만 정리 기록을 해제함
+            // 원본과 임시 파일이 모두 제거된 후에만 정리 기록을 해제
             try finishPending(fileID: fileID)
             // 여기서 중단되면 원본이 없는 디렉터리를 복구 후보로 찾을 수 있음
             try FileManager.default.removeItem(at: directory)
@@ -212,7 +212,7 @@ struct ClipImageFileStore: Sendable {
     }
 
     /// 정상 원본을 일괄 삭제하지 않음
-    /// 정리 후보와 저장 중단으로 불완전한 디렉터리만 반환함
+    /// 정리 후보와 저장 중단으로 불완전한 디렉터리만 반환
     func pendingFileIDs() throws -> [UUID] {
         try validateRoot()
         let entries: [URL]
@@ -239,11 +239,11 @@ struct ClipImageFileStore: Sendable {
         let type = identifier as String
         let supported = CGImageSourceCopyTypeIdentifiers() as? [String] ?? []
         guard supported.contains(type), UTType(type)?.conforms(to: .image) == true else { throw ClipImageFileError.unsupportedImage }
-        // ImageIO는 잘린 GIF도 남은 프레임만으로 statusComplete를 반환하므로 종료 바이트(0x3B)로 잘림을 판별함
+        // ImageIO는 잘린 GIF도 남은 프레임만으로 statusComplete를 반환하므로 종료 바이트(0x3B)로 잘림을 판별
         if type == UTType.gif.identifier, data.last != 0x3B { throw ClipImageFileError.invalidImage }
         let count = CGImageSourceGetCount(source)
         guard 0 < count else { throw ClipImageFileError.invalidImage }
-        // 원본 해상도 비트맵을 만들지 않도록 크기는 속성으로 읽고 무결성은 축소 디코딩으로 확인함
+        // 원본 해상도 비트맵을 만들지 않도록 크기는 속성으로 읽고 무결성은 축소 디코딩으로 확인
         let validationOptions = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceShouldCacheImmediately: true,

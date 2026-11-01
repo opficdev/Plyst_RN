@@ -7,14 +7,14 @@
 
 import Foundation
 
-/// Objective-C++ 모듈이 JavaScript의 저장 요청 구독과 기기 종류 조회를 전달함
+/// Objective-C++ 모듈이 JavaScript의 저장 요청 구독과 기기 종류 조회를 전달
 @objc(HomeBridgeModuleImpl)
 public final class HomeBridgeModuleImpl: NSObject, Sendable {
     private let id = UUID()
     private let requestSave: @Sendable () -> Void
     @MainActor private var isInvalidated = false
 
-    /// Objective-C++ 모듈이 저장 요청 전송 함수를 전달함
+    /// Objective-C++ 모듈이 저장 요청 전송 함수를 전달
     /// ready() 전에는 호출하지 않음
     @objc
     public init(requestSave: @escaping @Sendable () -> Void) {
@@ -22,9 +22,9 @@ public final class HomeBridgeModuleImpl: NSObject, Sendable {
         super.init()
     }
 
-    /// JavaScript가 구독한 뒤 호출함
-    /// 보관된 저장 요청을 전달함
-    /// 무효화된 모듈은 무시함
+    /// JavaScript가 구독한 뒤 호출
+    /// 보관된 저장 요청을 전달
+    /// 무효화된 모듈은 무시
     @objc
     public nonisolated func ready() {
         Task { @MainActor in
@@ -40,8 +40,8 @@ public final class HomeBridgeModuleImpl: NSObject, Sendable {
         DeviceModel.isDuo
     }
 
-    /// 네이티브 모듈이 종료될 때 호출함
-    /// 자신의 이벤트 등록을 해제하고 이후 요청을 무시함
+    /// 네이티브 모듈이 종료될 때 호출
+    /// 자신의 이벤트 등록을 해제하고 이후 요청을 무시
     @objc
     public nonisolated func invalidate() {
         Task { @MainActor in

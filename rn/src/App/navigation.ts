@@ -14,7 +14,7 @@ export function initialNavigation(): AppNavigation {
 }
 
 // clipClosed는 닫기 버튼, 스와이프 dismiss, 저장·삭제 완료 중 먼저 온 것으로 보내며 여러 번 보내도 같음
-// detail을 비우면 스택 항목이 빠지면서 시스템이 시트를 dismiss함
+// detail을 비우면 스택 항목이 빠지면서 시스템이 시트를 dismiss
 export const navigationSlice = createSlice({
   name: 'navigation',
   initialState: initialNavigation,

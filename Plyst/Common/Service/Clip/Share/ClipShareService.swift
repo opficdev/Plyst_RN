@@ -9,16 +9,16 @@ import Foundation
 import os
 import UniformTypeIdentifiers
 
-/// 공유 시트로 받은 항목을 클립으로 저장함
+/// 공유 시트로 받은 항목을 클립으로 저장
 /// 여러 항목은 다루지 않음
 ///
-/// 지원하는 첫 첨부가 이미지 형식을 가지면 변환 없이 원본 바이트를 이름 없는 이미지 클립으로 저장함
-/// 그 외에는 텍스트나 URL을 텍스트 클립으로 저장함
-/// 지원하는 첫 첨부가 URL 하나뿐이고 경로나 쿼리 값에 든 주소의 확장자가 이미지 형식이면 이미지를 내려받아 원본 URL을 메모로 둔 이미지 클립으로 저장함
+/// 지원하는 첫 첨부가 이미지 형식을 가지면 변환 없이 원본 바이트를 이름 없는 이미지 클립으로 저장
+/// 그 외에는 텍스트나 URL을 텍스트 클립으로 저장
+/// 지원하는 첫 첨부가 URL 하나뿐이고 경로나 쿼리 값에 든 주소의 확장자가 이미지 형식이면 이미지를 내려받아 원본 URL을 메모로 둔 이미지 클립으로 저장
 /// 내려받기나 이미지 검증에 실패하면 같은 URL을 텍스트 클립으로 저장하며 일반 페이지 링크는 네트워크 요청을 하지 않음
 /// 저장을 시도할 때마다 첨부를 다시 읽으므로 읽기 실패 후에도 같은 항목으로 다시 시도할 수 있음
 /// 읽기에 실패하면 저장소에 쓰지 않음
-/// 이미지 검증 오류와 저장소 오류와 CancellationError는 그대로 전파함
+/// 이미지 검증 오류와 저장소 오류와 CancellationError는 그대로 전파
 struct ClipShareService: Sendable {
     private let storage: any ClipStorageService
     private let images: ClipImageService
@@ -70,8 +70,8 @@ struct ClipShareService: Sendable {
         return .saved(clip)
     }
 
-    /// 내려받기나 이미지 검증에 실패하면 nil이며 텍스트 경로가 이어서 처리함
-    /// 저장소 오류는 전파하고 취소는 CancellationError로 전파함
+    /// 내려받기나 이미지 검증에 실패하면 nil이며 텍스트 경로가 이어서 처리
+    /// 저장소 오류는 전파하고 취소는 CancellationError로 전파
     private func saveDownloadedImage(from url: URL) async throws -> ClipShareSaveResult? {
         let data: Data
         do {
@@ -90,7 +90,7 @@ struct ClipShareService: Sendable {
         }
     }
 
-    /// 지원하는 첫 첨부가 이미지와 텍스트 형식 없이 URL 형식만 가지는지 확인함
+    /// 지원하는 첫 첨부가 이미지와 텍스트 형식 없이 URL 형식만 가지는지 확인
     @MainActor
     private static func isURLOnly(_ item: ClipShareItem) -> Bool {
         let textType = UTType.plainText.identifier
@@ -114,9 +114,9 @@ struct ClipShareService: Sendable {
         UTType(filenameExtension: url.pathExtension)?.conforms(to: .image) == true
     }
 
-    /// 텍스트와 URL과 이미지 중 지원하는 첫 첨부만 확인함
+    /// 텍스트와 URL과 이미지 중 지원하는 첫 첨부만 확인
     /// 그 첨부가 이미지 형식을 가지면 URL이나 텍스트 형식이 함께 있어도 등록된 첫 이미지 형식의 원본 데이터를 읽음
-    /// 이미지 형식이 없으면 nil이며 텍스트 경로가 이어서 처리함
+    /// 이미지 형식이 없으면 nil이며 텍스트 경로가 이어서 처리
     @MainActor
     private static func loadImageData(from item: ClipShareItem) async throws -> Data? {
         guard let provider = item.providers.first(where: {
@@ -131,7 +131,7 @@ struct ClipShareService: Sendable {
     }
 
     /// 작업을 취소하면 Progress를 취소해 느린 로드를 멈춤
-    /// 취소하면 NSItemProvider가 취소 오류로 완료 핸들러를 다시 호출할 수 있으므로 처음 호출만 사용해 continuation을 한 번만 재개함
+    /// 취소하면 NSItemProvider가 취소 오류로 완료 핸들러를 다시 호출할 수 있으므로 처음 호출만 사용해 continuation을 한 번만 재개
     @MainActor
     private static func loadData(
         from provider: NSItemProvider,
@@ -163,9 +163,9 @@ struct ClipShareService: Sendable {
     }
 
     /// 지원하는 첫 첨부만 읽음
-    /// 같은 첨부에서는 텍스트를 우선하고 공백뿐이면 URL로 대체함
+    /// 같은 첨부에서는 텍스트를 우선하고 공백뿐이면 URL로 대체
     /// 지원하는 첨부가 없으면 nil
-    /// URL은 정규화하지 않고 원본 문자열을 그대로 사용함
+    /// URL은 정규화하지 않고 원본 문자열을 그대로 사용
     @MainActor
     private static func loadText(from item: ClipShareItem) async throws -> String? {
         let textType = UTType.plainText.identifier
@@ -181,8 +181,8 @@ struct ClipShareService: Sendable {
         return try await load(from: provider, typeIdentifier: urlType)
     }
 
-    /// 완료 핸들러에서만 continuation을 재개하므로 정확히 한 번 재개함
-    /// loadObject는 공유한 앱이 NSString을 객체로 등록한 경우 읽지 못하므로 등록된 항목을 그대로 돌려주는 loadItem을 사용함
+    /// 완료 핸들러에서만 continuation을 재개하므로 정확히 한 번 재개
+    /// loadObject는 공유한 앱이 NSString을 객체로 등록한 경우 읽지 못하므로 등록된 항목을 그대로 돌려주는 loadItem을 사용
     @MainActor
     private static func load(
         from provider: NSItemProvider,
@@ -220,7 +220,7 @@ struct ClipShareService: Sendable {
     }
 
     /// NSURL이 제공한 URL 데이터는 UTF-8 문자열이 아닐 수 있음
-    /// 따라서 NSURL의 해석을 먼저 사용함
+    /// 따라서 NSURL의 해석을 먼저 사용
     private nonisolated static func urlString(
         from data: Data,
         typeIdentifier: String

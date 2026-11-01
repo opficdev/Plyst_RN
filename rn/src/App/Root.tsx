@@ -117,7 +117,7 @@ function AppContent() {
       )}
     </ScreenStack>
   );
-  // iPhone Duo는 검색 화면 헤더가 항목 안쪽 provider 바깥이라 앱 전체의 오른쪽 안전 영역을 여기서 제공함
+  // iPhone Duo는 검색 화면 헤더가 항목 안쪽 provider 바깥이라 앱 전체의 오른쪽 안전 영역을 여기서 제공
   if (!usesSystemBar) return stack;
   return (
     <SafeAreaProvider style={styles.root} initialMetrics={initialWindowMetrics}>

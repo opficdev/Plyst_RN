@@ -5,7 +5,7 @@ import { colors, spacing, typography } from '../../Theme';
 import { ClipPinnedCard, clipCardLongPressDelay } from '../ClipCard';
 
 type HomePinnedRowProps = {
-  // 원본 configure(clips:)와 HomePinnedRowViewAction.select의 이름을 유지함
+  // 원본 configure(clips:)와 HomePinnedRowViewAction.select의 이름을 유지
   clips: (ComponentProps<typeof ClipPinnedCard> & {
     id: string;
     onSelect: () => void;
@@ -14,8 +14,8 @@ type HomePinnedRowProps = {
   onViewableIdsChange: (ids: string[]) => void;
 };
 
-// 원본 visibleClips()처럼 일부만 보이는 카드도 포함함
-// FlatList의 노출 판정으로 최초 배치와 가로 스크롤을 처리함
+// 원본 visibleClips()처럼 일부만 보이는 카드도 포함
+// FlatList의 노출 판정으로 최초 배치와 가로 스크롤을 처리
 // 요청 취소는 하지 않음
 const viewabilityConfig = { viewAreaCoveragePercentThreshold: 0 };
 
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.sectionLabel,
-    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영함
+    lineHeight: 13.3333, // 원본 UILabel의 높이를 반영
     color: colors.SecondaryText,
     flexShrink: 1,
   },

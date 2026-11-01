@@ -8,10 +8,10 @@
 import ReactorKit
 import RxSwift
 
-/// 공유 항목을 클립으로 저장하는 흐름을 관리함
+/// 공유 항목을 클립으로 저장하는 흐름을 관리
 final class ShareReactor: Reactorable {
     enum Action: Sendable {
-        /// 처음 저장과 다시 시도에 함께 사용함
+        /// 처음 저장과 다시 시도에 함께 사용
         case save
         case cancel
     }
@@ -62,7 +62,7 @@ final class ShareReactor: Reactorable {
             ])
 
         case .cancel:
-            // 진행 중인 저장은 save의 take(until:)이 중단함
+            // 진행 중인 저장은 save의 take(until:)이 중단
             return .empty()
         }
     }

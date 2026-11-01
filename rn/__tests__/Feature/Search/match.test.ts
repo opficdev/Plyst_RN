@@ -6,7 +6,7 @@ import {
   searchRanges,
 } from '../../../src/Feature/Search/match';
 
-// 실기기 Swift 원본의 23개 기대값을 고정함
+// 실기기 Swift 원본의 23개 기대값을 고정
 const cases = [
   {
     id: 'nfc_text_nfd_query',
