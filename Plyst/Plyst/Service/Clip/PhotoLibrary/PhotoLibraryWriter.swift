@@ -18,7 +18,7 @@ protocol PhotoLibraryWriter: Sendable {
     func requestAddAuthorization() async throws -> PhotoLibraryAuthorization
 
     /// 쓰기 요청 전에는 취소할 수 있음
-    /// 요청 후에는 확정된 쓰기의 완료 결과를 반환함
+    /// 요청 후에는 확정된 쓰기의 완료 결과를 반환
     func write(
         _ data: Data,
         contentType: String

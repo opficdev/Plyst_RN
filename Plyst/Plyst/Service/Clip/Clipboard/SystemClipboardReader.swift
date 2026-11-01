@@ -36,7 +36,7 @@ struct SystemClipboardReader: ClipboardReader {
             guard let data = pasteboard.data(forPasteboardType: imageType) else { return .accessFailed }
             return .image(data)
         }
-        // hasStrings와 hasURLs는 전체 항목을 확인하므로 첫 항목의 형식만 검사함
+        // hasStrings와 hasURLs는 전체 항목을 확인하므로 첫 항목의 형식만 검사
         let hasText = pasteboard.contains(pasteboardTypes: Self.textTypes)
         let hasURL = pasteboard.contains(pasteboardTypes: Self.urlTypes)
         guard hasText || hasURL else { return .unsupported }

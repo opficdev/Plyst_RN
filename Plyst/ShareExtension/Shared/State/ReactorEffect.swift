@@ -8,7 +8,7 @@
 import RxSwift
 
 enum ReactorEffect {
-    /// Reactor가 해제될 때 요청을 취소할 수 있도록 서비스만 캡처함
+    /// Reactor가 해제될 때 요청을 취소할 수 있도록 서비스만 캡처
     static func task<Element: Sendable>(
         _ operation: @escaping @Sendable () async throws -> Element
     ) -> Observable<Element> {

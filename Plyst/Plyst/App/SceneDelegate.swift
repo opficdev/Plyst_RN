@@ -80,7 +80,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #endif
     }
 
-    /// 클립보드 읽기는 앱이 활성 상태일 때만 가능하므로 활성화된 뒤에 요청을 처리함
+    /// 클립보드 읽기는 앱이 활성 상태일 때만 가능하므로 활성화된 뒤에 요청을 처리
     /// 처리할 수 없는 상태에서 요청이 남아 이후 활성화에 실행되지 않도록 항상 요청을 비움
     private func saveClipboardIfRequested() {
         guard isClipboardSaveRequested else { return }

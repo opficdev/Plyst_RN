@@ -20,7 +20,7 @@ export { Provider as ScreenProvider } from 'react-redux';
 export type SliceListen<State> = TypedStartListening<State>;
 
 // abort되면 정리 함수를 바로 실행하고 끝나는 Promise를 돌려줌
-// effect가 이 Promise를 기다리면 세션이 끝날 때까지 구독을 소유함
+// effect가 이 Promise를 기다리면 세션이 끝날 때까지 구독을 소유
 export function untilAborted(signal: AbortSignal, cleanup: () => void) {
   return new Promise<void>((resolve) => {
     signal.addEventListener(
@@ -35,8 +35,8 @@ export function untilAborted(signal: AbortSignal, cleanup: () => void) {
 }
 
 // slice 하나로 reducer와 action 생성자를 만드는 화면용 factory
-// 종료된 세션의 listener는 clearListeners가 끊고 진행 중인 effect의 signal을 abort함
-// start가 돌려준 정리 함수는 clearListeners 다음에 실행함
+// 종료된 세션의 listener는 clearListeners가 끊고 진행 중인 effect의 signal을 abort
+// start가 돌려준 정리 함수는 clearListeners 다음에 실행
 export function createScreenStore<State>({
   slice,
   start,

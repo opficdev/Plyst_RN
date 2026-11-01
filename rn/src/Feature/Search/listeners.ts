@@ -22,7 +22,7 @@ export function startSearchListeners(
   dispatch: SliceDispatch,
   onReload: () => void,
 ) {
-  // effect가 먼저 끝나도 큐 작업이 이어지므로 세션 단위 signal로 종료를 확인함
+  // effect가 먼저 끝나도 큐 작업이 이어지므로 세션 단위 signal로 종료를 확인
   const session = new AbortController();
   const queue = createSearchHistoryQueue();
   const stopThumbnails = startClipThumbnailListener(listen, dispatch, actions);
@@ -42,7 +42,7 @@ export function startSearchListeners(
   listen({
     actionCreator: actions.viewDidLoad,
     effect: async (_, api) => {
-      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유함
+      // 세션마다 한 번만 실행하고 abort될 때까지 구독을 소유
       api.unsubscribe();
       void queue.enqueue(async () => {
         const result = await loadSearchHistory();

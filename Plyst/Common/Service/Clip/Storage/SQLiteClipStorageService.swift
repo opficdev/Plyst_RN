@@ -9,8 +9,8 @@ import Foundation
 import OSLog
 import SQLiteData
 
-/// SQLiteData로 클립과 최근 검색어를 저장함
-/// 모든 화면은 같은 인스턴스를 공유하여 클립 변경을 관찰함
+/// SQLiteData로 클립과 최근 검색어를 저장
+/// 모든 화면은 같은 인스턴스를 공유하여 클립 변경을 관찰
 /// 최근 검색어 연산은 ClipStorageEvent를 발행하지 않음
 actor SQLiteClipStorageService: ClipStorageService {
 
@@ -43,7 +43,7 @@ actor SQLiteClipStorageService: ClipStorageService {
             configuration.busyMode = .timeout(5)
             configuration.journalMode = .wal
             database = try DatabaseQueue(path: databaseURL.path, configuration: configuration)
-            // GRDB의 WAL 초기화가 NORMAL을 설정하므로 초기화 후 FULL을 적용함
+            // GRDB의 WAL 초기화가 NORMAL을 설정하므로 초기화 후 FULL을 적용
             try database.writeWithoutTransaction { connection in
                 try connection.setSynchronousMode(.full)
             }
@@ -160,7 +160,7 @@ actor SQLiteClipStorageService: ClipStorageService {
         Self.logger.debug("변경 이벤트 발행: 구독자 \(self.subscriptions.count, privacy: .public)개")
     }
 
-    /// write가 확정될 때까지 actor를 중단하지 않아 저장과 이벤트 발행 순서를 보존함
+    /// write가 확정될 때까지 actor를 중단하지 않아 저장과 이벤트 발행 순서를 보존
     private func access<Value>(_ name: String = #function, fallback: ClipStorageError, operation: () throws -> Value) throws -> Value {
         Self.logger.debug("\(name, privacy: .public) 시작")
         do {
@@ -172,7 +172,7 @@ actor SQLiteClipStorageService: ClipStorageService {
         }
     }
 
-    /// 오류 설명에는 SQL과 저장값이 포함될 수 있어 종류와 코드만 기록함
+    /// 오류 설명에는 SQL과 저장값이 포함될 수 있어 종류와 코드만 기록
     private static func logFailure(_ error: Error, operation: String) {
         if error is CancellationError {
             logger.debug("\(operation, privacy: .public) 취소")
@@ -233,7 +233,7 @@ actor SQLiteClipStorageService: ClipStorageService {
 }
 
 // database와 access 등 private 멤버를 그대로 쓰기 위해 같은 파일에 둠
-// 연결과 마이그레이션은 이 actor가 계속 소유함
+// 연결과 마이그레이션은 이 actor가 계속 소유
 extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
     func fetchSearchHistory() throws -> ClipSearchHistory {
         try access(fallback: .readFailed) {
@@ -255,7 +255,7 @@ extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
         }
     }
 
-    /// 읽기, 규칙 적용, 전체 교체를 하나의 트랜잭션으로 처리함
+    /// 읽기, 규칙 적용, 전체 교체를 하나의 트랜잭션으로 처리
     /// 결과가 같으면 쓰지 않음
     private func replaceSearchHistory(
         operation: String,

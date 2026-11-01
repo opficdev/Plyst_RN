@@ -20,10 +20,13 @@ import type { HomeHeaderPosition, HomeScrollGeometry } from './headerScroll';
 import type { HomeListItem } from './listItems';
 
 type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+type HomeLayoutGeometry = Omit<HomeScrollGeometry, 'contentHeight'>;
 
+// 콘텐츠 높이는 셀 측정마다 바뀌므로 렌더 없이 ref에서 사용 시점의 값을 읽음
 export function useHomeHeaderScroll(
   list: RefObject<FlashListRef<HomeListItem> | null>,
-  geometry: HomeScrollGeometry,
+  geometry: HomeLayoutGeometry,
+  contentHeight: RefObject<number>,
   content: HomeListItem[],
 ) {
   const [translateY] = useState(() => new Animated.Value(0));
@@ -56,7 +59,10 @@ export function useHomeHeaderScroll(
         ? 0
         : (position.current.hidden * geometry.headerHeight) /
           previous.headerHeight;
-    const next = reloadHeaderPosition(hidden, offset.current, geometry);
+    const next = reloadHeaderPosition(hidden, offset.current, {
+      ...geometry,
+      contentHeight: contentHeight.current,
+    });
     position.current = next;
     translateY.setValue(-next.hidden);
     if (!next.isScrollEnabled) {
@@ -72,7 +78,7 @@ export function useHomeHeaderScroll(
       !next.isScrollEnabled
     )
       setIndicatorTop(geometry.headerHeight - next.hidden);
-  }, [geometry, content, list, stop, translateY]);
+  }, [geometry, content, contentHeight, list, stop, translateY]);
 
   useEffect(() => {
     const listener = translateY.addListener(({ value }) => {
@@ -98,12 +104,16 @@ export function useHomeHeaderScroll(
     });
   }, [list, stop, translateY]);
 
+  function measured(): HomeScrollGeometry {
+    return { ...current.current, contentHeight: contentHeight.current };
+  }
+
   function snap() {
     if (updating.current) return;
     const target = snapHeaderTarget(
       position.current.hidden,
       offset.current,
-      current.current,
+      measured(),
     );
     setIndicatorTop(
       current.current.headerHeight -
@@ -140,7 +150,7 @@ export function useHomeHeaderScroll(
       position.current = updateHeaderHidden(
         position.current,
         offset.current,
-        current.current,
+        measured(),
         dragging.current,
         decelerating.current,
         updating.current,

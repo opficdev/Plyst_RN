@@ -113,7 +113,7 @@ jobs:
           path: frameworks.tar
 
   xcode:
-    # fail-fast로 한쪽이 실패하면 진행 중인 나머지 잡을 즉시 취소함
+    # fail-fast로 한쪽이 실패하면 진행 중인 나머지 잡을 즉시 취소
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
     name: ${{ matrix.name }}
     needs: xcframework
@@ -150,14 +150,14 @@ jobs:
         timeout-minutes: 2
         run: echo "TEST_DEVICE_ID=$(make -s test-device-id)" >> "$GITHUB_ENV"
 
-      # 시뮬레이터를 빌드와 겹쳐 부팅했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 부팅함
+      # 시뮬레이터를 빌드와 겹쳐 부팅했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 부팅
       - name: Build for testing
         if: matrix.target == 'test'
         timeout-minutes: 12
         run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID" XCODEBUILD_FLAGS=-skipMacroValidation
 
       # simslim은 부팅 시간을 줄이는 최적화이고 테스트는 simslim이 끄는 데몬에 의존하지 않음
-      # 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행함
+      # 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행
       - name: Install simslim
         id: simslim
         if: matrix.target == 'test'
@@ -179,7 +179,7 @@ jobs:
             echo "::warning title=simslim::설치에 실패해 기본 상태 시뮬레이터로 진행합니다."
           fi
 
-      # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅함
+      # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅
       # 제한 시간이 지나도 진행 중인 부팅은 다음 단계가 기다림
       - name: Slim simulator
         if: matrix.target == 'test' && steps.simslim.outputs.path != ''

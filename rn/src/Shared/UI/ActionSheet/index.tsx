@@ -56,7 +56,7 @@ export function ActionSheet({
 
   function dismiss() {
     const item = pendingItem.current;
-    // handler가 화면을 다시 표시할 때 새 선택 상태가 지워지지 않도록 호출 전에 대기 중인 항목을 초기화함
+    // handler가 화면을 다시 표시할 때 새 선택 상태가 지워지지 않도록 호출 전에 대기 중인 항목을 초기화
     pendingItem.current = undefined;
     item?.handler?.();
   }

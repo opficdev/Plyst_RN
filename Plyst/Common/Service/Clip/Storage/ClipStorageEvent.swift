@@ -6,7 +6,7 @@
 //
 
 /// 저장이 확정된 메타데이터 변경
-/// inserted와 updated 값은 저장이 확정된 전체 스냅샷을 포함함
+/// inserted와 updated 값은 저장이 확정된 전체 스냅샷을 포함
 enum ClipStorageEvent: Equatable, Sendable {
     case inserted(Clip)
     case updated(Clip)

@@ -17,7 +17,7 @@ struct ClipSearchHistory: Equatable, Sendable {
 
     init() {}
 
-    /// 저장된 목록이 규칙을 이미 만족할 때만 생성함
+    /// 저장된 목록이 규칙을 이미 만족할 때만 생성
     /// 각 항목은 정규화된 형태여야 함
     /// 대소문자를 무시한 중복이 없어야 함
     /// 개수는 최대 개수 이하여야 함
@@ -35,7 +35,7 @@ struct ClipSearchHistory: Equatable, Sendable {
     }
 
     /// 같은 항목을 제거하고 새 표기를 맨 앞에 둠
-    /// 최대 개수를 넘으면 가장 오래된 항목을 제거함
+    /// 최대 개수를 넘으면 가장 오래된 항목을 제거
     mutating func record(_ query: ClipSearchQuery) {
         terms.removeAll { Self.isSame($0, query.text) }
         terms.insert(query.text, at: 0)
@@ -44,7 +44,7 @@ struct ClipSearchHistory: Equatable, Sendable {
         }
     }
 
-    /// 대소문자를 무시하고 같은 항목을 제거함
+    /// 대소문자를 무시하고 같은 항목을 제거
     /// 정규화 결과가 비었거나 일치하는 항목이 없으면 변경하지 않음
     mutating func remove(_ term: String) {
         guard let query = ClipSearchQuery(term) else { return }

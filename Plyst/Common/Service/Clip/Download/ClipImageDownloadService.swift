@@ -10,11 +10,11 @@ import UniformTypeIdentifiers
 
 /// 이미지 URL의 응답 본문을 최대 바이트 수 안에서 메모리로 내려받음
 ///
-/// 세션의 수명은 호출하는 쪽이 소유함
+/// 세션의 수명은 호출하는 쪽이 소유
 /// 이 서비스는 세션을 만들거나 무효화하지 않음
 /// 요청은 GET 하나이며 쿠키와 캐시를 쓰지 않는 `configuration`으로 만든 세션을 받는 것을 전제로 함
 /// 응답이 2xx이고 `Content-Type`이 이미지일 때만 본문을 읽으며 검증과 저장은 하지 않음
-/// 작업을 취소하면 전송을 중단하고 CancellationError를 전파함
+/// 작업을 취소하면 전송을 중단하고 CancellationError를 전파
 struct ClipImageDownloadService: Sendable {
     /// 내려받을 수 있는 본문의 최대 바이트 수
     private static let maximumByteCount = 20 * 1024 * 1024
@@ -44,7 +44,7 @@ struct ClipImageDownloadService: Sendable {
         }
         do {
             let (bytes, response) = try await session.bytes(from: url)
-            // 일찍 끝나는 경우에도 남은 전송을 중단함
+            // 일찍 끝나는 경우에도 남은 전송을 중단
             defer { bytes.task.cancel() }
             guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
                 throw ClipImageDownloadError.invalidResponse

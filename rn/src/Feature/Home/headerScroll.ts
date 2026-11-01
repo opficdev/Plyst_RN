@@ -20,7 +20,7 @@ function boundedScrollY(offset: number, geometry: HomeScrollGeometry): number {
     top,
     geometry.contentHeight - geometry.viewportHeight + geometry.insetBottom,
   );
-  // 위아래 튕김을 제외한 실제 목록 범위로 제한함
+  // 위아래 튕김을 제외한 실제 목록 범위로 제한
   return Math.min(bottom, Math.max(top, offset));
 }
 
@@ -49,7 +49,7 @@ export function updateHeaderHidden(
   if (isUpdatingScrollGeometry) return position;
   const scrollY = boundedScrollY(offset, geometry);
   const previous = position.previousScrollY ?? scrollY;
-  // 드래그나 감속 중에만 이전 위치와의 차이를 누적함
+  // 드래그나 감속 중에만 이전 위치와의 차이를 누적
   const hidden =
     position.hidden + (isDragging || isDecelerating ? scrollY - previous : 0);
   return {
@@ -68,7 +68,7 @@ export function snapHeaderTarget(
   const scrollY = boundedScrollY(offset, geometry);
   // 헤더 아래쪽이 안전 영역 경계를 넘어갔을 때만 완전히 숨김
   const hides = geometry.headerHeight - geometry.safeTop < hidden;
-  // 헤더 높이보다 적게 스크롤했다면 목록도 헤더 끝이나 맨 위로 이동함
+  // 헤더 높이보다 적게 스크롤했다면 목록도 헤더 끝이나 맨 위로 이동
   const targetY =
     scrollY - top < geometry.headerHeight
       ? boundedScrollY(hides ? top + geometry.headerHeight : top, geometry)
@@ -87,7 +87,7 @@ export function reloadHeaderPosition(
   offset: number,
   geometry: HomeScrollGeometry,
 ) {
-  // 빈 목록은 스크롤을 끄고 상단에 고정함
+  // 빈 목록은 스크롤을 끄고 상단에 고정
   // 헤더도 모두 드러냄
   const isScrollEnabled = 0 < geometry.sectionCount;
   const contentOffset = isScrollEnabled ? offset : -geometry.insetTop;
@@ -101,7 +101,7 @@ export function reloadHeaderPosition(
 }
 
 export function homeScrollToTop(insetTop: number) {
-  // 필터가 실제로 바뀌면 화면에서 이 위치를 적용함
-  // 최초 표시는 제외함
+  // 필터가 실제로 바뀌면 화면에서 이 위치를 적용
+  // 최초 표시는 제외
   return { hidden: 0, previousScrollY: -insetTop, contentOffset: -insetTop };
 }

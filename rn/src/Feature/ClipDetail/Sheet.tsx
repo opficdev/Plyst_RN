@@ -29,7 +29,7 @@ type ClipDetailSheetProps = {
   children: ReactNode;
 };
 
-// 시트는 스택 항목이므로 부모가 항목을 빼면 시스템이 dismiss함
+// 시트는 스택 항목이므로 부모가 항목을 빼면 시스템이 dismiss
 // 그래서 닫기 요청은 곧 onClose
 export function ClipDetailSheet({
   title,

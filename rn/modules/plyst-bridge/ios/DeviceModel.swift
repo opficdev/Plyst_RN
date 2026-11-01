@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// 기기 모델 식별자로 기기 종류를 판별함
+/// 기기 모델 식별자로 기기 종류를 판별
 /// 상태가 없으므로 어느 스레드에서나 읽을 수 있음
 enum DeviceModel {
     /// iPhone Duo이면 true
