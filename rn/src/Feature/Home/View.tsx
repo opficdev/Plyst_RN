@@ -124,8 +124,9 @@ function HomeContent({
     const clip = current.clips.find((clip) => clip.id === current.menuClip?.id);
     if (clip) dispatch(actions.deleteConfirmShown(clip));
   }
-  // 카드가 받는 핸들러를 고정해 memo 비교에서 바뀌지 않게 함
-  // 호출 시점에는 최신 렌더의 함수를 실행함
+
+  // 카드가 받는 핸들러를 memo 비교에서 바뀌지 않도록 고정
+  // 호출 시점에는 최신 렌더의 함수를 실행
   const handlers = useRef({ selectClip, showMenu, copy });
   useLayoutEffect(() => {
     handlers.current = { selectClip, showMenu, copy };
@@ -209,7 +210,7 @@ function HomeContent({
         }
       : homeFilterStrings[empty === 'empty' ? 'all' : state.filter];
 
-  // 셀은 renderItem이 바뀔 때만 다시 렌더되므로 카드 표시에 쓰는 값만 의존함
+  // 셀은 renderItem이 바뀔 때만 다시 렌더되므로 카드 표시 값에만 의존
   // 로딩 상태와 메뉴 상태가 바뀌어도 셀을 다시 렌더하지 않음
   const { now: cardNow, thumbnails: thumbnailUris, failedThumbnails } = state;
   const { onViewableIdsChange } = thumbnails;
