@@ -3,8 +3,9 @@
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
 > 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
-<a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EB%B2%84%EC%A0%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
-<a href="https://apps.apple.com/kr/app/plyst/id6818818750"><img src="https://img.shields.io/badge/App_Store-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-0D96F6?style=for-the-badge&logo=appstore&logoColor=white" alt="App Store 다운로드" /></a>
+<a href="https://github.com/opficdev/Plyst"><img src="./docs/badges/uikit.svg" alt="UIKit 버전" /></a>
+
+<a href="https://apps.apple.com/kr/app/plyst/id6818818750"><img src="./docs/badges/appstore.svg" alt="App Store 다운로드" /></a>
 
 <table>
   <tr>
