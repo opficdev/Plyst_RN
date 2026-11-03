@@ -172,8 +172,8 @@ export interface Spec extends TurboModule {
 | 최소 지원 버전 | iOS 17.0+ |
 | 지원 기기 | iPhone |
 | 언어 | TypeScript 6.0.3, Swift 6.0 |
-| 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5, UIKit 호스트 |
-| 앱 확장 | Share Extension, WidgetKit, SwiftUI |
+| 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5 |
+| 앱 확장 | Share Extension, Widget Extension |
 | 상태 관리 | Redux Toolkit 2.13.0, React Redux 9.3.0 (RN 화면)<br>ReactorKit 3.2.0, RxSwift 6.10.2 (Share Extension 상태 관리) |
 | 네이티브 브리지 | TurboModule, Codegen |
 | 앱 통합 | React Native Brownfield 5.3.0, XCFramework |
