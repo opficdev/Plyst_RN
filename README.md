@@ -4,8 +4,7 @@
 > 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
 <a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EB%B2%84%EC%A0%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
-<a href="https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7"><img src="https://img.shields.io/badge/Notion-%EC%9E%91%EC%97%85_%EA%B3%B5%EA%B0%84-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion 작업 공간" /></a>
-<a href="https://testflight.apple.com/join/BA4MaW9h"><img src="https://img.shields.io/badge/TestFlight-%EB%B2%A0%ED%83%80_%EC%B0%B8%EC%97%AC-0D96F6?style=for-the-badge&logo=apple&logoColor=white" alt="TestFlight 베타 참여" /></a>
+<a href="https://apps.apple.com/kr/app/plyst/id6818818750"><img src="https://img.shields.io/badge/App_Store-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-0D96F6?style=for-the-badge&logo=appstore&logoColor=white" alt="App Store 다운로드" /></a>
 
 | Home | Search | 텍스트 상세 |
 | :---: | :---: | :---: |
