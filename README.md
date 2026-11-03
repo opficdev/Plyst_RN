@@ -6,13 +6,31 @@
 <a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EB%B2%84%EC%A0%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
 <a href="https://apps.apple.com/kr/app/plyst/id6818818750"><img src="https://img.shields.io/badge/App_Store-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-0D96F6?style=for-the-badge&logo=appstore&logoColor=white" alt="App Store 다운로드" /></a>
 
-| Home | Search | 텍스트 상세 |
-| :---: | :---: | :---: |
-| ![Home](./docs/home.png) | ![Search](./docs/search.png) | ![텍스트 상세](./docs/text_detail.png) |
+<table>
+  <tr>
+    <th width="33.3%">Home</th>
+    <th width="33.3%">Search</th>
+    <th width="33.3%">텍스트 상세</th>
+  </tr>
+  <tr>
+    <td width="33.3%"><img src="./docs/home.png" alt="Home" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/search.png" alt="Search" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/text_detail.png" alt="텍스트 상세" width="100%" /></td>
+  </tr>
+</table>
 
-| 이미지 상세 | Widget | Share Extension |
-| :---: | :---: | :---: |
-| ![이미지 상세](./docs/image_detail.png) | ![Widget](./docs/widget.png) | ![Share Extension](./docs/share.png) |
+<table>
+  <tr>
+    <th width="33.3%">이미지 상세</th>
+    <th width="33.3%">Widget</th>
+    <th width="33.3%">Share Extension</th>
+  </tr>
+  <tr>
+    <td width="33.3%"><img src="./docs/image_detail.png" alt="이미지 상세" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/widget.png" alt="Widget" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/share.png" alt="Share Extension" width="100%" /></td>
+  </tr>
+</table>
 
 ## 프로젝트 개요
 
