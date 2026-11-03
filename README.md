@@ -67,7 +67,7 @@
 
 ## 핵심 성과
 
-### **1. 카드 하나가 바뀔 때마다 화면의 모든 카드가 재렌더링되는 구조를 표시에 필요한 값만 받는 memo 컴포넌트로 분리해 JS 스레드 작업 시간을 2.62s → 1.69s로 단축**
+### **1. 카드 memo 분리로 JS 스레드 작업 시간 2.62s → 1.69s 단축**
 
 ![카드 재렌더링 범위 축소](./docs/card-rerender.png)
 
@@ -105,7 +105,7 @@ const HomeGridItem = memo(function HomeGridItem({ clip, now, thumbnailUri, isThu
 | 이동 | 리스트를 2회 왕복 스크롤 |
 | 횟수 | 변경 전후 각 3회 평균 |
 
-### **2. 종료된 화면이 비동기 결과로 상태를 갱신하지 않도록 Service 호출과 구독을 Redux Toolkit Listener로 옮기고 화면 해제 시 한 번에 정리**
+### **2. Redux Toolkit Listener로 종료된 화면의 상태 갱신 차단**
 > **문제**<br>
 > 화면 컴포넌트가 `useReducer`와 `useEffect`로 상태 변경, Service 호출, 이벤트 구독을 함께 처리<br>
 > 화면을 닫은 뒤에도 구독과 비동기 요청이 남으면 종료된 화면의 상태를 갱신할 수 있음
@@ -143,7 +143,7 @@ listen({
 });
 ```
 
-### **3. RN과 Swift의 호출 형식이 어긋나지 않도록 Codegen TurboModule로 연결해 RN의 SQLite, 파일, 클립보드 직접 접근 차단**
+### **3. Codegen TurboModule로 RN의 저장소 직접 접근 차단**
 > **문제**<br>
 > RN과 Swift가 호출 형식을 따로 정의하면 한쪽만 바뀌어도 호출이 어긋날 수 있음
 >
