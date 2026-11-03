@@ -3,21 +3,39 @@
 > 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
 > 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
-<a href="https://github.com/opficdev/Plyst"><img src="https://img.shields.io/badge/UIKit_%EB%B2%84%EC%A0%84-opficdev%2FPlyst-181717?style=for-the-badge&logo=github&logoColor=white" alt="UIKit 버전" /></a>
-<a href="https://app.notion.com/p/3f1b88a8aa5481f4938cc2484f4fd5c7"><img src="https://img.shields.io/badge/Notion-%EC%9E%91%EC%97%85_%EA%B3%B5%EA%B0%84-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion 작업 공간" /></a>
-<a href="https://testflight.apple.com/join/BA4MaW9h"><img src="https://img.shields.io/badge/TestFlight-%EB%B2%A0%ED%83%80_%EC%B0%B8%EC%97%AC-0D96F6?style=for-the-badge&logo=apple&logoColor=white" alt="TestFlight 베타 참여" /></a>
+<a href="https://github.com/opficdev/Plyst"><img src="./docs/badges/uikit.svg" alt="UIKit 버전" /></a>
 
-| Home | Search | 텍스트 상세 |
-| :---: | :---: | :---: |
-| ![Home](./docs/home.png) | ![Search](./docs/search.png) | ![텍스트 상세](./docs/text_detail.png) |
+<a href="https://apps.apple.com/kr/app/plyst/id6818818750"><img src="./docs/badges/appstore.svg" alt="App Store 다운로드" /></a>
 
-| 이미지 상세 | Widget | Share Extension |
-| :---: | :---: | :---: |
-| ![이미지 상세](./docs/image_detail.png) | ![Widget](./docs/widget.png) | ![Share Extension](./docs/share.png) |
+<table>
+  <tr>
+    <th width="33.3%">Home</th>
+    <th width="33.3%">Search</th>
+    <th width="33.3%">텍스트 상세</th>
+  </tr>
+  <tr>
+    <td width="33.3%"><img src="./docs/home.png" alt="Home" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/search.png" alt="Search" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/text_detail.png" alt="텍스트 상세" width="100%" /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th width="33.3%">이미지 상세</th>
+    <th width="33.3%">Widget</th>
+    <th width="33.3%">Share Extension</th>
+  </tr>
+  <tr>
+    <td width="33.3%"><img src="./docs/image_detail.png" alt="이미지 상세" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/widget.png" alt="Widget" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/share.png" alt="Share Extension" width="100%" /></td>
+  </tr>
+</table>
 
 ## 프로젝트 개요
 
-화면과 상태는 RN이 맡고 iOS 실행 환경과 시스템 자원은 Swift가 맡는 브라운필드 앱
+화면과 상태는 RN이 담당하고 iOS 실행 환경과 시스템 자원은 Swift가 담당하는 브라운필드 앱
 
 | 영역 | 담당 | 이유 |
 | --- | --- | --- |
@@ -49,7 +67,45 @@
 
 ## 핵심 성과
 
-### **1. Redux Toolkit Store와 Listener로 화면의 상태 변경, Service 호출, 구독 정리를 역할별로 분리**
+### **1. 카드 memo 분리로 JS 스레드 작업 시간 2.62s → 1.69s 단축**
+
+![카드 재렌더링 범위 축소](./docs/card-rerender.png)
+
+> **문제**<br>
+> FlashList가 화면 상태 전체를 참조해 값 하나만 바뀌어도 보이는 카드 전체를 재렌더링<br>
+> 카드마다 렌더 때 새로 만든 핸들러를 받아 바뀐 카드만 골라 렌더할 수 없는 구조
+>
+> **해결**<br>
+> 카드는 고정 핸들러와 표시에 필요한 props만 받는 memo 컴포넌트로 분리<br>
+> FlashList의 `renderItem`은 카드 props에 쓰는 값만 참조<br>
+> 홈 콘텐츠 높이는 바뀌어도 렌더를 일으키지 않는 `useRef`로 보관
+>
+> **성과**<br>
+> ✅ 홈 리스트 스크롤 기준 JS 스레드 작업 시간 **2.62s → 1.69s**<br>
+> ✅ 검색 결과 리스트 스크롤 기준 JS 스레드 작업 시간 **1.99s → 1.57s**<br>
+> ⚠️ 메인 스레드 작업 시간은 **변화 없음**
+
+```tsx
+const [cardHandlers] = useState<HomeCardHandlers>(() => ({
+  onSelect: (clip) => handlers.current.selectClip(clip),  // 렌더마다 새로 만들지 않는 고정 핸들러
+  // ...
+}));
+
+// 다른 카드의 썸네일이 바뀌어 셀이 다시 렌더되어도 이 카드의 표시 값이 같으면 렌더를 건너뜀
+const HomeGridItem = memo(function HomeGridItem({ clip, now, thumbnailUri, isThumbnailFailed, handlers }) {
+  // ...
+});
+```
+
+| 측정 조건 | 값 |
+|:---:|:---:|
+| 기기 | iPhone 18 Pro 시뮬레이터, iOS 27.2 |
+| 빌드 | Release |
+| 데이터 | 이미지 50개 리스트 |
+| 이동 | 리스트를 2회 왕복 스크롤 |
+| 횟수 | 변경 전후 각 3회 평균 |
+
+### **2. Redux Toolkit Listener로 종료된 화면의 상태 갱신 차단**
 > **문제**<br>
 > 화면 컴포넌트가 `useReducer`와 `useEffect`로 상태 변경, Service 호출, 이벤트 구독을 함께 처리<br>
 > 화면을 닫은 뒤에도 구독과 비동기 요청이 남으면 종료된 화면의 상태를 갱신할 수 있음
@@ -87,7 +143,7 @@ listen({
 });
 ```
 
-### **2. Codegen TurboModule로 저장소 접근 경로를 한 곳으로 제한해 RN의 DB와 파일 직접 접근 차단**
+### **3. Codegen TurboModule로 RN의 저장소 직접 접근 차단**
 > **문제**<br>
 > RN과 Swift가 호출 형식을 따로 정의하면 한쪽만 바뀌어도 호출이 어긋날 수 있음
 >
@@ -108,37 +164,6 @@ export interface Spec extends TurboModule {
 }
 ```
 
-### **3. 표시 크기 썸네일과 요청 큐 제한으로 이미지 150개 목록의 메모리 증가량을 UIKit 버전 이하로 유지**
-> **문제**<br>
-> RN 목록은 이미지 디코딩과 화면 밖 요청 누적으로 이미지 수가 늘수록 UIKit 버전보다 메모리가 빠르게 늘 수 있음
->
-> **해결**<br>
-> 2열 카드 목록(FlashList masonry)에서 카드 너비와 화면 배율에 맞춘 ImageIO 썸네일 요청<br>
-> 화면 밖 대기 요청을 제거하고 실행 중인 요청은 완료 시 결과 폐기<br>
-> 썸네일 URI 보관 수 48개와 요청 큐 동시 실행 수 2개로 제한
->
-> **성과**<br>
-> ✅ 이미지 2개 대비 150개의 최대 메모리 증가량을 비교 시 UIKit **+42.80MB**, RN **+25.48MB**<br>
-> ✅ 이미지 150개 목록을 스크롤하여 왕복한 뒤 메모리 비교 시 UIKit **56.71MB**, RN **52.72MB**<br>
-> ⚠️ RN 런타임의 고정 메모리는 이미지 2개에서 **+18.78MB**로 UIKit 버전보다 높음
-
-| 이미지 수 | UIKit 왕복 후 / 최대 | RN 왕복 후 / 최대 |
-|:---:|:---:|:---:|
-| 2개 | 19.38 / 20.96MB | 38.16 / 42.04MB |
-| 16개 | 30.80 / 31.59MB | 59.90 / 61.75MB |
-| 32개 | 44.12 / 45.75MB | 52.59 / 64.85MB |
-| 48개 | 56.90 / 59.05MB | 50.07 / 65.83MB |
-| 64개 | 59.57 / 64.26MB | 49.50 / 63.75MB |
-| 150개 | 56.71 / 63.75MB | 52.72 / 67.52MB |
-
-| 측정 조건 | 값 |
-|:---:|:---:|
-| 기기 | iPhone 16 Pro, iOS 26.7.1, USB 연결 |
-| 빌드 | UIKit: Release / RN: Hermes 번들 |
-| 데이터 | 같은 규칙으로 만든 이미지 2~150개와 텍스트 12개 |
-| 이동 | 목록의 처음과 끝을 2회 왕복, 초당 2,200pt |
-| 메모리 | 앱 안에서 `phys_footprint`를 250ms 간격으로 관측 |
-
 ---
 
 ## 기술 스택
@@ -148,8 +173,8 @@ export interface Spec extends TurboModule {
 | 최소 지원 버전 | iOS 17.0+ |
 | 지원 기기 | iPhone |
 | 언어 | TypeScript 6.0.3, Swift 6.0 |
-| 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5, UIKit 호스트 |
-| 앱 확장 | Share Extension, WidgetKit, SwiftUI |
+| 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5 |
+| 앱 확장 | Share Extension, Widget Extension |
 | 상태 관리 | Redux Toolkit 2.13.0, React Redux 9.3.0 (RN 화면)<br>ReactorKit 3.2.0, RxSwift 6.10.2 (Share Extension 상태 관리) |
 | 네이티브 브리지 | TurboModule, Codegen |
 | 앱 통합 | React Native Brownfield 5.3.0, XCFramework |
