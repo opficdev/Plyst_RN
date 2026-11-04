@@ -1,5 +1,5 @@
 import { memo, useCallback, useContext, useDeferredValue, useEffect, useMemo, useLayoutEffect, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, PixelRatio, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { BackHandler, Keyboard, KeyboardAvoidingView, PixelRatio, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { ScreenStackHeaderLeftView, ScreenStackItem } from 'react-native-screens';
@@ -173,6 +173,21 @@ function SearchScreen({
     setIsPresented(false);
     closeTimer.current = setTimeout(finishClose, 800);
   }
+
+  // Android 뒤로 가기는 맨 위 화면을 닫기 버튼과 같은 경로로 닫음
+  // 상세보다 먼저 등록한 처리기를 유지하도록 한 번만 등록하고 최신 close를 ref로 부름
+  const latestClose = useRef(close);
+  useLayoutEffect(() => {
+    latestClose.current = close;
+  });
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      latestClose.current();
+      return true;
+    });
+    return () => subscription.remove();
+  }, []);
 
   function transitionEnded(didPresent: boolean) {
     if (!isMounted.current) return;

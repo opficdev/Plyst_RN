@@ -53,7 +53,7 @@ export function ActionSheet({ isVisible, title, message, items, onClose }: Actio
   }
 
   return (
-    <Modal transparent animationType="fade" visible={isVisible} onDismiss={() => runPendingItem(pendingItem)}>
+    <Modal transparent animationType="fade" visible={isVisible} onRequestClose={cancel} onDismiss={() => runPendingItem(pendingItem)}>
       <SafeAreaProvider>
         <ActionSheetContent title={title} message={message} items={items} onSelect={select} onCancel={cancel} />
       </SafeAreaProvider>

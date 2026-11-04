@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BackHandler, KeyboardAvoidingView, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenStackItem } from 'react-native-screens';
 import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
@@ -27,6 +27,16 @@ export function ClipDetailSheet({ title, usesSystemBar, isSaveEnabled, isClosed,
   useEffect(() => {
     if (isClosed) onClose();
   }, [isClosed, onClose]);
+  // Android 뒤로 가기는 맨 위 화면을 닫기 버튼과 같은 경로로 닫음
+  // 나중에 등록한 처리기가 먼저 불리므로 검색 위에 열린 상세가 먼저 닫힘
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [onClose]);
   const headerConfig: ScreenStackHeaderConfigProps = {
     hidden: !usesSystemBar,
     title,
