@@ -50,8 +50,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         execute(
             fallback: .readFailed,
             operation: {
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                return try await provider.clips()
+                try await Self.provider().clips()
             },
             completion: { records, code in
                 completion(records.map { $0.map(Self.dictionary) as NSArray }, code)
@@ -64,8 +63,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         execute(
             fallback: .readFailed,
             operation: {
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                return try await provider.searchHistory()
+                try await Self.provider().searchHistory()
             },
             completion: { terms, code in
                 completion(terms.map { $0 as NSArray }, code)
@@ -81,8 +79,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         execute(
             fallback: .writeFailed,
             operation: {
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                return try await provider.recordSearchTerm(term)
+                try await Self.provider().recordSearchTerm(term)
             },
             completion: { terms, code in
                 completion(terms.map { $0 as NSArray }, code)
@@ -98,8 +95,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         execute(
             fallback: .writeFailed,
             operation: {
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                return try await provider.removeSearchTerm(term)
+                try await Self.provider().removeSearchTerm(term)
             },
             completion: { terms, code in
                 completion(terms.map { $0 as NSArray }, code)
@@ -112,8 +108,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         execute(
             fallback: .writeFailed,
             operation: {
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                try await provider.removeAllSearchTerms()
+                try await Self.provider().removeAllSearchTerms()
                 return true
             },
             completion: { _, code in completion(code) }
@@ -125,8 +120,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
         execute(
             fallback: .saveFailed,
             operation: {
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                return try await provider.saveCurrentClipboard()
+                try await Self.provider().saveCurrentClipboard()
             },
             completion: { result, code in
                 completion(result?.rawValue, code)
@@ -264,8 +258,7 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
             fallback: fallback,
             operation: {
                 guard let id = UUID(uuidString: identifier) else { throw ClipBridgeError.invalidID }
-                guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
-                return try await operation(provider, id)
+                return try await operation(Self.provider(), id)
             },
             completion: completion
         )
@@ -291,6 +284,12 @@ public final class ClipBridgeModuleImpl: NSObject, Sendable {
                 }
             }
         }
+    }
+
+    @MainActor
+    private static func provider() throws -> any ClipBridgeProvider {
+        guard let provider = ClipBridge.provider else { throw ClipBridgeError.unavailable }
+        return provider
     }
 
     private static func dictionary(_ record: ClipBridgeRecord) -> NSDictionary {

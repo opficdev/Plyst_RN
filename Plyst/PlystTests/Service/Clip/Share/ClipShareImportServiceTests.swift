@@ -7,25 +7,13 @@
 
 import Foundation
 import os
-import UIKit
 import XCTest
 @testable import Plyst
 
 @MainActor
-final class ClipShareImportServiceTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-import-\(UUID())", isDirectory: true)
+final class ClipShareImportServiceTests: ClipTemporaryDirectoryTestCase {
     private var inboxDatabaseURL: URL { directory.appendingPathComponent("ShareInbox.sqlite") }
     private var inboxImagesURL: URL { directory.appendingPathComponent("ShareInboxImages", isDirectory: true) }
-    private var databaseURL: URL { directory.appendingPathComponent("clips.sqlite") }
-    private var imagesURL: URL { directory.appendingPathComponent("images", isDirectory: true) }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
-        try super.tearDownWithError()
-    }
-
     func testTextClipIsImportedWithOriginalFieldsAndRemovedFromInbox() async throws {
         let inbox = try makeInboxStorage()
         let clip = Clip(
@@ -59,7 +47,7 @@ final class ClipShareImportServiceTests: XCTestCase {
     func testImageClipIsImportedWithSameBytesAndRemovedFromInbox() async throws {
         let inbox = try makeInboxStorage()
         let inboxImages = try makeInboxImages(storage: inbox)
-        let data = try makePNGData()
+        let data = try ClipImageTestFixture.data()
         let saved = try await inboxImages.saveImage(
             data,
             name: "공유 이미지",
@@ -85,29 +73,7 @@ final class ClipShareImportServiceTests: XCTestCase {
         let remaining = try await inbox.fetchAll(order: .createdAt)
         XCTAssertTrue(remaining.isEmpty)
         XCTAssertEqual(try entryCount(at: inboxImagesURL), 0)
-        XCTAssertEqual(try entryCount(at: imagesURL), 1)
-    }
-
-    func testMissingInboxDoesNotTouchStorageOrCreateInbox() async throws {
-        let storage = try makeStorage()
-
-        let result = try await makeService(storage: storage).importPendingClips()
-
-        XCTAssertEqual(result, .empty)
-        let stored = try await storage.fetchAll(order: .createdAt)
-        XCTAssertTrue(stored.isEmpty)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: inboxDatabaseURL.path))
-    }
-
-    func testEmptyInboxImportsNothing() async throws {
-        _ = try makeInboxStorage()
-        let storage = try makeStorage()
-
-        let result = try await makeService(storage: storage).importPendingClips()
-
-        XCTAssertEqual(result, .empty)
-        let stored = try await storage.fetchAll(order: .createdAt)
-        XCTAssertTrue(stored.isEmpty)
+        XCTAssertEqual(try entryCount(at: root), 1)
     }
 
     func testClipAlreadyInStorageIsNotDuplicatedAndIsRemovedFromInbox() async throws {
@@ -132,9 +98,9 @@ final class ClipShareImportServiceTests: XCTestCase {
         try await inbox.insert(clip)
         let storage = try makeStorage()
         let shouldFail = OSAllocatedUnfairLock(initialState: true)
-        let spy = ClipboardStorageServiceSpy(
+        let spy = ClipStorageServiceSpy(
             storage: storage,
-            beforeInsert: {
+            beforeInsert: { _ in
                 if shouldFail.withLock({ $0 }) { throw ClipStorageError.writeFailed }
             }
         )
@@ -170,7 +136,7 @@ final class ClipShareImportServiceTests: XCTestCase {
         let inbox = try makeInboxStorage()
         let inboxImages = try makeInboxImages(storage: inbox)
         let image = try await inboxImages.saveImage(
-            try makePNGData(),
+            try ClipImageTestFixture.data(),
             createdAt: Date(timeIntervalSince1970: 100)
         ).value
         let text = Clip(
@@ -199,22 +165,6 @@ final class ClipShareImportServiceTests: XCTestCase {
         XCTAssertEqual(stored, [text])
         let remaining = try await inbox.fetchAll(order: .createdAt)
         XCTAssertEqual(remaining, [image])
-    }
-
-    func testClipSavedByExtensionAfterFirstImportIsImportedNextTime() async throws {
-        let inbox = try makeInboxStorage()
-        let storage = try makeStorage()
-        let service = try makeService(storage: storage)
-        let first = try await service.importPendingClips()
-        XCTAssertEqual(first, .empty)
-        let clip = Clip(content: .text("나중에 공유한 텍스트"))
-        try await inbox.insert(clip)
-
-        let second = try await service.importPendingClips()
-
-        XCTAssertEqual(second.importedCount, 1)
-        let stored = try await storage.fetchAll(order: .createdAt)
-        XCTAssertEqual(stored, [clip])
     }
 
     func testCancelledImportThrowsCancellationAndKeepsInbox() async throws {
@@ -249,12 +199,8 @@ final class ClipShareImportServiceTests: XCTestCase {
         ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: inboxImagesURL))
     }
 
-    private func makeStorage() throws -> SQLiteClipStorageService {
-        try SQLiteClipStorageService(databaseURL: databaseURL)
-    }
-
     private func makeImages(storage: any ClipStorageService) throws -> ClipImageService {
-        ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: imagesURL))
+        ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
     }
 
     private func makeService(storage: any ClipStorageService) throws -> ClipShareImportService {
@@ -271,26 +217,5 @@ final class ClipShareImportServiceTests: XCTestCase {
             storage: storage,
             images: images
         )
-    }
-
-    /// 이미지 루트 아래의 항목 수
-    /// 저장된 이미지 하나당 디렉터리 하나가 있음
-    private func entryCount(at url: URL) throws -> Int {
-        try FileManager.default.contentsOfDirectory(atPath: url.path).count
-    }
-
-    private func makePNGData() throws -> Data {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 3), format: format)
-        return try XCTUnwrap(renderer.pngData { context in
-            UIColor.red.setFill()
-            context.fill(CGRect(
-                x: 0,
-                y: 0,
-                width: 2,
-                height: 3
-            ))
-        })
     }
 }

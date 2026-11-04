@@ -37,77 +37,39 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
     }
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? {
-        let clip: Clip?
-        do {
-            clip = try await storage.fetch(id: id)
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.readFailed
+        try await bridged(fallback: .readFailed) {
+            try await storage.fetch(id: id).map { record(from: $0) }
         }
-        guard let clip else { return nil }
-
-        return record(from: clip)
     }
 
     func clips() async throws -> [ClipBridgeRecord] {
-        do {
-            return try await storage.fetchAll(order: .createdAt).map { record(from: $0) }
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.readFailed
+        try await bridged(fallback: .readFailed) {
+            try await storage.fetchAll(order: .createdAt).map { record(from: $0) }
         }
     }
 
     func searchHistory() async throws -> [String] {
-        do {
-            return try await history.fetchSearchHistory().terms
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.readFailed
+        try await bridged(fallback: .readFailed) {
+            try await history.fetchSearchHistory().terms
         }
     }
 
     func recordSearchTerm(_ term: String) async throws -> [String]? {
         guard let query = ClipSearchQuery(term) else { return nil }
-        do {
-            return try await history.recordSearchTerm(query).terms
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.writeFailed
+        return try await bridged(fallback: .writeFailed) {
+            try await history.recordSearchTerm(query).terms
         }
     }
 
     func removeSearchTerm(_ term: String) async throws -> [String] {
-        do {
-            return try await history.removeSearchTerm(term).terms
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.writeFailed
+        try await bridged(fallback: .writeFailed) {
+            try await history.removeSearchTerm(term).terms
         }
     }
 
     func removeAllSearchTerms() async throws {
-        do {
+        try await bridged(fallback: .writeFailed, mapsCorruption: false) {
             try await history.removeAllSearchTerms()
-        } catch let error as CancellationError {
-            throw error
-        } catch {
-            throw ClipBridgeError.writeFailed
         }
     }
 
@@ -117,42 +79,34 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         memo: String?,
         isPinned: Bool
     ) async throws -> ClipBridgeRecord? {
-        do {
-            let change = ClipUpdate.details(
-                name: name,
-                memo: memo,
-                isPinned: isPinned,
-                requestedAt: Date()
-            )
-            let clip = try await storage.update(id: id, change: change)
-            return record(from: clip)
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.notFound {
-            return nil
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.writeFailed
+        try await bridged(fallback: .writeFailed) {
+            do {
+                let change = ClipUpdate.details(
+                    name: name,
+                    memo: memo,
+                    isPinned: isPinned,
+                    requestedAt: Date()
+                )
+                let clip = try await storage.update(id: id, change: change)
+                return record(from: clip)
+            } catch ClipStorageError.notFound {
+                return nil
+            }
         }
     }
 
     func deleteClip(id: UUID) async throws {
-        do {
-            _ = try await images.delete(id: id)
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.notFound {
-            return
-        } catch ClipStorageError.corruptedData {
-            throw ClipBridgeError.corruptedData
-        } catch {
-            throw ClipBridgeError.writeFailed
+        try await bridged(fallback: .writeFailed) {
+            do {
+                _ = try await images.delete(id: id)
+            } catch ClipStorageError.notFound {
+                return
+            }
         }
     }
 
     func saveCurrentClipboard() async throws -> ClipBridgeClipboardSaveResult {
-        do {
+        try await bridged(fallback: .saveFailed, mapsCorruption: false) {
             switch try await clipboard.saveCurrentClipboard() {
             case .saved: return .saved
             case .savedWithPendingCleanup:
@@ -163,38 +117,28 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             case .accessFailed: return .accessFailed
             case .invalidImage: return .invalidImage
             }
-        } catch let error as CancellationError {
-            throw error
-        } catch {
-            throw ClipBridgeError.saveFailed
         }
     }
 
     func copyClip(id: UUID) async throws -> ClipBridgeCopyResult? {
-        do {
-            switch try await clipboard.copy(id: id) {
-            case .copied: return .copied
-            case .copiedWithoutLastUsedAt: return .copiedWithoutLastUsedAt
-            case .writeNotObserved: return .writeNotObserved
+        try await bridged(fallback: .copyFailed, mapsCorruption: false) {
+            do {
+                switch try await clipboard.copy(id: id) {
+                case .copied: return .copied
+                case .copiedWithoutLastUsedAt: return .copiedWithoutLastUsedAt
+                case .writeNotObserved: return .writeNotObserved
+                }
+            } catch ClipStorageError.notFound {
+                return nil
             }
-        } catch let error as CancellationError {
-            throw error
-        } catch ClipStorageError.notFound {
-            return nil
-        } catch {
-            throw ClipBridgeError.copyFailed
         }
     }
 
     func getClipImagePreview(id: UUID) async throws -> String? {
-        do {
+        try await bridged(fallback: .imageUnavailable, mapsCorruption: false) {
             guard let clip = try await storage.fetch(id: id),
                   case .image(let image) = clip.content else { return nil }
             return try await images.makePreviewFileURL(image).absoluteString
-        } catch let error as CancellationError {
-            throw error
-        } catch {
-            throw ClipBridgeError.imageUnavailable
         }
     }
 
@@ -202,30 +146,41 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         id: UUID,
         maximumPixelDimension: Int
     ) async throws -> String? {
-        do {
+        try await bridged(fallback: .imageUnavailable, mapsCorruption: false) {
             guard let clip = try await storage.fetch(id: id),
                   case .image(let image) = clip.content else { return nil }
             return try await images.makeThumbnailFileURL(image, maximumPixelDimension: maximumPixelDimension).absoluteString
-        } catch let error as CancellationError {
-            throw error
-        } catch {
-            throw ClipBridgeError.imageUnavailable
         }
     }
 
     func saveClipImageToPhotos(id: UUID) async throws -> ClipBridgePhotoSaveResult? {
-        do {
-            switch try await photos.save(id: id) {
-            case .saved: return .saved
-            case .denied: return .denied
-            case .restricted: return .restricted
+        try await bridged(fallback: .photoSaveFailed, mapsCorruption: false) {
+            do {
+                switch try await photos.save(id: id) {
+                case .saved: return .saved
+                case .denied: return .denied
+                case .restricted: return .restricted
+                }
+            } catch ClipStorageError.notFound {
+                return nil
             }
+        }
+    }
+
+    /// 저장소 손상과 호출별 대체 오류를 브릿지 오류로 변환
+    private func bridged<Value>(
+        fallback: ClipBridgeError,
+        mapsCorruption: Bool = true,
+        operation: () async throws -> Value
+    ) async throws -> Value {
+        do {
+            return try await operation()
         } catch let error as CancellationError {
             throw error
-        } catch ClipStorageError.notFound {
-            return nil
+        } catch ClipStorageError.corruptedData where mapsCorruption {
+            throw ClipBridgeError.corruptedData
         } catch {
-            throw ClipBridgeError.photoSaveFailed
+            throw fallback
         }
     }
 

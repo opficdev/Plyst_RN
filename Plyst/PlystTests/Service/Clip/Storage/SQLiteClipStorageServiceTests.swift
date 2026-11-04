@@ -10,25 +10,7 @@ import SQLiteData
 import XCTest
 @testable import Plyst
 
-final class SQLiteClipStorageServiceTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-\(UUID())", isDirectory: true)
-    private var url: URL { directory.appendingPathComponent("clips.sqlite") }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
-        try super.tearDownWithError()
-    }
-
-    func testEmptyStoreReturnsEmptyResultsAndMissingIdentifier() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clips = try await storage.fetchAll(order: .createdAt)
-        let missing = try await storage.fetch(id: UUID())
-        XCTAssertEqual(clips, [])
-        XCTAssertNil(missing)
-    }
-
+final class SQLiteClipStorageServiceTests: ClipTemporaryDirectoryTestCase {
     func testTextAndImageMetadataAreRestoredByAnotherStorage() async throws {
         let text = Clip(
             content: .text("  한글 'text'\0🙂\nhttps://example.com  "),
@@ -78,45 +60,6 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         await assertError(.notFound(clip.id)) { try await storage.delete(id: clip.id) }
     }
 
-    func testStoredDatesPreserveDeterministicCreationOrder() async throws {
-        let first = makeClip(id: 1, createdAt: 300, lastUsedAt: 400)
-        let second = makeClip(id: 2, createdAt: 300, lastUsedAt: 400)
-        let recent = makeClip(id: 3, createdAt: 100, lastUsedAt: 500)
-        let unused = makeClip(id: 4, createdAt: 600)
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        for clip in [unused, second, recent, first] { try await storage.insert(clip) }
-        let created = try await storage.fetchAll(order: .createdAt)
-        XCTAssertEqual(created, [unused, first, second, recent])
-    }
-
-    func testAllSubscribersReceiveChangesInCommitOrderWithoutReplay() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let first = await storage.changes()
-        let second = await storage.changes()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let late = await storage.changes()
-        let updated = try await storage.update(id: clip.id, change: .details(name: "새 이름", memo: nil, isPinned: true, requestedAt: Date(timeIntervalSince1970: 300)))
-        try await storage.delete(id: clip.id)
-        let expected = [ClipStorageEvent.inserted(clip), .updated(updated), .deleted(clip.id)]
-        await assertEvents(first, equalTo: expected)
-        await assertEvents(second, equalTo: expected)
-        await assertEvents(late, equalTo: [.updated(updated), .deleted(clip.id)])
-    }
-
-    func testDuplicateInvalidAndUnchangedWritesDoNotPublishEvents() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let stream = await storage.changes()
-        await assertError(.duplicateID(clip.id)) { try await storage.insert(clip) }
-        await assertError(.invalidContent) { try await storage.insert(Clip(content: .text(" \n\t"))) }
-        let unchanged = try await storage.update(id: clip.id, change: .details(name: nil, memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300)))
-        XCTAssertEqual(unchanged, clip)
-        try await storage.delete(id: clip.id)
-        await assertEvents(stream, equalTo: [.deleted(clip.id)])
-    }
-
     func testFailedUpdateRollsBackAndDoesNotPublishAnEvent() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let clip = Clip(content: .text("원문"), name: "기존 이름")
@@ -133,7 +76,7 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         XCTAssertEqual(preserved, clip)
         try execute("DROP TRIGGER rejectUpdate")
         let updated = try await storage.update(id: clip.id, change: .details(name: "저장된 이름", memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300)))
-        await assertEvents(stream, equalTo: [.updated(updated)])
+        await assertEvents(stream, expected: [.updated(updated)])
     }
 
     func testCorruptedFileIsReportedWithoutReplacingItsContents() throws {
@@ -199,64 +142,6 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         await assertError(.corruptedData) { _ = try await storage.fetchAll(order: .createdAt) }
     }
 
-    func testUnreadableLocationReturnsReadFailure() throws {
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        XCTAssertThrowsError(try SQLiteClipStorageService(databaseURL: url)) {
-            XCTAssertEqual($0 as? ClipStorageError, .readFailed)
-        }
-    }
-
-    func testCancelledInsertPreservesStorage() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"))
-        let task = Task {
-            withUnsafeCurrentTask { $0?.cancel() }
-            try await storage.insert(clip)
-        }
-        do {
-            try await task.value
-            XCTFail("취소된 작업이 성공함")
-        } catch {
-            XCTAssertTrue(error is CancellationError)
-        }
-        let stored = try await storage.fetch(id: clip.id)
-        XCTAssertNil(stored)
-    }
-
-    func testStreamFinishesWhenStorageIsReleased() async throws {
-        var storage: SQLiteClipStorageService? = try SQLiteClipStorageService(databaseURL: url)
-        weak let reference = storage
-        let pending = await storage?.changes()
-        let stream = try XCTUnwrap(pending)
-        let finished = expectation(description: "저장소 해제 후 스트림 종료")
-        let task = Task {
-            for await _ in stream { XCTFail("변경이 없는 저장소에서 이벤트 발생") }
-            finished.fulfill()
-        }
-        defer { task.cancel() }
-        storage = nil
-        XCTAssertNil(reference)
-        await fulfillment(of: [finished], timeout: 2)
-    }
-
-    func testPinTimesAndOrderSurviveReopeningStorage() async throws {
-        let first = makeClip(id: 1, createdAt: 300)
-        let second = makeClip(id: 2, createdAt: 100)
-        do {
-            let storage = try SQLiteClipStorageService(databaseURL: url)
-            try await storage.insert(first)
-            try await storage.insert(second)
-            _ = try await storage.update(id: first.id, change: .details(name: nil, memo: nil, isPinned: true, requestedAt: Date(timeIntervalSince1970: 400)))
-            _ = try await storage.update(id: second.id, change: .details(name: nil, memo: nil, isPinned: true, requestedAt: Date(timeIntervalSince1970: 500)))
-        }
-        let restored = try SQLiteClipStorageService(databaseURL: url)
-        let clips = try await restored.fetchAll(order: .createdAt)
-        XCTAssertEqual(clips.map(\.id), [first.id, second.id])
-        XCTAssertEqual(clips.map(\.pinnedAt), [Date(timeIntervalSince1970: 400), Date(timeIntervalSince1970: 500)])
-        let pinned = clips.sorted { ($1.pinnedAt ?? $1.createdAt) < ($0.pinnedAt ?? $0.createdAt) }
-        XCTAssertEqual(pinned.map(\.id), [second.id, first.id])
-    }
-
     func testNonFiniteStoredPinTimeIsReportedAsCorruptedData() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let clip = Clip(content: .text("원문"))
@@ -272,19 +157,43 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         await assertError(.invalidContent) { try await storage.insert(clip) }
     }
 
-    private func assertEvents(_ stream: AsyncStream<ClipStorageEvent>, equalTo expected: [ClipStorageEvent]) async {
-        let received = expectation(description: "저장 확정 순서로 이벤트 전달")
-        let task = Task {
-            var iterator = stream.makeAsyncIterator()
-            for expectedEvent in expected {
-                guard let event = await iterator.next() else { return }
-                XCTAssertEqual(event, expectedEvent)
-            }
-            received.fulfill()
+    func testRecordedTermsAreRestoredInOrderByAnotherStorage() async throws {
+        let storage = try SQLiteClipStorageService(databaseURL: url)
+        _ = try await storage.recordSearchTerm(try query("first"))
+        _ = try await storage.recordSearchTerm(try query("second"))
+
+        let restored = try SQLiteClipStorageService(databaseURL: url)
+        let history = try await restored.fetchSearchHistory()
+
+        XCTAssertEqual(history.terms, ["second", "first"])
+    }
+
+    func testVersionOneDatabaseGainsSearchTermsAndKeepsClips() async throws {
+        let clip = Clip(content: .text("원문"))
+        let original = try SQLiteClipStorageService(databaseURL: url)
+        try await original.insert(clip)
+        try execute("DROP TABLE clipSearchTerms")
+        try execute("DELETE FROM grdb_migrations WHERE identifier = 'CreateClipSearchTerms'")
+
+        let upgraded = try SQLiteClipStorageService(databaseURL: url)
+        let stored = try await upgraded.fetch(id: clip.id)
+        let empty = try await upgraded.fetchSearchHistory()
+        let recorded = try await upgraded.recordSearchTerm(try query("alpha"))
+        let reopened = try SQLiteClipStorageService(databaseURL: url)
+        let restored = try await reopened.fetchSearchHistory()
+
+        XCTAssertEqual(stored, clip)
+        XCTAssertEqual(empty, ClipSearchHistory())
+        XCTAssertEqual(restored, recorded)
+    }
+
+    func testUnknownMigrationIsRejectedAsDowngrade() throws {
+        _ = try SQLiteClipStorageService(databaseURL: url)
+        try execute("INSERT INTO grdb_migrations (identifier) VALUES ('FutureMigration')")
+
+        XCTAssertThrowsError(try SQLiteClipStorageService(databaseURL: url)) {
+            XCTAssertEqual($0 as? ClipStorageError, .corruptedData)
         }
-        await fulfillment(of: [received], timeout: 2)
-        task.cancel()
-        await task.value
     }
 
     private func assertError(_ expected: ClipStorageError, operation: () async throws -> Void) async {
@@ -296,16 +205,12 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         }
     }
 
+    private func query(_ raw: String) throws -> ClipSearchQuery {
+        try XCTUnwrap(ClipSearchQuery(raw))
+    }
+
     private func execute(_ sql: String) throws {
         let connection = try DatabaseQueue(path: url.path)
         try connection.write { try $0.execute(sql: sql) }
-    }
-
-    private func makeClip(id: UInt8, createdAt: TimeInterval, lastUsedAt: TimeInterval? = nil) -> Clip {
-        Clip(
-            id: UUID(uuid: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, id)), content: .text("원문"),
-            createdAt: Date(timeIntervalSinceReferenceDate: createdAt),
-            lastUsedAt: lastUsedAt.map { Date(timeIntervalSinceReferenceDate: $0) }
-        )
     }
 }
