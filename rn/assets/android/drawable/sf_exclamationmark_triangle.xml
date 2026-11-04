@@ -1,0 +1,13 @@
+<!-- Material Symbols Outlined의 warning 아이콘 wght400 (Apache License 2.0) -->
+<!-- viewport는 SF Symbols 이미지 영역이고 글리프는 SF 글리프 경계 안 가운데에 맞춤 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="25dp"
+    android:height="21.43dp"
+    android:viewportWidth="1063.9"
+    android:viewportHeight="911.92">
+  <group android:translateX="51.19" android:translateY="955.96">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="m40-120 440-760 440 760H40Zm138-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm-40-120h80v-200h-80v200Zm40-100Z"/>
+  </group>
+</vector>
