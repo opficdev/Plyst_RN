@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, type TextProps } from 'react-native';
+import { PixelRatio, Text, type TextProps } from 'react-native';
 import type { ReactNode } from 'react';
 import { colors } from '../../Theme';
 import type { ClipTextRange } from './CardProps';
@@ -12,6 +12,11 @@ type ClipCardLabelProps = Omit<TextProps, 'children'> & {
   highlightWeight?: '600' | '700';
 };
 type LabelState = { text: string; height: number };
+
+// minHeight가 물리 픽셀로 올림되어 그려지는 높이
+function pixelCeil(height: number) {
+  return Math.ceil(height * PixelRatio.get() - 0.01) / PixelRatio.get();
+}
 type LabelTruncationState = { text: string; cut: number | null };
 
 export function ClipCardLabel({ children, highlights, highlightWeight, style, onLayout, onTextLayout, numberOfLines, ...props }: ClipCardLabelProps) {
@@ -66,8 +71,10 @@ export function ClipCardLabel({ children, highlights, highlightWeight, style, on
       }
       style={[style, { lineHeight: 17.3333 }, state?.text === key && { minHeight: state.height }]}
       onLayout={(event) => {
-        const height = Math.ceil(event.nativeEvent.layout.height - 0.01);
-        setState((previous) => (previous?.text === key && previous.height === height ? previous : { text: key, height }));
+        const layoutHeight = event.nativeEvent.layout.height;
+        const height = Math.ceil(layoutHeight - 0.01);
+        // Android는 dp가 물리 픽셀로 올림되어 minHeight보다 조금 높게 측정되므로 그 차이로는 높이를 다시 올리지 않음
+        setState((previous) => (previous?.text === key && (previous.height === height || layoutHeight <= pixelCeil(previous.height) + 0.01) ? previous : { text: key, height }));
         onLayout?.(event);
       }}
     >
