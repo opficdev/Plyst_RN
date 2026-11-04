@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenStackItem } from 'react-native-screens';
 import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
@@ -35,7 +35,16 @@ export function ClipDetailSheet({ title, usesSystemBar, isSaveEnabled, isClosed,
     hideShadow: true,
   };
   return (
-    <ScreenStackItem screenId="clipDetail" stackPresentation="pageSheet" headerConfig={headerConfig} onDismissed={onClose} style={StyleSheet.absoluteFill}>
+    <ScreenStackItem
+      screenId="clipDetail"
+      {...(Platform.OS === 'android'
+        ? // Android에는 pageSheet가 없어 iOS 시트처럼 상태 표시줄 아래부터 화면 끝까지 덮는 formSheet로 띄움
+          { stackPresentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 38 }
+        : { stackPresentation: 'pageSheet' })}
+      headerConfig={headerConfig}
+      onDismissed={onClose}
+      style={StyleSheet.absoluteFill}
+    >
       <SafeAreaProvider style={styles.canvas}>
         <SheetBody title={title} usesSystemBar={usesSystemBar} isSaveEnabled={isSaveEnabled} onCloseButtonPress={onClose} onSaveButtonPress={onSaveButtonPress}>
           {children}
