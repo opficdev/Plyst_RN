@@ -78,6 +78,16 @@ jobs:
           install: true
           cache: true
 
+      - name: Lint Rust core
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-rust-lint
+
+      - name: Test Rust core
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-rust-test
+
       - name: Cache npm
         uses: actions/cache@v4
         with:

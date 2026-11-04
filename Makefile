@@ -13,7 +13,7 @@ DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 MATCH_FORCE ?= false
 
-.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
+.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -77,12 +77,20 @@ rn-test:
 
 rn-verify: rn-typecheck rn-lint rn-test
 
+rn-rust-test:
+	cd rn/modules/plyst-search/rust && mise exec -- cargo test --locked
+
+rn-rust-lint:
+	cd rn/modules/plyst-search/rust && mise exec -- cargo fmt --check
+	cd rn/modules/plyst-search/rust && mise exec -- cargo clippy --locked --all-targets -- -D warnings
+	cd rn/modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
+
 rn-start:
 	cd rn && npx expo start
 
 deploy-setup:
 	mise trust
-	mise install node
+	mise install node rust
 	bundle config set --local path vendor/bundle
 	bundle install
 	test -f fastlane/secrets.json || cp fastlane/secrets.example.json fastlane/secrets.json
