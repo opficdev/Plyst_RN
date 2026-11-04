@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../Theme';
+import { colors, typography } from '../../Theme';
 import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
+import { SymbolImage } from '../SymbolImage';
 
 type ClipPinnedCardProps = ClipCardProps &
   (
@@ -15,24 +15,15 @@ type ClipPinnedCardProps = ClipCardProps &
       }
   );
 export function ClipPinnedCard(props: ClipPinnedCardProps) {
-  const name =
-    props.name ?? (props.kind === 'text' ? props.body : '이름 없는 이미지');
+  const name = props.name ?? (props.kind === 'text' ? props.body : '이름 없는 이미지');
   return (
     <View style={styles.card}>
       {props.kind === 'image' ? (
-        <ClipThumbnail
-          uri={props.thumbnailUri}
-          isFailed={props.isThumbnailFailed}
-          isPinned
-        />
+        <ClipThumbnail uri={props.thumbnailUri} isFailed={props.isThumbnailFailed} isPinned />
       ) : (
         <View style={styles.visualBox}>
           {props.isWebLink ? (
-            <Image
-              source="sf:globe"
-              contentFit="contain"
-              style={styles.linkIcon}
-            />
+            <SymbolImage name="globe" contentFit="contain" style={styles.linkIcon} />
           ) : (
             <Text allowFontScaling={false} style={styles.quote}>
               “
@@ -44,20 +35,11 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
         <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        <Text
-          allowFontScaling={false}
-          style={styles.metadata}
-          numberOfLines={1}
-        >
+        <Text allowFontScaling={false} style={styles.metadata} numberOfLines={1}>
           {props.metadata}
         </Text>
       </View>
-      {props.onCopyButtonPress && (
-        <CopyButton
-          onCopyButtonPress={props.onCopyButtonPress}
-          onCopyButtonLongPress={props.onCopyButtonLongPress}
-        />
-      )}
+      {props.onCopyButtonPress && <CopyButton onCopyButtonPress={props.onCopyButtonPress} onCopyButtonLongPress={props.onCopyButtonLongPress} />}
     </View>
   );
 }
@@ -92,7 +74,7 @@ const styles = StyleSheet.create({
     color: colors.MarkBackground,
   },
   quote: {
-    fontFamily: 'Georgia-Bold',
+    ...typography.quoteMark,
     fontSize: 20,
     color: colors.MarkBackground,
     textAlign: 'center',
@@ -105,7 +87,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   metadata: {
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 9.5,
     fontWeight: '500',
     color: colors.SecondaryText,

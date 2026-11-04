@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { colors, typography } from '../../Theme';
+import { hangulWordBreak } from '../hangulWordBreak';
 import type { ActionSheetItem } from './Item';
 
 type ActionSheetButtonProps = {
@@ -7,21 +8,11 @@ type ActionSheetButtonProps = {
   role: ActionSheetItem['role'];
   onPress: () => void;
 };
-export function ActionSheetButton({
-  title,
-  role,
-  onPress,
-}: ActionSheetButtonProps) {
+export function ActionSheetButton({ title, role, onPress }: ActionSheetButtonProps) {
   return (
-    <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-      onPress={onPress}
-    >
-      <Text
-        style={[styles.title, role === 'destructive' && styles.destructive]}
-        lineBreakStrategyIOS="standard"
-      >
-        {title}
+    <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]} onPress={onPress}>
+      <Text style={[styles.title, role === 'destructive' && styles.destructive]} lineBreakStrategyIOS="standard">
+        {hangulWordBreak(title)}
       </Text>
     </Pressable>
   );

@@ -6,14 +6,6 @@ export function formatClipCardTime(date: number, now: number): string {
   const today = new Date(now);
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  const sameDay = (day: Date) =>
-    value.getFullYear() === day.getFullYear() &&
-    value.getMonth() === day.getMonth() &&
-    value.getDate() === day.getDate();
-  return new Intl.DateTimeFormat(
-    undefined,
-    sameDay(today) || sameDay(yesterday)
-      ? { timeStyle: 'short' }
-      : { dateStyle: 'medium', timeStyle: 'short' },
-  ).format(value);
+  const sameDay = (day: Date) => value.getFullYear() === day.getFullYear() && value.getMonth() === day.getMonth() && value.getDate() === day.getDate();
+  return new Intl.DateTimeFormat(undefined, sameDay(today) || sameDay(yesterday) ? { timeStyle: 'short' } : { dateStyle: 'medium', timeStyle: 'short' }).format(value);
 }

@@ -1,49 +1,25 @@
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../../Theme';
+import { SymbolImage } from '../SymbolImage';
 
 type ClipDetailActionBarProps = {
   isBusy?: boolean;
   onDeleteButtonPress: () => void;
   onCopyButtonPress: () => void;
 };
-export function ClipDetailActionBar({
-  isBusy = false,
-  onDeleteButtonPress,
-  onCopyButtonPress,
-}: ClipDetailActionBarProps) {
+export function ClipDetailActionBar({ isBusy = false, onDeleteButtonPress, onCopyButtonPress }: ClipDetailActionBarProps) {
   return (
     <View style={styles.container}>
       <View style={styles.line} />
       <View style={[styles.stack, isBusy && styles.busy]}>
-        <Pressable
-          style={styles.deleteButton}
-          disabled={isBusy}
-          onPress={onDeleteButtonPress}
-        >
-          <Text
-            allowFontScaling={false}
-            style={styles.deleteTitle}
-            numberOfLines={1}
-          >
+        <Pressable style={styles.deleteButton} disabled={isBusy} onPress={onDeleteButtonPress}>
+          <Text allowFontScaling={false} style={styles.deleteTitle} numberOfLines={1}>
             삭제
           </Text>
         </Pressable>
-        <Pressable
-          style={styles.copyButton}
-          disabled={isBusy}
-          onPress={onCopyButtonPress}
-        >
-          <Image
-            source="sf:doc.on.doc"
-            contentFit="contain"
-            style={styles.copyIcon}
-          />
-          <Text
-            allowFontScaling={false}
-            style={styles.copyTitle}
-            numberOfLines={1}
-          >
+        <Pressable style={styles.copyButton} disabled={isBusy} onPress={onCopyButtonPress}>
+          <SymbolImage name="doc.on.doc" contentFit="contain" style={styles.copyIcon} />
+          <Text allowFontScaling={false} style={styles.copyTitle} numberOfLines={1}>
             다시 복사
           </Text>
         </Pressable>

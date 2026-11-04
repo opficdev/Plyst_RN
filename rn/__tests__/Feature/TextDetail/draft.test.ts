@@ -12,11 +12,7 @@ import {
   textDetailActions as actions,
   textDetailSlice,
 } from '../../../src/Feature/TextDetail/draft';
-import type {
-  Draft,
-  TextDetailLoaded,
-  TextDetailStoreState,
-} from '../../../src/Feature/TextDetail/draft';
+import type { Draft, TextDetailLoaded, TextDetailStoreState } from '../../../src/Feature/TextDetail/draft';
 
 const clip: ClipRecord = {
   id: 'clip-id',
@@ -31,8 +27,7 @@ const clip: ClipRecord = {
   createdAt: 1234500,
   lastUsedAt: null,
 };
-const whitespace =
-  '\t\n\v\f\r\u0020\u0085\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u2028\u2029\u202F\u205F\u3000';
+const whitespace = '\t\n\v\f\r\u0020\u0085\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u2028\u2029\u202F\u205F\u3000';
 
 test('원본의 null을 빈 문자열로 바꾸고 고정 여부를 유지한다', () => {
   expect(draftFromClip(clip)).toEqual({
@@ -40,9 +35,7 @@ test('원본의 null을 빈 문자열로 바꾸고 고정 여부를 유지한다
     memo: '',
     isPinned: false,
   });
-  expect(
-    draftFromClip({ ...clip, name: '이름', memo: '메모', pinnedAt: 1000 }),
-  ).toEqual({ name: '이름', memo: '메모', isPinned: true });
+  expect(draftFromClip({ ...clip, name: '이름', memo: '메모', pinnedAt: 1000 })).toEqual({ name: '이름', memo: '메모', isPinned: true });
 });
 
 test.each<[Partial<Draft>, boolean]>([
@@ -68,18 +61,13 @@ test.each([
   ['e\u0301', 'é'],
 ])('이름과 메모의 정준 동등성을 비교한다: %s', (original, equivalent) => {
   const record = { ...clip, name: original, memo: original };
-  expect(
-    differs({ name: equivalent, memo: equivalent, isPinned: false }, record),
-  ).toBe(false);
+  expect(differs({ name: equivalent, memo: equivalent, isPinned: false }, record)).toBe(false);
 });
 
-test.each(['name', 'memo'] as const)(
-  '원본 %s의 빈 문자열과 null을 구분한다',
-  (field) => {
-    const original = { ...clip, [field]: '' };
-    expect(differs(draftFromClip(original), original)).toBe(true);
-  },
-);
+test.each(['name', 'memo'] as const)('원본 %s의 빈 문자열과 null을 구분한다', (field) => {
+  const original = { ...clip, [field]: '' };
+  expect(differs(draftFromClip(original), original)).toBe(true);
+});
 
 type Action = Parameters<typeof textDetailSlice.reducer>[1];
 
@@ -117,19 +105,14 @@ test('변경이 있을 때만 저장할 수 있다', () => {
   const changed = { ...state, draft: { ...state.draft, name: '이름' } };
   expect(hasChanges(changed)).toBe(true);
   expect(canSave(changed)).toBe(true);
-  expect(canSave({ ...changed, isSaved: true, isDeleteSheetOpen: true })).toBe(
-    true,
-  );
+  expect(canSave({ ...changed, isSaved: true, isDeleteSheetOpen: true })).toBe(true);
 });
 
-test.each(['isSaving', 'isDeleting', 'isRemoved'] as const)(
-  '%s이면 변경이 있어도 저장할 수 없다',
-  (flag) => {
-    const state = loadedState(clip);
-    state.draft.name = '이름';
-    expect(canSave({ ...state, [flag]: true })).toBe(false);
-  },
-);
+test.each(['isSaving', 'isDeleting', 'isRemoved'] as const)('%s이면 변경이 있어도 저장할 수 없다', (flag) => {
+  const state = loadedState(clip);
+  state.draft.name = '이름';
+  expect(canSave({ ...state, [flag]: true })).toBe(false);
+});
 
 test('저장 버튼은 저장 뒤에도 켜져 있지만 저장 시작은 막는다', () => {
   const state = {
@@ -145,15 +128,12 @@ test('저장 버튼은 저장 뒤에도 켜져 있지만 저장 시작은 막는
   expect(canStartSave(closed)).toBe(false);
 });
 
-test.each(['isDeleting', 'isRemoved'] as const)(
-  '%s이면 삭제를 시작할 수 없다',
-  (flag) => {
-    const state = loadedState(clip);
-    expect(canStartDelete(state)).toBe(true);
-    expect(canStartDelete({ ...state, [flag]: true })).toBe(false);
-    expect(canStartDelete(loading)).toBe(false);
-  },
-);
+test.each(['isDeleting', 'isRemoved'] as const)('%s이면 삭제를 시작할 수 없다', (flag) => {
+  const state = loadedState(clip);
+  expect(canStartDelete(state)).toBe(true);
+  expect(canStartDelete({ ...state, [flag]: true })).toBe(false);
+  expect(canStartDelete(loading)).toBe(false);
+});
 
 test('닫힘은 조회 실패나 삭제 또는 저장 완료로 판정한다', () => {
   const state = loadedState(clip);
@@ -190,13 +170,7 @@ test('조회 전 clipLoaded는 조회된 상태가 되고 removed와 loadFailed�
 });
 
 test('닫힌 상태는 어떤 action에도 바뀌지 않는다', () => {
-  for (const action of [
-    actions.clipLoaded(clip),
-    actions.removed(),
-    actions.loadFailed(),
-    actions.nameChanged('이름'),
-    actions.save(),
-  ]) {
+  for (const action of [actions.clipLoaded(clip), actions.removed(), actions.loadFailed(), actions.nameChanged('이름'), actions.save()]) {
     expect(reduce(closed, action)).toEqual(closed);
   }
 });
@@ -215,12 +189,7 @@ test('clipLoaded는 편집하지 않은 초안을 새 원본에 맞춘다', () =
   });
 });
 
-test.each<Partial<Draft>>([
-  { name: '편집한 이름' },
-  { memo: '편집한 메모' },
-  { isPinned: true },
-  { name: ' ' },
-])('clipLoaded는 편집 중인 초안 %j을 유지한다', (change) => {
+test.each<Partial<Draft>>([{ name: '편집한 이름' }, { memo: '편집한 메모' }, { isPinned: true }, { name: ' ' }])('clipLoaded는 편집 중인 초안 %j을 유지한다', (change) => {
   const state = loadedState(clip);
   state.draft = { ...state.draft, ...change };
   expect(reduceLoaded(state, actions.clipLoaded(updated))).toEqual({
@@ -229,21 +198,16 @@ test.each<Partial<Draft>>([
   });
 });
 
-test.each(['isRemoved', 'isSaved'] as const)(
-  'clipLoaded는 %s인 상태를 바꾸지 않는다',
-  (flag) => {
-    const state = { ...loadedState(clip), [flag]: true };
-    expect(reduceLoaded(state, actions.clipLoaded(updated))).toEqual(state);
-  },
-);
+test.each(['isRemoved', 'isSaved'] as const)('clipLoaded는 %s인 상태를 바꾸지 않는다', (flag) => {
+  const state = { ...loadedState(clip), [flag]: true };
+  expect(reduceLoaded(state, actions.clipLoaded(updated))).toEqual(state);
+});
 
 test('clipLoaded의 초안 비교는 정준 동등성을 적용하지 않는다', () => {
   const state = loadedState({ ...clip, name: 'é' });
   state.draft.name = 'e\u0301';
   expect(hasChanges(state)).toBe(false);
-  expect(reduceLoaded(state, actions.clipLoaded(updated)).draft).toEqual(
-    state.draft,
-  );
+  expect(reduceLoaded(state, actions.clipLoaded(updated)).draft).toEqual(state.draft);
 });
 
 test('saved는 저장된 값과 같은 초안을 정리한다', () => {
@@ -260,11 +224,7 @@ test('saved는 저장된 값과 같은 초안을 정리한다', () => {
   });
 });
 
-test.each<Partial<Draft>>([
-  { name: '추가 이름' },
-  { memo: '추가 메모' },
-  { isPinned: false },
-])('saved는 저장 중 추가 편집 %j을 보존한다', (change) => {
+test.each<Partial<Draft>>([{ name: '추가 이름' }, { memo: '추가 메모' }, { isPinned: false }])('saved는 저장 중 추가 편집 %j을 보존한다', (change) => {
   const state = loadedState(clip);
   state.isSaving = true;
   state.draft = { ...draftFromClip(updated), ...change };
@@ -277,18 +237,9 @@ test.each<Partial<Draft>>([
 });
 
 test.each<[Action, Partial<TextDetailLoaded>]>([
-  [
-    actions.nameChanged('이름'),
-    { draft: { name: '이름', memo: '', isPinned: false } },
-  ],
-  [
-    actions.memoChanged('메모'),
-    { draft: { name: '', memo: '메모', isPinned: false } },
-  ],
-  [
-    actions.pinnedChanged(true),
-    { draft: { name: '', memo: '', isPinned: true } },
-  ],
+  [actions.nameChanged('이름'), { draft: { name: '이름', memo: '', isPinned: false } }],
+  [actions.memoChanged('메모'), { draft: { name: '', memo: '메모', isPinned: false } }],
+  [actions.pinnedChanged(true), { draft: { name: '', memo: '', isPinned: true } }],
   [actions.deleteSheetShown(), { isDeleteSheetOpen: true }],
 ])('%j는 해당 상태만 변경한다', (action, change) => {
   const state = loadedState(clip);

@@ -24,9 +24,7 @@ test('브리지 결과가 null이면 missing이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  getClipThumbnailMock.mockRejectedValue(
-    Object.assign(new Error('요청 실패'), { code: 'E_IMAGE_UNAVAILABLE' }),
-  );
+  getClipThumbnailMock.mockRejectedValue(Object.assign(new Error('요청 실패'), { code: 'E_IMAGE_UNAVAILABLE' }));
   await expect(loadClipThumbnail('clip-id', 200)).resolves.toEqual({
     status: 'failed',
   });

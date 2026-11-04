@@ -30,11 +30,7 @@ test('고정 시각이 같으면 생성 시각 내림차순과 식별자 오름�
   const first = { ...clip, id: 'A', createdAt: 20 };
   const second = { ...first, id: 'B' };
   const older = { ...clip, id: '0' };
-  expect(sortPinnedClips([older, second, first])).toEqual([
-    first,
-    second,
-    older,
-  ]);
+  expect(sortPinnedClips([older, second, first])).toEqual([first, second, older]);
 });
 
 test('입력 배열을 변경하지 않고 새 배열을 반환한다', () => {

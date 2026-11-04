@@ -1,14 +1,7 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { clipFilters } from '../../../src/Feature/ClipGrid/filter';
-import {
-  homeFilterStrings,
-  makeHomeContent,
-  homeEmptyState,
-} from '../../../src/Feature/Home/content';
-import {
-  clipSectionKinds,
-  clipSectionTitles,
-} from '../../../src/Feature/ClipGrid/section';
+import { homeFilterStrings, makeHomeContent, homeEmptyState } from '../../../src/Feature/Home/content';
+import { clipSectionKinds, clipSectionTitles } from '../../../src/Feature/ClipGrid/section';
 import type { ClipFilter } from '../../../src/Feature/ClipGrid/filter';
 import type { ClipLoadPhase } from '../../../src/Feature/ClipGrid/loadPhase';
 import type { HomeEmptyState } from '../../../src/Feature/Home/content';
@@ -46,8 +39,7 @@ test('필터 순서와 모든 고정 문구는 원본과 같다', () => {
     {
       title: '전체',
       emptyTitle: '아직 저장된 내용이 없습니다',
-      emptyMessage:
-        '텍스트나 이미지를 복사한 뒤 현재 클립보드 저장을 눌러보세요',
+      emptyMessage: '텍스트나 이미지를 복사한 뒤 현재 클립보드 저장을 눌러보세요',
     },
     {
       title: '텍스트',
@@ -75,15 +67,7 @@ test('필터 순서와 모든 고정 문구는 원본과 같다', () => {
 });
 
 test('미래와 5분 경계 및 현지 날짜 경계를 생성 시각으로 분류한다', () => {
-  const times = [
-    now + 1000,
-    now - 299000,
-    now - 300000,
-    new Date(2026, 9, 10).getTime(),
-    new Date(2026, 9, 10).getTime() - 1,
-    new Date(2026, 9, 9).getTime(),
-    new Date(2026, 9, 9).getTime() - 1,
-  ];
+  const times = [now + 1000, now - 299000, now - 300000, new Date(2026, 9, 10).getTime(), new Date(2026, 9, 10).getTime() - 1, new Date(2026, 9, 9).getTime(), new Date(2026, 9, 9).getTime() - 1];
   const clips = times.map((createdAt, index) => ({
     ...clip,
     id: `${index}`,
@@ -106,9 +90,7 @@ test('자정을 지나도 5분 미만이면 방금에 속한다', () => {
   const midnight = new Date(2026, 9, 10).getTime();
   const recent = { ...clip, createdAt: midnight - 299000 };
   const yesterday = { ...clip, id: 'yesterday', createdAt: midnight - 300000 };
-  expect(
-    makeHomeContent([recent, yesterday], 'all', midnight).sections,
-  ).toEqual([
+  expect(makeHomeContent([recent, yesterday], 'all', midnight).sections).toEqual([
     { kind: 'recent', clips: [recent] },
     { kind: 'yesterday', clips: [yesterday] },
   ]);
@@ -129,18 +111,15 @@ test.each<[ClipFilter, ClipRecord[], ClipRecord[]]>([
   ['text', [], [pinnedText, text]],
   ['image', [], [pinnedImage, image]],
   ['pinned', [], [pinnedText, pinnedImage]],
-])(
-  '%s 필터는 전체에서만 고정 목록을 분리한다',
-  (filter, pinnedClips, timeline) => {
-    const before = clips.map((value) => ({ ...value }));
-    expect(makeHomeContent(clips, filter, now)).toEqual({
-      pinnedClips,
-      sections: [{ kind: 'recent', clips: timeline }],
-      isEmpty: false,
-    });
-    expect(clips).toEqual(before);
-  },
-);
+])('%s 필터는 전체에서만 고정 목록을 분리한다', (filter, pinnedClips, timeline) => {
+  const before = clips.map((value) => ({ ...value }));
+  expect(makeHomeContent(clips, filter, now)).toEqual({
+    pinnedClips,
+    sections: [{ kind: 'recent', clips: timeline }],
+    isEmpty: false,
+  });
+  expect(clips).toEqual(before);
+});
 
 test('고정 목록만 있어도 비어 있지 않다', () => {
   expect(makeHomeContent([pinnedText], 'all', now)).toEqual({
@@ -168,18 +147,15 @@ test.each<[ClipLoadPhase, boolean, boolean, HomeEmptyState]>([
   ['failed', true, true, 'failed'],
   ['failed', false, true, 'none'],
   ['failed', false, false, 'none'],
-])(
-  '%s에서 전체 목록 비어 있음 %s와 표시 내용 비어 있음 %s를 판별한다',
-  (loadPhase, noClips, isEmpty, expected) => {
-    expect(
-      homeEmptyState({
-        loadPhase,
-        clips: noClips ? [] : [text],
-        content: { pinnedClips: [], sections: [], isEmpty },
-      }),
-    ).toBe(expected);
-  },
-);
+])('%s에서 전체 목록 비어 있음 %s와 표시 내용 비어 있음 %s를 판별한다', (loadPhase, noClips, isEmpty, expected) => {
+  expect(
+    homeEmptyState({
+      loadPhase,
+      clips: noClips ? [] : [text],
+      content: { pinnedClips: [], sections: [], isEmpty },
+    }),
+  ).toBe(expected);
+});
 
 test('전체 고정 영역은 최근 고정 순서를 사용하고 일반 목록 순서는 유지한다', () => {
   const recent = { ...clip, id: 'recent', createdAt: now - 1000 };
@@ -197,16 +173,12 @@ test('고정 필터는 생성 시각으로 분류하고 각 섹션 안에서 고
   const recent = { ...clip, id: 'recent', createdAt: now, pinnedAt: 1 };
   const first = { ...clip, id: 'first', createdAt: now - 1000, pinnedAt: 2 };
   const older = { ...clip, id: 'older', createdAt: 0, pinnedAt: 3 };
-  expect(
-    makeHomeContent([recent, first, older], 'pinned', now).sections,
-  ).toEqual([
+  expect(makeHomeContent([recent, first, older], 'pinned', now).sections).toEqual([
     { kind: 'recent', clips: [first, recent] },
     { kind: 'earlier', clips: [older] },
   ]);
-  expect(makeHomeContent([recent, first, older], 'text', now).sections).toEqual(
-    [
-      { kind: 'recent', clips: [recent, first] },
-      { kind: 'earlier', clips: [older] },
-    ],
-  );
+  expect(makeHomeContent([recent, first, older], 'text', now).sections).toEqual([
+    { kind: 'recent', clips: [recent, first] },
+    { kind: 'earlier', clips: [older] },
+  ]);
 });

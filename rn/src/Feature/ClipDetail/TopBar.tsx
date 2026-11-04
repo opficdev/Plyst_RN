@@ -10,25 +10,13 @@ type ClipDetailTopBarProps = {
   onSaveButtonPress: () => void;
 };
 
-export function ClipDetailTopBar({
-  title,
-  isSaveEnabled,
-  onCloseButtonPress,
-  onSaveButtonPress,
-}: ClipDetailTopBarProps) {
+export function ClipDetailTopBar({ title, isSaveEnabled, onCloseButtonPress, onSaveButtonPress }: ClipDetailTopBarProps) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 12 }]}>
       <DetailBarButton icon="xmark" onPress={onCloseButtonPress} />
-      <DetailBarButton
-        title="저장"
-        isEnabled={isSaveEnabled}
-        onPress={onSaveButtonPress}
-      />
-      <View
-        pointerEvents="none"
-        style={[styles.title, { top: insets.top + 12 }]}
-      >
+      <DetailBarButton title="저장" isEnabled={isSaveEnabled} onPress={onSaveButtonPress} />
+      <View pointerEvents="none" style={[styles.title, { top: insets.top + 12 }]}>
         <Text allowFontScaling={false} style={styles.titleText}>
           {title}
         </Text>

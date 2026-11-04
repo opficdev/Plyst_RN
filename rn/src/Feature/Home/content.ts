@@ -36,15 +36,8 @@ export type HomeContent = {
   isEmpty: boolean;
 };
 
-export function makeHomeContent(
-  clips: ClipRecord[],
-  filter: ClipFilter,
-  now: number,
-): HomeContent {
-  const pinnedClips =
-    filter === 'all'
-      ? sortPinnedClips(clips.filter((clip) => clip.pinnedAt !== null))
-      : [];
+export function makeHomeContent(clips: ClipRecord[], filter: ClipFilter, now: number): HomeContent {
+  const pinnedClips = filter === 'all' ? sortPinnedClips(clips.filter((clip) => clip.pinnedAt !== null)) : [];
   const timeline = clips.filter((clip) => {
     switch (filter) {
       case 'all':
@@ -82,15 +75,7 @@ export function makeHomeContent(
 
 export type HomeEmptyState = 'none' | 'empty' | 'filtered' | 'failed';
 
-export function homeEmptyState({
-  loadPhase,
-  clips,
-  content,
-}: {
-  loadPhase: ClipLoadPhase;
-  clips: ClipRecord[];
-  content: HomeContent;
-}): HomeEmptyState {
+export function homeEmptyState({ loadPhase, clips, content }: { loadPhase: ClipLoadPhase; clips: ClipRecord[]; content: HomeContent }): HomeEmptyState {
   // 전체 목록이 비었으면 content의 빈 상태보다 우선
   switch (loadPhase) {
     case 'loading':

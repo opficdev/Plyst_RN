@@ -1,12 +1,5 @@
-import {
-  createScreenStore,
-  createSlice,
-  untilAborted,
-} from '../../../src/Shared/State/screenStore';
-import type {
-  PayloadAction,
-  SliceListen,
-} from '../../../src/Shared/State/screenStore';
+import { createScreenStore, createSlice, untilAborted } from '../../../src/Shared/State/screenStore';
+import type { PayloadAction, SliceListen } from '../../../src/Shared/State/screenStore';
 
 const counter = createSlice({
   name: 'counter',
@@ -19,9 +12,7 @@ const counter = createSlice({
   },
 });
 type Counter = ReturnType<typeof counter.getInitialState>;
-function makeScreen(
-  start: (listen: SliceListen<Counter>) => void | (() => void),
-) {
+function makeScreen(start: (listen: SliceListen<Counter>) => void | (() => void)) {
   return createScreenStore({ slice: counter, start });
 }
 
@@ -120,9 +111,7 @@ test('두 화면은 상태와 listener를 공유하지 않는다', () => {
 });
 
 test('start가 받은 dispatch는 listener 밖에서도 store에 action을 보낸다', () => {
-  let dispatch:
-    | ((action: ReturnType<typeof counter.actions.changed>) => unknown)
-    | undefined;
+  let dispatch: ((action: ReturnType<typeof counter.actions.changed>) => unknown) | undefined;
   const screen = createScreenStore({
     slice: counter,
     start: (_, send) => {

@@ -17,8 +17,7 @@ export function subscribeClipChanges(listener: (change: ClipChange) => void) {
   return subscription;
 }
 
-export type ClipCopyResult =
-  'copied' | 'copiedWithoutLastUsedAt' | 'writeNotObserved';
+export type ClipCopyResult = 'copied' | 'copiedWithoutLastUsedAt' | 'writeNotObserved';
 
 export function copyClip(id: string): Promise<ClipCopyResult | null> {
   return NativePlystClip.copyClip(id) as Promise<ClipCopyResult | null>;
@@ -28,8 +27,7 @@ export function getClip(id: string): Promise<ClipRecord | null> {
   return NativePlystClip.getClip(id);
 }
 
-export type ClipboardSaveResult =
-  'saved' | 'empty' | 'unsupported' | 'accessFailed' | 'invalidImage';
+export type ClipboardSaveResult = 'saved' | 'empty' | 'unsupported' | 'accessFailed' | 'invalidImage';
 
 export function saveCurrentClipboard(): Promise<ClipboardSaveResult> {
   return NativePlystClip.saveCurrentClipboard() as Promise<ClipboardSaveResult>;
@@ -59,29 +57,17 @@ export function getClipImagePreview(id: string): Promise<string | null> {
   return NativePlystClip.getClipImagePreview(id);
 }
 
-export function getClipThumbnail(
-  id: string,
-  maximumPixelDimension: number,
-): Promise<string | null> {
+export function getClipThumbnail(id: string, maximumPixelDimension: number): Promise<string | null> {
   return NativePlystClip.getClipThumbnail(id, maximumPixelDimension);
 }
 
 export type ClipPhotoSaveResult = 'saved' | 'denied' | 'restricted';
 
-export function saveClipImageToPhotos(
-  id: string,
-): Promise<ClipPhotoSaveResult | null> {
-  return NativePlystClip.saveClipImageToPhotos(
-    id,
-  ) as Promise<ClipPhotoSaveResult | null>;
+export function saveClipImageToPhotos(id: string): Promise<ClipPhotoSaveResult | null> {
+  return NativePlystClip.saveClipImageToPhotos(id) as Promise<ClipPhotoSaveResult | null>;
 }
 
-export function updateClip(
-  id: string,
-  name: string | null,
-  memo: string | null,
-  isPinned: boolean,
-): Promise<ClipRecord | null> {
+export function updateClip(id: string, name: string | null, memo: string | null, isPinned: boolean): Promise<ClipRecord | null> {
   return NativePlystClip.updateClip(id, name, memo, isPinned);
 }
 

@@ -1,10 +1,5 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
-import {
-  clipCardValues,
-  clipColumnWidth,
-  clipListRightMargin,
-  clipThumbnailPixels,
-} from '../../../src/Feature/ClipGrid/cardValues';
+import { clipCardValues, clipColumnWidth, clipListRightMargin, clipThumbnailPixels } from '../../../src/Feature/ClipGrid/cardValues';
 const clip: ClipRecord = {
   id: 'text',
   text: '원문',
@@ -72,12 +67,9 @@ test('격자 이미지에만 해상도를 표시한다', () => {
   });
 });
 
-test.each([320, 375, 393, 430])(
-  '%i 너비에서 두 열과 양쪽 여백 및 간격의 합이 목록 너비다',
-  (width) => {
-    expect(clipColumnWidth(width) * 2 + 32 + 10).toBe(width);
-  },
-);
+test.each([320, 375, 393, 430])('%i 너비에서 두 열과 양쪽 여백 및 간격의 합이 목록 너비다', (width) => {
+  expect(clipColumnWidth(width) * 2 + 32 + 10).toBe(width);
+});
 
 test('썸네일 픽셀은 올림하며 최소 1이고 고정 카드는 열 너비와 무관하다', () => {
   expect(clipThumbnailPixels(clipColumnWidth(393), 3)).toBe(491);

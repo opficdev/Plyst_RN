@@ -12,10 +12,7 @@ import {
   isSaveEnabled,
   loadedState,
 } from '../../../src/Feature/ImageDetail/draft';
-import type {
-  ImageDetailLoaded,
-  ImageDetailStoreState,
-} from '../../../src/Feature/ImageDetail/draft';
+import type { ImageDetailLoaded, ImageDetailStoreState } from '../../../src/Feature/ImageDetail/draft';
 
 const clip: ClipRecord = {
   id: 'id',
@@ -67,28 +64,19 @@ test('조회된 초안은 이름과 고정만 가지고 미리보기는 로딩 �
 
 test('이름의 공백과 정준 동등성을 반영하고 메모 변경은 비교하지 않는다', () => {
   const original = { ...clip, name: 'é' };
-  expect(differs({ name: ' e\u0301\n', isPinned: false }, original)).toBe(
-    false,
-  );
+  expect(differs({ name: ' e\u0301\n', isPinned: false }, original)).toBe(false);
   expect(differs({ name: ' \t\n', isPinned: false }, clip)).toBe(false);
-  expect(differs({ name: '', isPinned: false }, { ...clip, name: '' })).toBe(
-    true,
-  );
+  expect(differs({ name: '', isPinned: false }, { ...clip, name: '' })).toBe(true);
   expect(differs({ name: '', isPinned: true }, clip)).toBe(true);
-  expect(differs(draftFromClip(clip), { ...clip, memo: '새 메모' })).toBe(
-    false,
-  );
+  expect(differs(draftFromClip(clip), { ...clip, memo: '새 메모' })).toBe(false);
 });
 
-test.each(['isSaving', 'isDeleting', 'isRemoved'] as const)(
-  '%s이면 저장을 막는다',
-  (flag) => {
-    const state = reduceLoaded(loadedState(clip), actions.nameChanged('편집'));
-    expect(canSave(state)).toBe(true);
-    expect(canSave({ ...state, [flag]: true })).toBe(false);
-    expect(canSave({ ...state, isSavingToPhotos: true })).toBe(true);
-  },
-);
+test.each(['isSaving', 'isDeleting', 'isRemoved'] as const)('%s이면 저장을 막는다', (flag) => {
+  const state = reduceLoaded(loadedState(clip), actions.nameChanged('편집'));
+  expect(canSave(state)).toBe(true);
+  expect(canSave({ ...state, [flag]: true })).toBe(false);
+  expect(canSave({ ...state, isSavingToPhotos: true })).toBe(true);
+});
 
 test('저장 버튼은 저장 뒤에도 켜져 있지만 저장 시작은 막는다', () => {
   const state = reduceLoaded(loadedState(clip), actions.nameChanged('편집'));
@@ -101,26 +89,20 @@ test('저장 버튼은 저장 뒤에도 켜져 있지만 저장 시작은 막는
   expect(canStartSave(closed)).toBe(false);
 });
 
-test.each(['isDeleting', 'isRemoved'] as const)(
-  '%s이면 삭제를 시작할 수 없다',
-  (flag) => {
-    const state = loadedState(clip);
-    expect(canStartDelete(state)).toBe(true);
-    expect(canStartDelete({ ...state, [flag]: true })).toBe(false);
-    expect(canStartDelete(loading)).toBe(false);
-  },
-);
+test.each(['isDeleting', 'isRemoved'] as const)('%s이면 삭제를 시작할 수 없다', (flag) => {
+  const state = loadedState(clip);
+  expect(canStartDelete(state)).toBe(true);
+  expect(canStartDelete({ ...state, [flag]: true })).toBe(false);
+  expect(canStartDelete(loading)).toBe(false);
+});
 
-test.each(['isSavingToPhotos', 'isDeleting', 'isRemoved'] as const)(
-  '%s이면 사진 저장을 시작할 수 없다',
-  (flag) => {
-    const state = loadedState(clip);
-    expect(canStartPhotoSave(state)).toBe(true);
-    expect(canStartPhotoSave({ ...state, [flag]: true })).toBe(false);
-    expect(canStartPhotoSave({ ...state, isSaved: true })).toBe(true);
-    expect(canStartPhotoSave(loading)).toBe(false);
-  },
-);
+test.each(['isSavingToPhotos', 'isDeleting', 'isRemoved'] as const)('%s이면 사진 저장을 시작할 수 없다', (flag) => {
+  const state = loadedState(clip);
+  expect(canStartPhotoSave(state)).toBe(true);
+  expect(canStartPhotoSave({ ...state, [flag]: true })).toBe(false);
+  expect(canStartPhotoSave({ ...state, isSaved: true })).toBe(true);
+  expect(canStartPhotoSave(loading)).toBe(false);
+});
 
 test('닫힘은 조회 실패나 삭제 또는 저장 완료로 판정한다', () => {
   const state = loadedState(clip);
@@ -159,13 +141,7 @@ test('조회 전 clipLoaded는 조회된 상태가 되고 removed와 loadFailed�
 });
 
 test('닫힌 상태는 어떤 action에도 바뀌지 않는다', () => {
-  for (const action of [
-    actions.clipLoaded(clip),
-    actions.removed(),
-    actions.loadFailed(),
-    actions.nameChanged('이름'),
-    actions.save(),
-  ]) {
+  for (const action of [actions.clipLoaded(clip), actions.removed(), actions.loadFailed(), actions.nameChanged('이름'), actions.save()]) {
     expect(reduce(closed, action)).toEqual(closed);
   }
 });
@@ -175,19 +151,13 @@ test('조회된 뒤의 loadFailed는 상태를 바꾸지 않는다', () => {
   expect(reduceLoaded(state, actions.loadFailed())).toEqual(state);
 });
 
-test.each(['isRemoved', 'isSaved'] as const)(
-  'clipLoaded는 %s인 상태를 바꾸지 않는다',
-  (flag) => {
-    const state = { ...loadedState(clip), [flag]: true };
-    expect(reduceLoaded(state, actions.clipLoaded(clip))).toEqual(state);
-  },
-);
+test.each(['isRemoved', 'isSaved'] as const)('clipLoaded는 %s인 상태를 바꾸지 않는다', (flag) => {
+  const state = { ...loadedState(clip), [flag]: true };
+  expect(reduceLoaded(state, actions.clipLoaded(clip))).toEqual(state);
+});
 
 test('외부 변경은 편집하지 않은 초안만 갱신하고 미리보기는 유지한다', () => {
-  const state = reduceLoaded(
-    loadedState(clip),
-    actions.previewReady('file:///preview'),
-  );
+  const state = reduceLoaded(loadedState(clip), actions.previewReady('file:///preview'));
   const updated = { ...clip, name: '외부 이름', pinnedAt: 1000 };
   const loaded = reduceLoaded(state, actions.clipLoaded(updated));
   expect(loaded.draft).toEqual(draftFromClip(updated));
@@ -201,9 +171,7 @@ test('외부 변경은 편집하지 않은 초안만 갱신하고 미리보기�
 test('초안 비교는 Swift 문자열처럼 정준 동등성을 적용한다', () => {
   const state = loadedState({ ...clip, name: 'é' });
   state.draft.name = 'e\u0301';
-  expect(reduceLoaded(state, actions.clipLoaded(clip)).draft).toEqual(
-    draftFromClip(clip),
-  );
+  expect(reduceLoaded(state, actions.clipLoaded(clip)).draft).toEqual(draftFromClip(clip));
 });
 
 test('save는 저장할 수 있을 때만 저장 중으로 바꾼다', () => {
@@ -221,29 +189,18 @@ test('save는 저장할 수 있을 때만 저장 중으로 바꾼다', () => {
 test('저장 중 추가 편집은 유지하고 저장된 값과 같은 초안은 정리한다', () => {
   const state = reduceLoaded(loadedState(clip), actions.nameChanged(' 이름 '));
   const saved = { ...clip, name: '이름' };
-  const finished = reduceLoaded(
-    { ...state, isSaving: true },
-    actions.saved(saved),
-  );
+  const finished = reduceLoaded({ ...state, isSaving: true }, actions.saved(saved));
   expect(finished.isSaved).toBe(true);
   expect(finished.isSaving).toBe(false);
   expect(finished.draft.name).toBe('이름');
   const edited = { ...state, draft: { ...state.draft, name: '추가 편집' } };
-  expect(reduceLoaded(edited, actions.saved(saved)).draft).toEqual(
-    edited.draft,
-  );
+  expect(reduceLoaded(edited, actions.saved(saved)).draft).toEqual(edited.draft);
 });
 
 test('미리보기는 디코딩 완료까지 로딩을 유지하고 실제 방향의 비율을 쓴다', () => {
-  const ready = reduceLoaded(
-    loadedState(clip),
-    actions.previewReady('file:///preview'),
-  );
+  const ready = reduceLoaded(loadedState(clip), actions.previewReady('file:///preview'));
   expect(ready.preview.status).toBe('loading');
-  const loaded = reduceLoaded(
-    ready,
-    actions.previewLoaded({ width: 3, height: 2 }),
-  );
+  const loaded = reduceLoaded(ready, actions.previewLoaded({ width: 3, height: 2 }));
   expect(loaded.preview).toEqual({
     status: 'loaded',
     uri: 'file:///preview',
@@ -252,21 +209,12 @@ test('미리보기는 디코딩 완료까지 로딩을 유지하고 실제 방�
   const failed = reduceLoaded(ready, actions.previewFailed());
   expect(failed.preview.status).toBe('failed');
   expect(failed.preview.uri).toBeNull();
-  expect(
-    reduceLoaded(failed, actions.previewLoaded({ width: 3, height: 2 }))
-      .preview,
-  ).toEqual(failed.preview);
+  expect(reduceLoaded(failed, actions.previewLoaded({ width: 3, height: 2 })).preview).toEqual(failed.preview);
 });
 
 test('크기가 0인 미리보기는 기존 비율을 유지한다', () => {
-  const ready = reduceLoaded(
-    loadedState(clip),
-    actions.previewReady('file:///preview'),
-  );
-  const loaded = reduceLoaded(
-    ready,
-    actions.previewLoaded({ width: 0, height: 2 }),
-  );
+  const ready = reduceLoaded(loadedState(clip), actions.previewReady('file:///preview'));
+  const loaded = reduceLoaded(ready, actions.previewLoaded({ width: 0, height: 2 }));
   expect(loaded.preview).toEqual({
     status: 'loaded',
     uri: 'file:///preview',
@@ -290,9 +238,7 @@ test('삭제되면 진행 플래그와 시트를 닫고 늦은 미리보기를 �
     isSavingToPhotos: false,
     isDeleteSheetOpen: false,
   });
-  expect(
-    reduceLoaded(removed, actions.previewReady('file:///preview')).preview,
-  ).toEqual(removed.preview);
+  expect(reduceLoaded(removed, actions.previewReady('file:///preview')).preview).toEqual(removed.preview);
 });
 
 test.each<Action>([
@@ -328,9 +274,7 @@ test('사진 저장과 삭제 플래그가 요청과 완료에 맞게 바뀐다'
   const saving = reduceLoaded(state, actions.saveToPhotos());
   expect(saving.isSavingToPhotos).toBe(true);
   expect(reduceLoaded(saving, actions.saveToPhotos())).toEqual(saving);
-  expect(
-    reduceLoaded(saving, actions.photoSaveFinished()).isSavingToPhotos,
-  ).toBe(false);
+  expect(reduceLoaded(saving, actions.photoSaveFinished()).isSavingToPhotos).toBe(false);
   const sheet = reduceLoaded(state, actions.deleteSheetShown());
   expect(sheet.isDeleteSheetOpen).toBe(true);
   const deleting = reduceLoaded(sheet, actions.delete());

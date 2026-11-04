@@ -1,7 +1,4 @@
-export function nextClipTimelineChange(
-  createdAtList: readonly number[],
-  now: number,
-): number | null {
+export function nextClipTimelineChange(createdAtList: readonly number[], now: number): number | null {
   if (createdAtList.length === 0) return null;
   const end = new Date(now);
   end.setHours(24, 0, 0, 0);

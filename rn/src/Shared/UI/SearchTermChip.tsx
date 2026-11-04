@@ -1,17 +1,13 @@
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, typography } from '../Theme';
+import { SymbolImage } from './SymbolImage';
 
 type SearchTermChipProps = {
   term: string;
   onTermButtonPress: () => void;
   onRemoveButtonPress: () => void;
 };
-export function SearchTermChip({
-  term,
-  onTermButtonPress,
-  onRemoveButtonPress,
-}: SearchTermChipProps) {
+export function SearchTermChip({ term, onTermButtonPress, onRemoveButtonPress }: SearchTermChipProps) {
   return (
     <View style={styles.chip}>
       <Pressable style={styles.termButton} onPress={onTermButtonPress}>
@@ -20,7 +16,7 @@ export function SearchTermChip({
         </Text>
       </Pressable>
       <Pressable style={styles.removeButton} onPress={onRemoveButtonPress}>
-        <Image source="sf:xmark" contentFit="none" style={styles.removeIcon} />
+        <SymbolImage name="xmark" contentFit="none" style={styles.removeIcon} />
       </Pressable>
     </View>
   );

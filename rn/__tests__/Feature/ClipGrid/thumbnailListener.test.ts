@@ -1,9 +1,6 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createScreenStore } from '../../../src/Shared/State/screenStore';
-import {
-  searchActions as actions,
-  searchSlice,
-} from '../../../src/Feature/Search/state';
+import { searchActions as actions, searchSlice } from '../../../src/Feature/Search/state';
 import { startClipThumbnailListener } from '../../../src/Feature/ClipGrid/thumbnailListener';
 import { loadClipThumbnail } from '../../../src/Service/Clip/loadThumbnail';
 import type { ClipThumbnailResult } from '../../../src/Service/Clip/loadThumbnail';
@@ -45,8 +42,7 @@ function setup() {
   });
   const screen = createScreenStore({
     slice: searchSlice,
-    start: (listen, dispatch) =>
-      startClipThumbnailListener(listen, dispatch, actions),
+    start: (listen, dispatch) => startClipThumbnailListener(listen, dispatch, actions),
   });
   screen.start();
   screen.store.dispatch(
@@ -61,12 +57,9 @@ beforeEach(() => jest.resetAllMocks());
 
 test('listener 연결 뒤에도 요청 중복과 동시 실행 제한을 유지한다', async () => {
   const { screen, pending } = setup();
-  for (const id of ['a', 'a', 'b', 'c'])
-    screen.store.dispatch(actions.thumbnailRequested({ id, pixels: 200 }));
+  for (const id of ['a', 'a', 'b', 'c']) screen.store.dispatch(actions.thumbnailRequested({ id, pixels: 200 }));
   expect(loadClipThumbnail).toHaveBeenCalledTimes(2);
-  screen.store.dispatch(
-    actions.thumbnailCancelRequested({ id: 'a', pixels: 200 }),
-  );
+  screen.store.dispatch(actions.thumbnailCancelRequested({ id: 'a', pixels: 200 }));
   expect(loadClipThumbnail).toHaveBeenCalledTimes(2);
   pending[0].resolve({ status: 'loaded', uri: 'file://a' });
   await settle();
@@ -78,9 +71,7 @@ test('listener 연결 뒤에도 요청 중복과 동시 실행 제한을 유지�
 test('실행 중 취소 후 재진입하면 기존 요청을 복구한다', async () => {
   const { screen, pending } = setup();
   screen.store.dispatch(actions.thumbnailRequested({ id: 'a', pixels: 200 }));
-  screen.store.dispatch(
-    actions.thumbnailCancelRequested({ id: 'a', pixels: 200 }),
-  );
+  screen.store.dispatch(actions.thumbnailCancelRequested({ id: 'a', pixels: 200 }));
   screen.store.dispatch(actions.thumbnailRequested({ id: 'a', pixels: 200 }));
   pending[0].resolve({ status: 'loaded', uri: 'file://a' });
   await settle();

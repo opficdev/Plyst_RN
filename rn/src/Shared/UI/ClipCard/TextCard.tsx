@@ -1,72 +1,45 @@
-import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../Theme';
 import type { ClipCardProps, ClipTextRange } from './CardProps';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';
+import { hangulWordBreak } from '../hangulWordBreak';
+import { SymbolImage } from '../SymbolImage';
 
 type ClipTextCardProps = ClipCardProps & {
   body: string;
   isWebLink: boolean;
   bodyHighlights?: ClipTextRange[];
 };
-export function ClipTextCard({
-  name,
-  nameHighlights,
-  bodyHighlights,
-  metadata,
-  body,
-  isWebLink,
-  onCopyButtonPress,
-  onCopyButtonLongPress,
-}: ClipTextCardProps) {
+export function ClipTextCard({ name, nameHighlights, bodyHighlights, metadata, body, isWebLink, onCopyButtonPress, onCopyButtonLongPress }: ClipTextCardProps) {
   return (
     <View style={styles.card}>
       {isWebLink ? (
-        <Image source="sf:globe" contentFit="contain" style={styles.linkIcon} />
+        <SymbolImage name="globe" contentFit="contain" style={styles.linkIcon} />
       ) : (
         <Text allowFontScaling={false} style={styles.quote}>
           “
         </Text>
       )}
       {name !== null && (
-        <ClipCardLabel
-          highlights={nameHighlights}
-          highlightWeight="700"
-          style={styles.name}
-          numberOfLines={2}
-          lineBreakStrategyIOS="standard"
-        >
+        <ClipCardLabel highlights={nameHighlights} highlightWeight="700" style={styles.name} numberOfLines={2} lineBreakStrategyIOS="standard">
           {name}
         </ClipCardLabel>
       )}
       <ClipCardLabel
         highlights={bodyHighlights}
         highlightWeight="600"
-        style={[
-          styles.body,
-          name === null ? styles.unnamedBody : styles.namedBody,
-        ]}
+        style={[styles.body, name === null ? styles.unnamedBody : styles.namedBody]}
         numberOfLines={name === null ? 3 : 2}
         lineBreakStrategyIOS="standard"
       >
         {body}
       </ClipCardLabel>
       <View style={styles.metadataRow}>
-        <Text
-          allowFontScaling={false}
-          style={styles.metadata}
-          numberOfLines={onCopyButtonPress ? 2 : 1}
-          lineBreakStrategyIOS="hangul-word"
-        >
-          {metadata}
+        <Text allowFontScaling={false} style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1} lineBreakStrategyIOS="hangul-word">
+          {hangulWordBreak(metadata)}
         </Text>
-        {onCopyButtonPress && (
-          <CopyButton
-            onCopyButtonPress={onCopyButtonPress}
-            onCopyButtonLongPress={onCopyButtonLongPress}
-          />
-        )}
+        {onCopyButtonPress && <CopyButton onCopyButtonPress={onCopyButtonPress} onCopyButtonLongPress={onCopyButtonLongPress} />}
       </View>
     </View>
   );
@@ -87,7 +60,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     left: 13,
-    fontFamily: 'Georgia-Bold',
+    ...typography.quoteMark,
     fontSize: 26,
     color: colors.MarkBackground,
   },
@@ -119,7 +92,7 @@ const styles = StyleSheet.create({
   metadata: {
     flex: 1,
     flexShrink: 1,
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 10.5,
     fontWeight: '500',
     color: colors.SecondaryText,

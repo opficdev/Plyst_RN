@@ -2,8 +2,7 @@ import type { ClipRecord } from './clipRecord';
 
 export function sortPinnedClips(clips: readonly ClipRecord[]): ClipRecord[] {
   return [...clips].sort((left, right) => {
-    const pinned =
-      (right.pinnedAt ?? right.createdAt) - (left.pinnedAt ?? left.createdAt);
+    const pinned = (right.pinnedAt ?? right.createdAt) - (left.pinnedAt ?? left.createdAt);
     if (pinned !== 0) return pinned;
     const created = right.createdAt - left.createdAt;
     if (created !== 0) return created;

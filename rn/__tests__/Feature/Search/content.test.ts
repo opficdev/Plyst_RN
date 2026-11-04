@@ -1,14 +1,6 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import type { ClipFilter } from '../../../src/Feature/ClipGrid/filter';
-import {
-  createSearchTimeTexts,
-  makeSearchContent,
-  searchEmptyStrings,
-  searchExcerptStart,
-  searchHeaderTitle,
-  searchMode,
-  searchRecentDisplay,
-} from '../../../src/Feature/Search/content';
+import { createSearchTimeTexts, makeSearchContent, searchEmptyStrings, searchExcerptStart, searchHeaderTitle, searchMode, searchRecentDisplay } from '../../../src/Feature/Search/content';
 import { createSearchIndex } from '../../../src/Feature/Search/match';
 import { searchCardText } from '../../../src/Feature/Search/cardText';
 
@@ -40,19 +32,8 @@ const image: ClipRecord = {
   },
 };
 const pinned = { ...text, id: 'pinned', pinnedAt: 1000 };
-function content(
-  clips: ClipRecord[],
-  query: string,
-  filter: ClipFilter = 'all',
-) {
-  return makeSearchContent(
-    clips,
-    query,
-    filter,
-    now,
-    createSearchIndex(),
-    createSearchTimeTexts(),
-  );
+function content(clips: ClipRecord[], query: string, filter: ClipFilter = 'all') {
+  return makeSearchContent(clips, query, filter, now, createSearchIndex(), createSearchTimeTexts());
 }
 
 test('공백 검색어에는 결과가 없다', () => {
@@ -117,9 +98,7 @@ test('40글자를 넘은 첫 일치에서 14글자 앞부터 발췌한다', () =
 });
 
 test('종류가 섞인 결과에만 종류별 개수를 표시한다', () => {
-  expect(searchHeaderTitle(content([text, image], 'report'))).toBe(
-    '결과 2개 · 텍스트 1 · 이미지 1',
-  );
+  expect(searchHeaderTitle(content([text, image], 'report'))).toBe('결과 2개 · 텍스트 1 · 이미지 1');
   expect(searchHeaderTitle(content([text], 'report'))).toBe('결과 1개');
   expect(searchHeaderTitle(content([], 'report'))).toBe('결과 0개');
 });
@@ -131,9 +110,7 @@ test('조회 단계와 전체 클립에 따라 화면 모드를 결정한다', (
   expect(searchMode(empty, 'loaded', [])).toBe('empty');
   expect(searchMode(empty, 'failed', [])).toBe('failed');
   expect(searchMode(empty, 'failed', [text])).toBe('empty');
-  expect(searchMode(content([text], 'report'), 'failed', [text])).toBe(
-    'results',
-  );
+  expect(searchMode(content([text], 'report'), 'failed', [text])).toBe('results');
 });
 
 test('빈 결과와 조회 실패 문구는 원본과 같다', () => {
@@ -141,10 +118,7 @@ test('빈 결과와 조회 실패 문구는 원본과 같다', () => {
     title: '‘단어’ 결과 없음',
     message: '이미지는 이름과 저장 시각으로만 찾을 수 있어요.',
   });
-  for (const filter of ['text', 'image', 'pinned'] as const)
-    expect(searchEmptyStrings('단어', filter, false).message).toBe(
-      '필터를 ‘전체’로 바꾸거나 다른 단어로 검색해 보세요.',
-    );
+  for (const filter of ['text', 'image', 'pinned'] as const) expect(searchEmptyStrings('단어', filter, false).message).toBe('필터를 ‘전체’로 바꾸거나 다른 단어로 검색해 보세요.');
   expect(searchEmptyStrings('단어', 'all', true)).toEqual({
     title: '기록을 불러오지 못했습니다',
     message: '앱을 다시 열어 기록을 확인해 주세요',
@@ -188,8 +162,5 @@ test('시각 문자열은 동일 시각에 재사용하고 시각 또는 원문 
 test('고정 필터의 검색 결과도 고정 시각과 무관하게 입력 순서를 유지한다', () => {
   const first = { ...text, id: 'first', pinnedAt: 1 };
   const recent = { ...text, id: 'recent', pinnedAt: 2 };
-  expect(content([first, recent], 'report', 'pinned').results).toEqual([
-    first,
-    recent,
-  ]);
+  expect(content([first, recent], 'report', 'pinned').results).toEqual([first, recent]);
 });

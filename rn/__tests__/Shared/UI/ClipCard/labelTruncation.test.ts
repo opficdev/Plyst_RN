@@ -21,29 +21,16 @@ test('마지막으로 보이는 빈 문단의 줄바꿈만 제외한다', () => 
   expect(text.slice(0, cut!) + '…').toBe('a\n…');
 });
 
-test.each(['\n', '\r', '\u2028', '\u2029'])(
-  '%j 줄바꿈을 처리한다',
-  (newline) => {
-    expect(
-      labelTruncation(
-        `a${newline}b${newline}c`,
-        [{ text: `a${newline}` }, { text: `b${newline}` }],
-        2,
-      ),
-    ).toBe(3);
-  },
-);
+test.each(['\n', '\r', '\u2028', '\u2029'])('%j 줄바꿈을 처리한다', (newline) => {
+  expect(labelTruncation(`a${newline}b${newline}c`, [{ text: `a${newline}` }, { text: `b${newline}` }], 2)).toBe(3);
+});
 
 test('끝 줄바꿈까지 전체 본문이 보이면 변환하지 않는다', () => {
-  expect(
-    labelTruncation('a\nb\n', [{ text: 'a\n' }, { text: 'b\n' }], 2),
-  ).toBeNull();
+  expect(labelTruncation('a\nb\n', [{ text: 'a\n' }, { text: 'b\n' }], 2)).toBeNull();
 });
 
 test.each([1, 3])('실제 줄 수가 제한 %i와 다르면 변환하지 않는다', (limit) => {
-  expect(
-    labelTruncation('a\nb\nc', [{ text: 'a\n' }, { text: 'b\n' }], limit),
-  ).toBeNull();
+  expect(labelTruncation('a\nb\nc', [{ text: 'a\n' }, { text: 'b\n' }], limit)).toBeNull();
 });
 
 test.each([0, -1])('줄 수 제한이 %i이면 변환하지 않는다', (limit) => {
@@ -56,9 +43,7 @@ test('레이아웃에 줄이 없으면 변환하지 않는다', () => {
 });
 
 test('마지막 줄이 줄바꿈으로 끝나지 않으면 변환하지 않는다', () => {
-  expect(
-    labelTruncation('a\nb\nc', [{ text: 'a\n' }, { text: 'b' }], 2),
-  ).toBeNull();
+  expect(labelTruncation('a\nb\nc', [{ text: 'a\n' }, { text: 'b' }], 2)).toBeNull();
   expect(labelTruncation('abc', [{ text: 'ab' }], 1)).toBeNull();
 });
 
@@ -71,7 +56,11 @@ test('첫 줄이 빈 문단이면 위치 0을 반환한다', () => {
 });
 
 test('보조 평면 문자를 UTF-16 길이로 계산한다', () => {
-  expect(
-    labelTruncation('😀\nb\nc', [{ text: '😀\n' }, { text: 'b\n' }], 2),
-  ).toBe(4);
+  expect(labelTruncation('😀\nb\nc', [{ text: '😀\n' }, { text: 'b\n' }], 2)).toBe(4);
+});
+
+test('줄 텍스트의 WORD JOINER를 원문 길이에 세지 않는다', () => {
+  const text = '가나\n다라\n마';
+  const lines = [{ text: '가\u2060나\n' }, { text: '다\u2060라\n' }];
+  expect(labelTruncation(text, lines, 2)).toBe(5);
 });

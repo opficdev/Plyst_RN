@@ -7,9 +7,23 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.PlystRN"
     },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "../Plyst/Plyst/Assets.xcassets/AppIcon.appiconset/AppIcon.png",
+        "backgroundImage": "../Plyst/Plyst/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+      },
+      "package": "com.anonymous.PlystRN"
+    },
     "plugins": [
       "@callstack/react-native-brownfield",
-      ["expo-image", { "disableLibdav1d": true }]
+      [
+        "expo-image",
+        {
+          "disableLibdav1d": true
+        }
+      ],
+      "./plugins/withAndroidAssets",
+      "./plugins/withAndroidMainActivity"
     ]
   }
 }

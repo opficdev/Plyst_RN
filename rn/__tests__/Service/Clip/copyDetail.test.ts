@@ -6,15 +6,12 @@ const copyClipMock = jest.mocked(copyClip);
 
 beforeEach(() => jest.resetAllMocks());
 
-test.each(['copied', 'copiedWithoutLastUsedAt'] as const)(
-  '복사 결과가 %s이면 copied이다',
-  async (result) => {
-    copyClipMock.mockResolvedValue(result);
-    await expect(copyClipDetail('clip-id')).resolves.toBe('copied');
-    expect(copyClipMock).toHaveBeenCalledWith('clip-id');
-    expect(copyClipMock).toHaveBeenCalledTimes(1);
-  },
-);
+test.each(['copied', 'copiedWithoutLastUsedAt'] as const)('복사 결과가 %s이면 copied이다', async (result) => {
+  copyClipMock.mockResolvedValue(result);
+  await expect(copyClipDetail('clip-id')).resolves.toBe('copied');
+  expect(copyClipMock).toHaveBeenCalledWith('clip-id');
+  expect(copyClipMock).toHaveBeenCalledTimes(1);
+});
 
 test('복사 결과가 writeNotObserved이면 failed이다', async () => {
   copyClipMock.mockResolvedValue('writeNotObserved');
@@ -27,8 +24,6 @@ test('복사 결과가 null이면 failed이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  copyClipMock.mockRejectedValue(
-    Object.assign(new Error('복사 실패'), { code: 'E_COPY_FAILED' }),
-  );
+  copyClipMock.mockRejectedValue(Object.assign(new Error('복사 실패'), { code: 'E_COPY_FAILED' }));
   await expect(copyClipDetail('clip-id')).resolves.toBe('failed');
 });

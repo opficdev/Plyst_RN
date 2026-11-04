@@ -1,18 +1,12 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  initialWindowMetrics,
-} from 'react-native-safe-area-context';
+import { Platform, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { ScreenStack, ScreenStackItem } from 'react-native-screens';
 import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
 import { isDuoDevice } from 'plyst-bridge';
 import type { ClipKind } from '../Model/clipRecord';
-import {
-  ScreenProvider,
-  useScreenDispatch,
-  useScreenState,
-} from '../Shared/State/screenStore';
+import { ToastHost } from '../Shared/UI';
+import { ScreenProvider, useScreenDispatch, useScreenState } from '../Shared/State/screenStore';
 import { HomeView } from '../Feature/Home/View';
 import { NavigationBarTitle } from '../Feature/Home/NavigationBarTitle';
 import { SearchView } from '../Feature/Search/View';
@@ -29,6 +23,9 @@ const Search = memo(SearchView);
 // 다른 기기는 헤더를 숨기고 지금처럼 RN 버튼을 그림
 // 값은 프로세스가 끝날 때까지 바뀌지 않음
 const usesSystemBar = isDuoDevice();
+
+// Android에는 Scene이 소유한 토스트 창이 없어 앱 루트의 마지막 자식으로 ToastHost를 그림
+const drawsToastInRoot = Platform.OS === 'android';
 
 // 항목은 각 화면이 PlystNavigationBarButton으로 넣으므로 헤더 설정에는 항목을 두지 않음
 // iPhone Duo는 로고와 제목도 시스템이 검색 항목과 같은 바 줄에 놓도록 왼쪽 항목으로 넣음
@@ -57,40 +54,16 @@ export function AppRoot() {
 function AppContent() {
   const { isSearchVisible, detail } = useScreenState<AppNavigation>();
   const dispatch = useScreenDispatch();
-  const openClip = useCallback(
-    (clipID: string, kind: ClipKind) =>
-      dispatch(actions.clipOpened({ clipID, kind })),
-    [dispatch],
-  );
-  const closeClip = useCallback(
-    () => dispatch(actions.clipClosed()),
-    [dispatch],
-  );
-  const openSearch = useCallback(
-    () => dispatch(actions.searchOpened()),
-    [dispatch],
-  );
-  const closeSearch = useCallback(
-    () => dispatch(actions.searchClosed()),
-    [dispatch],
-  );
+  const openClip = useCallback((clipID: string, kind: ClipKind) => dispatch(actions.clipOpened({ clipID, kind })), [dispatch]);
+  const closeClip = useCallback(() => dispatch(actions.clipClosed()), [dispatch]);
+  const openSearch = useCallback(() => dispatch(actions.searchOpened()), [dispatch]);
+  const closeSearch = useCallback(() => dispatch(actions.searchClosed()), [dispatch]);
   // 화면마다 필요한 동작만 타입으로 받으므로 모든 동작을 담은 객체를 한 번만 만들어 넘김
-  const navigation = useMemo(
-    () => ({ openClip, openSearch, closeSearch, closeClip }),
-    [openClip, openSearch, closeSearch, closeClip],
-  );
+  const navigation = useMemo(() => ({ openClip, openSearch, closeSearch, closeClip }), [openClip, openSearch, closeSearch, closeClip]);
   const stack = (
     <ScreenStack style={styles.root}>
-      <ScreenStackItem
-        screenId="home"
-        headerConfig={homeHeader}
-        style={StyleSheet.absoluteFill}
-      >
-        <Home
-          isSearchVisible={isSearchVisible}
-          usesSystemBar={usesSystemBar}
-          navigation={navigation}
-        />
+      <ScreenStackItem screenId="home" headerConfig={homeHeader} style={StyleSheet.absoluteFill}>
+        <Home isSearchVisible={isSearchVisible} usesSystemBar={usesSystemBar} navigation={navigation} />
         {!usesSystemBar && isSearchVisible && (
           <View style={StyleSheet.absoluteFill}>
             <Search usesSystemBar={usesSystemBar} navigation={navigation} />
@@ -98,25 +71,22 @@ function AppContent() {
         )}
       </ScreenStackItem>
       {/* iPhone Duo는 검색 화면이 자기 ScreenStackItem을 그리므로 ScreenStack의 직접 자식으로 붙임 */}
-      {usesSystemBar && isSearchVisible && (
-        <Search usesSystemBar={usesSystemBar} navigation={navigation} />
-      )}
-      {detail?.kind === 'text' && (
-        <TextDetailView
-          clipID={detail.clipID}
-          usesSystemBar={usesSystemBar}
-          navigation={navigation}
-        />
-      )}
-      {detail?.kind === 'image' && (
-        <ImageDetailView
-          clipID={detail.clipID}
-          usesSystemBar={usesSystemBar}
-          navigation={navigation}
-        />
-      )}
+      {usesSystemBar && isSearchVisible && <Search usesSystemBar={usesSystemBar} navigation={navigation} />}
+      {detail?.kind === 'text' && <TextDetailView clipID={detail.clipID} usesSystemBar={usesSystemBar} navigation={navigation} />}
+      {detail?.kind === 'image' && <ImageDetailView clipID={detail.clipID} usesSystemBar={usesSystemBar} navigation={navigation} />}
     </ScreenStack>
   );
+  // 토스트를 덮는 View는 터치를 아래 화면으로 통과시킴
+  if (drawsToastInRoot) {
+    return (
+      <View style={styles.root}>
+        {stack}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <ToastHost />
+        </View>
+      </View>
+    );
+  }
   // iPhone Duo는 검색 화면 헤더가 항목 안쪽 provider 바깥이라 앱 전체의 오른쪽 안전 영역을 여기서 제공
   if (!usesSystemBar) return stack;
   return (

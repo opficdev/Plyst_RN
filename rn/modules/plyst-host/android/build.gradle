@@ -1,0 +1,20 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+android {
+  namespace "opfic.plyst.host"
+  // expo-module-gradle-plugin이 요구하는 값이며 package.json version과 같음
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  implementation project(':plyst-bridge')
+  implementation "com.facebook.react:react-android"
+  // react-native-brownfield가 쓰는 것과 같은 버전
+  implementation "androidx.core:core-ktx:1.17.0"
+}

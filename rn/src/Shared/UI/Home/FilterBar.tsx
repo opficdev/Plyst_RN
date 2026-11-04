@@ -3,33 +3,18 @@ import type { ScrollViewProps } from 'react-native';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { colors, spacing, typography } from '../../Theme';
 
-type HomeFilterBarProps<Key extends string> = Pick<
-  ScrollViewProps,
-  'keyboardShouldPersistTaps'
-> & {
+type HomeFilterBarProps<Key extends string> = Pick<ScrollViewProps, 'keyboardShouldPersistTaps'> & {
   chips: { key: Key; title: string }[];
   selectedKey: Key;
   // HomeFilterBarViewAction.select의 의미를 유지
   onSelect: (key: Key) => void;
 };
 
-export function HomeFilterBar<Key extends string>(
-  props: HomeFilterBarProps<Key>,
-) {
-  return (
-    <HomeFilterChips
-      key={JSON.stringify(props.chips.map(({ title }) => title))}
-      {...props}
-    />
-  );
+export function HomeFilterBar<Key extends string>(props: HomeFilterBarProps<Key>) {
+  return <HomeFilterChips key={JSON.stringify(props.chips.map(({ title }) => title))} {...props} />;
 }
 
-function HomeFilterChips<Key extends string>({
-  chips,
-  selectedKey,
-  onSelect,
-  keyboardShouldPersistTaps,
-}: HomeFilterBarProps<Key>) {
+function HomeFilterChips<Key extends string>({ chips, selectedKey, onSelect, keyboardShouldPersistTaps }: HomeFilterBarProps<Key>) {
   const [maxWidth, setMaxWidth] = useState(0);
 
   return (
@@ -44,22 +29,14 @@ function HomeFilterChips<Key extends string>({
       {chips.map(({ key, title }) => (
         <Pressable
           key={key}
-          style={[
-            styles.button,
-            { minWidth: maxWidth },
-            key === selectedKey && styles.selectedButton,
-          ]}
+          style={[styles.button, { minWidth: maxWidth }, key === selectedKey && styles.selectedButton]}
           onLayout={({ nativeEvent }) => {
             const { width } = nativeEvent.layout;
             setMaxWidth((current) => Math.max(current, width));
           }}
           onPress={() => onSelect(key)}
         >
-          <Text
-            allowFontScaling={false}
-            style={[styles.title, key === selectedKey && styles.selectedTitle]}
-            numberOfLines={1}
-          >
+          <Text allowFontScaling={false} style={[styles.title, key === selectedKey && styles.selectedTitle]} numberOfLines={1}>
             {title}
           </Text>
         </Pressable>

@@ -1,15 +1,5 @@
-import {
-  configureStore,
-  createListenerMiddleware,
-  Tuple,
-} from '@reduxjs/toolkit';
-import type {
-  CaseReducerActions,
-  Dispatch,
-  PayloadAction,
-  Reducer,
-  TypedStartListening,
-} from '@reduxjs/toolkit';
+import { configureStore, createListenerMiddleware, Tuple } from '@reduxjs/toolkit';
+import type { CaseReducerActions, Dispatch, PayloadAction, Reducer, TypedStartListening } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
 export { createAction, createSlice, original } from '@reduxjs/toolkit';
@@ -42,16 +32,12 @@ export function createScreenStore<State>({
   start,
 }: {
   slice: { reducer: Reducer<State>; getInitialState: () => State };
-  start: (
-    listen: SliceListen<State>,
-    dispatch: Dispatch,
-  ) => void | (() => void);
+  start: (listen: SliceListen<State>, dispatch: Dispatch) => void | (() => void);
 }) {
   const listener = createListenerMiddleware<State>();
   const reset = { type: 'screen/reset' };
   const store = configureStore({
-    reducer: (state = slice.getInitialState(), action): State =>
-      action === reset ? slice.getInitialState() : slice.reducer(state, action),
+    reducer: (state = slice.getInitialState(), action): State => (action === reset ? slice.getInitialState() : slice.reducer(state, action)),
     middleware: () => new Tuple(listener.middleware),
   });
   let isStarted = false;

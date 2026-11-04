@@ -1,9 +1,5 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
-import {
-  initialSearchState,
-  searchActions as actions,
-  searchSlice,
-} from '../../../src/Feature/Search/state';
+import { initialSearchState, searchActions as actions, searchSlice } from '../../../src/Feature/Search/state';
 import type { SearchState } from '../../../src/Feature/Search/state';
 
 const clip: ClipRecord = {
@@ -29,8 +25,7 @@ type Action = Parameters<typeof searchSlice.reducer>[1];
 function reduce(state: SearchState, action: Action) {
   return searchSlice.reducer(state, action);
 }
-const loaded = () =>
-  reduce(initialSearchState(1), actions.clipsLoaded({ clips: [clip], now: 2 }));
+const loaded = () => reduce(initialSearchState(1), actions.clipsLoaded({ clips: [clip], now: 2 }));
 
 test('초기 상태의 목록과 검색어 및 최근 검색어가 비어 있다', () => {
   expect(initialSearchState(1)).toEqual({
@@ -77,9 +72,7 @@ test('재조회는 목록과 시각을 갱신하고 실패는 기존 목록을 �
     ...state,
     loadPhase: 'failed',
   });
-  expect(
-    reduce(state, actions.clipsLoaded({ clips: [], now: 3 })),
-  ).toMatchObject({ clips: [], now: 3, loadPhase: 'loaded' });
+  expect(reduce(state, actions.clipsLoaded({ clips: [], now: 3 }))).toMatchObject({ clips: [], now: 3, loadPhase: 'loaded' });
 });
 
 test('시간 변경은 검색 대상 시각만 갱신한다', () => {

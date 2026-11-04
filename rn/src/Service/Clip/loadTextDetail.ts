@@ -2,14 +2,9 @@ import { getClip } from 'plyst-bridge';
 import { makeClipRecord } from '../../Model/clipRecord';
 import type { ClipRecord } from '../../Model/clipRecord';
 
-export type TextDetailResult =
-  | { status: 'loaded'; clip: ClipRecord & { text: string } }
-  | { status: 'missing' }
-  | { status: 'failed' };
+export type TextDetailResult = { status: 'loaded'; clip: ClipRecord & { text: string } } | { status: 'missing' } | { status: 'failed' };
 
-export async function loadTextDetail(
-  clipID: string,
-): Promise<TextDetailResult> {
+export async function loadTextDetail(clipID: string): Promise<TextDetailResult> {
   try {
     const clip = await getClip(clipID);
     if (clip === null) return { status: 'missing' };

@@ -46,10 +46,7 @@ test('겹친 조회에서 늦게 도착한 이전 응답은 무시한다', async
   const second = deferred();
   const onResult = jest.fn();
   const refresher = createClipDetailRefresher({
-    load: jest
-      .fn()
-      .mockReturnValueOnce(first.promise)
-      .mockReturnValueOnce(second.promise),
+    load: jest.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise),
     onResult,
   });
 
@@ -68,10 +65,7 @@ test('최신 조회가 대기 중이어도 이전 응답은 무시한다', async
   const second = deferred();
   const onResult = jest.fn();
   const refresher = createClipDetailRefresher({
-    load: jest
-      .fn()
-      .mockReturnValueOnce(first.promise)
-      .mockReturnValueOnce(second.promise),
+    load: jest.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise),
     onResult,
   });
 
@@ -90,10 +84,7 @@ test('무효화한 조회의 응답은 무시하고 다음 조회는 전달한�
   const pending = deferred();
   const onResult = jest.fn();
   const refresher = createClipDetailRefresher({
-    load: jest
-      .fn()
-      .mockReturnValueOnce(pending.promise)
-      .mockResolvedValue({ status: 'missing' }),
+    load: jest.fn().mockReturnValueOnce(pending.promise).mockResolvedValue({ status: 'missing' }),
     onResult,
   });
 

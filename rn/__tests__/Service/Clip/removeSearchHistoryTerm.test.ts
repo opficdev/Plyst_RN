@@ -18,9 +18,7 @@ test('입력을 그대로 전달하고 삭제 후 검색 기록을 포함한 sav
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  removeSearchTermMock.mockRejectedValue(
-    Object.assign(new Error('요청 실패'), { code: 'E_WRITE_FAILED' }),
-  );
+  removeSearchTermMock.mockRejectedValue(Object.assign(new Error('요청 실패'), { code: 'E_WRITE_FAILED' }));
   await expect(removeSearchHistoryTerm(' 검색어\n')).resolves.toEqual({
     status: 'failed',
   });

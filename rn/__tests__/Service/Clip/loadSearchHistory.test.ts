@@ -18,8 +18,6 @@ test('불러온 검색 기록을 포함한 loaded이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  getSearchHistoryMock.mockRejectedValue(
-    Object.assign(new Error('요청 실패'), { code: 'E_READ_FAILED' }),
-  );
+  getSearchHistoryMock.mockRejectedValue(Object.assign(new Error('요청 실패'), { code: 'E_READ_FAILED' }));
   await expect(loadSearchHistory()).resolves.toEqual({ status: 'failed' });
 });

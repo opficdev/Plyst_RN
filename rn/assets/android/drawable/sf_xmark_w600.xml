@@ -1,0 +1,13 @@
+<!-- Material Symbols Outlined의 close 아이콘 wght600 (Apache License 2.0) -->
+<!-- viewport는 SF Symbols 이미지 영역이고 글리프는 SF 글리프 경계 안 가운데에 맞춤 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="21.18dp"
+    android:height="20dp"
+    android:viewportWidth="777.63"
+    android:viewportHeight="734.42">
+  <group android:translateX="-91.19" android:translateY="848.29">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M256-181.91 181.91-256l224-224-224-224L256-778.09l224 224 224-224L778.09-704l-224 224 224 224L704-181.91l-224-224-224 224Z"/>
+  </group>
+</vector>

@@ -5,7 +5,6 @@ import { startSearchListeners } from './listeners';
 export function createSearchStore(onReload: () => void) {
   return createScreenStore({
     slice: searchSlice,
-    start: (listen, dispatch) =>
-      startSearchListeners(listen, dispatch, onReload),
+    start: (listen, dispatch) => startSearchListeners(listen, dispatch, onReload),
   });
 }

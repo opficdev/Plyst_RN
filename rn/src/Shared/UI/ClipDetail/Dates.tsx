@@ -1,11 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../Theme';
+import { colors, typography } from '../../Theme';
 
 type ClipDetailDatesProps = { savedValue: string; lastUsedValue: string };
-export function ClipDetailDates({
-  savedValue,
-  lastUsedValue,
-}: ClipDetailDatesProps) {
+export function ClipDetailDates({ savedValue, lastUsedValue }: ClipDetailDatesProps) {
   return (
     <View style={styles.container}>
       <View style={styles.cell}>
@@ -48,7 +45,7 @@ const styles = StyleSheet.create({
   lastUsedCell: { paddingLeft: 14, paddingRight: 12 },
   caption: { fontSize: 12, color: colors.SecondaryText, flexShrink: 1 },
   value: {
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 14,
     fontWeight: '500',
     color: colors.PrimaryText,

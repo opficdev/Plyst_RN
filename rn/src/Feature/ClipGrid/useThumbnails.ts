@@ -11,18 +11,12 @@ const viewabilityConfig = {
 };
 
 type ThumbnailState = ClipThumbnails & { clips: ClipRecord[] };
-type ThumbnailRequestActions = Pick<
-  ClipGridActions,
-  'thumbnailRequested' | 'thumbnailCancelRequested'
->;
+type ThumbnailRequestActions = Pick<ClipGridActions, 'thumbnailRequested' | 'thumbnailCancelRequested'>;
 type ThumbnailItem = { kind: 'card'; clip: ClipRecord } | { kind: string };
 
 export function useClipThumbnails<Item extends ThumbnailItem>(
   state: ThumbnailState,
-  dispatch: Dispatch<
-    | ReturnType<ThumbnailRequestActions['thumbnailRequested']>
-    | ReturnType<ThumbnailRequestActions['thumbnailCancelRequested']>
-  >,
+  dispatch: Dispatch<ReturnType<ThumbnailRequestActions['thumbnailRequested']> | ReturnType<ThumbnailRequestActions['thumbnailCancelRequested']>>,
   actions: ThumbnailRequestActions,
   gridPixels: number,
   pinnedPixels: number,
@@ -52,14 +46,8 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
     (id: string, pixels: number) => {
       const { state } = current.current;
       const key = `${id}:${pixels}`;
-      if (
-        state.thumbnails[key] ||
-        state.loadingThumbnails[key] ||
-        state.failedThumbnails[key]
-      )
-        return;
-      if (state.clips.some((clip) => clip.id === id && clip.image !== null))
-        dispatch(actions.thumbnailRequested({ id, pixels }));
+      if (state.thumbnails[key] || state.loadingThumbnails[key] || state.failedThumbnails[key]) return;
+      if (state.clips.some((clip) => clip.id === id && clip.image !== null)) dispatch(actions.thumbnailRequested({ id, pixels }));
     },
     [actions, dispatch],
   );
@@ -69,8 +57,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
     const next = new Map<string, { id: string; pixels: number }>();
     if (isMeasured) {
       for (const id of visibleIds.current) {
-        if (!state.clips.some((clip) => clip.id === id && clip.image !== null))
-          continue;
+        if (!state.clips.some((clip) => clip.id === id && clip.image !== null)) continue;
         next.set(`${id}:${gridPixels}`, { id, pixels: gridPixels });
         request(id, gridPixels);
       }
@@ -79,8 +66,7 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
       if (next.has(key)) continue;
       const timer = setTimeout(() => {
         timers.current.delete(timer);
-        if (!visibleKeys.current.has(key))
-          dispatch(actions.thumbnailCancelRequested(value));
+        if (!visibleKeys.current.has(key)) dispatch(actions.thumbnailCancelRequested(value));
       }, 0);
       timers.current.add(timer);
     }
@@ -99,26 +85,18 @@ export function useClipThumbnails<Item extends ThumbnailItem>(
     for (const id of pinnedIds.current) {
       const pixels = current.current.pinnedPixels;
       const key = `${id}:${pixels}`;
-      if (order.includes(key) && !state.thumbnailOrder.includes(key))
-        request(id, pixels);
+      if (order.includes(key) && !state.thumbnailOrder.includes(key)) request(id, pixels);
     }
   }, [state.thumbnailOrder, request]);
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken<Item>[] }) => {
       const wasPinnedVisible = isPinnedVisible.current;
-      isPinnedVisible.current = viewableItems.some(
-        ({ item }) => item.kind === 'pinned',
-      );
-      visibleIds.current = viewableItems.flatMap(({ item }) =>
-        item.kind === 'card' && 'clip' in item && item.clip.image !== null
-          ? [item.clip.id]
-          : [],
-      );
+      isPinnedVisible.current = viewableItems.some(({ item }) => item.kind === 'pinned');
+      visibleIds.current = viewableItems.flatMap(({ item }) => (item.kind === 'card' && 'clip' in item && item.clip.image !== null ? [item.clip.id] : []));
       updateGrid();
       if (!wasPinnedVisible && isPinnedVisible.current) {
-        for (const id of pinnedIds.current)
-          request(id, current.current.pinnedPixels);
+        for (const id of pinnedIds.current) request(id, current.current.pinnedPixels);
       }
     },
     [request, updateGrid],

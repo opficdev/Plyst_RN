@@ -1,16 +1,11 @@
 export { ClipTextCard, ClipImageCard, ClipPinnedCard } from './ClipCard';
 export type { ClipCardProps, ClipTextRange } from './ClipCard';
 export { SectionTitle } from './SectionTitle';
-export {
-  HomeEmptyState,
-  HomeTitle,
-  HomeTitleHeader,
-  HomeFilterBar,
-  HomePinnedRow,
-} from './Home';
+export { HomeEmptyState, HomeTitle, HomeTitleHeader, HomeFilterBar, HomePinnedRow } from './Home';
 export { EdgeFade } from './EdgeFade';
 export { SearchTermChip } from './SearchTermChip';
-export { ClipDetailDates, ClipDetailActionBar } from './ClipDetail';
+export { SymbolImage } from './SymbolImage';
+export { ClipDetailDates, ClipDetailActionBar, ClipDetailPinSwitch } from './ClipDetail';
 export { ActionSheet } from './ActionSheet';
 export type { ActionSheetProps } from './ActionSheet';
 export { Toast, ToastHost, showToast } from './Toast';

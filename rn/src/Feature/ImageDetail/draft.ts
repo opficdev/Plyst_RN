@@ -13,10 +13,7 @@ export function draftFromClip(clip: ClipRecord): Draft {
 }
 
 export function differs(draft: Draft, clip: ClipRecord): boolean {
-  return (
-    !equivalent(normalizedName(draft), clip.name) ||
-    draft.isPinned !== (clip.pinnedAt !== null)
-  );
+  return !equivalent(normalizedName(draft), clip.name) || draft.isPinned !== (clip.pinnedAt !== null);
 }
 
 export type Preview = {
@@ -40,8 +37,7 @@ export type ImageDetailState = {
 export type ImageDetailLoaded = { phase: 'loaded' } & ImageDetailState;
 
 // closed는 최초 조회 실패나 조회 전 삭제로 화면이 열리지 못한 경우
-export type ImageDetailStoreState =
-  { phase: 'loading' } | { phase: 'closed' } | ImageDetailLoaded;
+export type ImageDetailStoreState = { phase: 'loading' } | { phase: 'closed' } | ImageDetailLoaded;
 
 export function loadedState(clip: ClipRecord): ImageDetailLoaded {
   return {
@@ -63,12 +59,7 @@ export function hasChanges(state: ImageDetailState): boolean {
 }
 
 export function canSave(state: ImageDetailState): boolean {
-  return (
-    hasChanges(state) &&
-    !state.isSaving &&
-    !state.isDeleting &&
-    !state.isRemoved
-  );
+  return hasChanges(state) && !state.isSaving && !state.isDeleting && !state.isRemoved;
 }
 
 export function isSaveEnabled(state: ImageDetailStoreState): boolean {
@@ -76,35 +67,21 @@ export function isSaveEnabled(state: ImageDetailStoreState): boolean {
 }
 
 export function isClosed(state: ImageDetailStoreState): boolean {
-  return (
-    state.phase === 'closed' ||
-    (state.phase === 'loaded' && (state.isRemoved || state.isSaved))
-  );
+  return state.phase === 'closed' || (state.phase === 'loaded' && (state.isRemoved || state.isSaved));
 }
 
 // reducer는 변경 전 상태로 판정
 // listener는 getOriginalState로 같은 조건을 판정
-export function canStartSave(
-  state: ImageDetailStoreState,
-): state is ImageDetailLoaded {
+export function canStartSave(state: ImageDetailStoreState): state is ImageDetailLoaded {
   return state.phase === 'loaded' && !state.isSaved && canSave(state);
 }
 
-export function canStartDelete(
-  state: ImageDetailStoreState,
-): state is ImageDetailLoaded {
+export function canStartDelete(state: ImageDetailStoreState): state is ImageDetailLoaded {
   return state.phase === 'loaded' && !state.isDeleting && !state.isRemoved;
 }
 
-export function canStartPhotoSave(
-  state: ImageDetailStoreState,
-): state is ImageDetailLoaded {
-  return (
-    state.phase === 'loaded' &&
-    !state.isSavingToPhotos &&
-    !state.isDeleting &&
-    !state.isRemoved
-  );
+export function canStartPhotoSave(state: ImageDetailStoreState): state is ImageDetailLoaded {
+  return state.phase === 'loaded' && !state.isSavingToPhotos && !state.isDeleting && !state.isRemoved;
 }
 
 export const imageDetailSlice = createSlice({
@@ -130,10 +107,7 @@ export const imageDetailSlice = createSlice({
       if (state.phase === 'loading') return loadedState(clip);
       if (state.isRemoved || state.isSaved) return;
       const original = draftFromClip(state.clip);
-      if (
-        equivalent(state.draft.name, original.name) &&
-        state.draft.isPinned === original.isPinned
-      ) {
+      if (equivalent(state.draft.name, original.name) && state.draft.isPinned === original.isPinned) {
         state.draft = draftFromClip(clip);
       }
       state.clip = clip;
@@ -183,15 +157,8 @@ export const imageDetailSlice = createSlice({
         state.preview.uri = uri;
       }
     },
-    previewLoaded(
-      state,
-      { payload }: PayloadAction<{ width: number; height: number }>,
-    ) {
-      if (
-        state.phase !== 'loaded' ||
-        state.isRemoved ||
-        state.preview.status === 'failed'
-      ) {
+    previewLoaded(state, { payload }: PayloadAction<{ width: number; height: number }>) {
+      if (state.phase !== 'loaded' || state.isRemoved || state.preview.status === 'failed') {
         return;
       }
       state.preview.status = 'loaded';

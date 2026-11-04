@@ -1,54 +1,23 @@
-import {
-  memo,
-  useCallback,
-  useLayoutEffect,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { memo, useCallback, useLayoutEffect, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, PixelRatio, StyleSheet, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import type { ClipKind, ClipRecord } from '../../Model/clipRecord';
-import {
-  ActionSheet,
-  HomeSaveBar,
-  ClipTextCard,
-  ClipImageCard,
-  EdgeFade,
-  HomeEmptyState,
-  HomeFilterBar,
-  HomePinnedRow,
-  HomeTitleHeader,
-  SectionTitle,
-} from '../../Shared/UI';
+import { ActionSheet, HomeSaveBar, ClipTextCard, ClipImageCard, EdgeFade, HomeEmptyState, HomeFilterBar, HomePinnedRow, HomeTitleHeader, SectionTitle } from '../../Shared/UI';
 import { homeMenuTitle, homeMenuSummary } from './menu';
 import { colors, spacing } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
 import { homeEmptyState, homeFilterStrings, makeHomeContent } from './content';
 import { clipFilters, clipFilterTitles } from '../ClipGrid/filter';
 import { clipSectionTitles } from '../ClipGrid/section';
-import {
-  clipCardValues,
-  clipColumnWidth,
-  clipListRightMargin,
-  clipThumbnailPixels,
-} from '../ClipGrid/cardValues';
+import { clipCardValues, clipColumnWidth, clipListRightMargin, clipThumbnailPixels } from '../ClipGrid/cardValues';
 import { makeHomeListItems } from './listItems';
 import type { HomeListItem } from './listItems';
 import { homeActions as actions } from './state';
 import type { HomeState } from './state';
 import { createHomeStore } from './store';
-import {
-  ScreenProvider,
-  useScreenState,
-  useScreenDispatch,
-} from '../../Shared/State/screenStore';
+import { ScreenProvider, useScreenState, useScreenDispatch } from '../../Shared/State/screenStore';
 import { useClipTimeline } from '../ClipGrid/useTimeline';
 import { useHomeHeaderScroll } from './useHeaderScroll';
 import { NavigationBarButton } from './NavigationBarButton';
@@ -93,12 +62,7 @@ function HomeRoot(props: HomeViewProps) {
   );
 }
 
-function HomeContent({
-  getState,
-  isSearchVisible,
-  usesSystemBar,
-  navigation,
-}: HomeViewProps & { getState: () => HomeState }) {
+function HomeContent({ getState, isSearchVisible, usesSystemBar, navigation }: HomeViewProps & { getState: () => HomeState }) {
   const insets = useSafeAreaInsets();
   const state = useScreenState<HomeState>();
   const dispatch = useScreenDispatch();
@@ -141,18 +105,12 @@ function HomeContent({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [headerHeight, setHeaderHeight] = useState(0);
   const contentHeight = useRef(0);
-  const dates = useMemo(
-    () => state.clips.map((clip) => clip.createdAt),
-    [state.clips],
-  );
+  const dates = useMemo(() => state.clips.map((clip) => clip.createdAt), [state.clips]);
   const now = useClipTimeline(dates, !isSearchVisible);
   useEffect(() => {
     dispatch(actions.timeChanged(now));
   }, [dispatch, now]);
-  const content = useMemo(
-    () => makeHomeContent(state.clips, state.filter, state.now),
-    [state.clips, state.filter, state.now],
-  );
+  const content = useMemo(() => makeHomeContent(state.clips, state.filter, state.now), [state.clips, state.filter, state.now]);
   const empty = useMemo(
     () =>
       homeEmptyState({
@@ -172,10 +130,7 @@ function HomeContent({
       insetTop: 0,
       insetBottom: 0,
       viewportHeight: size.height,
-      sectionCount:
-        empty === 'none'
-          ? content.sections.length + Number(content.pinnedClips.length !== 0)
-          : 0,
+      sectionCount: empty === 'none' ? content.sections.length + Number(content.pinnedClips.length !== 0) : 0,
     }),
     [headerHeight, insets.top, size.height, content, empty],
   );
@@ -191,14 +146,7 @@ function HomeContent({
   const scale = PixelRatio.get();
   const gridPixels = clipThumbnailPixels(columnWidth, scale);
   const pinnedPixels = clipThumbnailPixels(columnWidth, scale, true);
-  const thumbnails = useClipThumbnails<HomeListItem>(
-    state,
-    dispatch,
-    actions,
-    gridPixels,
-    pinnedPixels,
-    0 < size.width,
-  );
+  const thumbnails = useClipThumbnails<HomeListItem>(state, dispatch, actions, gridPixels, pinnedPixels, 0 < size.width);
   useEffect(() => {
     list.current?.recomputeViewableItems();
   }, [items]);
@@ -239,33 +187,13 @@ function HomeContent({
         );
       if (item.kind === 'section')
         return (
-          <View
-            style={[
-              styles.section,
-              item.hasPreviousSection && styles.nextSection,
-            ]}
-          >
+          <View style={[styles.section, item.hasPreviousSection && styles.nextSection]}>
             <SectionTitle title={clipSectionTitles[item.section]} />
           </View>
         );
-      return (
-        <HomeGridItem
-          clip={item.clip}
-          now={cardNow}
-          {...thumbnail(item.clip.id, gridPixels)}
-          handlers={cardHandlers}
-        />
-      );
+      return <HomeGridItem clip={item.clip} now={cardNow} {...thumbnail(item.clip.id, gridPixels)} handlers={cardHandlers} />;
     },
-    [
-      cardHandlers,
-      cardNow,
-      failedThumbnails,
-      gridPixels,
-      onViewableIdsChange,
-      pinnedPixels,
-      thumbnailUris,
-    ],
+    [cardHandlers, cardNow, failedThumbnails, gridPixels, onViewableIdsChange, pinnedPixels, thumbnailUris],
   );
 
   return (
@@ -281,13 +209,7 @@ function HomeContent({
           numColumns={2}
           CellRendererComponent={ClipListCell}
           keyExtractor={(item) => item.key}
-          getItemType={(item) =>
-            item.kind === 'card'
-              ? item.clip.image === null
-                ? 'text'
-                : 'image'
-              : item.kind
-          }
+          getItemType={(item) => (item.kind === 'card' ? (item.clip.image === null ? 'text' : 'image') : item.kind)}
           overrideItemLayout={(layout, item) => {
             layout.span = item.kind === 'card' ? 1 : 2;
           }}
@@ -309,9 +231,7 @@ function HomeContent({
             bottom: 0,
             right: insets.right - clipListRightMargin(insets.right),
           }}
-          onLayout={({ nativeEvent: { layout } }) =>
-            setSize({ width: layout.width, height: layout.height })
-          }
+          onLayout={({ nativeEvent: { layout } }) => setSize({ width: layout.width, height: layout.height })}
           onContentSizeChange={(_, height) => {
             contentHeight.current = height;
           }}
@@ -325,22 +245,14 @@ function HomeContent({
           onViewableItemsChanged={thumbnails.onViewableItemsChanged}
         />
         {empty !== 'none' && (
-          <View
-            pointerEvents="none"
-            style={[styles.empty, { top: headerHeight, bottom: 0 }]}
-          >
+          <View pointerEvents="none" style={[styles.empty, { top: headerHeight, bottom: 0 }]}>
             <View style={styles.emptyContent}>
-              <HomeEmptyState
-                emptyTitle={strings.emptyTitle}
-                emptyBody={strings.emptyMessage}
-              />
+              <HomeEmptyState emptyTitle={strings.emptyTitle} emptyBody={strings.emptyMessage} />
             </View>
           </View>
         )}
         <Animated.View
-          onLayout={({ nativeEvent: { layout } }) =>
-            setHeaderHeight(layout.height)
-          }
+          onLayout={({ nativeEvent: { layout } }) => setHeaderHeight(layout.height)}
           style={[
             styles.header,
             {
@@ -350,50 +262,27 @@ function HomeContent({
           ]}
         >
           {/* iPhone Duo는 로고와 제목과 검색 버튼을 시스템 바가 그리므로 제목 줄을 그리지 않음 */}
-          {!usesSystemBar && (
-            <HomeTitleHeader
-              onSearchButtonPress={navigation.openSearch}
-              isSearchButtonDisabled={isSearchVisible}
-            />
-          )}
+          {!usesSystemBar && <HomeTitleHeader onSearchButtonPress={navigation.openSearch} isSearchButtonDisabled={isSearchVisible} />}
           <View style={usesSystemBar ? undefined : styles.filters}>
-            <HomeFilterBar
-              chips={chips}
-              selectedKey={state.filter}
-              onSelect={(filter) => dispatch(actions.filterSelected(filter))}
-            />
+            <HomeFilterBar chips={chips} selectedKey={state.filter} onSelect={(filter) => dispatch(actions.filterSelected(filter))} />
           </View>
         </Animated.View>
         <EdgeFade height={insets.top} />
         {/* 검색 화면은 자기 스택 항목에 닫기 항목을 두므로 Home 항목은 검색이 열려도 빼지 않음 */}
         {/* 헤더 스크롤 숨김과는 관계없음 */}
-        {usesSystemBar && (
-          <NavigationBarButton
-            side="right"
-            icon="magnifyingglass"
-            onPress={navigation.openSearch}
-          />
-        )}
+        {usesSystemBar && <NavigationBarButton side="right" icon="magnifyingglass" onPress={navigation.openSearch} />}
       </View>
       <View style={{ paddingBottom: insets.bottom + spacing.card }}>
-        <HomeSaveBar
-          isSaving={state.isSaving}
-          onSaveButtonPress={() => void save()}
-        />
+        <HomeSaveBar isSaving={state.isSaving} onSaveButtonPress={() => void save()} />
       </View>
       <ActionSheet
         isVisible={state.isMenuVisible}
         title={state.menuClip ? homeMenuTitle(state.menuClip) : '텍스트'}
-        message={
-          state.menuClip ? homeMenuSummary(state.menuClip) : '이름 없는 이미지'
-        }
+        message={state.menuClip ? homeMenuSummary(state.menuClip) : '이름 없는 이미지'}
         onClose={() => dispatch(actions.menuClosed())}
         items={[
           {
-            title:
-              (state.menuClip?.pinnedAt ?? null) !== null
-                ? '고정 해제'
-                : '고정',
+            title: (state.menuClip?.pinnedAt ?? null) !== null ? '고정 해제' : '고정',
             role: 'default',
             handler: () => void togglePin(),
           },
@@ -441,16 +330,9 @@ const HomeGridItem = memo(function HomeGridItem({
 }) {
   const values = clipCardValues(clip, now);
   return (
-    <ClipGridCard
-      onPress={() => handlers.onSelect(clip)}
-      onShowMenu={() => handlers.onShowMenu(clip)}
-    >
+    <ClipGridCard onPress={() => handlers.onSelect(clip)} onShowMenu={() => handlers.onShowMenu(clip)}>
       {values.kind === 'text' ? (
-        <ClipTextCard
-          {...values}
-          onCopyButtonPress={() => handlers.onCopy(clip)}
-          onCopyButtonLongPress={() => handlers.onShowMenu(clip)}
-        />
+        <ClipTextCard {...values} onCopyButtonPress={() => handlers.onCopy(clip)} onCopyButtonLongPress={() => handlers.onShowMenu(clip)} />
       ) : (
         <ClipImageCard
           {...values}

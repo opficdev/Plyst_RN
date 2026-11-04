@@ -4,50 +4,27 @@ import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';
+import { hangulWordBreak } from '../hangulWordBreak';
 
 type ClipImageCardProps = ClipCardProps & {
   thumbnailUri: string | null;
   isThumbnailFailed?: boolean;
 };
-export function ClipImageCard({
-  name,
-  nameHighlights,
-  metadata,
-  thumbnailUri,
-  isThumbnailFailed,
-  onCopyButtonPress,
-  onCopyButtonLongPress,
-}: ClipImageCardProps) {
+export function ClipImageCard({ name, nameHighlights, metadata, thumbnailUri, isThumbnailFailed, onCopyButtonPress, onCopyButtonLongPress }: ClipImageCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.thumbnailInset}>
         <ClipThumbnail uri={thumbnailUri} isFailed={isThumbnailFailed} />
       </View>
       <View style={styles.content}>
-        <ClipCardLabel
-          highlights={nameHighlights}
-          highlightWeight="700"
-          style={[styles.name, name === null && styles.unnamed]}
-          numberOfLines={2}
-          lineBreakStrategyIOS="standard"
-        >
+        <ClipCardLabel highlights={nameHighlights} highlightWeight="700" style={[styles.name, name === null && styles.unnamed]} numberOfLines={2} lineBreakStrategyIOS="standard">
           {name ?? '이름 없는 이미지'}
         </ClipCardLabel>
         <View style={styles.metadataRow}>
-          <Text
-            allowFontScaling={false}
-            style={styles.metadata}
-            numberOfLines={onCopyButtonPress ? 2 : 1}
-            lineBreakStrategyIOS="hangul-word"
-          >
-            {metadata}
+          <Text allowFontScaling={false} style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1} lineBreakStrategyIOS="hangul-word">
+            {hangulWordBreak(metadata)}
           </Text>
-          {onCopyButtonPress && (
-            <CopyButton
-              onCopyButtonPress={onCopyButtonPress}
-              onCopyButtonLongPress={onCopyButtonLongPress}
-            />
-          )}
+          {onCopyButtonPress && <CopyButton onCopyButtonPress={onCopyButtonPress} onCopyButtonLongPress={onCopyButtonLongPress} />}
         </View>
       </View>
     </View>
@@ -76,7 +53,7 @@ const styles = StyleSheet.create({
   metadata: {
     flex: 1,
     flexShrink: 1,
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 10.5,
     fontWeight: '500',
     color: colors.SecondaryText,

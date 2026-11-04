@@ -19,10 +19,7 @@ type HomePinnedRowProps = {
 // 요청 취소는 하지 않음
 const viewabilityConfig = { viewAreaCoveragePercentThreshold: 0 };
 
-export function HomePinnedRow({
-  clips,
-  onViewableIdsChange,
-}: HomePinnedRowProps) {
+export function HomePinnedRow({ clips, onViewableIdsChange }: HomePinnedRowProps) {
   // 오른쪽 safe area가 있으면 목록 틀이 safe area 안으로 16 들어옴
   // 이때는 구분선과 카드가 잘리는 위치를 safe area 경계에 맞춤
   const isRightInset = 0 < useSafeAreaInsets().right;
@@ -39,21 +36,12 @@ export function HomePinnedRow({
         data={clips}
         keyExtractor={(item) => item.id}
         style={[styles.scrollView, isRightInset && styles.insetScrollView]}
-        contentContainerStyle={[
-          styles.stack,
-          isRightInset && styles.insetStack,
-        ]}
+        contentContainerStyle={[styles.stack, isRightInset && styles.insetStack]}
         showsHorizontalScrollIndicator={false}
         viewabilityConfig={viewabilityConfig}
-        onViewableItemsChanged={({ viewableItems }) =>
-          onViewableIdsChange(viewableItems.map(({ item }) => item.id))
-        }
+        onViewableItemsChanged={({ viewableItems }) => onViewableIdsChange(viewableItems.map(({ item }) => item.id))}
         renderItem={({ item }) => (
-          <Pressable
-            onPress={item.onSelect}
-            onLongPress={item.onShowMenu}
-            delayLongPress={clipCardLongPressDelay}
-          >
+          <Pressable onPress={item.onSelect} onLongPress={item.onShowMenu} delayLongPress={clipCardLongPressDelay}>
             <ClipPinnedCard {...item} onCopyButtonLongPress={item.onShowMenu} />
           </Pressable>
         )}

@@ -55,24 +55,18 @@ function buildMap(value: SearchText): ClusterMap {
   return value.map;
 }
 
-function firstRange(
-  value: SearchText,
-  query: string,
-  cursor: number,
-): { range: ClipTextRange; next: number } | null {
+function firstRange(value: SearchText, query: string, cursor: number): { range: ClipTextRange; next: number } | null {
   while (cursor < value.folded.length) {
     const start = value.folded.indexOf(query, cursor);
     if (start < 0) return null;
     const end = start + query.length;
-    if (value.isSimple)
-      return { range: { location: start, length: query.length }, next: end };
+    if (value.isSimple) return { range: { location: start, length: query.length }, next: end };
     const map = buildMap(value);
     if (map.boundaries[start] && map.boundaries[end]) {
       const location = map.starts[start];
       const originalEnd = map.ends[end - 1];
       cursor = end;
-      while (cursor < value.folded.length && map.starts[cursor] < originalEnd)
-        cursor += 1;
+      while (cursor < value.folded.length && map.starts[cursor] < originalEnd) cursor += 1;
       return {
         range: { location, length: originalEnd - location },
         next: cursor,

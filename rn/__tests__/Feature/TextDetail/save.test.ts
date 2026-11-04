@@ -40,9 +40,7 @@ test('저장 결과가 null이면 removed이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  updateClipMock.mockRejectedValue(
-    Object.assign(new Error('저장 실패'), { code: 'E_UPDATE_FAILED' }),
-  );
+  updateClipMock.mockRejectedValue(Object.assign(new Error('저장 실패'), { code: 'E_UPDATE_FAILED' }));
   await expect(saveTextDetail(clip.id, draft)).resolves.toEqual({
     status: 'failed',
   });

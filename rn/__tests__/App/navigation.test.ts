@@ -1,8 +1,4 @@
-import {
-  initialNavigation,
-  navigationActions as actions,
-  navigationSlice,
-} from '../../src/App/navigation';
+import { initialNavigation, navigationActions as actions, navigationSlice } from '../../src/App/navigation';
 import type { AppNavigation } from '../../src/App/navigation';
 
 const detail = { clipID: 'clip', kind: 'text' } as const;
@@ -62,12 +58,7 @@ test('상세를 닫으면 detail만 비운다', () => {
   expect(reduce(closed, actions.clipClosed())).toBe(closed);
 });
 
-test.each([
-  actions.searchOpened(),
-  actions.searchClosed(),
-  actions.clipOpened(detail),
-  actions.clipClosed(),
-])('%j는 입력 상태를 변형하지 않는다', (action) => {
+test.each([actions.searchOpened(), actions.searchClosed(), actions.clipOpened(detail), actions.clipClosed()])('%j는 입력 상태를 변형하지 않는다', (action) => {
   const state: AppNavigation = Object.freeze({
     isSearchVisible: true,
     detail,

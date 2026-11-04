@@ -20,9 +20,7 @@ test.each<[ClipboardSaveResult, string, boolean]>([
 });
 
 test('거부되면 저장 실패 토스트를 반환한다', async () => {
-  save.mockRejectedValue(
-    Object.assign(new Error('실패'), { code: 'E_SAVE_FAILED' }),
-  );
+  save.mockRejectedValue(Object.assign(new Error('실패'), { code: 'E_SAVE_FAILED' }));
   await expect(saveHomeClipboard()).resolves.toEqual({
     message: '클립을 저장하지 못했습니다',
     isSuccess: false,

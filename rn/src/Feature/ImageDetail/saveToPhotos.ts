@@ -1,12 +1,8 @@
 import { saveClipToPhotos } from '../../Service/Clip/saveToPhotos';
 
-export type SaveImageDetailToPhotosResult =
-  | { status: 'removed' }
-  | { status: 'finished'; message: string; isSuccess: boolean };
+export type SaveImageDetailToPhotosResult = { status: 'removed' } | { status: 'finished'; message: string; isSuccess: boolean };
 
-export async function saveImageDetailToPhotos(
-  clipID: string,
-): Promise<SaveImageDetailToPhotosResult> {
+export async function saveImageDetailToPhotos(clipID: string): Promise<SaveImageDetailToPhotosResult> {
   const result = await saveClipToPhotos(clipID);
   if (result === 'removed') return { status: 'removed' };
   if (result === 'failed') {

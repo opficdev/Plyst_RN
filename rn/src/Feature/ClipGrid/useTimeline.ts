@@ -2,10 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { nextClipTimelineChange } from './timeline';
 
-export function useClipTimeline(
-  createdAtList: readonly number[],
-  isEnabled: boolean,
-): number {
+export function useClipTimeline(createdAtList: readonly number[], isEnabled: boolean): number {
   const [now, setNow] = useState(Date.now);
   const dates = useRef(createdAtList);
   const reschedule = useRef<(() => void) | null>(null);
@@ -26,8 +23,7 @@ export function useClipTimeline(
       if (!isEnabled || AppState.currentState !== 'active') return;
       const current = Date.now();
       const next = nextClipTimelineChange(dates.current, current);
-      if (next !== null)
-        timer = setTimeout(refresh, Math.max(0, next - current));
+      if (next !== null) timer = setTimeout(refresh, Math.max(0, next - current));
     }
     function refresh() {
       if (!isEnabled || AppState.currentState !== 'active') return;

@@ -42,9 +42,7 @@ test('조회 결과가 null이면 missing이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  getClipMock.mockRejectedValue(
-    Object.assign(new Error('읽기 실패'), { code: 'E_READ_FAILED' }),
-  );
+  getClipMock.mockRejectedValue(Object.assign(new Error('읽기 실패'), { code: 'E_READ_FAILED' }));
   await expect(loadImageDetail(clip.id)).resolves.toEqual({ status: 'failed' });
 });
 

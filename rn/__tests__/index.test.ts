@@ -25,12 +25,7 @@ test('ToastHost 모듈을 등록한다', () => {
 
 test('AppRoot 모듈 하나가 화면 루트를 대신한다', () => {
   expect(AppRegistry.getAppKeys()).toContain('AppRoot');
-  for (const name of [
-    'HomeView',
-    'SearchView',
-    'TextDetailView',
-    'ImageDetailView',
-  ]) {
+  for (const name of ['HomeView', 'SearchView', 'TextDetailView', 'ImageDetailView']) {
     expect(AppRegistry.getAppKeys()).not.toContain(name);
   }
 });

@@ -16,25 +16,15 @@ export type HomeHeaderPosition = {
 
 function boundedScrollY(offset: number, geometry: HomeScrollGeometry): number {
   const top = -geometry.insetTop;
-  const bottom = Math.max(
-    top,
-    geometry.contentHeight - geometry.viewportHeight + geometry.insetBottom,
-  );
+  const bottom = Math.max(top, geometry.contentHeight - geometry.viewportHeight + geometry.insetBottom);
   // 위아래 튕김을 제외한 실제 목록 범위로 제한
   return Math.min(bottom, Math.max(top, offset));
 }
 
-function clampedHidden(
-  hidden: number,
-  scrollY: number,
-  geometry: HomeScrollGeometry,
-): number {
+function clampedHidden(hidden: number, scrollY: number, geometry: HomeScrollGeometry): number {
   if (geometry.sectionCount <= 0) return 0;
   // 헤더 높이와 상단 여백에서부터 이동한 거리까지만 숨김
-  return Math.max(
-    0,
-    Math.min(geometry.headerHeight, hidden, scrollY + geometry.insetTop),
-  );
+  return Math.max(0, Math.min(geometry.headerHeight, hidden, scrollY + geometry.insetTop));
 }
 
 export function updateHeaderHidden(
@@ -50,43 +40,27 @@ export function updateHeaderHidden(
   const scrollY = boundedScrollY(offset, geometry);
   const previous = position.previousScrollY ?? scrollY;
   // 드래그나 감속 중에만 이전 위치와의 차이를 누적
-  const hidden =
-    position.hidden + (isDragging || isDecelerating ? scrollY - previous : 0);
+  const hidden = position.hidden + (isDragging || isDecelerating ? scrollY - previous : 0);
   return {
     hidden: clampedHidden(hidden, scrollY, geometry),
     previousScrollY: scrollY,
   };
 }
 
-export function snapHeaderTarget(
-  hidden: number,
-  offset: number,
-  geometry: HomeScrollGeometry,
-): { hidden: number; scrollY: number } | null {
+export function snapHeaderTarget(hidden: number, offset: number, geometry: HomeScrollGeometry): { hidden: number; scrollY: number } | null {
   if (geometry.headerHeight <= 0) return null;
   const top = -geometry.insetTop;
   const scrollY = boundedScrollY(offset, geometry);
   // 헤더 아래쪽이 안전 영역 경계를 넘어갔을 때만 완전히 숨김
   const hides = geometry.headerHeight - geometry.safeTop < hidden;
   // 헤더 높이보다 적게 스크롤했다면 목록도 헤더 끝이나 맨 위로 이동
-  const targetY =
-    scrollY - top < geometry.headerHeight
-      ? boundedScrollY(hides ? top + geometry.headerHeight : top, geometry)
-      : scrollY;
-  const target = clampedHidden(
-    hides ? geometry.headerHeight : 0,
-    targetY,
-    geometry,
-  );
+  const targetY = scrollY - top < geometry.headerHeight ? boundedScrollY(hides ? top + geometry.headerHeight : top, geometry) : scrollY;
+  const target = clampedHidden(hides ? geometry.headerHeight : 0, targetY, geometry);
   if (target === hidden && targetY === scrollY) return null;
   return { hidden: target, scrollY: targetY };
 }
 
-export function reloadHeaderPosition(
-  hidden: number,
-  offset: number,
-  geometry: HomeScrollGeometry,
-) {
+export function reloadHeaderPosition(hidden: number, offset: number, geometry: HomeScrollGeometry) {
   // 빈 목록은 스크롤을 끄고 상단에 고정
   // 헤더도 모두 드러냄
   const isScrollEnabled = 0 < geometry.sectionCount;

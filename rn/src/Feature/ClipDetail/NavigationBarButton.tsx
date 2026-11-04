@@ -11,23 +11,8 @@ type NavigationBarButtonProps = {
 };
 
 // 항목은 내비게이션 바에 그려지므로 RN 상자는 크기가 없음
-export function NavigationBarButton({
-  side,
-  icon,
-  title,
-  isEnabled = true,
-  onPress,
-}: NavigationBarButtonProps) {
-  return (
-    <PlystNavigationBarButton
-      side={side}
-      icon={icon}
-      title={title}
-      isEnabled={isEnabled}
-      onPress={onPress}
-      style={styles.box}
-    />
-  );
+export function NavigationBarButton({ side, icon, title, isEnabled = true, onPress }: NavigationBarButtonProps) {
+  return <PlystNavigationBarButton side={side} icon={icon} title={title} isEnabled={isEnabled} onPress={onPress} style={styles.box} />;
 }
 
 const styles = StyleSheet.create({
