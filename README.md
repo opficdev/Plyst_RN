@@ -40,7 +40,7 @@
 | 영역 | 담당 | 이유 |
 | --- | --- | --- |
 | 화면 구성과 화면 상태, 화면 전환과 상세 시트 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용하며 `AppRoot` 하나가 전환을 소유 |
-| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 Rust 코어가 네이티브 스레드에서 계산 |
+| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 Rust 코어로 계산하며 필터와 범위는 JS 스레드의 동기 호출이고 미리 만들기만 작업 스레드에서 실행 |
 | 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
 | 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
 | 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
