@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../Theme';
 import type { ClipCardProps, ClipTextRange } from './CardProps';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';
+import { SymbolImage } from '../SymbolImage';
 
 type ClipTextCardProps = ClipCardProps & {
   body: string;
@@ -14,7 +14,7 @@ export function ClipTextCard({ name, nameHighlights, bodyHighlights, metadata, b
   return (
     <View style={styles.card}>
       {isWebLink ? (
-        <Image source="sf:globe" contentFit="contain" style={styles.linkIcon} />
+        <SymbolImage name="globe" contentFit="contain" style={styles.linkIcon} />
       ) : (
         <Text allowFontScaling={false} style={styles.quote}>
           “

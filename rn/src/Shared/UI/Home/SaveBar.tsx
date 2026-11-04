@@ -1,6 +1,6 @@
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../Theme';
+import { SymbolImage } from '../SymbolImage';
 
 type HomeSaveBarProps = {
   isSaving: boolean;
@@ -22,7 +22,7 @@ export function HomeSaveBar({ isSaving, onSaveButtonPress }: HomeSaveBarProps) {
         </Text>
       </Pressable>
       <View style={styles.privacyRow}>
-        <Image source="sf:lock.fill" contentFit="contain" style={styles.lock} />
+        <SymbolImage name="lock.fill" contentFit="contain" style={styles.lock} />
         <Text allowFontScaling={false} style={styles.privacy}>
           이 기기에만 저장됩니다
         </Text>

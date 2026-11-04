@@ -1,6 +1,6 @@
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../../Theme';
+import { SymbolImage } from '../SymbolImage';
 
 type ClipDetailActionBarProps = {
   isBusy?: boolean;
@@ -18,7 +18,7 @@ export function ClipDetailActionBar({ isBusy = false, onDeleteButtonPress, onCop
           </Text>
         </Pressable>
         <Pressable style={styles.copyButton} disabled={isBusy} onPress={onCopyButtonPress}>
-          <Image source="sf:doc.on.doc" contentFit="contain" style={styles.copyIcon} />
+          <SymbolImage name="doc.on.doc" contentFit="contain" style={styles.copyIcon} />
           <Text allowFontScaling={false} style={styles.copyTitle} numberOfLines={1}>
             다시 복사
           </Text>

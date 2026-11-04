@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActionSheet } from '../../Shared/UI';
+import { ActionSheet, SymbolImage } from '../../Shared/UI';
 import { ClipDetailActionBar, ClipDetailDates } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
@@ -111,7 +111,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
               )}
               {preview.status !== 'loaded' && (
                 <View style={styles.previewMessage}>
-                  {preview.status === 'failed' && <Image source="sf:exclamationmark.triangle" style={styles.failureIcon} contentFit="contain" />}
+                  {preview.status === 'failed' && <SymbolImage name="exclamationmark.triangle" style={styles.failureIcon} contentFit="contain" />}
                   <Text allowFontScaling={false} style={styles.message}>
                     {preview.status === 'failed' ? '이미지를 불러오지 못했습니다' : '이미지를 불러오는 중입니다'}
                   </Text>
@@ -121,7 +121,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
           </View>
           <Pressable disabled={photoDisabled} onPress={saveToPhotos} style={({ pressed }) => [styles.photoButton, { opacity: photoDisabled || pressed ? 0.5 : 1 }]}>
             <View pointerEvents="none" style={styles.photoBackground} />
-            {state.isSavingToPhotos ? <ActivityIndicator color={colors.PrimaryText} /> : <Image source="sf:square.and.arrow.down" style={styles.photoIcon} contentFit="contain" />}
+            {state.isSavingToPhotos ? <ActivityIndicator color={colors.PrimaryText} /> : <SymbolImage name="square.and.arrow.down" style={styles.photoIcon} contentFit="contain" />}
             <Text allowFontScaling={false} style={styles.photoLabel}>
               사진 앱에 저장
             </Text>

@@ -1,6 +1,5 @@
 import { memo, useCallback, useContext, useDeferredValue, useEffect, useMemo, useLayoutEffect, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, PixelRatio, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import { Image } from 'expo-image';
 import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { ScreenStackHeaderLeftView, ScreenStackItem } from 'react-native-screens';
@@ -8,7 +7,7 @@ import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import type { ClipKind, ClipRecord } from '../../Model/clipRecord';
-import { ClipImageCard, ClipTextCard, HomeEmptyState, HomeFilterBar, SearchTermChip, SectionTitle } from '../../Shared/UI';
+import { ClipImageCard, ClipTextCard, HomeEmptyState, HomeFilterBar, SearchTermChip, SectionTitle, SymbolImage } from '../../Shared/UI';
 import { colors, spacing, typography } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
 import { clipCardValues, clipColumnWidth, clipListRightMargin, clipThumbnailPixels } from '../ClipGrid/cardValues';
@@ -278,7 +277,7 @@ function SearchScreen({
           : [styles.searchPill, styles.searchPillPosition, { top: insets.top - 5, width: Math.max(0, width - 96) }]
       }
     >
-      <Image source="sf:magnifyingglass" contentFit="contain" style={styles.searchIcon} onDisplay={startOpen} onLoad={startOpen} />
+      <SymbolImage name="magnifyingglass" contentFit="contain" style={styles.searchIcon} onDisplay={startOpen} onLoad={startOpen} />
       <TextInput
         ref={input}
         value={state.query}
@@ -316,10 +315,10 @@ function SearchScreen({
           <SearchTransition effect="fadeIn" isPresented={isPresented} style={[styles.cancel, { top: insets.top - 5 }]}>
             <Pressable style={styles.cancelPress} onPress={close}>
               <SearchTransition effect="fadeOut" isPresented={isPresented} style={styles.buttonIcon}>
-                <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
+                <SymbolImage name="magnifyingglass" style={styles.cancelIcon} />
               </SearchTransition>
               <SearchTransition effect="fadeIn" isPresented={isPresented} style={styles.buttonIcon}>
-                <Image source="sf:xmark" contentFit="none" style={styles.xmarkIcon} />
+                <SymbolImage name="xmark" contentFit="none" style={styles.xmarkIcon} />
               </SearchTransition>
             </Pressable>
           </SearchTransition>

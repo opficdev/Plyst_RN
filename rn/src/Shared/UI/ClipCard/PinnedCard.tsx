@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../Theme';
 import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
+import { SymbolImage } from '../SymbolImage';
 
 type ClipPinnedCardProps = ClipCardProps &
   (
@@ -23,7 +23,7 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
       ) : (
         <View style={styles.visualBox}>
           {props.isWebLink ? (
-            <Image source="sf:globe" contentFit="contain" style={styles.linkIcon} />
+            <SymbolImage name="globe" contentFit="contain" style={styles.linkIcon} />
           ) : (
             <Text allowFontScaling={false} style={styles.quote}>
               “
