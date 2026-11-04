@@ -64,3 +64,15 @@ test('줄 텍스트의 WORD JOINER를 원문 길이에 세지 않는다', () => 
   const lines = [{ text: '가\u2060나\n' }, { text: '다\u2060라\n' }];
   expect(labelTruncation(text, lines, 2)).toBe(5);
 });
+
+test('원문에 원래 있던 WORD JOINER는 원문 길이에 센다', () => {
+  const text = 'a\u2060b\nc\nd';
+  const lines = [{ text: 'a\u2060b\n' }, { text: 'c\n' }];
+  expect(labelTruncation(text, lines, 2)).toBe(5);
+});
+
+test('원문의 WORD JOINER 옆에 넣은 WORD JOINER만 건너뛴다', () => {
+  const text = '가\u2060나\n다\n라';
+  const lines = [{ text: '가\u2060\u2060나\n' }, { text: '다\n' }];
+  expect(labelTruncation(text, lines, 2)).toBe(5);
+});
