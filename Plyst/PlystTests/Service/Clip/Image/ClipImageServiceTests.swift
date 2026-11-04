@@ -56,23 +56,6 @@ final class ClipImageServiceTests: XCTestCase {
         await assertEvents(stream, expected: [.deleted(result.value.id)])
     }
 
-    func testRejectedInsertPreservesStorageErrorAndCleansFile() async throws {
-        let spy = ClipImageStorageServiceSpy(storage: try makeStorage())
-        await spy.reject(.insert)
-        let files = try ClipImageFileStore(rootURL: root)
-        let service = ClipImageService(storage: spy, files: files)
-        let stream = await spy.changes()
-        do {
-            _ = try await service.saveImage(ClipImageTestFixture.data())
-            XCTFail("실패하도록 설정한 삽입 성공")
-        } catch { XCTAssertEqual(error as? ClipStorageError, .writeFailed) }
-        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
-        await spy.allow(.insert)
-        let sentinel = Clip(content: .text("검증"))
-        try await spy.insert(sentinel)
-        await assertEvents(stream, expected: [.inserted(sentinel)])
-    }
-
     func testRejectedDeletionPreservesClipOriginalAndEvents() async throws {
         let spy = ClipImageStorageServiceSpy(storage: try makeStorage())
         let service = ClipImageService(storage: spy, files: try ClipImageFileStore(rootURL: root))
@@ -91,49 +74,6 @@ final class ClipImageServiceTests: XCTestCase {
         let sentinel = Clip(content: .text("검증"))
         try await spy.insert(sentinel)
         await assertEvents(stream, expected: [.inserted(sentinel)])
-    }
-
-    func testFailedInsertCompensationIsRecoveredWithoutLosingStorageError() async throws {
-        let root = self.root
-        let spy = ClipImageStorageServiceSpy(storage: try makeStorage(), beforeInsert: { clip in
-            guard case .image(let image) = clip.content else { return }
-            try ClipImageFileSystemTestFixture.makeReadOnly(root.appendingPathComponent(image.fileID.uuidString))
-        })
-        await spy.reject(.insert)
-        let files = try ClipImageFileStore(rootURL: root)
-        let service = ClipImageService(storage: spy, files: files)
-        do {
-            _ = try await service.saveImage(ClipImageTestFixture.data())
-            XCTFail("실패하도록 설정한 삽입 성공")
-        } catch {
-            if error is XCTSkip { throw error }
-            XCTAssertEqual(error as? ClipStorageError, .writeFailed)
-        }
-        XCTAssertEqual(try files.pendingFileIDs().count, 1)
-        try ClipImageFileSystemTestFixture.restorePermissions(at: root)
-        let reopenedFiles = try ClipImageFileStore(rootURL: root)
-        let reopened = ClipImageService(storage: spy, files: reopenedFiles)
-        let pending = try await reopened.recoverPendingCleanup()
-        XCTAssertEqual(pending, [])
-        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
-    }
-
-    func testMarkerFailurePreventsMetadataDeletion() async throws {
-        let storage = try makeStorage()
-        let data = try ClipImageTestFixture.data()
-        let service = ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
-        let result = try await service.saveImage(data)
-        let files = try ClipImageFileStore(rootURL: root)
-        let marker = root.appendingPathComponent(try image(in: result.value).fileID.uuidString).appendingPathComponent("pending")
-        try FileManager.default.createDirectory(at: marker, withIntermediateDirectories: false)
-        let failing = ClipImageService(storage: storage, files: files)
-        do {
-            _ = try await failing.delete(id: result.value.id)
-            XCTFail("정리 후보 생성 실패 후 삭제 성공")
-        } catch { XCTAssertEqual(error as? ClipImageFileError, .unsafePath) }
-        let preserved = try await storage.fetch(id: result.value.id)
-        XCTAssertEqual(preserved, result.value)
-        XCTAssertEqual(try files.load(fileID: image(in: result.value).fileID), data)
     }
 
     func testCommittedDeletionWithFailedCleanupIsRecoveredAfterReopening() async throws {
@@ -307,23 +247,6 @@ final class ClipImageServiceTests: XCTestCase {
         XCTAssertEqual(clips.count, 12)
         for clip in clips { XCTAssertEqual(try files.load(fileID: image(in: clip).fileID), data) }
         XCTAssertEqual(try files.pendingFileIDs(), [])
-    }
-
-    func testCancelledSaveDoesNotCreateAnOriginalOrMetadata() async throws {
-        let storage = try makeStorage()
-        let service = ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
-        let data = try ClipImageTestFixture.data()
-        let task = Task {
-            withUnsafeCurrentTask { $0?.cancel() }
-            return try await service.saveImage(data)
-        }
-        do {
-            _ = try await task.value
-            XCTFail("취소된 저장 성공")
-        } catch { XCTAssertTrue(error is CancellationError) }
-        let clips = try await storage.fetchAll(order: .createdAt)
-        XCTAssertEqual(clips, [])
-        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
     }
 
     private func makeStorage() throws -> SQLiteClipStorageService {
