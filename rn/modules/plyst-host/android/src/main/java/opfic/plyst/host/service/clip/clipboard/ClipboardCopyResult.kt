@@ -4,7 +4,7 @@ import java.util.UUID
 import opfic.plyst.host.model.Clip
 
 sealed interface ClipboardCopyResult {
-  // 클립보드 쓰기를 확인했고 사용 시각의 저장도 확정했음
+  // 클립보드 쓰기를 확인했고 사용 시각의 저장도 확정
   data class Copied(val clip: Clip) : ClipboardCopyResult
 
   data class WriteNotObserved(val id: UUID) : ClipboardCopyResult
