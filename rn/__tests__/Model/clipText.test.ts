@@ -1,11 +1,10 @@
-import { clipCharacterCount, clipTextPrefix, clusters } from '../../src/Model/clipText';
+import { clipCharacterCount, clipTextPrefix } from '../../src/Model/clipText';
 
 test.each([
   ['👨‍👩‍👧‍👦', 1],
   ['🇰🇷', 1],
   ['e\u0301', 1],
 ])('문자소 경계를 보존한다: %s', (text, count) => {
-  expect(clusters(text)).toHaveLength(count);
   expect(clipCharacterCount(text)).toBe(count);
 });
 

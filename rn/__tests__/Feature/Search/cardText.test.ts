@@ -1,3 +1,4 @@
+import { searchCoreCardText } from 'plyst-search';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { searchCardText } from '../../../src/Feature/Search/cardText';
 import { createSearchIndex } from '../../../src/Feature/Search/match';
@@ -35,8 +36,9 @@ test('일치가 없으면 본문을 그대로 반환한다', () => {
   });
 });
 
-test('늦은 일치는 앞에 말줄임표를 붙이고 UTF-16 범위를 옮긴다', () => {
+test('발췌 시작 위치부터 말줄임표를 붙이고 UTF-16 범위를 옮긴다', () => {
   const text = '😀'.repeat(50) + 'target target';
+  jest.mocked(searchCoreCardText).mockReturnValueOnce({ nameRanges: [], bodyRanges: [100, 6, 107, 6], excerptStart: 72 });
   expect(searchCardText({ ...clip, text }, 'target', createSearchIndex())).toEqual({
     body: '…' + '😀'.repeat(14) + 'target target',
     nameHighlights: [],
@@ -47,15 +49,7 @@ test('늦은 일치는 앞에 말줄임표를 붙이고 UTF-16 범위를 옮긴�
   });
 });
 
-test('분해된 한글도 글자 수로 발췌하고 범위는 UTF-16으로 옮긴다', () => {
-  const prefix = '한'.normalize('NFD');
-  const text = prefix.repeat(50) + 'target';
-  const value = searchCardText({ ...clip, text }, 'target', createSearchIndex());
-  expect(value.body).toBe('…' + prefix.repeat(14) + 'target');
-  expect(value.bodyHighlights).toEqual([{ location: 43, length: 6 }]);
-});
-
-test('40번째 글자에서 시작하는 일치는 발췌하지 않는다', () => {
+test('발췌 시작 위치가 0이면 본문을 그대로 쓴다', () => {
   const text = '가'.repeat(40) + 'target';
   expect(searchCardText({ ...clip, text }, 'target', createSearchIndex()).body).toBe(text);
 });

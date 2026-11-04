@@ -120,7 +120,7 @@ function SearchScreen({
   }, [dispatch, now]);
   useEffect(() => {
     times.retain(state.clips);
-    return index.prebuild(state.clips);
+    index.prebuild(state.clips);
   }, [index, times, state.clips]);
   useEffect(() => () => index.dispose(), [index]);
   useEffect(() => {

@@ -1,6 +1,6 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import type { ClipFilter } from '../../../src/Feature/ClipGrid/filter';
-import { createSearchTimeTexts, makeSearchContent, searchEmptyStrings, searchExcerptStart, searchHeaderTitle, searchMode, searchRecentDisplay } from '../../../src/Feature/Search/content';
+import { createSearchTimeTexts, makeSearchContent, searchEmptyStrings, searchHeaderTitle, searchMode, searchRecentDisplay } from '../../../src/Feature/Search/content';
 import { createSearchIndex } from '../../../src/Feature/Search/match';
 import { searchCardText } from '../../../src/Feature/Search/cardText';
 
@@ -89,12 +89,6 @@ test.each<[ClipFilter, ClipRecord[], number, number]>([
 test('결과는 입력 순서를 유지한다', () => {
   const clips = [image, pinned, text];
   expect(content(clips, 'report').results).toEqual(clips);
-});
-
-test('40글자를 넘은 첫 일치에서 14글자 앞부터 발췌한다', () => {
-  expect(searchExcerptStart('가'.repeat(50) + 'target', 50)).toBe(36);
-  expect(searchExcerptStart('target' + '가'.repeat(50), 0)).toBe(0);
-  expect(searchExcerptStart('가'.repeat(40) + 'target', 40)).toBe(0);
 });
 
 test('종류가 섞인 결과에만 종류별 개수를 표시한다', () => {
