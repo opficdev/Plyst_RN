@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { RefObject } from 'react';
+import { Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../Theme';
 import { ActionSheetButton } from './Button';
@@ -14,6 +15,17 @@ export type ActionSheetProps = {
   items: ActionSheetItem[];
   onClose: () => void;
 };
+
+// Android Modal은 onDismiss를 보내지 않음
+const sendsDismissEvent = Platform.OS === 'ios';
+
+// handler가 화면을 다시 표시할 때 새 선택 상태가 지워지지 않도록 호출 전에 대기 중인 항목을 초기화
+function runPendingItem(pendingItem: RefObject<ActionSheetItem | undefined>) {
+  const item = pendingItem.current;
+  pendingItem.current = undefined;
+  item?.handler?.();
+}
+
 export function ActionSheet({ isVisible, title, message, items, onClose }: ActionSheetProps) {
   const didFinish = useRef(false);
   const pendingItem = useRef<ActionSheetItem | undefined>(undefined);
@@ -23,6 +35,9 @@ export function ActionSheet({ isVisible, title, message, items, onClose }: Actio
       didFinish.current = false;
       pendingItem.current = undefined;
       Keyboard.dismiss();
+    } else if (!sendsDismissEvent) {
+      // 숨김이 반영된 뒤 대기 중인 handler를 실행
+      runPendingItem(pendingItem);
     }
   }, [isVisible]);
 
@@ -37,15 +52,8 @@ export function ActionSheet({ isVisible, title, message, items, onClose }: Actio
     select(items.filter((item) => item.role === 'cancel').pop());
   }
 
-  function dismiss() {
-    const item = pendingItem.current;
-    // handler가 화면을 다시 표시할 때 새 선택 상태가 지워지지 않도록 호출 전에 대기 중인 항목을 초기화
-    pendingItem.current = undefined;
-    item?.handler?.();
-  }
-
   return (
-    <Modal transparent animationType="fade" visible={isVisible} onDismiss={dismiss}>
+    <Modal transparent animationType="fade" visible={isVisible} onDismiss={() => runPendingItem(pendingItem)}>
       <SafeAreaProvider>
         <ActionSheetContent title={title} message={message} items={items} onSelect={select} onCancel={cancel} />
       </SafeAreaProvider>
