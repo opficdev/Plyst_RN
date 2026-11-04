@@ -58,3 +58,9 @@ test('첫 줄이 빈 문단이면 위치 0을 반환한다', () => {
 test('보조 평면 문자를 UTF-16 길이로 계산한다', () => {
   expect(labelTruncation('😀\nb\nc', [{ text: '😀\n' }, { text: 'b\n' }], 2)).toBe(4);
 });
+
+test('줄 텍스트의 WORD JOINER를 원문 길이에 세지 않는다', () => {
+  const text = '가나\n다라\n마';
+  const lines = [{ text: '가\u2060나\n' }, { text: '다\u2060라\n' }];
+  expect(labelTruncation(text, lines, 2)).toBe(5);
+});

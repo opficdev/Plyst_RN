@@ -10,9 +10,16 @@ function isHangul(character: string) {
   return (0xac00 <= code && code <= 0xd7a3) || (0x1100 <= code && code <= 0x11ff) || (0x3130 <= code && code <= 0x318f);
 }
 
+// 분해형 한글의 중성과 종성은 앞 자모와 한 글자로 합쳐지므로 사이에 문자를 넣지 않음
+function isTrailingJamo(character: string) {
+  const code = character.charCodeAt(0);
+  return 0x1160 <= code && code <= 0x11ff;
+}
+
 function joins(previous: string | undefined, next: string | undefined) {
   if (previous === undefined || next === undefined) return false;
   if (/\s/.test(previous) || /\s/.test(next)) return false;
+  if (isTrailingJamo(next)) return false;
   return isHangul(previous) || isHangul(next);
 }
 
