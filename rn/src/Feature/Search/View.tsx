@@ -1,5 +1,5 @@
 import { memo, useCallback, useContext, useDeferredValue, useEffect, useMemo, useLayoutEffect, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, PixelRatio, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, PixelRatio, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { ScreenStackHeaderLeftView, ScreenStackItem } from 'react-native-screens';
@@ -35,6 +35,8 @@ let hasPresentedKeyboard = false;
 const duoTopCameraMargin = 245;
 
 const noInsets = { top: 0, left: 0, bottom: 0, right: 0 };
+// Android TextInput에는 clearButtonMode가 없어 입력 중이고 글자가 있을 때 같은 자리에 지우기 버튼을 그림
+const drawsClearButton = Platform.OS === 'android';
 
 const searchHeader: ScreenStackHeaderConfigProps = {
   translucent: true,
@@ -102,6 +104,7 @@ function SearchScreen({
   const input = useRef<TextInput>(null);
   const list = useRef<FlashListRef<SearchListItem>>(null);
   const [isPresented, setIsPresented] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const hasEntered = useRef(false);
   const hasStarted = useRef(false);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -261,6 +264,7 @@ function SearchScreen({
   const recent = searchRecentDisplay(state.searchHistoryPhase, state.searchHistory);
 
   // iPhone Duo는 서치바를 시스템 바 왼쪽 항목으로 그리므로 위치는 시스템이 정하고 너비만 정함
+  const showsClearButton = drawsClearButton && isEditing && state.query !== '';
   const searchPill = (
     <SearchTransition
       effect="expand"
@@ -290,12 +294,19 @@ function SearchScreen({
         spellCheck={false}
         autoCapitalize="none"
         allowFontScaling={false}
-        style={styles.input}
+        style={[styles.input, showsClearButton && styles.inputBesideClearButton]}
+        onFocus={() => setIsEditing(true)}
+        onBlur={() => setIsEditing(false)}
         onSubmitEditing={() => {
           dispatch(actions.submitQuery());
           input.current?.blur();
         }}
       />
+      {showsClearButton && (
+        <Pressable style={styles.clearButton} onPress={() => dispatch(actions.queryChanged(''))}>
+          <SymbolImage name="xmark.circle.fill" style={styles.clearIcon} />
+        </Pressable>
+      )}
     </SearchTransition>
   );
 
@@ -532,6 +543,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.PrimaryText,
   },
+  // iOS 지우기 버튼은 입력 칸 오른쪽 끝에서 3pt 안쪽에 지름 15.7pt 원으로 그려짐
+  inputBesideClearButton: { marginRight: 0 },
+  clearButton: { width: 22, height: 44, marginRight: 11, alignItems: 'center', justifyContent: 'center' },
+  clearIcon: { width: 17.5, height: 17.5, color: colors.Placeholder },
   cancel: {
     position: 'absolute',
     right: 20,
