@@ -1,0 +1,19 @@
+apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+android {
+    namespace "opfic.plyst.bridge"
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+    }
+}
+
+dependencies {
+    implementation "com.facebook.react:react-android"
+    // expo-modules-core와 같은 버전
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+}

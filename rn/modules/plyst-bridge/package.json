@@ -10,6 +10,9 @@
     "name": "PlystClipSpec",
     "type": "all",
     "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "opfic.plyst.bridge"
+    },
     "ios": {
       "components": {
         "PlystDetailBarButton": {
