@@ -1,0 +1,19 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Android 9 이하에서 사진 모음에 추가할 때만 필요 -->
+  <uses-permission
+    android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="28" />
+
+  <application>
+    <!-- 이미지 클립을 클립보드로 복사할 때 다른 앱이 읽을 URI를 제공 -->
+    <provider
+      android:name="androidx.core.content.FileProvider"
+      android:authorities="${applicationId}.plyst.clipboard"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/plyst_clipboard_paths" />
+    </provider>
+  </application>
+</manifest>

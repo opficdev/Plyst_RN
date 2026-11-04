@@ -1,0 +1,6 @@
+{
+  "name": "plyst-host",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android에서 클립 저장소와 클립보드, 이미지 파일, 사진 저장을 맡는 호스트"
+}
