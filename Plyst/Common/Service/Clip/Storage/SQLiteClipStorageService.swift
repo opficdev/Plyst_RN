@@ -45,7 +45,7 @@ actor SQLiteClipStorageService: ClipStorageService {
             database = try DatabaseQueue(path: databaseURL.path, configuration: configuration)
             // GRDB의 WAL 초기화가 NORMAL을 설정하므로 초기화 후 FULL을 적용
             try database.writeWithoutTransaction { connection in
-                try connection.setSynchronousMode(.full)
+                try connection.execute(sql: "PRAGMA synchronous = 2")
             }
         } catch {
             Self.logFailure(error, operation: "데이터베이스 초기화")

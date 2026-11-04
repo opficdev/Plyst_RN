@@ -92,16 +92,6 @@ actor ClipImageService {
         return try files.writeThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
     }
 
-    /// 카드 표시용 축소 데이터만 반환하며 원본 파일은 유지
-    func loadThumbnail(
-        _ image: ClipImageMetadata,
-        maximumPixelDimension: Int
-    ) async throws -> Data {
-        try await acquire()
-        defer { release() }
-        return try files.loadThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
-    }
-
     /// DB 삭제 확정 후 파일 정리에 실패해도 확정된 삭제를 실패로 반환하지 않음
     func delete(id: Clip.ID) async throws -> ClipImageMutationResult<Clip.ID> {
         try await acquire()
