@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { colors } from '../../Theme';
 import type { ClipTextRange } from './CardProps';
 import { labelTruncation } from './labelTruncation';
+import { hangulWordBreak } from '../hangulWordBreak';
 
 type ClipCardLabelProps = Omit<TextProps, 'children'> & {
   children: string;
@@ -24,7 +25,7 @@ export function ClipCardLabel({ children, highlights, highlightWeight, style, on
   let cursor = 0;
   for (const { location, length } of highlights ?? []) {
     if (cut !== null && location + length > cut) continue;
-    parts.push(text.slice(cursor, location));
+    parts.push(hangulWordBreak(text, cursor, location));
     parts.push(
       <Text
         allowFontScaling={false}
@@ -34,12 +35,12 @@ export function ClipCardLabel({ children, highlights, highlightWeight, style, on
           fontWeight: highlightWeight,
         }}
       >
-        {text.slice(location, location + length)}
+        {hangulWordBreak(text, location, location + length)}
       </Text>,
     );
     cursor = location + length;
   }
-  parts.push(text.slice(cursor));
+  parts.push(hangulWordBreak(text, cursor));
 
   // RN 대체 글꼴로 짧아지는 한글 줄 높이를 맞추고 원본처럼 레이블 높이를 올림
   return (
@@ -70,7 +71,7 @@ export function ClipCardLabel({ children, highlights, highlightWeight, style, on
         onLayout?.(event);
       }}
     >
-      {highlights?.length ? parts : text}
+      {highlights?.length ? parts : hangulWordBreak(text)}
     </Text>
   );
 }

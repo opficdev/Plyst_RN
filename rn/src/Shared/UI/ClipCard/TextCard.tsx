@@ -3,6 +3,7 @@ import { colors, radius, spacing, typography } from '../../Theme';
 import type { ClipCardProps, ClipTextRange } from './CardProps';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';
+import { hangulWordBreak } from '../hangulWordBreak';
 import { SymbolImage } from '../SymbolImage';
 
 type ClipTextCardProps = ClipCardProps & {
@@ -36,7 +37,7 @@ export function ClipTextCard({ name, nameHighlights, bodyHighlights, metadata, b
       </ClipCardLabel>
       <View style={styles.metadataRow}>
         <Text allowFontScaling={false} style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1} lineBreakStrategyIOS="hangul-word">
-          {metadata}
+          {hangulWordBreak(metadata)}
         </Text>
         {onCopyButtonPress && <CopyButton onCopyButtonPress={onCopyButtonPress} onCopyButtonLongPress={onCopyButtonLongPress} />}
       </View>

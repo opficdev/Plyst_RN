@@ -4,6 +4,7 @@ import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
 import { ClipCardLabel } from './Label';
+import { hangulWordBreak } from '../hangulWordBreak';
 
 type ClipImageCardProps = ClipCardProps & {
   thumbnailUri: string | null;
@@ -21,7 +22,7 @@ export function ClipImageCard({ name, nameHighlights, metadata, thumbnailUri, is
         </ClipCardLabel>
         <View style={styles.metadataRow}>
           <Text allowFontScaling={false} style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1} lineBreakStrategyIOS="hangul-word">
-            {metadata}
+            {hangulWordBreak(metadata)}
           </Text>
           {onCopyButtonPress && <CopyButton onCopyButtonPress={onCopyButtonPress} onCopyButtonLongPress={onCopyButtonLongPress} />}
         </View>

@@ -1,15 +1,16 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../Theme';
+import { hangulWordBreak } from '../hangulWordBreak';
 
 type HomeEmptyStateProps = { emptyTitle: string; emptyBody: string };
 export function HomeEmptyState({ emptyTitle, emptyBody }: HomeEmptyStateProps) {
   return (
     <View style={styles.container}>
       <Text allowFontScaling={false} style={styles.emptyTitle} numberOfLines={0} lineBreakStrategyIOS="standard">
-        {emptyTitle}
+        {hangulWordBreak(emptyTitle)}
       </Text>
       <Text allowFontScaling={false} style={styles.emptyBody} numberOfLines={0} lineBreakStrategyIOS="standard">
-        {emptyBody}
+        {hangulWordBreak(emptyBody)}
       </Text>
     </View>
   );
