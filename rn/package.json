@@ -9,6 +9,7 @@
     "expo": "~57.0.27",
     "expo-image": "~57.0.5",
     "plyst-bridge": "file:./modules/plyst-bridge",
+    "plyst-search": "file:./modules/plyst-search",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
