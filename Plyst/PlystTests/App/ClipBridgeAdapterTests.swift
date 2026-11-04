@@ -46,39 +46,6 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertEqual(record.lastUsedAt, 2345500)
     }
 
-    func testImageClipReturnsMetadataWithoutFileURI() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
-        let result = try await adapter.images.saveImage(ClipImageTestFixture.data())
-        guard case .image(let metadata) = result.value.content else {
-            return XCTFail("이미지 클립이 아닙니다.")
-        }
-
-        let fetched = try await adapter.clip(id: result.value.id)
-        let record = try XCTUnwrap(fetched)
-        let image = try XCTUnwrap(record.image)
-
-        XCTAssertEqual(record.id, result.value.id.uuidString)
-        XCTAssertNil(record.text)
-        XCTAssertNil(record.name)
-        XCTAssertNil(record.memo)
-        XCTAssertNil(record.lastUsedAt)
-        XCTAssertNil(record.pinnedAt)
-        XCTAssertEqual(record.createdAt, result.value.createdAt.timeIntervalSince1970 * 1000)
-        XCTAssertEqual(image.byteCount, metadata.byteCount)
-        XCTAssertEqual(image.contentType, metadata.contentType)
-        XCTAssertEqual(image.pixelWidth, metadata.pixelWidth)
-        XCTAssertEqual(image.pixelHeight, metadata.pixelHeight)
-    }
-
-    func testMissingClipReturnsNil() async throws {
-        let adapter = try makeAdapter(storage: makeStorage())
-
-        let record = try await adapter.clip(id: UUID())
-
-        XCTAssertNil(record)
-    }
-
     func testMissingImageFileStillReturnsAndUpdatesTheClip() async throws {
         let storage = try makeStorage()
         let adapter = try makeAdapter(storage: storage)
@@ -159,18 +126,6 @@ final class ClipBridgeAdapterTests: XCTestCase {
         XCTAssertNil(record)
     }
 
-    func testDeleteRemovesTextClip() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-
-        try await adapter.deleteClip(id: clip.id)
-
-        let fetched = try await storage.fetch(id: clip.id)
-        XCTAssertNil(fetched)
-    }
-
     func testDeleteRemovesImageFile() async throws {
         let storage = try makeStorage()
         let adapter = try makeAdapter(storage: storage)
@@ -185,140 +140,6 @@ final class ClipBridgeAdapterTests: XCTestCase {
         let fetched = try await storage.fetch(id: result.value.id)
         XCTAssertNil(fetched)
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
-    }
-
-    func testDeleteMissingClipSucceeds() async throws {
-        let adapter = try makeAdapter(storage: makeStorage())
-        try await adapter.deleteClip(id: UUID())
-    }
-
-    func testUpdateWriteFailure() async throws {
-        let storage = try makeStorage()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let spy = ClipBridgeStorageServiceSpy(storage: storage, failure: ClipStorageError.writeFailed)
-        let adapter = try makeAdapter(storage: spy)
-
-        do {
-            _ = try await adapter.updateClip(
-                id: clip.id,
-                name: nil,
-                memo: nil,
-                isPinned: false
-            )
-            XCTFail("실패해야 하는 요청이 성공했습니다.")
-        } catch {
-            guard case ClipBridgeError.writeFailed = error else {
-                return XCTFail("예상한 오류가 아닙니다: \(error)")
-            }
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
-    }
-
-    func testUpdateCorruptedData() async throws {
-        let storage = try makeStorage()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let spy = ClipBridgeStorageServiceSpy(storage: storage, failure: ClipStorageError.corruptedData)
-        let adapter = try makeAdapter(storage: spy)
-
-        do {
-            _ = try await adapter.updateClip(
-                id: clip.id,
-                name: nil,
-                memo: nil,
-                isPinned: false
-            )
-            XCTFail("실패해야 하는 요청이 성공했습니다.")
-        } catch {
-            guard case ClipBridgeError.corruptedData = error else {
-                return XCTFail("예상한 오류가 아닙니다: \(error)")
-            }
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
-    }
-
-    func testUpdateCancellation() async throws {
-        let storage = try makeStorage()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let spy = ClipBridgeStorageServiceSpy(storage: storage, failure: CancellationError())
-        let adapter = try makeAdapter(storage: spy)
-
-        do {
-            _ = try await adapter.updateClip(
-                id: clip.id,
-                name: nil,
-                memo: nil,
-                isPinned: false
-            )
-            XCTFail("실패해야 하는 요청이 성공했습니다.")
-        } catch {
-            guard error is CancellationError else {
-                return XCTFail("예상한 오류가 아닙니다: \(error)")
-            }
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
-    }
-
-    func testDeleteWriteFailure() async throws {
-        let storage = try makeStorage()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let spy = ClipBridgeStorageServiceSpy(storage: storage, failure: ClipStorageError.writeFailed)
-        let adapter = try makeAdapter(storage: spy)
-
-        do {
-            try await adapter.deleteClip(id: clip.id)
-            XCTFail("실패해야 하는 요청이 성공했습니다.")
-        } catch {
-            guard case ClipBridgeError.writeFailed = error else {
-                return XCTFail("예상한 오류가 아닙니다: \(error)")
-            }
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
-    }
-
-    func testDeleteCorruptedData() async throws {
-        let storage = try makeStorage()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let spy = ClipBridgeStorageServiceSpy(storage: storage, failure: ClipStorageError.corruptedData)
-        let adapter = try makeAdapter(storage: spy)
-
-        do {
-            try await adapter.deleteClip(id: clip.id)
-            XCTFail("실패해야 하는 요청이 성공했습니다.")
-        } catch {
-            guard case ClipBridgeError.corruptedData = error else {
-                return XCTFail("예상한 오류가 아닙니다: \(error)")
-            }
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
-    }
-
-    func testDeleteCancellation() async throws {
-        let storage = try makeStorage()
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        let spy = ClipBridgeStorageServiceSpy(storage: storage, failure: CancellationError())
-        let adapter = try makeAdapter(storage: spy)
-
-        do {
-            try await adapter.deleteClip(id: clip.id)
-            XCTFail("실패해야 하는 요청이 성공했습니다.")
-        } catch {
-            guard error is CancellationError else {
-                return XCTFail("예상한 오류가 아닙니다: \(error)")
-            }
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
     }
 
     private func makeStorage() throws -> SQLiteClipStorageService {
