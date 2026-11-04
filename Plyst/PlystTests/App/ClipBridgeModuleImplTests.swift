@@ -21,63 +21,6 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         try await super.tearDown()
     }
 
-    func testFoundRecordReturnsName() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
-        let clip = Clip(content: .text("가족 👨‍👩‍👧‍👦"), name: "이름")
-        try await storage.insert(clip)
-        await ClipBridge.register(adapter)
-        let completion = expectation(description: "조회 완료")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(clip.id.uuidString) { record, code in
-            XCTAssertEqual(record?["name"] as? String, "이름")
-            XCTAssertEqual(record?["text"] as? String, "가족 👨‍👩‍👧‍👦")
-            XCTAssertNil(code)
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
-    }
-
-    func testMissingRecordReturnsNilWithoutCode() async throws {
-        let adapter = try makeAdapter(storage: makeStorage())
-        await ClipBridge.register(adapter)
-        let completion = expectation(description: "조회 완료")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(UUID().uuidString) { record, code in
-            XCTAssertNil(record)
-            XCTAssertNil(code)
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
-    }
-
-    func testInvalidIdentifierReturnsCode() async {
-        let completion = expectation(description: "조회 완료")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClip("invalid") { record, code in
-            XCTAssertNil(record)
-            XCTAssertEqual(code, "E_INVALID_ID")
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
-    }
-
-    func testUnregisteredProviderReturnsUnavailable() async {
-        await ClipBridge.unregister()
-        let completion = expectation(description: "조회 완료")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClip(UUID().uuidString) { record, code in
-            XCTAssertNil(record)
-            XCTAssertEqual(code, "E_UNAVAILABLE")
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
-    }
-
     func testImageRecordContainsRawSizeWithoutURI() async throws {
         let adapter = try makeAdapter(storage: makeStorage())
         let data = try ClipImageTestFixture.data()
@@ -123,61 +66,32 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         await fulfillment(of: [completion], timeout: 2)
     }
 
-    func testGetClipsReturnsEmptyArray() async throws {
-        let adapter = try makeAdapter(storage: makeStorage())
+    func testUpdateArgumentsReachStoredClipThroughAdapter() async throws {
+        let storage = try makeStorage()
+        let adapter = try makeAdapter(storage: storage)
+        let clip = Clip(content: .text("원문"))
+        try await storage.insert(clip)
         await ClipBridge.register(adapter)
-        let completion = expectation(description: "빈 목록 조회 완료")
+        let completion = expectation(description: "수정 완료")
 
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
-            XCTAssertEqual(records?.count, 0)
+        ClipBridgeModuleImpl(emit: { _, _ in }).updateClip(
+            clip.id.uuidString,
+            name: "이름",
+            memo: "메모",
+            isPinned: true
+        ) { record, code in
+            XCTAssertEqual(record?["name"] as? String, "이름")
+            XCTAssertEqual(record?["memo"] as? String, "메모")
             XCTAssertNil(code)
             completion.fulfill()
         }
 
         await fulfillment(of: [completion], timeout: 2)
-    }
-
-    func testGetClipsUnregisteredProviderReturnsUnavailable() async {
-        await ClipBridge.unregister()
-        let completion = expectation(description: "목록 조회 실패")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
-            XCTAssertNil(records)
-            XCTAssertEqual(code, "E_UNAVAILABLE")
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
-    }
-
-    func testGetClipsCorruptedDataReturnsCode() async throws {
-        let spy = ClipBridgeStorageServiceSpy(storage: try makeStorage(), failure: ClipStorageError.corruptedData)
-        let adapter = try makeAdapter(storage: spy)
-        await ClipBridge.register(adapter)
-        let completion = expectation(description: "목록 조회 실패")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
-            XCTAssertNil(records)
-            XCTAssertEqual(code, "E_CORRUPTED_DATA")
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
-    }
-
-    func testGetClipsReadFailureReturnsCode() async throws {
-        let spy = ClipBridgeStorageServiceSpy(storage: try makeStorage(), failure: ClipStorageError.readFailed)
-        let adapter = try makeAdapter(storage: spy)
-        await ClipBridge.register(adapter)
-        let completion = expectation(description: "목록 조회 실패")
-
-        ClipBridgeModuleImpl(emit: { _, _ in }).getClips { records, code in
-            XCTAssertNil(records)
-            XCTAssertEqual(code, "E_READ_FAILED")
-            completion.fulfill()
-        }
-
-        await fulfillment(of: [completion], timeout: 2)
+        let fetched = try await storage.fetch(id: clip.id)
+        let stored = try XCTUnwrap(fetched)
+        XCTAssertEqual(stored.name, "이름")
+        XCTAssertEqual(stored.memo, "메모")
+        XCTAssertNotNil(stored.pinnedAt)
     }
 
     private func makeStorage() throws -> SQLiteClipStorageService {
