@@ -33,30 +33,6 @@
   </tr>
 </table>
 
-## 프로젝트 개요
-
-화면과 상태는 RN이 담당하고 iOS 실행 환경과 시스템 자원은 Swift가 담당하는 브라운필드 앱
-
-| 영역 | 담당 | 이유 |
-| --- | --- | --- |
-| 화면 구성과 화면 상태, 화면 전환과 상세 시트 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용하며 `AppRoot` 하나가 전환을 소유 |
-| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 Rust 코어로 계산하며 필터와 범위는 JS 스레드의 동기 호출이고 미리 만들기만 작업 스레드에서 실행 |
-| 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
-| 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
-| 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
-| 앱과 Scene 생명주기, RN 런타임, RN 루트 호스트 | Swift | iOS 실행 환경 필요 |
-| 상세 화면의 닫기, 저장 버튼 (Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()` 버튼을 Fabric 컴포넌트로 RN 상단 바에 배치 (iOS 26 미만은 평면 버튼) |
-| TurboModule 구현과 wire 값 변환 | Swift | Codegen 인터페이스의 네이티브 구현 |
-| 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
-| 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
-| `isWebLink` 판정 | Swift | Foundation `URL`과 WHATWG `URL`의 판정 차이를 재현할 수 없음 |
-| 클립보드 읽기와 쓰기, `lastUsedAt` 갱신 | Swift | 시스템 API와 다른 앱과의 권한 동작에 의존 |
-| 사진 저장 | Swift | RN으로 옮겨도 사진 보관함 권한 판정은 Swift에 남아 책임이 나뉨 |
-| 최근 검색어의 규칙과 저장 | Swift | 대소문자 비교 결과가 달라지고 목록을 원자적으로 교체해야 함 |
-| Share Extension, Widget | Swift | Extension 실행 환경 필요 |
-
-![클립 데이터 흐름](./docs/data-flow.png)
-
 ## 주요 기능
 
 - Home에서 클립을 종류와 고정 여부로 분류하고 현재 클립보드를 저장
@@ -165,6 +141,30 @@ export interface Spec extends TurboModule {
 ```
 
 ---
+
+## 프로젝트 개요
+
+화면과 상태는 RN이 담당하고 iOS 실행 환경과 시스템 자원은 Swift가 담당하는 브라운필드 앱
+
+| 영역 | 담당 | 이유 |
+| --- | --- | --- |
+| 화면 구성과 화면 상태, 화면 전환과 상세 시트 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용하며 `AppRoot` 하나가 전환을 소유 |
+| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 Rust 코어로 계산하며 필터와 범위는 JS 스레드의 동기 호출이고 미리 만들기만 작업 스레드에서 실행 |
+| 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
+| 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
+| 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
+| 앱과 Scene 생명주기, RN 런타임, RN 루트 호스트 | Swift | iOS 실행 환경 필요 |
+| 상세 화면의 닫기, 저장 버튼 (Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()` 버튼을 Fabric 컴포넌트로 RN 상단 바에 배치 (iOS 26 미만은 평면 버튼) |
+| TurboModule 구현과 wire 값 변환 | Swift | Codegen 인터페이스의 네이티브 구현 |
+| 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
+| 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
+| `isWebLink` 판정 | Swift | Foundation `URL`과 WHATWG `URL`의 판정 차이를 재현할 수 없음 |
+| 클립보드 읽기와 쓰기, `lastUsedAt` 갱신 | Swift | 시스템 API와 다른 앱과의 권한 동작에 의존 |
+| 사진 저장 | Swift | RN으로 옮겨도 사진 보관함 권한 판정은 Swift에 남아 책임이 나뉨 |
+| 최근 검색어의 규칙과 저장 | Swift | 대소문자 비교 결과가 달라지고 목록을 원자적으로 교체해야 함 |
+| Share Extension, Widget | Swift | Extension 실행 환경 필요 |
+
+![클립 데이터 흐름](./docs/data-flow.png)
 
 ## 기술 스택
 
