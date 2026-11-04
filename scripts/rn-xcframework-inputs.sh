@@ -52,6 +52,7 @@ lock_lines() {
 }
 
 # 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 plyst-bridge ios 소스는 이름만 포함
+# Android 전용 소스와 plyst-host는 iOS 프레임워크에 들어가지 않아 제외
 base_lines() {
 	content_lines \
 		rn/package.json \
@@ -62,6 +63,8 @@ base_lines() {
 		Plyst/Packages/PlystReactNative/Package.swift \
 		.mise.toml \
 		':(exclude,glob)rn/modules/**/ios/**' \
+		':(exclude,glob)rn/modules/**/android/**' \
+		':(exclude)rn/modules/plyst-host' \
 		rn/modules
 	name_lines ':(glob)rn/modules/**/ios/**'
 	deployment_target_line
