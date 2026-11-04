@@ -6,20 +6,11 @@
 //
 
 import Foundation
-import SQLiteData
 import XCTest
 @testable import Plyst
 
 @MainActor
-final class ClipboardServiceCopyTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-copy-\(UUID())", isDirectory: true)
-    private var url: URL { directory.appendingPathComponent("clips.sqlite") }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
-        try super.tearDownWithError()
-    }
-
+final class ClipboardServiceCopyTests: ClipTemporaryDirectoryTestCase {
     func testTextCopyPreservesOriginalAndDetailsAndCommitsUsageAndEvent() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let text = " \n한글 'text'\0🙂\nhttps://example.com/path?query=value\t "
@@ -73,7 +64,7 @@ final class ClipboardServiceCopyTests: XCTestCase {
         )
         try await storage.insert(clip)
         let stream = await storage.changes()
-        let spy = ClipboardStorageServiceSpy(storage: storage, beforeUpdate: {
+        let spy = ClipStorageServiceSpy(storage: storage, beforeUpdate: {
             try await storage.delete(id: clip.id)
             try await storage.insert(replacement)
         })
@@ -98,7 +89,7 @@ final class ClipboardServiceCopyTests: XCTestCase {
         let clip = Clip(content: .text("편집 중인 원문"))
         try await storage.insert(clip)
         let details = ClipUpdate.details(name: "새 이름", memo: "새 메모", isPinned: true, requestedAt: Date(timeIntervalSince1970: 300))
-        let spy = ClipboardStorageServiceSpy(storage: storage, beforeUpdate: {
+        let spy = ClipStorageServiceSpy(storage: storage, beforeUpdate: {
             _ = try await storage.update(id: clip.id, change: details)
         })
         let writer = ClipboardWriterSpy()
@@ -127,26 +118,4 @@ final class ClipboardServiceCopyTests: XCTestCase {
             writer: writer
         )
     }
-
-    private func assertEvents(
-        _ stream: AsyncStream<ClipStorageEvent>,
-        expected: [ClipStorageEvent]
-    ) async {
-        let received = expectation(description: "확정된 저장 변경만 전달")
-        let task = Task {
-            var iterator = stream.makeAsyncIterator()
-            for event in expected {
-                let actual = await iterator.next()
-                XCTAssertEqual(actual, event)
-            }
-            received.fulfill()
-        }
-        await fulfillment(of: [received], timeout: 2)
-        task.cancel()
-        await task.value
-    }
-}
-
-private enum ClipboardCopyTestError: Error {
-    case unexpected
 }

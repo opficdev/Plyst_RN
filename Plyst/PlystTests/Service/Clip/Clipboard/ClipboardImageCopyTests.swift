@@ -11,16 +11,7 @@ import XCTest
 @testable import Plyst
 
 @MainActor
-final class ClipboardImageCopyTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-image-copy-\(UUID())", isDirectory: true)
-    private var root: URL { directory.appendingPathComponent("images") }
-    private var url: URL { directory.appendingPathComponent("clips.sqlite") }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
-        try super.tearDownWithError()
-    }
-
+final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
     func testImageCopyPreservesOriginalBytesTypeAndMetadata() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let files = try ClipImageFileStore(rootURL: root)

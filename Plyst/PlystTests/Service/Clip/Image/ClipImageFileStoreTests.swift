@@ -12,14 +12,8 @@ import UniformTypeIdentifiers
 import XCTest
 @testable import Plyst
 
-final class ClipImageFileStoreTests: XCTestCase {
-    private let root = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-images-\(UUID())", isDirectory: true)
-
-    override func tearDownWithError() throws {
-        try ClipImageFileSystemTestFixture.restorePermissions(at: root)
-        if FileManager.default.fileExists(atPath: root.path) { try FileManager.default.removeItem(at: root) }
-        try super.tearDownWithError()
-    }
+final class ClipImageFileStoreTests: ClipTemporaryDirectoryTestCase {
+    override var root: URL { directory }
 
     func testOriginalBytesAndMetadataSurviveReopeningWithoutApplyingOrientation() throws {
         for type in [UTType.png.identifier, UTType.jpeg.identifier] {

@@ -9,16 +9,7 @@ import Foundation
 import XCTest
 @testable import Plyst
 
-final class ClipImageServiceTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-image-service-\(UUID())", isDirectory: true)
-    private var root: URL { directory.appendingPathComponent("images", isDirectory: true) }
-
-    override func tearDownWithError() throws {
-        try ClipImageFileSystemTestFixture.restorePermissions(at: directory)
-        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
-        try super.tearDownWithError()
-    }
-
+final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
     func testSavedClipAndOriginalAreRestoredByNewInstances() async throws {
         let data = try ClipImageTestFixture.data()
         let storage = try makeStorage()
@@ -57,7 +48,7 @@ final class ClipImageServiceTests: XCTestCase {
     }
 
     func testRejectedDeletionPreservesClipOriginalAndEvents() async throws {
-        let spy = ClipImageStorageServiceSpy(storage: try makeStorage())
+        let spy = ClipStorageServiceSpy(storage: try makeStorage())
         let service = ClipImageService(storage: spy, files: try ClipImageFileStore(rootURL: root))
         let data = try ClipImageTestFixture.data()
         let result = try await service.saveImage(data)
@@ -83,7 +74,7 @@ final class ClipImageServiceTests: XCTestCase {
         let result = try await service.saveImage(ClipImageTestFixture.data())
         let metadata = try image(in: result.value)
         let directory = root.appendingPathComponent(metadata.fileID.uuidString)
-        let spy = ClipImageStorageServiceSpy(storage: storage, beforeDelete: { _ in
+        let spy = ClipStorageServiceSpy(storage: storage, beforeDelete: { _ in
             try ClipImageFileSystemTestFixture.makeReadOnly(directory)
         })
         let failing = ClipImageService(storage: spy, files: files)
@@ -109,7 +100,7 @@ final class ClipImageServiceTests: XCTestCase {
         let storage = try makeStorage()
         let data = try ClipImageTestFixture.data()
         let root = self.root
-        let spy = ClipImageStorageServiceSpy(storage: storage, beforeInsert: { clip in
+        let spy = ClipStorageServiceSpy(storage: storage, beforeInsert: { clip in
             guard case .image(let image) = clip.content else { return }
             try ClipImageFileSystemTestFixture.makeReadOnly(root.appendingPathComponent(image.fileID.uuidString))
         })
@@ -128,7 +119,7 @@ final class ClipImageServiceTests: XCTestCase {
     }
 
     func testFailedReferenceQueryKeepsCandidateAndOriginalUntilRetry() async throws {
-        let spy = ClipImageStorageServiceSpy(storage: try makeStorage())
+        let spy = ClipStorageServiceSpy(storage: try makeStorage())
         let files = try ClipImageFileStore(rootURL: root)
         let service = ClipImageService(storage: spy, files: files)
         let data = try ClipImageTestFixture.data()
@@ -227,7 +218,7 @@ final class ClipImageServiceTests: XCTestCase {
     }
 
     func testConcurrentSavesAndRecoveryPreserveEveryCommittedOriginal() async throws {
-        let spy = ClipImageStorageServiceSpy(storage: try makeStorage())
+        let spy = ClipStorageServiceSpy(storage: try makeStorage())
         await spy.yieldBeforeInsert()
         let files = try ClipImageFileStore(rootURL: root)
         let service = ClipImageService(storage: spy, files: files)
@@ -249,75 +240,8 @@ final class ClipImageServiceTests: XCTestCase {
         XCTAssertEqual(try files.pendingFileIDs(), [])
     }
 
-    private func makeStorage() throws -> SQLiteClipStorageService {
-        try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
-    }
-
     private func image(in clip: Clip) throws -> ClipImageMetadata {
         guard case .image(let metadata) = clip.content else { throw ClipImageFileError.notImage(clip.id) }
         return metadata
     }
-
-    private func assertEvents(
-        _ stream: AsyncStream<ClipStorageEvent>,
-        expected: [ClipStorageEvent]
-    ) async {
-        let received = expectation(description: "확정된 DB 변경만 이벤트로 전달")
-        let task = Task {
-            var iterator = stream.makeAsyncIterator()
-            for event in expected {
-                let actual = await iterator.next()
-                XCTAssertEqual(actual, event)
-            }
-            received.fulfill()
-        }
-        await fulfillment(of: [received], timeout: 2)
-        task.cancel()
-        await task.value
-    }
-}
-
-private actor ClipImageStorageServiceSpy: ClipStorageService {
-    enum Operation: Hashable { case insert, delete, list }
-    private let storage: SQLiteClipStorageService
-    private var rejected = Set<Operation>()
-    private var yieldsBeforeInsert = false
-    private let beforeInsert: @Sendable (Clip) throws -> Void
-    private let beforeDelete: @Sendable (Clip.ID) throws -> Void
-
-    init(
-        storage: SQLiteClipStorageService,
-        beforeInsert: @escaping @Sendable (Clip) throws -> Void = { _ in },
-        beforeDelete: @escaping @Sendable (Clip.ID) throws -> Void = { _ in }
-    ) {
-        self.storage = storage
-        self.beforeInsert = beforeInsert
-        self.beforeDelete = beforeDelete
-    }
-    func reject(_ operation: Operation) { rejected.insert(operation) }
-    func allow(_ operation: Operation) { rejected.remove(operation) }
-    func yieldBeforeInsert() { yieldsBeforeInsert = true }
-    func fetchAll(order: ClipSortOrder) async throws -> [Clip] {
-        if rejected.contains(.list) { throw ClipStorageError.readFailed }
-        return try await storage.fetchAll(order: order)
-    }
-    func fetch(id: Clip.ID) async throws -> Clip? { try await storage.fetch(id: id) }
-    func insert(_ clip: Clip) async throws {
-        try beforeInsert(clip)
-        if rejected.contains(.insert) { throw ClipStorageError.writeFailed }
-        if yieldsBeforeInsert { await Task.yield() }
-        try await storage.insert(clip)
-    }
-    func update(
-        id: Clip.ID,
-        change: ClipUpdate
-    ) async throws -> Clip {
-        try await storage.update(id: id, change: change)
-    }
-    func delete(id: Clip.ID) async throws {
-        try beforeDelete(id)
-        if rejected.contains(.delete) { throw ClipStorageError.writeFailed }
-        try await storage.delete(id: id)
-    }
-    func changes() async -> AsyncStream<ClipStorageEvent> { await storage.changes() }
 }

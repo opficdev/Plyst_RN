@@ -10,17 +10,7 @@ import SQLiteData
 import XCTest
 @testable import Plyst
 
-final class SQLiteClipStorageServiceTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-\(UUID())", isDirectory: true)
-    private var url: URL { directory.appendingPathComponent("clips.sqlite") }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
-        try super.tearDownWithError()
-    }
-
+final class SQLiteClipStorageServiceTests: ClipTemporaryDirectoryTestCase {
     func testTextAndImageMetadataAreRestoredByAnotherStorage() async throws {
         let text = Clip(
             content: .text("  한글 'text'\0🙂\nhttps://example.com  "),
@@ -86,7 +76,7 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         XCTAssertEqual(preserved, clip)
         try execute("DROP TRIGGER rejectUpdate")
         let updated = try await storage.update(id: clip.id, change: .details(name: "저장된 이름", memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300)))
-        await assertEvents(stream, equalTo: [.updated(updated)])
+        await assertEvents(stream, expected: [.updated(updated)])
     }
 
     func testCorruptedFileIsReportedWithoutReplacingItsContents() throws {
@@ -206,21 +196,6 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
         }
     }
 
-    private func assertEvents(_ stream: AsyncStream<ClipStorageEvent>, equalTo expected: [ClipStorageEvent]) async {
-        let received = expectation(description: "저장 확정 순서로 이벤트 전달")
-        let task = Task {
-            var iterator = stream.makeAsyncIterator()
-            for expectedEvent in expected {
-                guard let event = await iterator.next() else { return }
-                XCTAssertEqual(event, expectedEvent)
-            }
-            received.fulfill()
-        }
-        await fulfillment(of: [received], timeout: 2)
-        task.cancel()
-        await task.value
-    }
-
     private func assertError(_ expected: ClipStorageError, operation: () async throws -> Void) async {
         do {
             try await operation()
@@ -237,13 +212,5 @@ final class SQLiteClipStorageServiceTests: XCTestCase {
     private func execute(_ sql: String) throws {
         let connection = try DatabaseQueue(path: url.path)
         try connection.write { try $0.execute(sql: sql) }
-    }
-
-    private func makeClip(id: UInt8, createdAt: TimeInterval, lastUsedAt: TimeInterval? = nil) -> Clip {
-        Clip(
-            id: UUID(uuid: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, id)), content: .text("원문"),
-            createdAt: Date(timeIntervalSinceReferenceDate: createdAt),
-            lastUsedAt: lastUsedAt.map { Date(timeIntervalSinceReferenceDate: $0) }
-        )
     }
 }

@@ -10,14 +10,9 @@ import PlystBridge
 import XCTest
 @testable import Plyst
 
-final class ClipBridgeModuleImplTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-module-\(UUID())", isDirectory: true)
-
+final class ClipBridgeModuleImplTests: ClipTemporaryDirectoryTestCase {
     override func tearDown() async throws {
         await ClipBridge.unregister()
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
         try await super.tearDown()
     }
 
@@ -92,21 +87,5 @@ final class ClipBridgeModuleImplTests: XCTestCase {
         XCTAssertEqual(stored.name, "이름")
         XCTAssertEqual(stored.memo, "메모")
         XCTAssertNotNil(stored.pinnedAt)
-    }
-
-    private func makeStorage() throws -> SQLiteClipStorageService {
-        try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
-    }
-
-    private func makeAdapter(storage: any ClipStorageService) throws -> ClipBridgeAdapter {
-        let files = try ClipImageFileStore(rootURL: directory.appendingPathComponent("images", isDirectory: true))
-        let images = ClipImageService(storage: storage, files: files)
-        return ClipBridgeAdapter(
-            storage: storage,
-            history: try makeStorage(),
-            images: images,
-            clipboard: ClipboardService(storage: storage, images: images),
-            photos: ClipPhotoLibraryService(storage: storage, images: images)
-        )
     }
 }

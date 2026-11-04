@@ -11,17 +11,7 @@ import XCTest
 @testable import Plyst
 
 @MainActor
-final class ClipboardImageServiceTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-clipboard-image-\(UUID())", isDirectory: true)
-    private var url: URL { directory.appendingPathComponent("clips.sqlite") }
-    private var root: URL { directory.appendingPathComponent("images", isDirectory: true) }
-
-    override func tearDownWithError() throws {
-        try ClipImageFileSystemTestFixture.restorePermissions(at: directory)
-        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
-        try super.tearDownWithError()
-    }
-
+final class ClipboardImageServiceTests: ClipTemporaryDirectoryTestCase {
     func testSavedImagePreservesBytesMetadataAndDefaultsAsLatestRecord() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let previous = Clip(content: .text("이전 기록"), createdAt: Date(timeIntervalSinceReferenceDate: 100))
@@ -58,7 +48,7 @@ final class ClipboardImageServiceTests: XCTestCase {
         let storage = try SQLiteClipStorageService(databaseURL: url)
         let stream = await storage.changes()
         let root = self.root
-        let spy = ClipboardStorageServiceSpy(storage: storage, beforeInsert: {
+        let spy = ClipStorageServiceSpy(storage: storage, beforeInsert: { _ in
             let entries = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             try ClipImageFileSystemTestFixture.makeReadOnly(XCTUnwrap(entries.first))
         })
@@ -117,32 +107,5 @@ final class ClipboardImageServiceTests: XCTestCase {
     private func metadata(in clip: Clip) throws -> ClipImageMetadata {
         guard case .image(let image) = clip.content else { throw ClipImageFileError.notImage(clip.id) }
         return image
-    }
-
-    private func assertNoImageEvents(
-        _ stream: AsyncStream<ClipStorageEvent>,
-        storage: any ClipStorageService
-    ) async throws {
-        let sentinel = Clip(content: .text("검증"))
-        try await storage.insert(sentinel)
-        await assertEvents(stream, expected: [.inserted(sentinel)])
-    }
-
-    private func assertEvents(
-        _ stream: AsyncStream<ClipStorageEvent>,
-        expected: [ClipStorageEvent]
-    ) async {
-        let received = expectation(description: "이미지 저장 확정 이후의 이벤트만 전달")
-        let task = Task {
-            var iterator = stream.makeAsyncIterator()
-            for event in expected {
-                let actual = await iterator.next()
-                XCTAssertEqual(actual, event)
-            }
-            received.fulfill()
-        }
-        await fulfillment(of: [received], timeout: 2)
-        task.cancel()
-        await task.value
     }
 }

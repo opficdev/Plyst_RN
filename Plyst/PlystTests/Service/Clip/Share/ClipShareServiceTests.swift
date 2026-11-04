@@ -6,23 +6,12 @@
 //
 
 import Foundation
-import UIKit
 import UniformTypeIdentifiers
 import XCTest
 @testable import Plyst
 
 @MainActor
-final class ClipShareServiceTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-share-\(UUID())", isDirectory: true)
-    private var url: URL { directory.appendingPathComponent("ShareInbox.sqlite") }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
-        try super.tearDownWithError()
-    }
-
+final class ClipShareServiceTests: ClipTemporaryDirectoryTestCase {
     func testTextProviderIsSavedAsTextClipWithTrimmedTitle() async throws {
         let storage = try makeStorage()
         let text = " \n한글 'text'\t🙂 "
@@ -77,7 +66,7 @@ final class ClipShareServiceTests: XCTestCase {
 
     func testImageProviderIsSavedAsOriginalUntitledImageClip() async throws {
         let storage = try makeStorage()
-        let data = try makePNGData()
+        let data = try ClipImageTestFixture.data()
         let item = makeItem(providers: [makeImageProvider(data: data)], title: "무시되는 제목")
 
         let result = try await makeService(storage: storage).save(item)
@@ -93,20 +82,14 @@ final class ClipShareServiceTests: XCTestCase {
         let reopened = try makeStorage()
         let stored = try await reopened.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip])
-        let images = ClipImageService(storage: reopened, files: try ClipImageFileStore(rootURL: imagesDirectory))
+        let images = ClipImageService(storage: reopened, files: try ClipImageFileStore(rootURL: root))
         let loaded = try await images.loadImage(image)
         XCTAssertEqual(loaded, data)
         XCTAssertEqual(try imageEntryCount(), 1)
     }
 
-    private var imagesDirectory: URL { directory.appendingPathComponent("images", isDirectory: true) }
-
-    private func makeStorage() throws -> SQLiteClipStorageService {
-        try SQLiteClipStorageService(databaseURL: url)
-    }
-
     private func makeService(storage: any ClipStorageService) throws -> ClipShareService {
-        let files = try ClipImageFileStore(rootURL: imagesDirectory)
+        let files = try ClipImageFileStore(rootURL: root)
         let session = URLSession(configuration: ClipImageDownloadService.configuration)
         addTeardownBlock { session.invalidateAndCancel() }
         return ClipShareService(
@@ -119,11 +102,7 @@ final class ClipShareServiceTests: XCTestCase {
     /// 이미지 루트 아래의 항목 수
     /// 저장된 이미지 하나당 디렉터리 하나가 있음
     private func imageEntryCount() throws -> Int {
-        try FileManager.default.contentsOfDirectory(atPath: imagesDirectory.path).count
-    }
-
-    private func makeUnsupportedProvider() -> NSItemProvider {
-        NSItemProvider(item: NSNumber(value: 1), typeIdentifier: UTType.data.identifier)
+        try FileManager.default.contentsOfDirectory(atPath: root.path).count
     }
 
     private func makeImageProvider(data: Data) -> NSItemProvider {
@@ -133,21 +112,6 @@ final class ClipShareServiceTests: XCTestCase {
             return nil
         }
         return provider
-    }
-
-    private func makePNGData() throws -> Data {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 3), format: format)
-        return try XCTUnwrap(renderer.pngData { context in
-            UIColor.red.setFill()
-            context.fill(CGRect(
-                x: 0,
-                y: 0,
-                width: 2,
-                height: 3
-            ))
-        })
     }
 
     private func makeItem(

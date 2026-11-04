@@ -10,16 +10,7 @@ import PlystBridge
 import XCTest
 @testable import Plyst
 
-final class ClipBridgeAdapterTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-bridge-\(UUID())", isDirectory: true)
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
-        try super.tearDownWithError()
-    }
-
+final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
     func testTextClipPreservesFieldsAndUsesUnixMilliseconds() async throws {
         let storage = try makeStorage()
         let adapter = try makeAdapter(storage: storage)
@@ -140,61 +131,5 @@ final class ClipBridgeAdapterTests: XCTestCase {
         let fetched = try await storage.fetch(id: result.value.id)
         XCTAssertNil(fetched)
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
-    }
-
-    private func makeStorage() throws -> SQLiteClipStorageService {
-        try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
-    }
-
-    private func makeAdapter(storage: any ClipStorageService) throws -> ClipBridgeAdapter {
-        let files = try ClipImageFileStore(rootURL: directory.appendingPathComponent("images", isDirectory: true))
-        let images = ClipImageService(storage: storage, files: files)
-        return ClipBridgeAdapter(
-            storage: storage,
-            history: try makeStorage(),
-            images: images,
-            clipboard: ClipboardService(storage: storage, images: images),
-            photos: ClipPhotoLibraryService(storage: storage, images: images)
-        )
-    }
-}
-
-actor ClipBridgeStorageServiceSpy: ClipStorageService {
-    private let storage: SQLiteClipStorageService
-    private let failure: any Error
-
-    init(
-        storage: SQLiteClipStorageService,
-        failure: any Error
-    ) {
-        self.storage = storage
-        self.failure = failure
-    }
-
-    func fetchAll(order: ClipSortOrder) async throws -> [Clip] {
-        throw failure
-    }
-
-    func fetch(id: Clip.ID) async throws -> Clip? {
-        try await storage.fetch(id: id)
-    }
-
-    func insert(_ clip: Clip) async throws {
-        try await storage.insert(clip)
-    }
-
-    func update(
-        id: Clip.ID,
-        change: ClipUpdate
-    ) async throws -> Clip {
-        throw failure
-    }
-
-    func delete(id: Clip.ID) async throws {
-        throw failure
-    }
-
-    func changes() async -> AsyncStream<ClipStorageEvent> {
-        await storage.changes()
     }
 }

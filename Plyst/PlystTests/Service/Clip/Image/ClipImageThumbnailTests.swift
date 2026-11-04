@@ -10,17 +10,7 @@ import ImageIO
 import XCTest
 @testable import Plyst
 
-final class ClipImageThumbnailTests: XCTestCase {
-    private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-thumbnail-\(UUID())")
-    private var root: URL { directory.appendingPathComponent("images") }
-
-    override func tearDownWithError() throws {
-        if FileManager.default.fileExists(atPath: directory.path) {
-            try FileManager.default.removeItem(at: directory)
-        }
-        try super.tearDownWithError()
-    }
-
+final class ClipImageThumbnailTests: ClipTemporaryDirectoryTestCase {
     func testFileStoreWritesSeparateSizesAndAtomicallyRewritesWithoutChangingOriginal() throws {
         let files = try ClipImageFileStore(rootURL: root)
         let data = try ClipImageTestFixture.data()
