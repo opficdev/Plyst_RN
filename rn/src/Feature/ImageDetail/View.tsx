@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { Image } from 'expo-image';
-import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActionSheet, SymbolImage } from '../../Shared/UI';
+import { ActionSheet, SymbolImage, ClipDetailPinSwitch } from '../../Shared/UI';
 import { ClipDetailActionBar, ClipDetailDates } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
@@ -147,13 +147,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
               <Text allowFontScaling={false} style={styles.pinLabel}>
                 고정
               </Text>
-              <Switch
-                value={draft.isPinned}
-                onValueChange={(isPinned) => {
-                  dispatch(actions.pinnedChanged(isPinned));
-                }}
-                trackColor={{ true: colors.SwitchOn }}
-              />
+              <ClipDetailPinSwitch value={draft.isPinned} onValueChange={(isPinned) => dispatch(actions.pinnedChanged(isPinned))} />
             </View>
             <View style={styles.divider} />
           </View>

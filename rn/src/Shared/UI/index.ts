@@ -5,7 +5,7 @@ export { HomeEmptyState, HomeTitle, HomeTitleHeader, HomeFilterBar, HomePinnedRo
 export { EdgeFade } from './EdgeFade';
 export { SearchTermChip } from './SearchTermChip';
 export { SymbolImage } from './SymbolImage';
-export { ClipDetailDates, ClipDetailActionBar } from './ClipDetail';
+export { ClipDetailDates, ClipDetailActionBar, ClipDetailPinSwitch } from './ClipDetail';
 export { ActionSheet } from './ActionSheet';
 export type { ActionSheetProps } from './ActionSheet';
 export { Toast, ToastHost, showToast } from './Toast';

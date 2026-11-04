@@ -21,7 +21,9 @@ export const colors = {
   PrivacyText: assetColor('HomePrivacyText'),
   SecondaryText: assetColor('HomeSecondaryText'),
   Shadow: assetColor('HomeShadow'),
+  SwitchOff: assetColor('HomeSwitchOff'),
   SwitchOn: assetColor('HomeSwitchOn'),
+  SwitchThumb: assetColor('HomeSwitchThumb'),
   UnnamedText: assetColor('HomeUnnamedText'),
   SearchHighlight: assetColor('SearchHighlight'),
 };
