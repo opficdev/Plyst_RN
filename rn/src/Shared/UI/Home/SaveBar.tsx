@@ -10,14 +10,7 @@ type HomeSaveBarProps = {
 export function HomeSaveBar({ isSaving, onSaveButtonPress }: HomeSaveBarProps) {
   return (
     <View style={styles.bar}>
-      <Pressable
-        disabled={isSaving}
-        onPress={onSaveButtonPress}
-        style={({ pressed }) => [
-          styles.button,
-          (isSaving || pressed) && styles.dimmed,
-        ]}
-      >
+      <Pressable disabled={isSaving} onPress={onSaveButtonPress} style={({ pressed }) => [styles.button, (isSaving || pressed) && styles.dimmed]}>
         <View style={styles.icon}>
           <View style={styles.board} />
           <View style={styles.tab} />

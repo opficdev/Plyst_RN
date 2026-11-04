@@ -13,21 +13,11 @@ type ThumbnailState = {
   phase: 'pending' | 'loaded' | 'failed';
 };
 
-export function ClipThumbnail({
-  uri,
-  isPinned = false,
-  isFailed = false,
-}: ClipThumbnailProps) {
+export function ClipThumbnail({ uri, isPinned = false, isFailed = false }: ClipThumbnailProps) {
   const [state, setState] = useState<ThumbnailState>({ uri, phase: 'pending' });
-  const phase = isFailed
-    ? 'failed'
-    : state.uri === uri
-      ? state.phase
-      : 'pending';
+  const phase = isFailed ? 'failed' : state.uri === uri ? state.phase : 'pending';
   return (
-    <View
-      style={[styles.imageBox, isPinned ? styles.pinnedBox : styles.cardBox]}
-    >
+    <View style={[styles.imageBox, isPinned ? styles.pinnedBox : styles.cardBox]}>
       {uri !== null && (
         <Image
           key={uri}
@@ -44,16 +34,7 @@ export function ClipThumbnail({
           <View style={styles.placeholderDot} />
         </View>
       )}
-      {phase === 'failed' && (
-        <Image
-          source="sf:exclamationmark.triangle"
-          contentFit="contain"
-          style={[
-            styles.failureIcon,
-            isPinned ? styles.pinnedFailureIcon : styles.cardFailureIcon,
-          ]}
-        />
-      )}
+      {phase === 'failed' && <Image source="sf:exclamationmark.triangle" contentFit="contain" style={[styles.failureIcon, isPinned ? styles.pinnedFailureIcon : styles.cardFailureIcon]} />}
     </View>
   );
 }

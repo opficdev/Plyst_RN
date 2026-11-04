@@ -14,8 +14,7 @@ export type HomeListItem =
 
 export function makeHomeListItems(content: HomeContent): HomeListItem[] {
   const items: HomeListItem[] = [];
-  if (content.pinnedClips.length !== 0)
-    items.push({ kind: 'pinned', key: 'pinned', clips: content.pinnedClips });
+  if (content.pinnedClips.length !== 0) items.push({ kind: 'pinned', key: 'pinned', clips: content.pinnedClips });
   content.sections.forEach((section, index) => {
     items.push({
       kind: 'section',
@@ -23,8 +22,7 @@ export function makeHomeListItems(content: HomeContent): HomeListItem[] {
       section: section.kind,
       hasPreviousSection: 0 < index,
     });
-    for (const clip of section.clips)
-      items.push({ kind: 'card', key: `clip:${clip.id}`, clip });
+    for (const clip of section.clips) items.push({ kind: 'card', key: `clip:${clip.id}`, clip });
   });
   return items;
 }

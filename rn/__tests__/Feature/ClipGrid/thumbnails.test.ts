@@ -1,9 +1,5 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
-import {
-  clipThumbnailLimit,
-  reduceClipThumbnails,
-  retainClipThumbnails,
-} from '../../../src/Feature/ClipGrid/thumbnails';
+import { clipThumbnailLimit, reduceClipThumbnails, retainClipThumbnails } from '../../../src/Feature/ClipGrid/thumbnails';
 import type { ClipThumbnails } from '../../../src/Feature/ClipGrid/thumbnails';
 
 const clip: ClipRecord = {
@@ -31,11 +27,7 @@ const empty = (): ClipThumbnails => ({
   failedThumbnails: {},
 });
 function load(state: ClipThumbnails, key: string) {
-  return reduceClipThumbnails(
-    reduceClipThumbnails(state, { type: 'thumbnailStarted', key }, [clip]),
-    { type: 'thumbnailLoaded', key, uri: `file:///${key}` },
-    [clip],
-  );
+  return reduceClipThumbnails(reduceClipThumbnails(state, { type: 'thumbnailStarted', key }, [clip]), { type: 'thumbnailLoaded', key, uri: `file:///${key}` }, [clip]);
 }
 
 test('시작한 이미지 요청만 성공 캐시에 넣는다', () => {
@@ -135,9 +127,7 @@ test('유효한 이미지 id의 모든 크기만 보존한다', () => {
     failedThumbnails: { 'image:300': true },
   });
   expect(retainClipThumbnails(state, [])).toEqual(empty());
-  expect(
-    retainClipThumbnails(state, [{ ...clip, image: null, text: '본문' }]),
-  ).toEqual(empty());
+  expect(retainClipThumbnails(state, [{ ...clip, image: null, text: '본문' }])).toEqual(empty());
 });
 
 test('캐시는 48개를 유지하고 갱신한 키를 가장 뒤로 옮긴다', () => {

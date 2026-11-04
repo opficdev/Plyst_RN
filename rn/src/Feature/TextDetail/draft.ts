@@ -1,11 +1,7 @@
 import type { ClipRecord } from '../../Model/clipRecord';
 import { createSlice } from '../../Shared/State/screenStore';
 import type { PayloadAction } from '../../Shared/State/screenStore';
-import {
-  equivalent,
-  normalizedMemo,
-  normalizedName,
-} from '../../Model/clipDetailValues';
+import { equivalent, normalizedMemo, normalizedName } from '../../Model/clipDetailValues';
 
 export type Draft = { name: string; memo: string; isPinned: boolean };
 
@@ -18,11 +14,7 @@ export function draftFromClip(clip: ClipRecord): Draft {
 }
 
 export function differs(draft: Draft, clip: ClipRecord): boolean {
-  return (
-    !equivalent(normalizedName(draft), clip.name) ||
-    !equivalent(normalizedMemo(draft), clip.memo) ||
-    draft.isPinned !== (clip.pinnedAt !== null)
-  );
+  return !equivalent(normalizedName(draft), clip.name) || !equivalent(normalizedMemo(draft), clip.memo) || draft.isPinned !== (clip.pinnedAt !== null);
 }
 
 export type TextDetailState = {
@@ -38,8 +30,7 @@ export type TextDetailState = {
 export type TextDetailLoaded = { phase: 'loaded' } & TextDetailState;
 
 // closed는 최초 조회 실패나 조회 전 삭제로 화면이 열리지 못한 경우
-export type TextDetailStoreState =
-  { phase: 'loading' } | { phase: 'closed' } | TextDetailLoaded;
+export type TextDetailStoreState = { phase: 'loading' } | { phase: 'closed' } | TextDetailLoaded;
 
 export function loadedState(clip: ClipRecord): TextDetailLoaded {
   return {
@@ -59,12 +50,7 @@ export function hasChanges(state: TextDetailState): boolean {
 }
 
 export function canSave(state: TextDetailState): boolean {
-  return (
-    hasChanges(state) &&
-    !state.isSaving &&
-    !state.isDeleting &&
-    !state.isRemoved
-  );
+  return hasChanges(state) && !state.isSaving && !state.isDeleting && !state.isRemoved;
 }
 
 export function isSaveEnabled(state: TextDetailStoreState): boolean {
@@ -72,23 +58,16 @@ export function isSaveEnabled(state: TextDetailStoreState): boolean {
 }
 
 export function isClosed(state: TextDetailStoreState): boolean {
-  return (
-    state.phase === 'closed' ||
-    (state.phase === 'loaded' && (state.isRemoved || state.isSaved))
-  );
+  return state.phase === 'closed' || (state.phase === 'loaded' && (state.isRemoved || state.isSaved));
 }
 
 // reducer는 변경 전 상태로 판정
 // listener는 getOriginalState로 같은 조건을 판정
-export function canStartSave(
-  state: TextDetailStoreState,
-): state is TextDetailLoaded {
+export function canStartSave(state: TextDetailStoreState): state is TextDetailLoaded {
   return state.phase === 'loaded' && !state.isSaved && canSave(state);
 }
 
-export function canStartDelete(
-  state: TextDetailStoreState,
-): state is TextDetailLoaded {
+export function canStartDelete(state: TextDetailStoreState): state is TextDetailLoaded {
   return state.phase === 'loaded' && !state.isDeleting && !state.isRemoved;
 }
 
@@ -111,11 +90,7 @@ export const textDetailSlice = createSlice({
       if (state.phase === 'loading') return loadedState(clip);
       if (state.isRemoved || state.isSaved) return;
       const original = draftFromClip(state.clip);
-      if (
-        state.draft.name === original.name &&
-        state.draft.memo === original.memo &&
-        state.draft.isPinned === original.isPinned
-      ) {
+      if (state.draft.name === original.name && state.draft.memo === original.memo && state.draft.isPinned === original.isPinned) {
         state.draft = draftFromClip(clip);
       }
       state.clip = clip;

@@ -3,23 +3,10 @@ import { countGraphemes, splitGraphemes } from 'unicode-segmenter/grapheme';
 const mark = /\p{M}/u;
 
 function hangulKind(point: number) {
-  if (
-    (0x1100 <= point && point <= 0x115f) ||
-    (0xa960 <= point && point <= 0xa97c)
-  )
-    return 'L';
-  if (
-    (0x1160 <= point && point <= 0x11a7) ||
-    (0xd7b0 <= point && point <= 0xd7c6)
-  )
-    return 'V';
-  if (
-    (0x11a8 <= point && point <= 0x11ff) ||
-    (0xd7cb <= point && point <= 0xd7fb)
-  )
-    return 'T';
-  if (0xac00 <= point && point <= 0xd7a3)
-    return (point - 0xac00) % 28 === 0 ? 'LV' : 'LVT';
+  if ((0x1100 <= point && point <= 0x115f) || (0xa960 <= point && point <= 0xa97c)) return 'L';
+  if ((0x1160 <= point && point <= 0x11a7) || (0xd7b0 <= point && point <= 0xd7c6)) return 'V';
+  if ((0x11a8 <= point && point <= 0x11ff) || (0xd7cb <= point && point <= 0xd7fb)) return 'T';
+  if (0xac00 <= point && point <= 0xd7a3) return (point - 0xac00) % 28 === 0 ? 'LV' : 'LVT';
   return '';
 }
 
@@ -33,10 +20,7 @@ export function clusters(text: string): { segment: string; index: number }[] {
     const regional = 0x1f1e6 <= code && code <= 0x1f1ff;
     const a = hangulKind(previous);
     const b = hangulKind(code);
-    const hangul =
-      (a === 'L' && ['L', 'V', 'LV', 'LVT'].includes(b)) ||
-      (['LV', 'V'].includes(a) && ['V', 'T'].includes(b)) ||
-      (['LVT', 'T'].includes(a) && b === 'T');
+    const hangul = (a === 'L' && ['L', 'V', 'LV', 'LVT'].includes(b)) || (['LV', 'V'].includes(a) && ['V', 'T'].includes(b)) || (['LVT', 'T'].includes(a) && b === 'T');
     const extend =
       mark.test(point) ||
       code === 0x200d ||
@@ -47,8 +31,7 @@ export function clusters(text: string): { segment: string; index: number }[] {
       hangul ||
       (regional && regionalCount % 2 === 1) ||
       (previous === 13 && code === 10);
-    if (result.length !== 0 && extend)
-      result[result.length - 1].segment += point;
+    if (result.length !== 0 && extend) result[result.length - 1].segment += point;
     else result.push({ segment: point, index: offset });
     regionalCount = regional ? regionalCount + 1 : 0;
     previous = code;

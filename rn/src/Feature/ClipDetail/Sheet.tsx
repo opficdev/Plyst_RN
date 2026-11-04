@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import {
-  KeyboardAvoidingView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenStackItem } from 'react-native-screens';
 import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
 import { colors } from '../../Shared/Theme';
@@ -31,15 +23,7 @@ type ClipDetailSheetProps = {
 
 // 시트는 스택 항목이므로 부모가 항목을 빼면 시스템이 dismiss
 // 그래서 닫기 요청은 곧 onClose
-export function ClipDetailSheet({
-  title,
-  usesSystemBar,
-  isSaveEnabled,
-  isClosed,
-  onSaveButtonPress,
-  onClose,
-  children,
-}: ClipDetailSheetProps) {
+export function ClipDetailSheet({ title, usesSystemBar, isSaveEnabled, isClosed, onSaveButtonPress, onClose, children }: ClipDetailSheetProps) {
   useEffect(() => {
     if (isClosed) onClose();
   }, [isClosed, onClose]);
@@ -51,21 +35,9 @@ export function ClipDetailSheet({
     hideShadow: true,
   };
   return (
-    <ScreenStackItem
-      screenId="clipDetail"
-      stackPresentation="pageSheet"
-      headerConfig={headerConfig}
-      onDismissed={onClose}
-      style={StyleSheet.absoluteFill}
-    >
+    <ScreenStackItem screenId="clipDetail" stackPresentation="pageSheet" headerConfig={headerConfig} onDismissed={onClose} style={StyleSheet.absoluteFill}>
       <SafeAreaProvider style={styles.canvas}>
-        <SheetBody
-          title={title}
-          usesSystemBar={usesSystemBar}
-          isSaveEnabled={isSaveEnabled}
-          onCloseButtonPress={onClose}
-          onSaveButtonPress={onSaveButtonPress}
-        >
+        <SheetBody title={title} usesSystemBar={usesSystemBar} isSaveEnabled={isSaveEnabled} onCloseButtonPress={onClose} onSaveButtonPress={onSaveButtonPress}>
           {children}
         </SheetBody>
       </SafeAreaProvider>
@@ -87,55 +59,24 @@ const contentMetrics = {
   frame: { x: 0, y: 0, width: 0, height: 0 },
 };
 
-function SheetBody({
-  title,
-  usesSystemBar,
-  isSaveEnabled,
-  onCloseButtonPress,
-  onSaveButtonPress,
-  children,
-}: SheetBodyProps) {
+function SheetBody({ title, usesSystemBar, isSaveEnabled, onCloseButtonPress, onSaveButtonPress, children }: SheetBodyProps) {
   const insets = useSafeAreaInsets();
   const window = useWindowDimensions();
   const [height, setHeight] = useState(0);
   return (
-    <View
-      style={styles.canvas}
-      onLayout={({ nativeEvent: { layout } }) => setHeight(layout.height)}
-    >
+    <View style={styles.canvas} onLayout={({ nativeEvent: { layout } }) => setHeight(layout.height)}>
       {usesSystemBar ? (
         <>
-          <NavigationBarButton
-            side="left"
-            icon="xmark"
-            onPress={onCloseButtonPress}
-          />
-          <NavigationBarButton
-            side="right"
-            title="저장"
-            isEnabled={isSaveEnabled}
-            onPress={onSaveButtonPress}
-          />
+          <NavigationBarButton side="left" icon="xmark" onPress={onCloseButtonPress} />
+          <NavigationBarButton side="right" title="저장" isEnabled={isSaveEnabled} onPress={onSaveButtonPress} />
         </>
       ) : (
-        <ClipDetailTopBar
-          title={title}
-          isSaveEnabled={isSaveEnabled}
-          onCloseButtonPress={onCloseButtonPress}
-          onSaveButtonPress={onSaveButtonPress}
-        />
+        <ClipDetailTopBar title={title} isSaveEnabled={isSaveEnabled} onCloseButtonPress={onCloseButtonPress} onSaveButtonPress={onSaveButtonPress} />
       )}
       {/* 시트는 창 아래에 붙어 있으므로 시트의 창 안 y는 창 높이에서 시트 높이를 뺀 값 */}
-      <KeyboardAvoidingView
-        behavior="padding"
-        keyboardVerticalOffset={Math.max(0, window.height - height)}
-        style={[styles.content, { marginBottom: insets.bottom }]}
-      >
+      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={Math.max(0, window.height - height)} style={[styles.content, { marginBottom: insets.bottom }]}>
         {/* 내용 영역은 상단 바 아래부터 안전 영역 하단까지이므로 안전 영역 여백이 0 */}
-        <SafeAreaProvider
-          initialMetrics={contentMetrics}
-          style={styles.content}
-        >
+        <SafeAreaProvider initialMetrics={contentMetrics} style={styles.content}>
           {children}
         </SafeAreaProvider>
       </KeyboardAvoidingView>

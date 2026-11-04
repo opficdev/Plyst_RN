@@ -1,8 +1,5 @@
 import { untilAborted } from '../../Shared/State/screenStore';
-import type {
-  SliceDispatch,
-  SliceListen,
-} from '../../Shared/State/screenStore';
+import type { SliceDispatch, SliceListen } from '../../Shared/State/screenStore';
 import { showToast } from '../../Shared/UI';
 import { loadSearchHistory } from '../../Service/Clip/loadSearchHistory';
 import { recordSearchHistoryTerm } from '../../Service/Clip/recordSearchHistoryTerm';
@@ -17,26 +14,17 @@ import { searchActions as actions } from './state';
 import type { SearchState } from './state';
 
 // 기록 큐와 썸네일 큐를 비우는 정리 함수를 돌려줌
-export function startSearchListeners(
-  listen: SliceListen<SearchState>,
-  dispatch: SliceDispatch,
-  onReload: () => void,
-) {
+export function startSearchListeners(listen: SliceListen<SearchState>, dispatch: SliceDispatch, onReload: () => void) {
   // effect가 먼저 끝나도 큐 작업이 이어지므로 세션 단위 signal로 종료를 확인
   const session = new AbortController();
   const queue = createSearchHistoryQueue();
   const stopThumbnails = startClipThumbnailListener(listen, dispatch, actions);
-  function write(
-    operation: () => Promise<SearchHistoryWriteResult>,
-    isSilent = false,
-  ) {
+  function write(operation: () => Promise<SearchHistoryWriteResult>, isSilent = false) {
     void queue.enqueue(async () => {
       const result = await operation();
       if (session.signal.aborted) return;
-      if (result.status === 'saved')
-        dispatch(actions.searchHistoryLoaded(result.terms));
-      else if (result.status === 'failed' && !isSilent)
-        showToast('최근 검색어를 변경하지 못했습니다', false);
+      if (result.status === 'saved') dispatch(actions.searchHistoryLoaded(result.terms));
+      else if (result.status === 'failed' && !isSilent) showToast('최근 검색어를 변경하지 못했습니다', false);
     });
   }
   listen({
@@ -47,11 +35,7 @@ export function startSearchListeners(
       void queue.enqueue(async () => {
         const result = await loadSearchHistory();
         if (session.signal.aborted) return;
-        dispatch(
-          result.status === 'loaded'
-            ? actions.searchHistoryLoaded(result.terms)
-            : actions.searchHistoryLoadFailed(),
-        );
+        dispatch(result.status === 'loaded' ? actions.searchHistoryLoaded(result.terms) : actions.searchHistoryLoadFailed());
       });
       await untilAborted(api.signal, startClipReload(api, actions, onReload));
     },
@@ -82,14 +66,8 @@ export function startSearchListeners(
       const result = await copyClipDetail(payload);
       if (api.signal.aborted) return;
       const isSuccess = result === 'copied';
-      showToast(
-        isSuccess
-          ? '클립보드에 복사했습니다'
-          : '클립보드에 복사하지 못했습니다',
-        isSuccess,
-      );
-      if (isSuccess && query !== '')
-        write(() => recordSearchHistoryTerm(query), true);
+      showToast(isSuccess ? '클립보드에 복사했습니다' : '클립보드에 복사하지 못했습니다', isSuccess);
+      if (isSuccess && query !== '') write(() => recordSearchHistoryTerm(query), true);
     },
   });
   return () => {

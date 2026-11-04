@@ -105,89 +105,70 @@ test('대기 요청을 취소하면 전송하지 않고 나머지 순서를 유�
     ['d', 200],
     ['e', 200],
   ]);
-  expect(onStarted.mock.calls).toEqual([
-    ['a:200'],
-    ['b:200'],
-    ['d:200'],
-    ['e:200'],
+  expect(onStarted.mock.calls).toEqual([['a:200'], ['b:200'], ['d:200'], ['e:200']]);
+  queue.dispose();
+});
+
+test.each(['loaded', 'failed'] as const)('진행 중 요청 취소 후 %s 결과를 버리고 완료 뒤 다음 요청을 시작한다', async (finish) => {
+  const { queue, pending, load, onCancelled, onLoaded, onFailed } = setup();
+  queue.request('a', 200);
+  queue.request('b', 200);
+  queue.request('c', 200);
+  queue.cancel('a', 200);
+  queue.cancel('a', 200);
+  expect(load).toHaveBeenCalledTimes(2);
+  expect(onCancelled.mock.calls).toEqual([['a:200']]);
+  if (finish === 'loaded') pending[0].resolve({ status: 'loaded', uri: 'file:///a.png' });
+  else pending[0].resolve({ status: 'failed' });
+  await pending[0].promise;
+  expect(onLoaded).not.toHaveBeenCalled();
+  expect(onFailed).not.toHaveBeenCalled();
+  expect(load.mock.calls).toEqual([
+    ['a', 200],
+    ['b', 200],
+    ['c', 200],
   ]);
   queue.dispose();
 });
 
-test.each(['loaded', 'failed'] as const)(
-  '진행 중 요청 취소 후 %s 결과를 버리고 완료 뒤 다음 요청을 시작한다',
-  async (finish) => {
-    const { queue, pending, load, onCancelled, onLoaded, onFailed } = setup();
-    queue.request('a', 200);
-    queue.request('b', 200);
-    queue.request('c', 200);
-    queue.cancel('a', 200);
-    queue.cancel('a', 200);
-    expect(load).toHaveBeenCalledTimes(2);
-    expect(onCancelled.mock.calls).toEqual([['a:200']]);
-    if (finish === 'loaded')
-      pending[0].resolve({ status: 'loaded', uri: 'file:///a.png' });
-    else pending[0].resolve({ status: 'failed' });
-    await pending[0].promise;
-    expect(onLoaded).not.toHaveBeenCalled();
+test.each(['loaded', 'failed'] as const)('취소한 진행 중 요청을 다시 요청하면 기존 요청의 %s 결과를 전달한다', async (finish) => {
+  const { queue, pending, load, onStarted, onCancelled, onLoaded, onFailed } = setup();
+  queue.request('a', 200);
+  queue.cancel('a', 200);
+  queue.request('a', 200);
+  expect(load.mock.calls).toEqual([['a', 200]]);
+  expect(onStarted.mock.calls).toEqual([['a:200'], ['a:200']]);
+  expect(onCancelled.mock.calls).toEqual([['a:200']]);
+  if (finish === 'loaded') pending[0].resolve({ status: 'loaded', uri: 'file:///a.png' });
+  else pending[0].resolve({ status: 'failed' });
+  await pending[0].promise;
+  if (finish === 'loaded') {
+    expect(onLoaded.mock.calls).toEqual([['a:200', 'file:///a.png']]);
     expect(onFailed).not.toHaveBeenCalled();
-    expect(load.mock.calls).toEqual([
-      ['a', 200],
-      ['b', 200],
-      ['c', 200],
-    ]);
-    queue.dispose();
-  },
-);
-
-test.each(['loaded', 'failed'] as const)(
-  '취소한 진행 중 요청을 다시 요청하면 기존 요청의 %s 결과를 전달한다',
-  async (finish) => {
-    const { queue, pending, load, onStarted, onCancelled, onLoaded, onFailed } =
-      setup();
-    queue.request('a', 200);
-    queue.cancel('a', 200);
-    queue.request('a', 200);
-    expect(load.mock.calls).toEqual([['a', 200]]);
-    expect(onStarted.mock.calls).toEqual([['a:200'], ['a:200']]);
-    expect(onCancelled.mock.calls).toEqual([['a:200']]);
-    if (finish === 'loaded')
-      pending[0].resolve({ status: 'loaded', uri: 'file:///a.png' });
-    else pending[0].resolve({ status: 'failed' });
-    await pending[0].promise;
-    if (finish === 'loaded') {
-      expect(onLoaded.mock.calls).toEqual([['a:200', 'file:///a.png']]);
-      expect(onFailed).not.toHaveBeenCalled();
-    } else {
-      expect(onLoaded).not.toHaveBeenCalled();
-      expect(onFailed.mock.calls).toEqual([['a:200']]);
-    }
-    expect(load.mock.calls).toEqual([['a', 200]]);
-    queue.dispose();
-  },
-);
-
-test.each(['loaded', 'failed'] as const)(
-  '취소한 진행 중 요청을 다시 요청한 뒤 재취소하면 %s 결과를 버린다',
-  async (finish) => {
-    const { queue, pending, load, onStarted, onCancelled, onLoaded, onFailed } =
-      setup();
-    queue.request('a', 200);
-    queue.cancel('a', 200);
-    queue.request('a', 200);
-    queue.cancel('a', 200);
-    expect(onStarted.mock.calls).toEqual([['a:200'], ['a:200']]);
-    expect(onCancelled.mock.calls).toEqual([['a:200'], ['a:200']]);
-    if (finish === 'loaded')
-      pending[0].resolve({ status: 'loaded', uri: 'file:///a.png' });
-    else pending[0].resolve({ status: 'failed' });
-    await pending[0].promise;
+  } else {
     expect(onLoaded).not.toHaveBeenCalled();
-    expect(onFailed).not.toHaveBeenCalled();
-    expect(load.mock.calls).toEqual([['a', 200]]);
-    queue.dispose();
-  },
-);
+    expect(onFailed.mock.calls).toEqual([['a:200']]);
+  }
+  expect(load.mock.calls).toEqual([['a', 200]]);
+  queue.dispose();
+});
+
+test.each(['loaded', 'failed'] as const)('취소한 진행 중 요청을 다시 요청한 뒤 재취소하면 %s 결과를 버린다', async (finish) => {
+  const { queue, pending, load, onStarted, onCancelled, onLoaded, onFailed } = setup();
+  queue.request('a', 200);
+  queue.cancel('a', 200);
+  queue.request('a', 200);
+  queue.cancel('a', 200);
+  expect(onStarted.mock.calls).toEqual([['a:200'], ['a:200']]);
+  expect(onCancelled.mock.calls).toEqual([['a:200'], ['a:200']]);
+  if (finish === 'loaded') pending[0].resolve({ status: 'loaded', uri: 'file:///a.png' });
+  else pending[0].resolve({ status: 'failed' });
+  await pending[0].promise;
+  expect(onLoaded).not.toHaveBeenCalled();
+  expect(onFailed).not.toHaveBeenCalled();
+  expect(load.mock.calls).toEqual([['a', 200]]);
+  queue.dispose();
+});
 
 test('취소한 대기 요청은 새로 요청할 수 있다', async () => {
   const { queue, pending, load } = setup();
@@ -253,8 +234,7 @@ test('완료한 키는 명시적으로 다시 요청할 수 있다', async () =>
 });
 
 test('정리 후 성공과 실패를 버리고 대기 요청과 새 요청도 시작하지 않는다', async () => {
-  const { queue, pending, load, onLoaded, onFailed, onCancelled, onStarted } =
-    setup();
+  const { queue, pending, load, onLoaded, onFailed, onCancelled, onStarted } = setup();
   for (const id of ['a', 'b', 'c']) queue.request(id, 200);
   queue.dispose();
   queue.dispose();

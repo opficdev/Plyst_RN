@@ -1,13 +1,7 @@
 export { ClipTextCard, ClipImageCard, ClipPinnedCard } from './ClipCard';
 export type { ClipCardProps, ClipTextRange } from './ClipCard';
 export { SectionTitle } from './SectionTitle';
-export {
-  HomeEmptyState,
-  HomeTitle,
-  HomeTitleHeader,
-  HomeFilterBar,
-  HomePinnedRow,
-} from './Home';
+export { HomeEmptyState, HomeTitle, HomeTitleHeader, HomeFilterBar, HomePinnedRow } from './Home';
 export { EdgeFade } from './EdgeFade';
 export { SearchTermChip } from './SearchTermChip';
 export { ClipDetailDates, ClipDetailActionBar } from './ClipDetail';

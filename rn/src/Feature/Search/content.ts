@@ -30,26 +30,14 @@ export function createSearchTimeTexts() {
       const cached = cache.get(clip.id);
       if (cached?.createdAt === clip.createdAt) return cached.texts;
       const section = clipSectionTitles[clipSectionKind(clip.createdAt, now)];
-      const texts = [
-        `${section} ${formatClipCardTime(clip.createdAt, now)}`,
-        new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
-          new Date(clip.createdAt),
-        ),
-      ];
+      const texts = [`${section} ${formatClipCardTime(clip.createdAt, now)}`, new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(clip.createdAt))];
       cache.set(clip.id, { createdAt: clip.createdAt, texts });
       return texts;
     },
   };
 }
 
-export function makeSearchContent(
-  clips: ClipRecord[],
-  rawQuery: string,
-  filter: ClipFilter,
-  now: number,
-  index: SearchIndex,
-  times: ReturnType<typeof createSearchTimeTexts>,
-): SearchContent {
+export function makeSearchContent(clips: ClipRecord[], rawQuery: string, filter: ClipFilter, now: number, index: SearchIndex, times: ReturnType<typeof createSearchTimeTexts>): SearchContent {
   const query = normalizeSearchQuery(rawQuery);
   const results = !query
     ? []
@@ -58,13 +46,8 @@ export function makeSearchContent(
         if (filter === 'image' && clip.image === null) return false;
         if (filter === 'pinned' && clip.pinnedAt === null) return false;
         if (index.matches(clip.id, 'name', clip.name ?? '', query)) return true;
-        if (clip.image === null)
-          return index.matches(clip.id, 'body', clip.text ?? '', query);
-        return times
-          .texts(clip, now)
-          .some((text, position) =>
-            index.matches(clip.id, `time:${position}`, text, query),
-          );
+        if (clip.image === null) return index.matches(clip.id, 'body', clip.text ?? '', query);
+        return times.texts(clip, now).some((text, position) => index.matches(clip.id, `time:${position}`, text, query));
       });
   return {
     query,
@@ -76,27 +59,17 @@ export function makeSearchContent(
 
 export function searchHeaderTitle(content: SearchContent): string {
   const title = `결과 ${content.results.length}개`;
-  return content.textCount !== 0 && content.imageCount !== 0
-    ? `${title} · 텍스트 ${content.textCount} · 이미지 ${content.imageCount}`
-    : title;
+  return content.textCount !== 0 && content.imageCount !== 0 ? `${title} · 텍스트 ${content.textCount} · 이미지 ${content.imageCount}` : title;
 }
 
-export function searchMode(
-  content: SearchContent,
-  loadPhase: ClipLoadPhase,
-  clips: ClipRecord[],
-): 'recent' | 'results' | 'empty' | 'failed' {
+export function searchMode(content: SearchContent, loadPhase: ClipLoadPhase, clips: ClipRecord[]): 'recent' | 'results' | 'empty' | 'failed' {
   if (!content.query) return 'recent';
   if (loadPhase === 'loading') return 'results';
   if (loadPhase === 'failed' && clips.length === 0) return 'failed';
   return content.results.length === 0 ? 'empty' : 'results';
 }
 
-export function searchEmptyStrings(
-  query: string,
-  filter: ClipFilter,
-  isFailed: boolean,
-) {
+export function searchEmptyStrings(query: string, filter: ClipFilter, isFailed: boolean) {
   return isFailed
     ? {
         title: '기록을 불러오지 못했습니다',
@@ -104,10 +77,7 @@ export function searchEmptyStrings(
       }
     : {
         title: `‘${query}’ 결과 없음`,
-        message:
-          filter === 'all'
-            ? '이미지는 이름과 저장 시각으로만 찾을 수 있어요.'
-            : '필터를 ‘전체’로 바꾸거나 다른 단어로 검색해 보세요.',
+        message: filter === 'all' ? '이미지는 이름과 저장 시각으로만 찾을 수 있어요.' : '필터를 ‘전체’로 바꾸거나 다른 단어로 검색해 보세요.',
       };
 }
 
@@ -117,12 +87,8 @@ export function searchExcerptStart(body: string, location: number): number {
   return 40 < position ? letters[position - 14].index : 0;
 }
 
-export function searchRecentDisplay(
-  phase: 'initial' | 'loaded' | 'failed',
-  terms: string[],
-) {
-  if (phase === 'initial')
-    return { terms: [], message: null, isClearVisible: false };
+export function searchRecentDisplay(phase: 'initial' | 'loaded' | 'failed', terms: string[]) {
+  if (phase === 'initial') return { terms: [], message: null, isClearVisible: false };
   if (phase === 'failed')
     return {
       terms: [],

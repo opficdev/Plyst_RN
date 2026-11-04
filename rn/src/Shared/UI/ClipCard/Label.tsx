@@ -13,20 +13,9 @@ type ClipCardLabelProps = Omit<TextProps, 'children'> & {
 type LabelState = { text: string; height: number };
 type LabelTruncationState = { text: string; cut: number | null };
 
-export function ClipCardLabel({
-  children,
-  highlights,
-  highlightWeight,
-  style,
-  onLayout,
-  onTextLayout,
-  numberOfLines,
-  ...props
-}: ClipCardLabelProps) {
+export function ClipCardLabel({ children, highlights, highlightWeight, style, onLayout, onTextLayout, numberOfLines, ...props }: ClipCardLabelProps) {
   const [state, setState] = useState<LabelState | null>(null);
-  const [truncation, setTruncation] = useState<LabelTruncationState | null>(
-    null,
-  );
+  const [truncation, setTruncation] = useState<LabelTruncationState | null>(null);
 
   const key = JSON.stringify([children, highlights ?? [], highlightWeight]);
   const cut = truncation?.text === key ? truncation.cut : null;
@@ -74,18 +63,10 @@ export function ClipCardLabel({
             }
           : onTextLayout
       }
-      style={[
-        style,
-        { lineHeight: 17.3333 },
-        state?.text === key && { minHeight: state.height },
-      ]}
+      style={[style, { lineHeight: 17.3333 }, state?.text === key && { minHeight: state.height }]}
       onLayout={(event) => {
         const height = Math.ceil(event.nativeEvent.layout.height - 0.01);
-        setState((previous) =>
-          previous?.text === key && previous.height === height
-            ? previous
-            : { text: key, height },
-        );
+        setState((previous) => (previous?.text === key && previous.height === height ? previous : { text: key, height }));
         onLayout?.(event);
       }}
     >

@@ -1,17 +1,6 @@
 import { useEffect, useRef } from 'react';
-import {
-  Keyboard,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../Theme';
 import { ActionSheetButton } from './Button';
 import type { ActionSheetItem } from './Item';
@@ -25,13 +14,7 @@ export type ActionSheetProps = {
   items: ActionSheetItem[];
   onClose: () => void;
 };
-export function ActionSheet({
-  isVisible,
-  title,
-  message,
-  items,
-  onClose,
-}: ActionSheetProps) {
+export function ActionSheet({ isVisible, title, message, items, onClose }: ActionSheetProps) {
   const didFinish = useRef(false);
   const pendingItem = useRef<ActionSheetItem | undefined>(undefined);
 
@@ -62,20 +45,9 @@ export function ActionSheet({
   }
 
   return (
-    <Modal
-      transparent
-      animationType="fade"
-      visible={isVisible}
-      onDismiss={dismiss}
-    >
+    <Modal transparent animationType="fade" visible={isVisible} onDismiss={dismiss}>
       <SafeAreaProvider>
-        <ActionSheetContent
-          title={title}
-          message={message}
-          items={items}
-          onSelect={select}
-          onCancel={cancel}
-        />
+        <ActionSheetContent title={title} message={message} items={items} onSelect={select} onCancel={cancel} />
       </SafeAreaProvider>
     </Modal>
   );
@@ -88,18 +60,9 @@ type ActionSheetContentProps = {
   onSelect: (item: ActionSheetItem) => void;
   onCancel: () => void;
 };
-function ActionSheetContent({
-  title,
-  message,
-  items,
-  onSelect,
-  onCancel,
-}: ActionSheetContentProps) {
+function ActionSheetContent({ title, message, items, onSelect, onCancel }: ActionSheetContentProps) {
   const insets = useSafeAreaInsets();
-  const orderedItems = [
-    ...items.filter((item) => item.role !== 'cancel'),
-    ...items.filter((item) => item.role === 'cancel'),
-  ];
+  const orderedItems = [...items.filter((item) => item.role !== 'cancel'), ...items.filter((item) => item.role === 'cancel')];
 
   return (
     <View
@@ -121,19 +84,9 @@ function ActionSheetContent({
             {message}
           </Text>
         </View>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.buttons}
-          alwaysBounceVertical={false}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.buttons} alwaysBounceVertical={false} showsVerticalScrollIndicator={false}>
           {orderedItems.map((item, index) => (
-            <ActionSheetButton
-              key={index}
-              title={item.title}
-              role={item.role}
-              onPress={() => onSelect(item)}
-            />
+            <ActionSheetButton key={index} title={item.title} role={item.role} onPress={() => onSelect(item)} />
           ))}
         </ScrollView>
       </View>

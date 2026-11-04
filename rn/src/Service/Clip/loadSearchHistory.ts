@@ -1,7 +1,6 @@
 import { getSearchHistory } from 'plyst-bridge';
 
-export type SearchHistoryLoadResult =
-  { status: 'loaded'; terms: string[] } | { status: 'failed' };
+export type SearchHistoryLoadResult = { status: 'loaded'; terms: string[] } | { status: 'failed' };
 
 export async function loadSearchHistory(): Promise<SearchHistoryLoadResult> {
   try {

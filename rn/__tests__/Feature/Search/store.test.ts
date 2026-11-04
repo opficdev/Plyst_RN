@@ -44,24 +44,12 @@ const clip: ClipRecord = {
 
 beforeEach(() => {
   jest.resetAllMocks();
-  jest
-    .mocked(subscribeClipChanges)
-    .mockReturnValue({ remove: jest.fn() } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
+  jest.mocked(subscribeClipChanges).mockReturnValue({ remove: jest.fn() } as unknown as ReturnType<typeof subscribeClipChanges>);
   jest.mocked(loadClips).mockResolvedValue({ status: 'loaded', clips: [clip] });
-  jest
-    .mocked(loadSearchHistory)
-    .mockResolvedValue({ status: 'loaded', terms: [] });
-  jest
-    .mocked(recordSearchHistoryTerm)
-    .mockResolvedValue({ status: 'saved', terms: ['검색'] });
-  jest
-    .mocked(removeSearchHistoryTerm)
-    .mockResolvedValue({ status: 'saved', terms: [] });
-  jest
-    .mocked(clearSearchHistory)
-    .mockResolvedValue({ status: 'saved', terms: [] });
+  jest.mocked(loadSearchHistory).mockResolvedValue({ status: 'loaded', terms: [] });
+  jest.mocked(recordSearchHistoryTerm).mockResolvedValue({ status: 'saved', terms: ['검색'] });
+  jest.mocked(removeSearchHistoryTerm).mockResolvedValue({ status: 'saved', terms: [] });
+  jest.mocked(clearSearchHistory).mockResolvedValue({ status: 'saved', terms: [] });
 });
 
 test('초기 검색 기록 조회가 끝난 뒤 쓰기를 순서대로 실행한다', async () => {
@@ -79,14 +67,8 @@ test('초기 검색 기록 조회가 끝난 뒤 쓰기를 순서대로 실행한
   initial.resolve({ status: 'loaded', terms: ['기존'] });
   await settle();
   expect(recordSearchHistoryTerm).toHaveBeenCalledWith('검색');
-  expect(
-    jest.mocked(recordSearchHistoryTerm).mock.invocationCallOrder[0],
-  ).toBeLessThan(
-    jest.mocked(removeSearchHistoryTerm).mock.invocationCallOrder[0],
-  );
-  expect(
-    jest.mocked(removeSearchHistoryTerm).mock.invocationCallOrder[0],
-  ).toBeLessThan(jest.mocked(clearSearchHistory).mock.invocationCallOrder[0]);
+  expect(jest.mocked(recordSearchHistoryTerm).mock.invocationCallOrder[0]).toBeLessThan(jest.mocked(removeSearchHistoryTerm).mock.invocationCallOrder[0]);
+  expect(jest.mocked(removeSearchHistoryTerm).mock.invocationCallOrder[0]).toBeLessThan(jest.mocked(clearSearchHistory).mock.invocationCallOrder[0]);
   expect(screen.store.getState().searchHistory).toEqual([]);
   screen.dispose();
 });
@@ -144,10 +126,7 @@ test('검색 기록 실패는 사용자 요청만 알리고 복사 뒤 기록 �
   screen.store.dispatch(actions.queryChanged('검색'));
   screen.store.dispatch(actions.submitQuery());
   await settle();
-  expect(showToast).toHaveBeenCalledWith(
-    '최근 검색어를 변경하지 못했습니다',
-    false,
-  );
+  expect(showToast).toHaveBeenCalledWith('최근 검색어를 변경하지 못했습니다', false);
   jest.mocked(showToast).mockClear();
   screen.store.dispatch(actions.copy(clip.id));
   await settle();

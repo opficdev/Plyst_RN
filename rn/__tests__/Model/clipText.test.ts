@@ -1,8 +1,4 @@
-import {
-  clipCharacterCount,
-  clipTextPrefix,
-  clusters,
-} from '../../src/Model/clipText';
+import { clipCharacterCount, clipTextPrefix, clusters } from '../../src/Model/clipText';
 
 test.each([
   ['👨‍👩‍👧‍👦', 1],
@@ -41,9 +37,7 @@ test('ZWNJ와 이모지 태그를 Swift와 같은 문자소로 센다', () => {
   const england = '🏴\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}';
   expect(clipCharacterCount('a\u200c')).toBe(1);
   expect(clipCharacterCount(england)).toBe(1);
-  expect(clipTextPrefix('a'.repeat(59) + england + '끝')).toBe(
-    'a'.repeat(59) + england,
-  );
+  expect(clipTextPrefix('a'.repeat(59) + england + '끝')).toBe('a'.repeat(59) + england);
 });
 
 test('문자소 제어 문자 뒤의 결합 문자를 분리한다', () => {

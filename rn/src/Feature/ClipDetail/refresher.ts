@@ -3,10 +3,7 @@ type Options<Result> = {
   onResult: (result: Result, isInitial: boolean) => void;
 };
 
-export function createClipDetailRefresher<Result>({
-  load,
-  onResult,
-}: Options<Result>) {
+export function createClipDetailRefresher<Result>({ load, onResult }: Options<Result>) {
   let request = 0;
   let started = false;
   let disposed = false;

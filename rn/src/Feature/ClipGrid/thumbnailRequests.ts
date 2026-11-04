@@ -16,13 +16,7 @@ type ThumbnailRequest = {
   cancelled: boolean;
 };
 
-export function createThumbnailRequestQueue({
-  load,
-  onStarted,
-  onLoaded,
-  onFailed,
-  onCancelled,
-}: Options) {
+export function createThumbnailRequestQueue({ load, onStarted, onLoaded, onFailed, onCancelled }: Options) {
   const requests = new Map<string, ThumbnailRequest>();
   const queued: ThumbnailRequest[] = [];
   let active = 0;

@@ -3,15 +3,7 @@ import { loadClipThumbnail } from '../../Service/Clip/loadThumbnail';
 import type { ClipGridActions } from './reducers';
 import { createThumbnailRequestQueue } from './thumbnailRequests';
 
-type ThumbnailActions = Pick<
-  ClipGridActions,
-  | 'thumbnailStarted'
-  | 'thumbnailLoaded'
-  | 'thumbnailFailed'
-  | 'thumbnailCancelled'
-  | 'thumbnailRequested'
-  | 'thumbnailCancelRequested'
->;
+type ThumbnailActions = Pick<ClipGridActions, 'thumbnailStarted' | 'thumbnailLoaded' | 'thumbnailFailed' | 'thumbnailCancelled' | 'thumbnailRequested' | 'thumbnailCancelRequested'>;
 
 // 요청 큐를 만들고 세션이 끝날 때 큐를 비우는 정리 함수를 돌려줌
 export function startClipThumbnailListener<State>(

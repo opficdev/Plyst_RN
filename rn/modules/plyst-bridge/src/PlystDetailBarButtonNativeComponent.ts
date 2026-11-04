@@ -1,8 +1,5 @@
 import type { HostComponent, ViewProps } from 'react-native';
-import type {
-  DirectEventHandler,
-  WithDefault,
-} from 'react-native/Libraries/Types/CodegenTypes';
+import type { DirectEventHandler, WithDefault } from 'react-native/Libraries/Types/CodegenTypes';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 
 export interface NativeProps extends ViewProps {
@@ -16,6 +13,4 @@ export interface NativeProps extends ViewProps {
   onPress?: DirectEventHandler<Readonly<{}>>;
 }
 
-export default codegenNativeComponent<NativeProps>(
-  'PlystDetailBarButton',
-) as HostComponent<NativeProps>;
+export default codegenNativeComponent<NativeProps>('PlystDetailBarButton') as HostComponent<NativeProps>;

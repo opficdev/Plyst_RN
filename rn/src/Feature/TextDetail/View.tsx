@@ -1,18 +1,8 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionSheet } from '../../Shared/UI';
-import {
-  ClipDetailActionBar,
-  ClipDetailDates,
-} from '../../Shared/UI/ClipDetail';
+import { ClipDetailActionBar, ClipDetailDates } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
 import { ClipDetailSheet } from '../ClipDetail/Sheet';
@@ -20,11 +10,7 @@ import { isClosed, isSaveEnabled, textDetailActions as actions } from './draft';
 import type { TextDetailState, TextDetailStoreState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
-import {
-  ScreenProvider,
-  useScreenState,
-  useScreenDispatch,
-} from '../../Shared/State/screenStore';
+import { ScreenProvider, useScreenState, useScreenDispatch } from '../../Shared/State/screenStore';
 import { createTextDetailStore } from './store';
 
 type TextDetailViewProps = {
@@ -34,26 +20,11 @@ type TextDetailViewProps = {
 };
 
 // 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 시트 안에서만 그림
-export function TextDetailView({
-  clipID,
-  usesSystemBar,
-  navigation,
-}: TextDetailViewProps) {
-  return (
-    <TextDetailRoot
-      key={clipID}
-      clipID={clipID}
-      usesSystemBar={usesSystemBar}
-      navigation={navigation}
-    />
-  );
+export function TextDetailView({ clipID, usesSystemBar, navigation }: TextDetailViewProps) {
+  return <TextDetailRoot key={clipID} clipID={clipID} usesSystemBar={usesSystemBar} navigation={navigation} />;
 }
 
-function TextDetailRoot({
-  clipID,
-  usesSystemBar,
-  navigation,
-}: TextDetailViewProps) {
+function TextDetailRoot({ clipID, usesSystemBar, navigation }: TextDetailViewProps) {
   const [screen] = useState(() => createTextDetailStore(clipID));
   useLayoutEffect(() => {
     screen.start();
@@ -64,21 +35,12 @@ function TextDetailRoot({
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <TextDetailContent
-        usesSystemBar={usesSystemBar}
-        closeClip={navigation.closeClip}
-      />
+      <TextDetailContent usesSystemBar={usesSystemBar} closeClip={navigation.closeClip} />
     </ScreenProvider>
   );
 }
 
-function TextDetailContent({
-  usesSystemBar,
-  closeClip,
-}: {
-  usesSystemBar: boolean;
-  closeClip: () => void;
-}) {
+function TextDetailContent({ usesSystemBar, closeClip }: { usesSystemBar: boolean; closeClip: () => void }) {
   const state = useScreenState<TextDetailStoreState>();
   const dispatch = useScreenDispatch();
   return (
@@ -90,11 +52,7 @@ function TextDetailContent({
       onSaveButtonPress={() => dispatch(actions.save())}
       onClose={closeClip}
     >
-      {state.phase === 'loaded' ? (
-        <TextDetailEditor state={state} />
-      ) : (
-        <View style={styles.canvas} />
-      )}
+      {state.phase === 'loaded' ? <TextDetailEditor state={state} /> : <View style={styles.canvas} />}
     </ClipDetailSheet>
   );
 }
@@ -102,15 +60,7 @@ function TextDetailContent({
 function TextDetailEditor({ state }: { state: TextDetailState }) {
   const dispatch = useScreenDispatch();
   const insets = useSafeAreaInsets();
-  const {
-    contentRef,
-    nameRef,
-    memoRef,
-    nameInputProps,
-    memoInputProps,
-    revealMemo,
-    scrollProps,
-  } = useScrollFieldIntoView();
+  const { contentRef, nameRef, memoRef, nameInputProps, memoInputProps, revealMemo, scrollProps } = useScrollFieldIntoView();
 
   function showDeleteSheet() {
     if (state.isDeleting || state.isRemoved || state.isDeleteSheetOpen) return;
@@ -188,18 +138,11 @@ function TextDetailEditor({ state }: { state: TextDetailState }) {
             </View>
             <View style={styles.divider} />
           </View>
-          <ClipDetailDates
-            savedValue={formatClipDate(clip.createdAt)}
-            lastUsedValue={formatClipDate(clip.lastUsedAt)}
-          />
+          <ClipDetailDates savedValue={formatClipDate(clip.createdAt)} lastUsedValue={formatClipDate(clip.lastUsedAt)} />
         </View>
       </ScrollView>
       <View style={{ paddingBottom: insets.bottom }}>
-        <ClipDetailActionBar
-          isBusy={state.isDeleting}
-          onDeleteButtonPress={showDeleteSheet}
-          onCopyButtonPress={copy}
-        />
+        <ClipDetailActionBar isBusy={state.isDeleting} onDeleteButtonPress={showDeleteSheet} onCopyButtonPress={copy} />
       </View>
       <ActionSheet
         isVisible={state.isDeleteSheetOpen}

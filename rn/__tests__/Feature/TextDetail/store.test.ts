@@ -41,11 +41,7 @@ function deferred<Value>() {
 const remove = jest.fn();
 beforeEach(() => {
   jest.resetAllMocks();
-  jest
-    .mocked(subscribeClipChanges)
-    .mockReturnValue({ remove } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
+  jest.mocked(subscribeClipChanges).mockReturnValue({ remove } as unknown as ReturnType<typeof subscribeClipChanges>);
   jest.mocked(loadTextDetail).mockResolvedValue({ status: 'loaded', clip });
 });
 
@@ -66,9 +62,7 @@ test('변경 구독 뒤 최초 조회를 시작한다', async () => {
   screen.store.dispatch(actions.viewDidLoad());
   screen.store.dispatch(actions.viewDidLoad());
   expect(loadTextDetail).toHaveBeenCalledTimes(1);
-  expect(
-    jest.mocked(subscribeClipChanges).mock.invocationCallOrder[0],
-  ).toBeLessThan(jest.mocked(loadTextDetail).mock.invocationCallOrder[0]);
+  expect(jest.mocked(subscribeClipChanges).mock.invocationCallOrder[0]).toBeLessThan(jest.mocked(loadTextDetail).mock.invocationCallOrder[0]);
   pending.resolve({ status: 'loaded', clip });
   await settle();
   screen.dispose();
@@ -125,9 +119,7 @@ test('조회 실패는 최초 화면만 닫고 기존 편집 상태는 보존한
   const screen = await mounted();
   screen.store.dispatch(actions.nameChanged('편집 중'));
   jest.mocked(loadTextDetail).mockResolvedValue({ status: 'failed' });
-  jest
-    .mocked(subscribeClipChanges)
-    .mock.calls[0][0]({ id: clip.id, kind: 'updated' });
+  jest.mocked(subscribeClipChanges).mock.calls[0][0]({ id: clip.id, kind: 'updated' });
   await settle();
   expect(screen.store.getState()).toMatchObject({ draft: { name: '편집 중' } });
   screen.dispose();

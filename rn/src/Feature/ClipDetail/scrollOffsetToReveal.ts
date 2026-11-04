@@ -1,9 +1,4 @@
-export function scrollOffsetToReveal(
-  offset: number,
-  viewportHeight: number,
-  top: number,
-  bottom: number,
-): number {
+export function scrollOffsetToReveal(offset: number, viewportHeight: number, top: number, bottom: number): number {
   if (viewportHeight < bottom - top || top < offset) {
     return Math.max(0, top);
   }

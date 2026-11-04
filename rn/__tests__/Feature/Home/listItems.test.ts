@@ -46,12 +46,8 @@ test('고정 행과 구간 제목 및 카드 순서를 유지한다', () => {
 });
 
 test('빈 목록과 고정 행만 있는 목록을 구분한다', () => {
-  expect(
-    makeHomeListItems({ pinnedClips: [], sections: [], isEmpty: true }),
-  ).toEqual([]);
-  expect(
-    makeHomeListItems({ pinnedClips: [clip], sections: [], isEmpty: false }),
-  ).toEqual([{ kind: 'pinned', key: 'pinned', clips: [clip] }]);
+  expect(makeHomeListItems({ pinnedClips: [], sections: [], isEmpty: true })).toEqual([]);
+  expect(makeHomeListItems({ pinnedClips: [clip], sections: [], isEmpty: false })).toEqual([{ kind: 'pinned', key: 'pinned', clips: [clip] }]);
 });
 
 test('고정 행이 없으면 첫 구간에 추가 간격을 두지 않는다', () => {

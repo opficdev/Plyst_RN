@@ -7,20 +7,10 @@ type ActionSheetButtonProps = {
   role: ActionSheetItem['role'];
   onPress: () => void;
 };
-export function ActionSheetButton({
-  title,
-  role,
-  onPress,
-}: ActionSheetButtonProps) {
+export function ActionSheetButton({ title, role, onPress }: ActionSheetButtonProps) {
   return (
-    <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-      onPress={onPress}
-    >
-      <Text
-        style={[styles.title, role === 'destructive' && styles.destructive]}
-        lineBreakStrategyIOS="standard"
-      >
+    <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]} onPress={onPress}>
+      <Text style={[styles.title, role === 'destructive' && styles.destructive]} lineBreakStrategyIOS="standard">
         {title}
       </Text>
     </Pressable>

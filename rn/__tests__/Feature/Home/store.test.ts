@@ -1,7 +1,4 @@
-import {
-  subscribeClipChanges,
-  subscribeClipboardSaveRequests,
-} from 'plyst-bridge';
+import { subscribeClipChanges, subscribeClipboardSaveRequests } from 'plyst-bridge';
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { createHomeStore } from '../../../src/Feature/Home/store';
 import { homeActions as actions } from '../../../src/Feature/Home/state';
@@ -45,20 +42,10 @@ const clip: ClipRecord = {
 const remove = jest.fn();
 beforeEach(() => {
   jest.resetAllMocks();
-  jest
-    .mocked(subscribeClipChanges)
-    .mockReturnValue({ remove } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
-  jest
-    .mocked(subscribeClipboardSaveRequests)
-    .mockReturnValue({ remove } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
+  jest.mocked(subscribeClipChanges).mockReturnValue({ remove } as unknown as ReturnType<typeof subscribeClipChanges>);
+  jest.mocked(subscribeClipboardSaveRequests).mockReturnValue({ remove } as unknown as ReturnType<typeof subscribeClipChanges>);
   jest.mocked(loadClips).mockResolvedValue({ status: 'loaded', clips: [clip] });
-  jest
-    .mocked(saveHomeClipboard)
-    .mockResolvedValue({ message: '저장했습니다', isSuccess: true });
+  jest.mocked(saveHomeClipboard).mockResolvedValue({ message: '저장했습니다', isSuccess: true });
 });
 
 test('보관된 저장 요청을 ready 중 전달해도 한 번 처리한다', async () => {
@@ -140,11 +127,6 @@ test('메뉴가 열린 뒤 바뀐 클립의 최신 내용으로 고정한다', a
   );
   screen.store.dispatch(actions.setPinned());
   await settle();
-  expect(updateClipDetail).toHaveBeenCalledWith(
-    clip.id,
-    '최신 이름',
-    null,
-    true,
-  );
+  expect(updateClipDetail).toHaveBeenCalledWith(clip.id, '최신 이름', null, true);
   screen.dispose();
 });

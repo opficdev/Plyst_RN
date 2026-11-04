@@ -1,21 +1,9 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Animated, Easing } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type { FlashListRef } from '@shopify/flash-list';
-import {
-  homeHeaderSnapDuration,
-  homeScrollToTop,
-  reloadHeaderPosition,
-  snapHeaderTarget,
-  updateHeaderHidden,
-} from './headerScroll';
+import { homeHeaderSnapDuration, homeScrollToTop, reloadHeaderPosition, snapHeaderTarget, updateHeaderHidden } from './headerScroll';
 import type { HomeHeaderPosition, HomeScrollGeometry } from './headerScroll';
 import type { HomeListItem } from './listItems';
 
@@ -23,12 +11,7 @@ type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 type HomeLayoutGeometry = Omit<HomeScrollGeometry, 'contentHeight'>;
 
 // 콘텐츠 높이는 셀 측정마다 바뀌므로 렌더 없이 ref에서 사용 시점의 값을 읽음
-export function useHomeHeaderScroll(
-  list: RefObject<FlashListRef<HomeListItem> | null>,
-  geometry: HomeLayoutGeometry,
-  contentHeight: RefObject<number>,
-  content: HomeListItem[],
-) {
+export function useHomeHeaderScroll(list: RefObject<FlashListRef<HomeListItem> | null>, geometry: HomeLayoutGeometry, contentHeight: RefObject<number>, content: HomeListItem[]) {
   const [translateY] = useState(() => new Animated.Value(0));
   const position = useRef<HomeHeaderPosition>({
     hidden: 0,
@@ -54,11 +37,7 @@ export function useHomeHeaderScroll(
     const previous = current.current;
     current.current = geometry;
     stop();
-    const hidden =
-      previous.headerHeight === 0
-        ? 0
-        : (position.current.hidden * geometry.headerHeight) /
-          previous.headerHeight;
+    const hidden = previous.headerHeight === 0 ? 0 : (position.current.hidden * geometry.headerHeight) / previous.headerHeight;
     const next = reloadHeaderPosition(hidden, offset.current, {
       ...geometry,
       contentHeight: contentHeight.current,
@@ -73,11 +52,7 @@ export function useHomeHeaderScroll(
         skipFirstItemOffset: true,
       });
     }
-    if (
-      previous.headerHeight !== geometry.headerHeight ||
-      !next.isScrollEnabled
-    )
-      setIndicatorTop(geometry.headerHeight - next.hidden);
+    if (previous.headerHeight !== geometry.headerHeight || !next.isScrollEnabled) setIndicatorTop(geometry.headerHeight - next.hidden);
   }, [geometry, content, contentHeight, list, stop, translateY]);
 
   useEffect(() => {
@@ -110,15 +85,8 @@ export function useHomeHeaderScroll(
 
   function snap() {
     if (updating.current) return;
-    const target = snapHeaderTarget(
-      position.current.hidden,
-      offset.current,
-      measured(),
-    );
-    setIndicatorTop(
-      current.current.headerHeight -
-        (target?.hidden ?? position.current.hidden),
-    );
+    const target = snapHeaderTarget(position.current.hidden, offset.current, measured());
+    setIndicatorTop(current.current.headerHeight - (target?.hidden ?? position.current.hidden));
     if (!target) return;
     updating.current = true;
     animation.current = Animated.timing(translateY, {
@@ -147,14 +115,7 @@ export function useHomeHeaderScroll(
     reset,
     onScroll(event: ScrollEvent) {
       offset.current = event.nativeEvent.contentOffset.y;
-      position.current = updateHeaderHidden(
-        position.current,
-        offset.current,
-        measured(),
-        dragging.current,
-        decelerating.current,
-        updating.current,
-      );
+      position.current = updateHeaderHidden(position.current, offset.current, measured(), dragging.current, decelerating.current, updating.current);
       if (!updating.current) translateY.setValue(-position.current.hidden);
     },
     onScrollBeginDrag(event: ScrollEvent) {

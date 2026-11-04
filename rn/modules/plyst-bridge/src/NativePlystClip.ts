@@ -68,10 +68,7 @@ export interface Spec extends TurboModule {
   // 클립이 없거나 이미지가 아니면 null
   // 크기 인자 없이 고정 크기를 사용하는 getClipImagePreview와 다름
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_IMAGE_UNAVAILABLE 중 하나로 거부
-  getClipThumbnail(
-    id: string,
-    maximumPixelDimension: number,
-  ): Promise<string | null>;
+  getClipThumbnail(id: string, maximumPixelDimension: number): Promise<string | null>;
   // 결과는 saved, denied, restricted 중 하나
   // 클립이 없으면 null
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_PHOTO_SAVE_FAILED 중 하나로 거부
@@ -79,12 +76,7 @@ export interface Spec extends TurboModule {
   // 저장이 확정된 클립을 반환
   // 클립이 없으면 null
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부
-  updateClip(
-    id: string,
-    name: string | null,
-    memo: string | null,
-    isPinned: boolean,
-  ): Promise<ClipRecord | null>;
+  updateClip(id: string, name: string | null, memo: string | null, isPinned: boolean): Promise<ClipRecord | null>;
   // 삭제했거나 이미 없으면 반환값 없이 성공
   // 실패하면 E_INVALID_ID, E_UNAVAILABLE, E_WRITE_FAILED, E_CORRUPTED_DATA 중 하나로 거부
   deleteClip(id: string): Promise<void>;

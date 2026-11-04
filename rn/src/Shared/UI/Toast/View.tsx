@@ -22,9 +22,7 @@ export function Toast({ message, isSuccess, isVisible, onHidden }: ToastProps) {
     const animation = Animated.timing(progress, {
       toValue: isVisible ? 1 : 0,
       duration: isVisible ? 250 : 200,
-      easing: isVisible
-        ? Easing.bezier(0, 0, 0.58, 1)
-        : Easing.bezier(0.42, 0, 1, 1),
+      easing: isVisible ? Easing.bezier(0, 0, 0.58, 1) : Easing.bezier(0.42, 0, 1, 1),
       useNativeDriver: true,
     });
     animation.start(({ finished }) => {
@@ -39,9 +37,7 @@ export function Toast({ message, isSuccess, isVisible, onHidden }: ToastProps) {
       style={[
         styles.pill,
         {
-          backgroundColor: isSuccess
-            ? colors.FeedbackSuccess
-            : colors.FeedbackFailure,
+          backgroundColor: isSuccess ? colors.FeedbackSuccess : colors.FeedbackFailure,
           opacity: progress,
           transform: [
             {

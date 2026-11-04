@@ -5,20 +5,10 @@ type HomeEmptyStateProps = { emptyTitle: string; emptyBody: string };
 export function HomeEmptyState({ emptyTitle, emptyBody }: HomeEmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text
-        allowFontScaling={false}
-        style={styles.emptyTitle}
-        numberOfLines={0}
-        lineBreakStrategyIOS="standard"
-      >
+      <Text allowFontScaling={false} style={styles.emptyTitle} numberOfLines={0} lineBreakStrategyIOS="standard">
         {emptyTitle}
       </Text>
-      <Text
-        allowFontScaling={false}
-        style={styles.emptyBody}
-        numberOfLines={0}
-        lineBreakStrategyIOS="standard"
-      >
+      <Text allowFontScaling={false} style={styles.emptyBody} numberOfLines={0} lineBreakStrategyIOS="standard">
         {emptyBody}
       </Text>
     </View>

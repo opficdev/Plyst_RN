@@ -15,24 +15,15 @@ type ClipPinnedCardProps = ClipCardProps &
       }
   );
 export function ClipPinnedCard(props: ClipPinnedCardProps) {
-  const name =
-    props.name ?? (props.kind === 'text' ? props.body : '이름 없는 이미지');
+  const name = props.name ?? (props.kind === 'text' ? props.body : '이름 없는 이미지');
   return (
     <View style={styles.card}>
       {props.kind === 'image' ? (
-        <ClipThumbnail
-          uri={props.thumbnailUri}
-          isFailed={props.isThumbnailFailed}
-          isPinned
-        />
+        <ClipThumbnail uri={props.thumbnailUri} isFailed={props.isThumbnailFailed} isPinned />
       ) : (
         <View style={styles.visualBox}>
           {props.isWebLink ? (
-            <Image
-              source="sf:globe"
-              contentFit="contain"
-              style={styles.linkIcon}
-            />
+            <Image source="sf:globe" contentFit="contain" style={styles.linkIcon} />
           ) : (
             <Text allowFontScaling={false} style={styles.quote}>
               “
@@ -44,20 +35,11 @@ export function ClipPinnedCard(props: ClipPinnedCardProps) {
         <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        <Text
-          allowFontScaling={false}
-          style={styles.metadata}
-          numberOfLines={1}
-        >
+        <Text allowFontScaling={false} style={styles.metadata} numberOfLines={1}>
           {props.metadata}
         </Text>
       </View>
-      {props.onCopyButtonPress && (
-        <CopyButton
-          onCopyButtonPress={props.onCopyButtonPress}
-          onCopyButtonLongPress={props.onCopyButtonLongPress}
-        />
-      )}
+      {props.onCopyButtonPress && <CopyButton onCopyButtonPress={props.onCopyButtonPress} onCopyButtonLongPress={props.onCopyButtonLongPress} />}
     </View>
   );
 }

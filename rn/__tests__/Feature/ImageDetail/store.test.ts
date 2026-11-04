@@ -7,6 +7,8 @@ import { saveImageDetail } from '../../../src/Feature/ImageDetail/save';
 import { copyClipDetail } from '../../../src/Service/Clip/copyDetail';
 import { deleteClipDetail } from '../../../src/Service/Clip/deleteDetail';
 import { showToast } from '../../../src/Shared/UI';
+import { loadImageDetailPreview } from '../../../src/Service/Clip/loadImageDetailPreview';
+import { saveImageDetailToPhotos } from '../../../src/Feature/ImageDetail/saveToPhotos';
 
 jest.mock('plyst-bridge', () => ({
   subscribeClipChanges: jest.fn(),
@@ -16,8 +18,6 @@ jest.mock('../../../src/Service/Clip/loadImageDetail');
 jest.mock('../../../src/Feature/ImageDetail/save');
 jest.mock('../../../src/Service/Clip/copyDetail');
 jest.mock('../../../src/Service/Clip/deleteDetail');
-import { loadImageDetailPreview } from '../../../src/Service/Clip/loadImageDetailPreview';
-import { saveImageDetailToPhotos } from '../../../src/Feature/ImageDetail/saveToPhotos';
 jest.mock('../../../src/Service/Clip/loadImageDetailPreview');
 jest.mock('../../../src/Feature/ImageDetail/saveToPhotos');
 
@@ -50,15 +50,9 @@ function deferred<Value>() {
 const remove = jest.fn();
 beforeEach(() => {
   jest.resetAllMocks();
-  jest
-    .mocked(subscribeClipChanges)
-    .mockReturnValue({ remove } as unknown as ReturnType<
-      typeof subscribeClipChanges
-    >);
+  jest.mocked(subscribeClipChanges).mockReturnValue({ remove } as unknown as ReturnType<typeof subscribeClipChanges>);
   jest.mocked(loadImageDetail).mockResolvedValue({ status: 'loaded', clip });
-  jest
-    .mocked(loadImageDetailPreview)
-    .mockResolvedValue({ status: 'loaded', uri: 'file://preview' });
+  jest.mocked(loadImageDetailPreview).mockResolvedValue({ status: 'loaded', uri: 'file://preview' });
 });
 
 async function mounted() {
@@ -78,9 +72,7 @@ test('변경 구독 뒤 최초 조회를 시작한다', async () => {
   screen.store.dispatch(actions.viewDidLoad());
   screen.store.dispatch(actions.viewDidLoad());
   expect(loadImageDetail).toHaveBeenCalledTimes(1);
-  expect(
-    jest.mocked(subscribeClipChanges).mock.invocationCallOrder[0],
-  ).toBeLessThan(jest.mocked(loadImageDetail).mock.invocationCallOrder[0]);
+  expect(jest.mocked(subscribeClipChanges).mock.invocationCallOrder[0]).toBeLessThan(jest.mocked(loadImageDetail).mock.invocationCallOrder[0]);
   pending.resolve({ status: 'loaded', clip });
   await settle();
   screen.dispose();
@@ -137,9 +129,7 @@ test('조회 실패는 최초 화면만 닫고 기존 편집 상태는 보존한
   const screen = await mounted();
   screen.store.dispatch(actions.nameChanged('편집 중'));
   jest.mocked(loadImageDetail).mockResolvedValue({ status: 'failed' });
-  jest
-    .mocked(subscribeClipChanges)
-    .mock.calls[0][0]({ id: clip.id, kind: 'updated' });
+  jest.mocked(subscribeClipChanges).mock.calls[0][0]({ id: clip.id, kind: 'updated' });
   await settle();
   expect(screen.store.getState()).toMatchObject({ draft: { name: '편집 중' } });
   screen.dispose();
@@ -170,13 +160,10 @@ test('화면 종료 뒤에도 이미 요청한 복사와 삭제 실패를 알린
 
 test('갱신은 미리보기를 다시 요청하지 않고 사진 저장 재요청도 막는다', async () => {
   const screen = await mounted();
-  jest
-    .mocked(subscribeClipChanges)
-    .mock.calls[0][0]({ id: clip.id, kind: 'updated' });
+  jest.mocked(subscribeClipChanges).mock.calls[0][0]({ id: clip.id, kind: 'updated' });
   await settle();
   expect(loadImageDetailPreview).toHaveBeenCalledTimes(1);
-  const pending =
-    deferred<Awaited<ReturnType<typeof saveImageDetailToPhotos>>>();
+  const pending = deferred<Awaited<ReturnType<typeof saveImageDetailToPhotos>>>();
   jest.mocked(saveImageDetailToPhotos).mockReturnValue(pending.promise);
   screen.store.dispatch(actions.saveToPhotos());
   screen.store.dispatch(actions.saveToPhotos());

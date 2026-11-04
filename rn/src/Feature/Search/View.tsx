@@ -1,76 +1,25 @@
-import {
-  memo,
-  useCallback,
-  useContext,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  PixelRatio,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { memo, useCallback, useContext, useDeferredValue, useEffect, useMemo, useLayoutEffect, useRef, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, PixelRatio, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
-import {
-  SafeAreaInsetsContext,
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
-import {
-  ScreenStackHeaderLeftView,
-  ScreenStackItem,
-} from 'react-native-screens';
+import { ScreenStackHeaderLeftView, ScreenStackItem } from 'react-native-screens';
 import type { ScreenStackHeaderConfigProps } from 'react-native-screens';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import type { ClipKind, ClipRecord } from '../../Model/clipRecord';
-import {
-  ClipImageCard,
-  ClipTextCard,
-  HomeEmptyState,
-  HomeFilterBar,
-  SearchTermChip,
-  SectionTitle,
-} from '../../Shared/UI';
+import { ClipImageCard, ClipTextCard, HomeEmptyState, HomeFilterBar, SearchTermChip, SectionTitle } from '../../Shared/UI';
 import { colors, spacing, typography } from '../../Shared/Theme';
 import { ClipGridCard, ClipListCell } from '../ClipGrid/Card';
-import {
-  clipCardValues,
-  clipColumnWidth,
-  clipListRightMargin,
-  clipThumbnailPixels,
-} from '../ClipGrid/cardValues';
+import { clipCardValues, clipColumnWidth, clipListRightMargin, clipThumbnailPixels } from '../ClipGrid/cardValues';
 import { clipFilters, clipFilterTitles } from '../ClipGrid/filter';
 import { searchCardText } from './cardText';
-import {
-  createSearchTimeTexts,
-  makeSearchContent,
-  searchEmptyStrings,
-  searchHeaderTitle,
-  searchMode,
-  searchRecentDisplay,
-} from './content';
+import { createSearchTimeTexts, makeSearchContent, searchEmptyStrings, searchHeaderTitle, searchMode, searchRecentDisplay } from './content';
 import { createSearchIndex } from './match';
 import type { SearchState } from './state';
 import { createSearchStore } from './store';
 import { searchActions as actions } from './state';
-import {
-  ScreenProvider,
-  useScreenState,
-  useScreenDispatch,
-} from '../../Shared/State/screenStore';
+import { ScreenProvider, useScreenState, useScreenDispatch } from '../../Shared/State/screenStore';
 import { useClipThumbnails } from '../ClipGrid/useThumbnails';
 import { useClipTimeline } from '../ClipGrid/useTimeline';
 import { NavigationBarButton } from './NavigationBarButton';
@@ -94,9 +43,7 @@ const searchHeader: ScreenStackHeaderConfigProps = {
   backgroundColor: 'transparent',
 };
 
-type SearchListItem =
-  | { kind: 'header'; key: string }
-  | { kind: 'card'; key: string; clip: ClipRecord };
+type SearchListItem = { kind: 'header'; key: string } | { kind: 'card'; key: string; clip: ClipRecord };
 const chips = clipFilters.map((key) => ({
   key,
   title: clipFilterTitles[key],
@@ -164,10 +111,7 @@ function SearchScreen({
   const isMounted = useRef(false);
   const isFocusPending = useRef(false);
   const [listWidth, setListWidth] = useState(0);
-  const dates = useMemo(
-    () => state.clips.map((clip) => clip.createdAt),
-    [state.clips],
-  );
+  const dates = useMemo(() => state.clips.map((clip) => clip.createdAt), [state.clips]);
   const now = useClipTimeline(dates, true);
   useEffect(() => {
     dispatch(actions.timeChanged(now));
@@ -242,18 +186,7 @@ function SearchScreen({
   }
 
   const query = useDeferredValue(state.query);
-  const content = useMemo(
-    () =>
-      makeSearchContent(
-        state.clips,
-        query,
-        state.filter,
-        state.now,
-        index,
-        times,
-      ),
-    [state.clips, query, state.filter, state.now, index, times],
-  );
+  const content = useMemo(() => makeSearchContent(state.clips, query, state.filter, state.now, index, times), [state.clips, query, state.filter, state.now, index, times]);
   const mode = searchMode(content, state.loadPhase, state.clips);
   const items = useMemo<SearchListItem[]>(
     () =>
@@ -275,18 +208,8 @@ function SearchScreen({
     previousFilter.current = state.filter;
     list.current?.scrollToOffset({ offset: 0, animated: true });
   }, [state.filter]);
-  const pixels = clipThumbnailPixels(
-    clipColumnWidth(listWidth),
-    PixelRatio.get(),
-  );
-  const thumbnails = useClipThumbnails<SearchListItem>(
-    state,
-    dispatch,
-    actions,
-    pixels,
-    pixels,
-    0 < listWidth && mode === 'results',
-  );
+  const pixels = clipThumbnailPixels(clipColumnWidth(listWidth), PixelRatio.get());
+  const thumbnails = useClipThumbnails<SearchListItem>(state, dispatch, actions, pixels, pixels, 0 < listWidth && mode === 'results');
   useEffect(() => {
     list.current?.recomputeViewableItems();
   }, [items, mode]);
@@ -333,25 +256,10 @@ function SearchScreen({
         />
       );
     },
-    [
-      cardHandlers,
-      cardNow,
-      content,
-      failedThumbnails,
-      index,
-      pixels,
-      thumbnailUris,
-    ],
+    [cardHandlers, cardNow, content, failedThumbnails, index, pixels, thumbnailUris],
   );
-  const empty = searchEmptyStrings(
-    content.query,
-    state.filter,
-    mode === 'failed',
-  );
-  const recent = searchRecentDisplay(
-    state.searchHistoryPhase,
-    state.searchHistory,
-  );
+  const empty = searchEmptyStrings(content.query, state.filter, mode === 'failed');
+  const recent = searchRecentDisplay(state.searchHistoryPhase, state.searchHistory);
 
   // iPhone Duo는 서치바를 시스템 바 왼쪽 항목으로 그리므로 위치는 시스템이 정하고 너비만 정함
   const searchPill = (
@@ -364,28 +272,13 @@ function SearchScreen({
           ? [
               styles.searchPill,
               {
-                width: Math.max(
-                  0,
-                  0 < insets.right
-                    ? width - 2 * insets.right - spacing.screen
-                    : width - duoTopCameraMargin,
-                ),
+                width: Math.max(0, 0 < insets.right ? width - 2 * insets.right - spacing.screen : width - duoTopCameraMargin),
               },
             ]
-          : [
-              styles.searchPill,
-              styles.searchPillPosition,
-              { top: insets.top - 5, width: Math.max(0, width - 96) },
-            ]
+          : [styles.searchPill, styles.searchPillPosition, { top: insets.top - 5, width: Math.max(0, width - 96) }]
       }
     >
-      <Image
-        source="sf:magnifyingglass"
-        contentFit="contain"
-        style={styles.searchIcon}
-        onDisplay={startOpen}
-        onLoad={startOpen}
-      />
+      <Image source="sf:magnifyingglass" contentFit="contain" style={styles.searchIcon} onDisplay={startOpen} onLoad={startOpen} />
       <TextInput
         ref={input}
         value={state.query}
@@ -409,14 +302,7 @@ function SearchScreen({
 
   // iPhone Duo는 push 전환의 페이드를 시스템이 하므로 배경과 본문을 처음부터 보이게 함
   const isShown = usesSystemBar || isPresented;
-  const backdrop = (
-    <SearchTransition
-      effect="fadeIn"
-      isPresented={isShown}
-      pointerEvents="none"
-      style={styles.backdrop}
-    />
-  );
+  const backdrop = <SearchTransition effect="fadeIn" isPresented={isShown} pointerEvents="none" style={styles.backdrop} />;
 
   // iPhone Duo는 본문이 서치바 아래에 놓이도록 바 안쪽 안전 영역을 넘겨 받음
   // 바가 배치되기 전의 안쪽 위쪽 값은 앱 전체 값과 같아 그때 그리면 본문이 위에 찍혔다가 내려오므로 바 높이가 더해진 뒤에 그림
@@ -427,75 +313,35 @@ function SearchScreen({
         {usesSystemBar ? (
           <NavigationBarButton side="right" icon="xmark" onPress={close} />
         ) : (
-          <SearchTransition
-            effect="fadeIn"
-            isPresented={isPresented}
-            style={[styles.cancel, { top: insets.top - 5 }]}
-          >
+          <SearchTransition effect="fadeIn" isPresented={isPresented} style={[styles.cancel, { top: insets.top - 5 }]}>
             <Pressable style={styles.cancelPress} onPress={close}>
-              <SearchTransition
-                effect="fadeOut"
-                isPresented={isPresented}
-                style={styles.buttonIcon}
-              >
+              <SearchTransition effect="fadeOut" isPresented={isPresented} style={styles.buttonIcon}>
                 <Image source="sf:magnifyingglass" style={styles.cancelIcon} />
               </SearchTransition>
-              <SearchTransition
-                effect="fadeIn"
-                isPresented={isPresented}
-                style={styles.buttonIcon}
-              >
-                <Image
-                  source="sf:xmark"
-                  contentFit="none"
-                  style={styles.xmarkIcon}
-                />
+              <SearchTransition effect="fadeIn" isPresented={isPresented} style={styles.buttonIcon}>
+                <Image source="sf:xmark" contentFit="none" style={styles.xmarkIcon} />
               </SearchTransition>
             </Pressable>
           </SearchTransition>
         )}
       </View>
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={[styles.root, { marginBottom: insets.bottom }]}
-      >
-        <SearchTransition
-          effect="fadeIn"
-          isPresented={isShown}
-          style={styles.root}
-        >
+      <KeyboardAvoidingView behavior="padding" style={[styles.root, { marginBottom: insets.bottom }]}>
+        <SearchTransition effect="fadeIn" isPresented={isShown} style={styles.root}>
           <View style={styles.filters}>
-            <HomeFilterBar
-              keyboardShouldPersistTaps="handled"
-              chips={chips}
-              selectedKey={state.filter}
-              onSelect={(filter) => dispatch(actions.filterSelected(filter))}
-            />
+            <HomeFilterBar keyboardShouldPersistTaps="handled" chips={chips} selectedKey={state.filter} onSelect={(filter) => dispatch(actions.filterSelected(filter))} />
           </View>
           {/* iPhone Duo는 오른쪽 safe area에 바 항목이 놓이므로 카드와 구분선을 safe area 경계에서 끝냄 */}
-          <View
-            style={[
-              styles.list,
-              { marginRight: clipListRightMargin(insets.right) },
-            ]}
-          >
+          <View style={[styles.list, { marginRight: clipListRightMargin(insets.right) }]}>
             {mode === 'recent' ? (
               <SearchRecent
                 {...recent}
-                onTermButtonPress={(term) =>
-                  dispatch(actions.queryChanged(term))
-                }
-                onRemoveButtonPress={(term) =>
-                  dispatch(actions.removeRecentTerm(term))
-                }
+                onTermButtonPress={(term) => dispatch(actions.queryChanged(term))}
+                onRemoveButtonPress={(term) => dispatch(actions.removeRecentTerm(term))}
                 onClearButtonPress={() => dispatch(actions.clearRecentTerms())}
               />
             ) : mode === 'empty' || mode === 'failed' ? (
               <View style={styles.empty}>
-                <HomeEmptyState
-                  emptyTitle={empty.title}
-                  emptyBody={empty.message}
-                />
+                <HomeEmptyState emptyTitle={empty.title} emptyBody={empty.message} />
               </View>
             ) : (
               <FlashList
@@ -506,13 +352,7 @@ function SearchScreen({
                 numColumns={2}
                 CellRendererComponent={ClipListCell}
                 keyExtractor={(item) => item.key}
-                getItemType={(item) =>
-                  item.kind === 'card'
-                    ? item.clip.image === null
-                      ? 'text'
-                      : 'image'
-                    : item.kind
-                }
+                getItemType={(item) => (item.kind === 'card' ? (item.clip.image === null ? 'text' : 'image') : item.kind)}
                 overrideItemLayout={(layout, item) => {
                   layout.span = item.kind === 'card' ? 1 : 2;
                 }}
@@ -525,9 +365,7 @@ function SearchScreen({
                 contentContainerStyle={{ paddingBottom: 16 }}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
-                onLayout={({ nativeEvent: { layout } }) =>
-                  setListWidth(layout.width)
-                }
+                onLayout={({ nativeEvent: { layout } }) => setListWidth(layout.width)}
                 viewabilityConfig={thumbnails.viewabilityConfig}
                 onViewableItemsChanged={thumbnails.onViewableItemsChanged}
               />
@@ -555,24 +393,14 @@ function SearchScreen({
       headerConfig={{
         ...searchHeader,
         hideBackButton: true,
-        children: (
-          <ScreenStackHeaderLeftView hidesSharedBackground>
-            {searchPill}
-          </ScreenStackHeaderLeftView>
-        ),
+        children: <ScreenStackHeaderLeftView hidesSharedBackground>{searchPill}</ScreenStackHeaderLeftView>,
       }}
       style={StyleSheet.absoluteFill}
     >
       <View style={styles.root} onLayout={enter}>
         {backdrop}
         <SafeAreaProvider style={styles.root}>
-          <SafeAreaInsetsContext.Consumer>
-            {(inner) =>
-              inner && (isPresented || insets.top < inner.top)
-                ? renderBody(inner)
-                : null
-            }
-          </SafeAreaInsetsContext.Consumer>
+          <SafeAreaInsetsContext.Consumer>{(inner) => (inner && (isPresented || insets.top < inner.top) ? renderBody(inner) : null)}</SafeAreaInsetsContext.Consumer>
         </SafeAreaProvider>
       </View>
     </ScreenStackItem>
@@ -595,9 +423,7 @@ function SearchRecent({
   const isRightInset = 0 < useSafeAreaInsets().right;
   return (
     <View>
-      <View
-        style={[styles.recentHeader, isRightInset && styles.insetRecentHeader]}
-      >
+      <View style={[styles.recentHeader, isRightInset && styles.insetRecentHeader]}>
         <Text allowFontScaling={false} style={styles.recentTitle}>
           최근 검색어
         </Text>
@@ -617,18 +443,10 @@ function SearchRecent({
             keyboardShouldPersistTaps="handled"
             showsHorizontalScrollIndicator={false}
             style={isRightInset && styles.insetChipScroll}
-            contentContainerStyle={[
-              styles.chips,
-              isRightInset && styles.insetChips,
-            ]}
+            contentContainerStyle={[styles.chips, isRightInset && styles.insetChips]}
           >
             {terms.map((term) => (
-              <SearchTermChip
-                key={term}
-                term={term}
-                onTermButtonPress={() => onTermButtonPress(term)}
-                onRemoveButtonPress={() => onRemoveButtonPress(term)}
-              />
+              <SearchTermChip key={term} term={term} onTermButtonPress={() => onTermButtonPress(term)} onRemoveButtonPress={() => onRemoveButtonPress(term)} />
             ))}
           </ScrollView>
         ) : (
@@ -672,19 +490,9 @@ const SearchGridItem = memo(function SearchGridItem({
   return (
     <ClipGridCard onPress={() => handlers.onSelect(clip)}>
       {values.kind === 'text' ? (
-        <ClipTextCard
-          {...values}
-          {...text}
-          onCopyButtonPress={() => handlers.onCopy(clip)}
-        />
+        <ClipTextCard {...values} {...text} onCopyButtonPress={() => handlers.onCopy(clip)} />
       ) : (
-        <ClipImageCard
-          {...values}
-          nameHighlights={text.nameHighlights}
-          thumbnailUri={thumbnailUri}
-          isThumbnailFailed={isThumbnailFailed}
-          onCopyButtonPress={() => handlers.onCopy(clip)}
-        />
+        <ClipImageCard {...values} nameHighlights={text.nameHighlights} thumbnailUri={thumbnailUri} isThumbnailFailed={isThumbnailFailed} onCopyButtonPress={() => handlers.onCopy(clip)} />
       )}
     </ClipGridCard>
   );

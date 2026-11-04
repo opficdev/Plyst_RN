@@ -8,17 +8,6 @@ export type SearchTransitionProps = ViewProps & {
 };
 
 // 네이티브가 자기 layer의 알파를 정하므로 style에 opacity를 넘기지 않음
-export function SearchTransition({
-  onTransitionEnd,
-  ...props
-}: SearchTransitionProps) {
-  return (
-    <PlystSearchTransition
-      {...props}
-      onTransitionEnd={
-        onTransitionEnd &&
-        ((event) => onTransitionEnd(event.nativeEvent.isPresented))
-      }
-    />
-  );
+export function SearchTransition({ onTransitionEnd, ...props }: SearchTransitionProps) {
+  return <PlystSearchTransition {...props} onTransitionEnd={onTransitionEnd && ((event) => onTransitionEnd(event.nativeEvent.isPresented))} />;
 }

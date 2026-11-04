@@ -9,19 +9,10 @@ import { loadImageDetailPreview } from '../../Service/Clip/loadImageDetailPrevie
 import { createClipDetailRefresher } from '../ClipDetail/refresher';
 import { saveImageDetail } from './save';
 import { saveImageDetailToPhotos } from './saveToPhotos';
-import {
-  canStartDelete,
-  canStartPhotoSave,
-  canStartSave,
-  imageDetailActions as actions,
-  isClosed,
-} from './draft';
+import { canStartDelete, canStartPhotoSave, canStartSave, imageDetailActions as actions, isClosed } from './draft';
 import type { ImageDetailStoreState } from './draft';
 
-export function startImageDetailListeners(
-  listen: SliceListen<ImageDetailStoreState>,
-  clipID: string,
-) {
+export function startImageDetailListeners(listen: SliceListen<ImageDetailStoreState>, clipID: string) {
   listen({
     actionCreator: actions.viewDidLoad,
     effect: async (_, api) => {
@@ -63,11 +54,7 @@ export function startImageDetailListeners(
     effect: async (_, api) => {
       const before = api.getOriginalState();
       if (!canStartSave(before)) return;
-      const result = await saveImageDetail(
-        clipID,
-        before.draft,
-        before.clip.memo,
-      );
+      const result = await saveImageDetail(clipID, before.draft, before.clip.memo);
       // 이미 시작한 쓰기의 결과 토스트는 화면이 닫힌 뒤에도 유지
       const isActive = !api.signal.aborted;
       switch (result.status) {
@@ -94,12 +81,7 @@ export function startImageDetailListeners(
       }
       const result = await copyClipDetail(clipID);
       // 복사 결과는 화면 수명과 관계없이 기존 토스트 창에 표시
-      showToast(
-        result === 'copied'
-          ? '클립보드에 복사했습니다'
-          : '클립보드에 복사하지 못했습니다',
-        result === 'copied',
-      );
+      showToast(result === 'copied' ? '클립보드에 복사했습니다' : '클립보드에 복사하지 못했습니다', result === 'copied');
     },
   });
   listen({
@@ -108,9 +90,7 @@ export function startImageDetailListeners(
       if (!canStartDelete(api.getOriginalState())) return;
       const result = await deleteClipDetail(clipID);
       if (!api.signal.aborted) {
-        api.dispatch(
-          result === 'deleted' ? actions.removed() : actions.deleteFailed(),
-        );
+        api.dispatch(result === 'deleted' ? actions.removed() : actions.deleteFailed());
       }
       if (result === 'failed') showToast('삭제하지 못했습니다', false);
     },
@@ -123,11 +103,7 @@ export function startImageDetailListeners(
       api.unsubscribe();
       const preview = await loadImageDetailPreview(clipID);
       if (api.signal.aborted || isClosed(api.getState())) return;
-      api.dispatch(
-        preview.status === 'loaded'
-          ? actions.previewReady(preview.uri)
-          : actions.previewFailed(),
-      );
+      api.dispatch(preview.status === 'loaded' ? actions.previewReady(preview.uri) : actions.previewFailed());
     },
   });
   listen({
@@ -136,11 +112,7 @@ export function startImageDetailListeners(
       if (!canStartPhotoSave(api.getOriginalState())) return;
       const result = await saveImageDetailToPhotos(clipID);
       if (!api.signal.aborted) {
-        api.dispatch(
-          result.status === 'removed'
-            ? actions.removed()
-            : actions.photoSaveFinished(),
-        );
+        api.dispatch(result.status === 'removed' ? actions.removed() : actions.photoSaveFinished());
       }
       if (result.status !== 'removed') {
         showToast(result.message, result.isSuccess);

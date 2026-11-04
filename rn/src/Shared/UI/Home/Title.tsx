@@ -6,11 +6,7 @@ import { colors } from '../../Theme';
 export function HomeTitle() {
   return (
     <>
-      <Image
-        source={{ uri: 'HomeLogo' }}
-        contentFit="cover"
-        style={styles.mark}
-      />
+      <Image source={{ uri: 'HomeLogo' }} contentFit="cover" style={styles.mark} />
       <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
         Plyst
       </Text>

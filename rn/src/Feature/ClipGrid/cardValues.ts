@@ -1,11 +1,7 @@
 import type { ClipRecord } from '../../Model/clipRecord';
 import { formatClipCardTime } from './cardFormat';
 
-export function clipCardValues(
-  clip: ClipRecord,
-  now: number,
-  isPinned = false,
-) {
+export function clipCardValues(clip: ClipRecord, now: number, isPinned = false) {
   const time = formatClipCardTime(clip.createdAt, now);
   const common = { name: clip.name };
   if (clip.image !== null) {
@@ -13,9 +9,7 @@ export function clipCardValues(
     return {
       ...common,
       kind: 'image' as const,
-      metadata: isPinned
-        ? '이미지'
-        : `이미지 · ${pixelWidth}×${pixelHeight} · ${time}`,
+      metadata: isPinned ? '이미지' : `이미지 · ${pixelWidth}×${pixelHeight} · ${time}`,
     };
   }
   return {
@@ -38,10 +32,6 @@ export function clipListRightMargin(safeAreaRight: number) {
   return 0 < safeAreaRight ? safeAreaRight - 16 : 0;
 }
 
-export function clipThumbnailPixels(
-  columnWidth: number,
-  scale: number,
-  isPinned = false,
-) {
+export function clipThumbnailPixels(columnWidth: number, scale: number, isPinned = false) {
   return Math.max(1, Math.ceil((isPinned ? 56 : columnWidth - 12) * scale));
 }

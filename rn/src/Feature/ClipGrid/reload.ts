@@ -8,11 +8,7 @@ type ReloadActions = Pick<ClipGridActions, 'clipsLoaded' | 'loadFailed'>;
 export function startClipReload(
   api: {
     signal: AbortSignal;
-    dispatch: (
-      action:
-        | ReturnType<ReloadActions['clipsLoaded']>
-        | ReturnType<ReloadActions['loadFailed']>,
-    ) => unknown;
+    dispatch: (action: ReturnType<ReloadActions['clipsLoaded']> | ReturnType<ReloadActions['loadFailed']>) => unknown;
   },
   actions: ReloadActions,
   onReload?: () => void,
@@ -32,11 +28,7 @@ export function startClipReload(
       onReload?.();
       const result = await loadClips();
       if (api.signal.aborted) return;
-      api.dispatch(
-        result.status === 'loaded'
-          ? actions.clipsLoaded({ clips: result.clips, now: Date.now() })
-          : actions.loadFailed(),
-      );
+      api.dispatch(result.status === 'loaded' ? actions.clipsLoaded({ clips: result.clips, now: Date.now() }) : actions.loadFailed());
     } while (pending);
     loading = false;
   }

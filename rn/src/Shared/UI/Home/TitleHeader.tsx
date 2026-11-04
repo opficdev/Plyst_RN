@@ -3,26 +3,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { colors, spacing } from '../../Theme';
 import { HomeTitle } from './Title';
 
-export function HomeTitleHeader({
-  onSearchButtonPress,
-  isSearchButtonDisabled = false,
-}: {
-  onSearchButtonPress: () => void;
-  isSearchButtonDisabled?: boolean;
-}) {
+export function HomeTitleHeader({ onSearchButtonPress, isSearchButtonDisabled = false }: { onSearchButtonPress: () => void; isSearchButtonDisabled?: boolean }) {
   return (
     <View style={styles.container}>
       <HomeTitle />
-      <Pressable
-        style={styles.searchButton}
-        disabled={isSearchButtonDisabled}
-        onPress={onSearchButtonPress}
-      >
-        <Image
-          source="sf:magnifyingglass"
-          contentFit="contain"
-          style={styles.searchIcon}
-        />
+      <Pressable style={styles.searchButton} disabled={isSearchButtonDisabled} onPress={onSearchButtonPress}>
+        <Image source="sf:magnifyingglass" contentFit="contain" style={styles.searchIcon} />
       </Pressable>
     </View>
   );

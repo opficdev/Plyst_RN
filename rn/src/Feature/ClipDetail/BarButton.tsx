@@ -16,24 +16,8 @@ type DetailBarButtonProps = {
   onPress: () => void;
 };
 
-export function DetailBarButton({
-  icon,
-  title,
-  isEnabled = true,
-  onPress,
-}: DetailBarButtonProps) {
-  return (
-    <PlystDetailBarButton
-      icon={icon}
-      title={title}
-      isEnabled={isEnabled}
-      onPress={onPress}
-      style={[
-        styles.box,
-        { width: icon === undefined ? detailBarTextButtonWidth : side },
-      ]}
-    />
-  );
+export function DetailBarButton({ icon, title, isEnabled = true, onPress }: DetailBarButtonProps) {
+  return <PlystDetailBarButton icon={icon} title={title} isEnabled={isEnabled} onPress={onPress} style={[styles.box, { width: icon === undefined ? detailBarTextButtonWidth : side }]} />;
 }
 
 const styles = StyleSheet.create({

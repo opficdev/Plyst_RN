@@ -7,11 +7,7 @@ type SearchTermChipProps = {
   onTermButtonPress: () => void;
   onRemoveButtonPress: () => void;
 };
-export function SearchTermChip({
-  term,
-  onTermButtonPress,
-  onRemoveButtonPress,
-}: SearchTermChipProps) {
+export function SearchTermChip({ term, onTermButtonPress, onRemoveButtonPress }: SearchTermChipProps) {
   return (
     <View style={styles.chip}>
       <Pressable style={styles.termButton} onPress={onTermButtonPress}>

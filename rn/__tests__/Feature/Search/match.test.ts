@@ -1,10 +1,6 @@
 import type { ClipRecord } from '../../../src/Model/clipRecord';
 import { clusters } from '../../../src/Model/clipText';
-import {
-  createSearchIndex,
-  normalizeSearchQuery,
-  searchRanges,
-} from '../../../src/Feature/Search/match';
+import { createSearchIndex, normalizeSearchQuery, searchRanges } from '../../../src/Feature/Search/match';
 
 // 실기기 Swift 원본의 23개 기대값을 고정
 const cases = [
@@ -180,12 +176,7 @@ const cases = [
 
 test.each(cases)('$id는 Swift 원본과 같다', (value) => {
   expect(normalizeSearchQuery(value.query) === '').toBe(value.queryEmpty);
-  expect(
-    searchRanges(value.text, value.query).map(({ location, length }) => [
-      location,
-      length,
-    ]),
-  ).toEqual(value.ranges);
+  expect(searchRanges(value.text, value.query).map(({ location, length }) => [location, length])).toEqual(value.ranges);
 });
 
 test('양끝 공백과 개행을 제거하고 빈 입력을 거부한다', () => {
@@ -203,11 +194,7 @@ test('대소문자만 무시하고 악센트를 구분한다', () => {
 
 test('겹치지 않는 모든 범위를 반환한다', () => {
   const text = 'aaaa AA a';
-  expect(
-    searchRanges(text, 'aa').map(({ location, length }) =>
-      text.slice(location, location + length),
-    ),
-  ).toEqual(['aa', 'aa', 'AA']);
+  expect(searchRanges(text, 'aa').map(({ location, length }) => text.slice(location, location + length))).toEqual(['aa', 'aa', 'AA']);
 });
 
 test('일치하지 않거나 원문이 비면 범위가 없다', () => {
@@ -219,9 +206,7 @@ test('한글 정준 등가의 범위는 원문을 가리킨다', () => {
   const decomposed = '한글'.normalize('NFD');
   const text = `앞 ${decomposed} 뒤`;
   const [range] = searchRanges(text, '한글');
-  expect(text.slice(range.location, range.location + range.length)).toBe(
-    decomposed,
-  );
+  expect(text.slice(range.location, range.location + range.length)).toBe(decomposed);
 });
 
 test('이모지와 결합 문자 중간에서는 일치하지 않는다', () => {
@@ -255,9 +240,7 @@ test.each([
 test('같은 id와 필드의 원문이 바뀌면 캐시를 무효화한다', () => {
   const index = createSearchIndex();
   expect(index.matches('a', 'body', 'Straße', 'ss')).toBe(true);
-  expect(index.ranges('a', 'body', 'Straße', 'ss')).toEqual([
-    { location: 4, length: 1 },
-  ]);
+  expect(index.ranges('a', 'body', 'Straße', 'ss')).toEqual([{ location: 4, length: 1 }]);
   expect(index.matches('a', 'body', '다른 본문', 'ss')).toBe(false);
   expect(index.ranges('a', 'body', '다른 본문', 'ss')).toEqual([]);
 });

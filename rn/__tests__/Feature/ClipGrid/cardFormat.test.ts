@@ -1,8 +1,7 @@
 import { formatClipCardTime } from '../../../src/Feature/ClipGrid/cardFormat';
 
 const now = new Date(2026, 9, 10, 12).getTime();
-const shortTime = (date: number) =>
-  new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(date);
+const shortTime = (date: number) => new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(date);
 const dateTime = (date: number) =>
   new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',

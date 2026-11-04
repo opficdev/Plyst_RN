@@ -1,38 +1,17 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { Image } from 'expo-image';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  useWindowDimensions,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionSheet } from '../../Shared/UI';
-import {
-  ClipDetailActionBar,
-  ClipDetailDates,
-} from '../../Shared/UI/ClipDetail';
+import { ClipDetailActionBar, ClipDetailDates } from '../../Shared/UI/ClipDetail';
 import { colors, radius, spacing, typography } from '../../Shared/Theme';
 import { formatClipDate } from '../ClipDetail/formatDate';
 import { ClipDetailSheet } from '../ClipDetail/Sheet';
-import {
-  imageDetailActions as actions,
-  isClosed,
-  isSaveEnabled,
-} from './draft';
+import { imageDetailActions as actions, isClosed, isSaveEnabled } from './draft';
 import type { ImageDetailState, ImageDetailStoreState } from './draft';
 import { useScrollFieldIntoView } from '../ClipDetail/useScrollFieldIntoView';
 
-import {
-  ScreenProvider,
-  useScreenState,
-  useScreenDispatch,
-} from '../../Shared/State/screenStore';
+import { ScreenProvider, useScreenState, useScreenDispatch } from '../../Shared/State/screenStore';
 import { createImageDetailStore } from './store';
 import { formatByteCount } from './formatByteCount';
 
@@ -43,26 +22,11 @@ type ImageDetailViewProps = {
 };
 
 // 루트 컴포넌트는 ScreenProvider와 ClipDetailSheet만 렌더하고 배경은 시트 안에서만 그림
-export function ImageDetailView({
-  clipID,
-  usesSystemBar,
-  navigation,
-}: ImageDetailViewProps) {
-  return (
-    <ImageDetailRoot
-      key={clipID}
-      clipID={clipID}
-      usesSystemBar={usesSystemBar}
-      navigation={navigation}
-    />
-  );
+export function ImageDetailView({ clipID, usesSystemBar, navigation }: ImageDetailViewProps) {
+  return <ImageDetailRoot key={clipID} clipID={clipID} usesSystemBar={usesSystemBar} navigation={navigation} />;
 }
 
-function ImageDetailRoot({
-  clipID,
-  usesSystemBar,
-  navigation,
-}: ImageDetailViewProps) {
+function ImageDetailRoot({ clipID, usesSystemBar, navigation }: ImageDetailViewProps) {
   const [screen] = useState(() => createImageDetailStore(clipID));
   useLayoutEffect(() => {
     screen.start();
@@ -73,21 +37,12 @@ function ImageDetailRoot({
   }, [screen]);
   return (
     <ScreenProvider store={screen.store}>
-      <ImageDetailContent
-        usesSystemBar={usesSystemBar}
-        closeClip={navigation.closeClip}
-      />
+      <ImageDetailContent usesSystemBar={usesSystemBar} closeClip={navigation.closeClip} />
     </ScreenProvider>
   );
 }
 
-function ImageDetailContent({
-  usesSystemBar,
-  closeClip,
-}: {
-  usesSystemBar: boolean;
-  closeClip: () => void;
-}) {
+function ImageDetailContent({ usesSystemBar, closeClip }: { usesSystemBar: boolean; closeClip: () => void }) {
   const state = useScreenState<ImageDetailStoreState>();
   const dispatch = useScreenDispatch();
   return (
@@ -99,11 +54,7 @@ function ImageDetailContent({
       onSaveButtonPress={() => dispatch(actions.save())}
       onClose={closeClip}
     >
-      {state.phase === 'loaded' ? (
-        <ImageDetailEditor state={state} />
-      ) : (
-        <View style={styles.canvas} />
-      )}
+      {state.phase === 'loaded' ? <ImageDetailEditor state={state} /> : <View style={styles.canvas} />}
     </ClipDetailSheet>
   );
 }
@@ -113,8 +64,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
   const [previewWidth, setPreviewWidth] = useState(0);
   const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { contentRef, nameRef, nameInputProps, scrollProps } =
-    useScrollFieldIntoView();
+  const { contentRef, nameRef, nameInputProps, scrollProps } = useScrollFieldIntoView();
 
   function showDeleteSheet() {
     if (state.isDeleting || state.isRemoved || state.isDeleteSheetOpen) return;
@@ -126,10 +76,7 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
 
   const { clip, draft, preview } = state;
   const image = clip.image;
-  const previewHeight = Math.min(
-    Math.max(96, previewWidth / preview.aspectRatio),
-    Math.max(0, window.height - insets.top - insets.bottom) * 0.6,
-  );
+  const previewHeight = Math.min(Math.max(96, previewWidth / preview.aspectRatio), Math.max(0, window.height - insets.top - insets.bottom) * 0.6);
   const photoDisabled = state.isDeleting || state.isSavingToPhotos;
   return (
     <View style={styles.canvas}>
@@ -142,15 +89,9 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
         <View ref={contentRef} style={styles.content} collapsable={false}>
           <View style={styles.card}>
             <Text allowFontScaling={false} style={styles.meta}>
-              {image &&
-                `${image.pixelWidth} × ${image.pixelHeight} px, ${formatByteCount(image.byteCount)}`}
+              {image && `${image.pixelWidth} × ${image.pixelHeight} px, ${formatByteCount(image.byteCount)}`}
             </Text>
-            <View
-              style={[styles.preview, { height: previewHeight }]}
-              onLayout={(event) =>
-                setPreviewWidth(event.nativeEvent.layout.width)
-              }
-            >
+            <View style={[styles.preview, { height: previewHeight }]} onLayout={(event) => setPreviewWidth(event.nativeEvent.layout.width)}>
               {preview.uri !== null && (
                 <Image
                   source={{ uri: preview.uri }}
@@ -170,40 +111,17 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
               )}
               {preview.status !== 'loaded' && (
                 <View style={styles.previewMessage}>
-                  {preview.status === 'failed' && (
-                    <Image
-                      source="sf:exclamationmark.triangle"
-                      style={styles.failureIcon}
-                      contentFit="contain"
-                    />
-                  )}
+                  {preview.status === 'failed' && <Image source="sf:exclamationmark.triangle" style={styles.failureIcon} contentFit="contain" />}
                   <Text allowFontScaling={false} style={styles.message}>
-                    {preview.status === 'failed'
-                      ? '이미지를 불러오지 못했습니다'
-                      : '이미지를 불러오는 중입니다'}
+                    {preview.status === 'failed' ? '이미지를 불러오지 못했습니다' : '이미지를 불러오는 중입니다'}
                   </Text>
                 </View>
               )}
             </View>
           </View>
-          <Pressable
-            disabled={photoDisabled}
-            onPress={saveToPhotos}
-            style={({ pressed }) => [
-              styles.photoButton,
-              { opacity: photoDisabled || pressed ? 0.5 : 1 },
-            ]}
-          >
+          <Pressable disabled={photoDisabled} onPress={saveToPhotos} style={({ pressed }) => [styles.photoButton, { opacity: photoDisabled || pressed ? 0.5 : 1 }]}>
             <View pointerEvents="none" style={styles.photoBackground} />
-            {state.isSavingToPhotos ? (
-              <ActivityIndicator color={colors.PrimaryText} />
-            ) : (
-              <Image
-                source="sf:square.and.arrow.down"
-                style={styles.photoIcon}
-                contentFit="contain"
-              />
-            )}
+            {state.isSavingToPhotos ? <ActivityIndicator color={colors.PrimaryText} /> : <Image source="sf:square.and.arrow.down" style={styles.photoIcon} contentFit="contain" />}
             <Text allowFontScaling={false} style={styles.photoLabel}>
               사진 앱에 저장
             </Text>
@@ -239,18 +157,11 @@ function ImageDetailEditor({ state }: { state: ImageDetailState }) {
             </View>
             <View style={styles.divider} />
           </View>
-          <ClipDetailDates
-            savedValue={formatClipDate(clip.createdAt)}
-            lastUsedValue={formatClipDate(clip.lastUsedAt)}
-          />
+          <ClipDetailDates savedValue={formatClipDate(clip.createdAt)} lastUsedValue={formatClipDate(clip.lastUsedAt)} />
         </View>
       </ScrollView>
       <View style={{ paddingBottom: insets.bottom }}>
-        <ClipDetailActionBar
-          isBusy={state.isDeleting}
-          onDeleteButtonPress={showDeleteSheet}
-          onCopyButtonPress={copy}
-        />
+        <ClipDetailActionBar isBusy={state.isDeleting} onDeleteButtonPress={showDeleteSheet} onCopyButtonPress={copy} />
       </View>
       <ActionSheet
         isVisible={state.isDeleteSheetOpen}

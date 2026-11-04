@@ -10,16 +10,7 @@ type ClipTextCardProps = ClipCardProps & {
   isWebLink: boolean;
   bodyHighlights?: ClipTextRange[];
 };
-export function ClipTextCard({
-  name,
-  nameHighlights,
-  bodyHighlights,
-  metadata,
-  body,
-  isWebLink,
-  onCopyButtonPress,
-  onCopyButtonLongPress,
-}: ClipTextCardProps) {
+export function ClipTextCard({ name, nameHighlights, bodyHighlights, metadata, body, isWebLink, onCopyButtonPress, onCopyButtonLongPress }: ClipTextCardProps) {
   return (
     <View style={styles.card}>
       {isWebLink ? (
@@ -30,43 +21,24 @@ export function ClipTextCard({
         </Text>
       )}
       {name !== null && (
-        <ClipCardLabel
-          highlights={nameHighlights}
-          highlightWeight="700"
-          style={styles.name}
-          numberOfLines={2}
-          lineBreakStrategyIOS="standard"
-        >
+        <ClipCardLabel highlights={nameHighlights} highlightWeight="700" style={styles.name} numberOfLines={2} lineBreakStrategyIOS="standard">
           {name}
         </ClipCardLabel>
       )}
       <ClipCardLabel
         highlights={bodyHighlights}
         highlightWeight="600"
-        style={[
-          styles.body,
-          name === null ? styles.unnamedBody : styles.namedBody,
-        ]}
+        style={[styles.body, name === null ? styles.unnamedBody : styles.namedBody]}
         numberOfLines={name === null ? 3 : 2}
         lineBreakStrategyIOS="standard"
       >
         {body}
       </ClipCardLabel>
       <View style={styles.metadataRow}>
-        <Text
-          allowFontScaling={false}
-          style={styles.metadata}
-          numberOfLines={onCopyButtonPress ? 2 : 1}
-          lineBreakStrategyIOS="hangul-word"
-        >
+        <Text allowFontScaling={false} style={styles.metadata} numberOfLines={onCopyButtonPress ? 2 : 1} lineBreakStrategyIOS="hangul-word">
           {metadata}
         </Text>
-        {onCopyButtonPress && (
-          <CopyButton
-            onCopyButtonPress={onCopyButtonPress}
-            onCopyButtonLongPress={onCopyButtonLongPress}
-          />
-        )}
+        {onCopyButtonPress && <CopyButton onCopyButtonPress={onCopyButtonPress} onCopyButtonLongPress={onCopyButtonLongPress} />}
       </View>
     </View>
   );

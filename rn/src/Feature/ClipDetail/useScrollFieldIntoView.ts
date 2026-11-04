@@ -1,12 +1,6 @@
 import { useRef } from 'react';
 import type { RefObject } from 'react';
-import type {
-  LayoutChangeEvent,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  View,
-} from 'react-native';
+import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, ScrollView, View } from 'react-native';
 import { scrollOffsetToReveal } from './scrollOffsetToReveal';
 
 export function useScrollFieldIntoView() {
@@ -25,15 +19,9 @@ export function useScrollFieldIntoView() {
     const request = ++requestRef.current;
     if (!content || !row || heightRef.current <= 0) return;
     row.measureLayout(content, (_x, top, _width, height) => {
-      if (request !== requestRef.current || focusedRef.current !== field)
-        return;
+      if (request !== requestRef.current || focusedRef.current !== field) return;
       const offset = offsetRef.current;
-      const y = scrollOffsetToReveal(
-        offset,
-        heightRef.current,
-        top,
-        top + height,
-      );
+      const y = scrollOffsetToReveal(offset, heightRef.current, top, top + height);
       if (y !== offset) scrollRef.current?.scrollTo({ y, animated: true });
     });
   }

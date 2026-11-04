@@ -1,10 +1,4 @@
-import {
-  homeHeaderSnapDuration,
-  updateHeaderHidden,
-  snapHeaderTarget,
-  reloadHeaderPosition,
-  homeScrollToTop,
-} from '../../../src/Feature/Home/headerScroll';
+import { homeHeaderSnapDuration, updateHeaderHidden, snapHeaderTarget, reloadHeaderPosition, homeScrollToTop } from '../../../src/Feature/Home/headerScroll';
 import type { HomeScrollGeometry } from '../../../src/Feature/Home/headerScroll';
 
 const geometry: HomeScrollGeometry = {
@@ -22,118 +16,36 @@ test.each([
   [false, true],
   [true, true],
 ])('드래그 %s 감속 %s에서 이동 차이를 누적한다', (dragging, decelerating) => {
-  expect(
-    updateHeaderHidden(
-      { hidden: 10, previousScrollY: 0 },
-      30,
-      geometry,
-      dragging,
-      decelerating,
-    ),
-  ).toEqual({ hidden: 40, previousScrollY: 30 });
-  expect(
-    updateHeaderHidden(
-      { hidden: 40, previousScrollY: 30 },
-      10,
-      geometry,
-      dragging,
-      decelerating,
-    ),
-  ).toEqual({ hidden: 20, previousScrollY: 10 });
+  expect(updateHeaderHidden({ hidden: 10, previousScrollY: 0 }, 30, geometry, dragging, decelerating)).toEqual({ hidden: 40, previousScrollY: 30 });
+  expect(updateHeaderHidden({ hidden: 40, previousScrollY: 30 }, 10, geometry, dragging, decelerating)).toEqual({ hidden: 20, previousScrollY: 10 });
 });
 
 test('프로그램 이동에서는 누적하지 않지만 현재 이동 거리로 제한한다', () => {
-  expect(
-    updateHeaderHidden(
-      { hidden: 40, previousScrollY: 0 },
-      30,
-      geometry,
-      false,
-      false,
-    ),
-  ).toEqual({ hidden: 40, previousScrollY: 30 });
-  expect(
-    updateHeaderHidden(
-      { hidden: 40, previousScrollY: 0 },
-      -90,
-      geometry,
-      false,
-      false,
-    ),
-  ).toEqual({ hidden: 10, previousScrollY: -90 });
+  expect(updateHeaderHidden({ hidden: 40, previousScrollY: 0 }, 30, geometry, false, false)).toEqual({ hidden: 40, previousScrollY: 30 });
+  expect(updateHeaderHidden({ hidden: 40, previousScrollY: 0 }, -90, geometry, false, false)).toEqual({ hidden: 10, previousScrollY: -90 });
 });
 
 test('이전 위치가 없으면 첫 이동량은 0이다', () => {
-  expect(
-    updateHeaderHidden(
-      { hidden: 10, previousScrollY: null },
-      30,
-      geometry,
-      true,
-      false,
-    ),
-  ).toEqual({ hidden: 10, previousScrollY: 30 });
+  expect(updateHeaderHidden({ hidden: 10, previousScrollY: null }, 30, geometry, true, false)).toEqual({ hidden: 10, previousScrollY: 30 });
 });
 
 test('배치 갱신 중에는 이전 상태를 그대로 반환한다', () => {
   const position = { hidden: 10, previousScrollY: 0 };
-  expect(updateHeaderHidden(position, 30, geometry, true, false, true)).toBe(
-    position,
-  );
+  expect(updateHeaderHidden(position, 30, geometry, true, false, true)).toBe(position);
 });
 
 test('위아래 튕김과 헤더 높이의 양쪽 경계를 제한한다', () => {
-  expect(
-    updateHeaderHidden(
-      { hidden: 40, previousScrollY: 0 },
-      -200,
-      geometry,
-      true,
-      false,
-    ),
-  ).toEqual({ hidden: 0, previousScrollY: -100 });
-  expect(
-    updateHeaderHidden(
-      { hidden: 40, previousScrollY: 0 },
-      1000,
-      geometry,
-      true,
-      false,
-    ),
-  ).toEqual({ hidden: 100, previousScrollY: 530 });
-  expect(
-    updateHeaderHidden(
-      { hidden: 0, previousScrollY: 0 },
-      -10,
-      geometry,
-      true,
-      false,
-    ).hidden,
-  ).toBe(0);
+  expect(updateHeaderHidden({ hidden: 40, previousScrollY: 0 }, -200, geometry, true, false)).toEqual({ hidden: 0, previousScrollY: -100 });
+  expect(updateHeaderHidden({ hidden: 40, previousScrollY: 0 }, 1000, geometry, true, false)).toEqual({ hidden: 100, previousScrollY: 530 });
+  expect(updateHeaderHidden({ hidden: 0, previousScrollY: 0 }, -10, geometry, true, false).hidden).toBe(0);
 });
 
 test('짧은 목록의 하한은 상단 위치보다 작아지지 않는다', () => {
-  expect(
-    updateHeaderHidden(
-      { hidden: 40, previousScrollY: 0 },
-      1000,
-      { ...geometry, contentHeight: 0 },
-      true,
-      false,
-    ),
-  ).toEqual({ hidden: 0, previousScrollY: -100 });
+  expect(updateHeaderHidden({ hidden: 40, previousScrollY: 0 }, 1000, { ...geometry, contentHeight: 0 }, true, false)).toEqual({ hidden: 0, previousScrollY: -100 });
 });
 
 test('헤더를 숨길 때 상단 여백을 포함한 실제 이동 거리로 제한한다', () => {
-  expect(
-    updateHeaderHidden(
-      { hidden: 90, previousScrollY: -90 },
-      -80,
-      { ...geometry, insetTop: 90 },
-      true,
-      false,
-    ).hidden,
-  ).toBe(10);
+  expect(updateHeaderHidden({ hidden: 90, previousScrollY: -90 }, -80, { ...geometry, insetTop: 90 }, true, false).hidden).toBe(10);
 });
 
 test('스냅 임계값과 같으면 보이고 초과하면 숨긴다', () => {
@@ -161,9 +73,7 @@ test('헤더 높이보다 적게 이동한 목록은 헤더와 함께 이동한�
 });
 
 test('짧은 목록의 스냅도 아래쪽 경계를 넘지 않는다', () => {
-  expect(
-    snapHeaderTarget(81, -10, { ...geometry, contentHeight: 460 }),
-  ).toEqual({ hidden: 90, scrollY: -10 });
+  expect(snapHeaderTarget(81, -10, { ...geometry, contentHeight: 460 })).toEqual({ hidden: 90, scrollY: -10 });
 });
 
 test('헤더 높이가 없거나 이미 목표 위치이면 스냅하지 않는다', () => {
@@ -180,15 +90,7 @@ test('빈 목록은 상단으로 돌아가고 스크롤과 헤더 숨김을 해�
     hidden: 0,
     previousScrollY: -100,
   });
-  expect(
-    updateHeaderHidden(
-      { hidden: 80, previousScrollY: 0 },
-      50,
-      empty,
-      true,
-      false,
-    ).hidden,
-  ).toBe(0);
+  expect(updateHeaderHidden({ hidden: 80, previousScrollY: 0 }, 50, empty, true, false).hidden).toBe(0);
   expect(snapHeaderTarget(80, -20, empty)).toEqual({
     hidden: 0,
     scrollY: -100,

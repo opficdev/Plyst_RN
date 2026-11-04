@@ -39,8 +39,6 @@ test('빈 목록도 조회 성공이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  getClipsMock.mockRejectedValue(
-    Object.assign(new Error('읽기 실패'), { code: 'E_READ_FAILED' }),
-  );
+  getClipsMock.mockRejectedValue(Object.assign(new Error('읽기 실패'), { code: 'E_READ_FAILED' }));
   await expect(loadClips()).resolves.toEqual({ status: 'failed' });
 });

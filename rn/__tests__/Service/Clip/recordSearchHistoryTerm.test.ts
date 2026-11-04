@@ -25,9 +25,7 @@ test('브리지 결과가 null이면 unchanged이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  recordSearchTermMock.mockRejectedValue(
-    Object.assign(new Error('요청 실패'), { code: 'E_WRITE_FAILED' }),
-  );
+  recordSearchTermMock.mockRejectedValue(Object.assign(new Error('요청 실패'), { code: 'E_WRITE_FAILED' }));
   await expect(recordSearchHistoryTerm(' 검색어\n')).resolves.toEqual({
     status: 'failed',
   });

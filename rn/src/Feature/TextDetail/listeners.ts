@@ -7,18 +7,10 @@ import { deleteClipDetail } from '../../Service/Clip/deleteDetail';
 import { loadTextDetail } from '../../Service/Clip/loadTextDetail';
 import { createClipDetailRefresher } from '../ClipDetail/refresher';
 import { saveTextDetail } from './save';
-import {
-  canStartDelete,
-  canStartSave,
-  isClosed,
-  textDetailActions as actions,
-} from './draft';
+import { canStartDelete, canStartSave, isClosed, textDetailActions as actions } from './draft';
 import type { TextDetailStoreState } from './draft';
 
-export function startTextDetailListeners(
-  listen: SliceListen<TextDetailStoreState>,
-  clipID: string,
-) {
+export function startTextDetailListeners(listen: SliceListen<TextDetailStoreState>, clipID: string) {
   listen({
     actionCreator: actions.viewDidLoad,
     effect: async (_, api) => {
@@ -86,12 +78,7 @@ export function startTextDetailListeners(
       }
       const result = await copyClipDetail(clipID);
       // 복사 결과는 화면 수명과 관계없이 기존 토스트 창에 표시
-      showToast(
-        result === 'copied'
-          ? '클립보드에 복사했습니다'
-          : '클립보드에 복사하지 못했습니다',
-        result === 'copied',
-      );
+      showToast(result === 'copied' ? '클립보드에 복사했습니다' : '클립보드에 복사하지 못했습니다', result === 'copied');
     },
   });
   listen({
@@ -100,9 +87,7 @@ export function startTextDetailListeners(
       if (!canStartDelete(api.getOriginalState())) return;
       const result = await deleteClipDetail(clipID);
       if (!api.signal.aborted) {
-        api.dispatch(
-          result === 'deleted' ? actions.removed() : actions.deleteFailed(),
-        );
+        api.dispatch(result === 'deleted' ? actions.removed() : actions.deleteFailed());
       }
       if (result === 'failed') showToast('삭제하지 못했습니다', false);
     },

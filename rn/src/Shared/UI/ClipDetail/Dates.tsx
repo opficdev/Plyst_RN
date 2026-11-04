@@ -2,10 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../Theme';
 
 type ClipDetailDatesProps = { savedValue: string; lastUsedValue: string };
-export function ClipDetailDates({
-  savedValue,
-  lastUsedValue,
-}: ClipDetailDatesProps) {
+export function ClipDetailDates({ savedValue, lastUsedValue }: ClipDetailDatesProps) {
   return (
     <View style={styles.container}>
       <View style={styles.cell}>

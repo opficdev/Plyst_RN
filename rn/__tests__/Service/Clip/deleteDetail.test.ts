@@ -14,8 +14,6 @@ test('삭제에 성공하면 deleted이다', async () => {
 });
 
 test('브리지 오류가 발생하면 failed이다', async () => {
-  deleteClipMock.mockRejectedValue(
-    Object.assign(new Error('삭제 실패'), { code: 'E_DELETE_FAILED' }),
-  );
+  deleteClipMock.mockRejectedValue(Object.assign(new Error('삭제 실패'), { code: 'E_DELETE_FAILED' }));
   await expect(deleteClipDetail('clip-id')).resolves.toBe('failed');
 });
