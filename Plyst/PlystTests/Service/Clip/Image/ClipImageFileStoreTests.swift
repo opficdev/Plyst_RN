@@ -5,9 +5,7 @@
 //  Created by opfic on 9/29/26.
 //
 
-import CoreGraphics
 import Foundation
-import ImageIO
 import UniformTypeIdentifiers
 import XCTest
 @testable import Plyst
@@ -51,57 +49,5 @@ final class ClipImageFileStoreTests: ClipTemporaryDirectoryTestCase {
         XCTAssertEqual(try files.load(image: image), data)
         XCTAssertEqual(try files.load(fileID: image.fileID), data)
         XCTAssertEqual(try files.pendingFileIDs(), [image.fileID])
-    }
-}
-
-enum ClipImageTestFixture {
-    static func data(
-        type: String = UTType.png.identifier,
-        count: Int = 1,
-        orientation: Int = 1
-    ) throws -> Data {
-        let pixels = Data(repeating: 255, count: 24)
-        let provider = try XCTUnwrap(CGDataProvider(data: pixels as CFData))
-        let image = try XCTUnwrap(CGImage(
-            width: 2,
-            height: 3,
-            bitsPerComponent: 8,
-            bitsPerPixel: 32,
-            bytesPerRow: 8,
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
-            provider: provider,
-            decode: nil,
-            shouldInterpolate: false,
-            intent: .defaultIntent
-        ))
-        let data = NSMutableData()
-        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(data as CFMutableData, type as CFString, count, nil))
-        for _ in 0..<count {
-            CGImageDestinationAddImage(destination, image, [kCGImagePropertyOrientation: orientation] as CFDictionary)
-        }
-        XCTAssertTrue(CGImageDestinationFinalize(destination))
-        return data as Data
-    }
-}
-
-enum ClipImageFileSystemTestFixture {
-    static func makeReadOnly(_ directory: URL) throws {
-        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: directory.path)
-        if FileManager.default.isWritableFile(atPath: directory.path) {
-            throw XCTSkip("디렉터리 쓰기 권한 제한을 적용할 수 없는 실행 환경")
-        }
-    }
-
-    static func restorePermissions(at root: URL) throws {
-        guard FileManager.default.fileExists(atPath: root.path) else { return }
-        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: root.path)
-        let entries = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-        while let entry = entries?.nextObject() as? URL {
-            let properties = try entry.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-            if properties.isDirectory == true, properties.isSymbolicLink != true {
-                try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: entry.path)
-            }
-        }
     }
 }

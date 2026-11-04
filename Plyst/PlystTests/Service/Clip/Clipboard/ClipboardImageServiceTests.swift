@@ -23,7 +23,7 @@ final class ClipboardImageServiceTests: ClipTemporaryDirectoryTestCase {
 
         let clip = try savedClip(await service.saveCurrentClipboard())
 
-        let image = try metadata(in: clip)
+        let image = try imageMetadata(in: clip)
         XCTAssertEqual(image.contentType, UTType.jpeg.identifier)
         XCTAssertEqual(image.pixelWidth, 2)
         XCTAssertEqual(image.pixelHeight, 3)
@@ -68,7 +68,7 @@ final class ClipboardImageServiceTests: ClipTemporaryDirectoryTestCase {
             XCTFail("확정된 저장의 정리 대기 결과 누락")
             return
         }
-        XCTAssertEqual(try metadata(in: clip).fileID, fileID)
+        XCTAssertEqual(try imageMetadata(in: clip).fileID, fileID)
         let stored = try await storage.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip])
         XCTAssertEqual(try files.load(fileID: fileID), data)
@@ -102,10 +102,5 @@ final class ClipboardImageServiceTests: ClipTemporaryDirectoryTestCase {
             throw ClipStorageError.invalidContent
         }
         return clip
-    }
-
-    private func metadata(in clip: Clip) throws -> ClipImageMetadata {
-        guard case .image(let image) = clip.content else { throw ClipImageFileError.notImage(clip.id) }
-        return image
     }
 }

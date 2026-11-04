@@ -20,7 +20,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         let reopenedStorage = try makeStorage()
         let reopened = ClipImageService(storage: reopenedStorage, files: try ClipImageFileStore(rootURL: root))
         let clip = try await reopenedStorage.fetch(id: result.value.id)
-        let restored = try await reopened.loadImage(image(in: XCTUnwrap(clip)))
+        let restored = try await reopened.loadImage(imageMetadata(in: XCTUnwrap(clip)))
         XCTAssertEqual(restored, data)
         XCTAssertEqual(clip, result.value)
         XCTAssertEqual(clip?.name, "이름")
@@ -41,7 +41,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         } catch { XCTAssertEqual(error as? ClipStorageError, .duplicateID(result.value.id)) }
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path).count, 1)
         let clip = try await storage.fetch(id: result.value.id)
-        let original = try await service.loadImage(image(in: XCTUnwrap(clip)))
+        let original = try await service.loadImage(imageMetadata(in: XCTUnwrap(clip)))
         XCTAssertEqual(original, data)
         _ = try await service.delete(id: result.value.id)
         await assertEvents(stream, expected: [.deleted(result.value.id)])
@@ -59,7 +59,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
             XCTFail("실패하도록 설정한 삭제 성공")
         } catch { XCTAssertEqual(error as? ClipStorageError, .writeFailed) }
         let preserved = try await spy.fetch(id: result.value.id)
-        let original = try await service.loadImage(image(in: XCTUnwrap(preserved)))
+        let original = try await service.loadImage(imageMetadata(in: XCTUnwrap(preserved)))
         XCTAssertEqual(preserved, result.value)
         XCTAssertEqual(original, data)
         let sentinel = Clip(content: .text("검증"))
@@ -72,7 +72,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         let files = try ClipImageFileStore(rootURL: root)
         let service = ClipImageService(storage: storage, files: files)
         let result = try await service.saveImage(ClipImageTestFixture.data())
-        let metadata = try image(in: result.value)
+        let metadata = try imageMetadata(in: result.value)
         let directory = root.appendingPathComponent(metadata.fileID.uuidString)
         let spy = ClipStorageServiceSpy(storage: storage, beforeDelete: { _ in
             try ClipImageFileSystemTestFixture.makeReadOnly(directory)
@@ -107,7 +107,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         let files = try ClipImageFileStore(rootURL: root)
         let service = ClipImageService(storage: spy, files: files)
         let result = try await service.saveImage(data)
-        let metadata = try image(in: result.value)
+        let metadata = try imageMetadata(in: result.value)
         XCTAssertEqual(result.cleanup, .pending(metadata.fileID))
         try ClipImageFileSystemTestFixture.restorePermissions(at: root)
         let reopenedFiles = try ClipImageFileStore(rootURL: root)
@@ -124,7 +124,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         let service = ClipImageService(storage: spy, files: files)
         let data = try ClipImageTestFixture.data()
         let result = try await service.saveImage(data)
-        let metadata = try image(in: result.value)
+        let metadata = try imageMetadata(in: result.value)
         await spy.reject(.list)
         let deleted = try await service.delete(id: result.value.id)
         XCTAssertEqual(deleted.cleanup, .pending(metadata.fileID))
@@ -150,7 +150,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         try await storage.insert(second)
         let firstDeletion = try await service.delete(id: result.value.id)
         XCTAssertEqual(firstDeletion.cleanup, .completed)
-        XCTAssertEqual(try files.load(fileID: image(in: second).fileID), data)
+        XCTAssertEqual(try files.load(fileID: imageMetadata(in: second).fileID), data)
         let lastDeletion = try await service.delete(id: second.id)
         XCTAssertEqual(lastDeletion.cleanup, .completed)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
@@ -180,7 +180,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
         let service = ClipImageService(storage: storage, files: files)
         for removeMarker in [false, true] {
             let result = try await service.saveImage(ClipImageTestFixture.data())
-            let metadata = try image(in: result.value)
+            let metadata = try imageMetadata(in: result.value)
             let directory = root.appendingPathComponent(metadata.fileID.uuidString)
             try files.markPending(fileID: metadata.fileID)
             try await storage.delete(id: result.value.id)
@@ -236,12 +236,7 @@ final class ClipImageServiceTests: ClipTemporaryDirectoryTestCase {
             return clips
         }
         XCTAssertEqual(clips.count, 12)
-        for clip in clips { XCTAssertEqual(try files.load(fileID: image(in: clip).fileID), data) }
+        for clip in clips { XCTAssertEqual(try files.load(fileID: imageMetadata(in: clip).fileID), data) }
         XCTAssertEqual(try files.pendingFileIDs(), [])
-    }
-
-    private func image(in clip: Clip) throws -> ClipImageMetadata {
-        guard case .image(let metadata) = clip.content else { throw ClipImageFileError.notImage(clip.id) }
-        return metadata
     }
 }

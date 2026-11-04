@@ -30,7 +30,7 @@ final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
             )
             let saved = try await images.saveImage(data)
             let clip = saved.value
-            let image = try metadata(in: clip)
+            let image = try imageMetadata(in: clip)
 
             let result = try await service.copy(id: clip.id)
 
@@ -46,10 +46,5 @@ final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
             XCTAssertEqual(stored, copied)
         }
         XCTAssertEqual(writer.contents.count, 3)
-    }
-
-    private func metadata(in clip: Clip) throws -> ClipImageMetadata {
-        guard case .image(let image) = clip.content else { throw ClipImageFileError.notImage(clip.id) }
-        return image
     }
 }

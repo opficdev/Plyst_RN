@@ -218,10 +218,4 @@ final class ClipShareImportServiceTests: ClipTemporaryDirectoryTestCase {
             images: images
         )
     }
-
-    /// 이미지 루트 아래의 항목 수
-    /// 저장된 이미지 하나당 디렉터리 하나가 있음
-    private func entryCount(at url: URL) throws -> Int {
-        try FileManager.default.contentsOfDirectory(atPath: url.path).count
-    }
 }

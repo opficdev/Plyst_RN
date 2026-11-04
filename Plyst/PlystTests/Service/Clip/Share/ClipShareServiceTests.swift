@@ -85,7 +85,7 @@ final class ClipShareServiceTests: ClipTemporaryDirectoryTestCase {
         let images = ClipImageService(storage: reopened, files: try ClipImageFileStore(rootURL: root))
         let loaded = try await images.loadImage(image)
         XCTAssertEqual(loaded, data)
-        XCTAssertEqual(try imageEntryCount(), 1)
+        XCTAssertEqual(try entryCount(at: root), 1)
     }
 
     private func makeService(storage: any ClipStorageService) throws -> ClipShareService {
@@ -97,12 +97,6 @@ final class ClipShareServiceTests: ClipTemporaryDirectoryTestCase {
             images: ClipImageService(storage: storage, files: files),
             downloads: ClipImageDownloadService(session: session)
         )
-    }
-
-    /// 이미지 루트 아래의 항목 수
-    /// 저장된 이미지 하나당 디렉터리 하나가 있음
-    private func imageEntryCount() throws -> Int {
-        try FileManager.default.contentsOfDirectory(atPath: root.path).count
     }
 
     private func makeImageProvider(data: Data) -> NSItemProvider {

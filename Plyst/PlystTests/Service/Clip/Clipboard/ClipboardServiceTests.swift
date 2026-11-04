@@ -72,22 +72,6 @@ final class ClipboardServiceTests: ClipTemporaryDirectoryTestCase {
     }
 }
 
-@MainActor
-final class ClipboardReaderSpy: ClipboardReader {
-    private let result: ClipboardReadResult
-    private(set) var readCount = 0
-
-    init(result: ClipboardReadResult) {
-        self.result = result
-    }
-
-    @MainActor
-    func read() async throws -> ClipboardReadResult {
-        readCount += 1
-        return result
-    }
-}
-
 private enum ClipboardTestError: Error {
     case unexpectedResult
 }
