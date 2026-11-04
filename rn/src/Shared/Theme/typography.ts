@@ -1,12 +1,20 @@
-import type { TextStyle } from 'react-native';
+import { Platform, type TextStyle } from 'react-native';
+
+// Android에는 iOS의 ui-monospace와 Georgia가 없어 같은 성격의 Android 시스템 글꼴로 대체
+const monospace: TextStyle = {
+  fontFamily: Platform.OS === 'android' ? 'monospace' : 'ui-monospace',
+};
+const quoteMark: TextStyle = Platform.OS === 'android' ? { fontFamily: 'serif', fontWeight: '700' } : { fontFamily: 'Georgia-Bold' };
 
 export const typography = {
+  monospace,
+  quoteMark,
   title: {
     fontSize: 17,
     fontWeight: '600',
   },
   sectionLabel: {
-    fontFamily: 'ui-monospace',
+    ...monospace,
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.88,

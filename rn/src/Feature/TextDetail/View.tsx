@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     gap: 17,
   },
   meta: {
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 11.5,
     fontWeight: '500',
     color: colors.SecondaryText,

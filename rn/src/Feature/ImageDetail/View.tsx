@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   meta: {
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 12,
     fontWeight: '500',
     color: colors.SecondaryText,

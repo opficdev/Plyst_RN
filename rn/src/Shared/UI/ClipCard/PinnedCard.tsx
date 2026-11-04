@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../Theme';
+import { colors, typography } from '../../Theme';
 import type { ClipCardProps } from './CardProps';
 import { ClipThumbnail } from './Thumbnail';
 import { CopyButton } from './CopyButton';
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     color: colors.MarkBackground,
   },
   quote: {
-    fontFamily: 'Georgia-Bold',
+    ...typography.quoteMark,
     fontSize: 20,
     color: colors.MarkBackground,
     textAlign: 'center',
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   metadata: {
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 9.5,
     fontWeight: '500',
     color: colors.SecondaryText,

@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     left: 13,
-    fontFamily: 'Georgia-Bold',
+    ...typography.quoteMark,
     fontSize: 26,
     color: colors.MarkBackground,
   },
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   metadata: {
     flex: 1,
     flexShrink: 1,
-    fontFamily: 'ui-monospace',
+    ...typography.monospace,
     fontSize: 10.5,
     fontWeight: '500',
     color: colors.SecondaryText,
