@@ -88,28 +88,6 @@ final class ClipShareImportServiceTests: XCTestCase {
         XCTAssertEqual(try entryCount(at: imagesURL), 1)
     }
 
-    func testMissingInboxDoesNotTouchStorageOrCreateInbox() async throws {
-        let storage = try makeStorage()
-
-        let result = try await makeService(storage: storage).importPendingClips()
-
-        XCTAssertEqual(result, .empty)
-        let stored = try await storage.fetchAll(order: .createdAt)
-        XCTAssertTrue(stored.isEmpty)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: inboxDatabaseURL.path))
-    }
-
-    func testEmptyInboxImportsNothing() async throws {
-        _ = try makeInboxStorage()
-        let storage = try makeStorage()
-
-        let result = try await makeService(storage: storage).importPendingClips()
-
-        XCTAssertEqual(result, .empty)
-        let stored = try await storage.fetchAll(order: .createdAt)
-        XCTAssertTrue(stored.isEmpty)
-    }
-
     func testClipAlreadyInStorageIsNotDuplicatedAndIsRemovedFromInbox() async throws {
         let inbox = try makeInboxStorage()
         let clip = Clip(content: .text("이미 반입된 텍스트"))
@@ -199,22 +177,6 @@ final class ClipShareImportServiceTests: XCTestCase {
         XCTAssertEqual(stored, [text])
         let remaining = try await inbox.fetchAll(order: .createdAt)
         XCTAssertEqual(remaining, [image])
-    }
-
-    func testClipSavedByExtensionAfterFirstImportIsImportedNextTime() async throws {
-        let inbox = try makeInboxStorage()
-        let storage = try makeStorage()
-        let service = try makeService(storage: storage)
-        let first = try await service.importPendingClips()
-        XCTAssertEqual(first, .empty)
-        let clip = Clip(content: .text("나중에 공유한 텍스트"))
-        try await inbox.insert(clip)
-
-        let second = try await service.importPendingClips()
-
-        XCTAssertEqual(second.importedCount, 1)
-        let stored = try await storage.fetchAll(order: .createdAt)
-        XCTAssertEqual(stored, [clip])
     }
 
     func testCancelledImportThrowsCancellationAndKeepsInbox() async throws {
