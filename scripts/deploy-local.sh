@@ -68,6 +68,16 @@ if [ "$lane" = check ]; then
 		fail_check '.mise.toml에 지정한 Node가 실행되지 않습니다. make deploy-setup을 실행하세요.'
 	fi
 
+	if [ "$(rustc --version 2>/dev/null | cut -d ' ' -f 2)" != "$(mise current rust 2>/dev/null)" ]; then
+		fail_check '.mise.toml에 지정한 Rust가 실행되지 않습니다. make deploy-setup을 실행하세요.'
+	fi
+
+	for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+		if ! rustup target list --installed 2>/dev/null | grep -qx "$target"; then
+			fail_check "Rust 대상 $target이 설치되어 있지 않습니다. make deploy-setup을 실행하세요."
+		fi
+	done
+
 	if ! command -v pod >/dev/null 2>&1; then
 		fail_check 'CocoaPods(pod)가 설치되어 있지 않습니다.'
 	fi

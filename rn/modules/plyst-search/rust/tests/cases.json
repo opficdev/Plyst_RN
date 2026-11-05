@@ -1,0 +1,238 @@
+{
+ "source": "rn/__tests__/Feature/Search/match.test.ts 10-179, 실기기 Swift 원본 기대값",
+ "cases": [
+  {
+   "id": "nfc_text_nfd_query",
+   "text": "한글 검색 테스트",
+   "query": "한",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     1
+    ]
+   ]
+  },
+  {
+   "id": "nfd_text_nfc_query",
+   "text": "한글 검색",
+   "query": "한글",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     6
+    ]
+   ]
+  },
+  {
+   "id": "nfd_partial_syllable",
+   "text": "한글",
+   "query": "하",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "ascii_case",
+   "text": "Clipboard Manager",
+   "query": "CLIPBOARD",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     9
+    ]
+   ]
+  },
+  {
+   "id": "german_sharp_s_upper",
+   "text": "Straße",
+   "query": "SS",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     4,
+     1
+    ]
+   ]
+  },
+  {
+   "id": "german_sharp_s_lower",
+   "text": "Straße",
+   "query": "strasse",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     6
+    ]
+   ]
+  },
+  {
+   "id": "turkish_dotted_i",
+   "text": "İstanbul",
+   "query": "i",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "greek_final_sigma",
+   "text": "ΟΔΥΣΣΕΥΣ",
+   "query": "οδυσσευς",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     8
+    ]
+   ]
+  },
+  {
+   "id": "accent_nfd_text_ascii_query",
+   "text": "café",
+   "query": "cafe",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "accent_nfc_text_nfd_query",
+   "text": "café",
+   "query": "café",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     4
+    ]
+   ]
+  },
+  {
+   "id": "accent_distinguished",
+   "text": "café",
+   "query": "cafe",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "fullwidth",
+   "text": "ＡＢＣ",
+   "query": "abc",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "emoji_zwj_partial",
+   "text": "가족 👨‍👩‍👧 사진",
+   "query": "👩",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "emoji_skin_tone",
+   "text": "👍🏽 좋아요",
+   "query": "👍",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "flag_single_indicator",
+   "text": "🇰🇷 한국",
+   "query": "🇰",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "overlap",
+   "text": "aaaa",
+   "query": "aa",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     2
+    ],
+    [
+     2,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "whitespace_nel",
+   "text": "abc",
+   "query": "abc",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     3
+    ]
+   ]
+  },
+  {
+   "id": "whitespace_bom",
+   "text": "abc",
+   "query": "﻿abc",
+   "queryEmpty": false,
+   "ranges": []
+  },
+  {
+   "id": "whitespace_only",
+   "text": "abc",
+   "query": " \n\t",
+   "queryEmpty": true,
+   "ranges": []
+  },
+  {
+   "id": "whitespace_nbsp",
+   "text": "abc",
+   "query": " abc",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     3
+    ]
+   ]
+  },
+  {
+   "id": "multiple_occurrences",
+   "text": "Cat cat CAT",
+   "query": "cat",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     3
+    ],
+    [
+     4,
+     3
+    ],
+    [
+     8,
+     3
+    ]
+   ]
+  },
+  {
+   "id": "compat_jamo",
+   "text": "ㅎㅏㄴ글",
+   "query": "ㅎ",
+   "queryEmpty": false,
+   "ranges": [
+    [
+     0,
+     1
+    ]
+   ]
+  },
+  {
+   "id": "combining_query_only",
+   "text": "e",
+   "query": "é",
+   "queryEmpty": false,
+   "ranges": []
+  }
+ ]
+}

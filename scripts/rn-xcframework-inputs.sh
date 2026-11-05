@@ -5,7 +5,7 @@
 #
 # 사용법: rn-xcframework-inputs.sh [lock|native|all|files]
 #   lock     rn/package-lock.json의 해시
-#   native   의존성과 Pods 구성을 정하는 입력과 plyst-bridge 네이티브 소스 내용의 해시
+#   native   의존성과 Pods 구성을 정하는 입력과 rn/modules 네이티브 소스 내용의 해시
 #   all      native 입력과 JS 번들 입력의 해시 (기본값)
 #   files    all에 포함되는 파일 경로 목록
 
@@ -51,8 +51,8 @@ lock_lines() {
 	content_lines rn/package-lock.json
 }
 
-# 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 plyst-bridge ios 소스는 이름만 포함
-# Android 전용 소스와 plyst-host는 iOS 프레임워크에 들어가지 않아 제외
+# 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 rn/modules의 ios 소스는 이름만 포함
+# Android 전용 소스와 plyst-host와 Rust 테스트는 iOS 프레임워크에 들어가지 않아 제외
 base_lines() {
 	content_lines \
 		rn/package.json \
@@ -65,6 +65,8 @@ base_lines() {
 		':(exclude,glob)rn/modules/**/ios/**' \
 		':(exclude,glob)rn/modules/**/android/**' \
 		':(exclude)rn/modules/plyst-host' \
+		':(exclude)rn/modules/plyst-search/rust/tests' \
+		':(exclude)rn/modules/plyst-search/react-native.config.js' \
 		rn/modules
 	name_lines ':(glob)rn/modules/**/ios/**'
 	deployment_target_line

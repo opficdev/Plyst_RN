@@ -33,30 +33,6 @@
   </tr>
 </table>
 
-## 프로젝트 개요
-
-화면과 상태는 RN이 담당하고 iOS 실행 환경과 시스템 자원은 Swift가 담당하는 브라운필드 앱
-
-| 영역 | 담당 | 이유 |
-| --- | --- | --- |
-| 화면 구성과 화면 상태, 화면 전환과 상세 시트 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용하며 `AppRoot` 하나가 전환을 소유 |
-| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 JavaScript에서 계산 |
-| 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
-| 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
-| 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
-| 앱과 Scene 생명주기, RN 런타임, RN 루트 호스트 | Swift | iOS 실행 환경 필요 |
-| 상세 화면의 닫기, 저장 버튼 (Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()` 버튼을 Fabric 컴포넌트로 RN 상단 바에 배치 (iOS 26 미만은 평면 버튼) |
-| TurboModule 구현과 wire 값 변환 | Swift | Codegen 인터페이스의 네이티브 구현 |
-| 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
-| 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
-| `isWebLink` 판정 | Swift | Foundation `URL`과 WHATWG `URL`의 판정 차이를 재현할 수 없음 |
-| 클립보드 읽기와 쓰기, `lastUsedAt` 갱신 | Swift | 시스템 API와 다른 앱과의 권한 동작에 의존 |
-| 사진 저장 | Swift | RN으로 옮겨도 사진 보관함 권한 판정은 Swift에 남아 책임이 나뉨 |
-| 최근 검색어의 규칙과 저장 | Swift | 대소문자 비교 결과가 달라지고 목록을 원자적으로 교체해야 함 |
-| Share Extension, Widget | Swift | Extension 실행 환경 필요 |
-
-![클립 데이터 흐름](./docs/data-flow.png)
-
 ## 주요 기능
 
 - Home에서 클립을 종류와 고정 여부로 분류하고 현재 클립보드를 저장
@@ -67,7 +43,44 @@
 
 ## 핵심 성과
 
-### **1. 카드 memo 분리로 JS 스레드 작업 시간 2.62s → 1.69s 단축**
+### **1. Rust 코어 전환으로 검색어 입력당 계산 37.0ms → 7.6ms 단축**
+
+![위치 맵핑 생성의 작업 스레드 분리](./docs/search-rust.png)
+
+> **문제**<br>
+> 검색에 필요한 텍스트 처리가 JS 스레드에서 실행되어 클립이 늘수록 화면 반응이 늦어짐
+>
+> **해결**<br>
+> 검색 화면을 열면 클립 텍스트를 Rust로 넘겨 작업 스레드에서 정규화<br>
+> 검색어를 입력할 때마다 C++ TurboModule의 동기 호출로 Rust 코어에서 정규화 후 비교<br>
+> 정규화 전후로 글자 위치가 달라지므로 맵핑으로 원문에서 강조할 위치 계산
+>
+> **성과**<br>
+> ✅ iPhone 글자 입력당 검색 계산 **37.0ms → 7.6ms**<br>
+> ✅ Android 에뮬레이터 글자 입력당 검색 계산 **47.1ms → 7.4ms**<br>
+> ⚠️ 검색과 강조 범위 계산은 **JS 스레드에서 동기 실행**
+
+```rust
+let start = index_of(folded, query, cursor)?;
+let end = start + query.len();
+let map = field.map(general);
+if map.boundaries.get(start) && map.boundaries.get(end) {  // 시작과 끝이 모두 글자 경계일 때만 일치
+    let location = map.starts.get(start);  // 정규화 위치를 원문 위치로 변환
+    let original_end = map.ends.get(end - 1);
+    // ...
+}
+```
+
+| 측정 조건 | 값 |
+|:---:|:---:|
+| 기기 | iPhone 16 Pro, iOS 27.2<br>Android 에뮬레이터 Pixel 8, Android 36, arm64 |
+| 빌드 | Release, 측정 코드 포함 |
+| 데이터 | NFD 한글과 악센트 문자가 섞인 합성 텍스트 클립 5,000개(혼합 데이터), 본문 약 1KB |
+| 입력 | `search`와 `클립보드`를 한 글자씩 입력 |
+| 횟수 | 변경 전후를 번갈아 맵핑 생성 뒤 6회 측정한 글자 입력당 검색과 강조 범위 계산의 중앙값 |
+| 판정 | iPhone과 Android 에뮬레이터(대체 브릿지)에서 혼합과 단순 데이터의 글자 입력당 계산 중앙값, p95, JS 작업, 첫 입력, 메모리 증가 지표 20개가 모두 변경 전보다 작음 |
+
+### **2. 카드 memo 분리로 JS 스레드 작업 시간 2.62s → 1.69s 단축**
 
 ![카드 재렌더링 범위 축소](./docs/card-rerender.png)
 
@@ -105,7 +118,7 @@ const HomeGridItem = memo(function HomeGridItem({ clip, now, thumbnailUri, isThu
 | 이동 | 리스트를 2회 왕복 스크롤 |
 | 횟수 | 변경 전후 각 3회 평균 |
 
-### **2. Redux Toolkit Listener로 종료된 화면의 상태 갱신 차단**
+### **3. Redux Toolkit Listener로 종료된 화면의 상태 갱신 차단**
 > **문제**<br>
 > 화면 컴포넌트가 `useReducer`와 `useEffect`로 상태 변경, Service 호출, 이벤트 구독을 함께 처리<br>
 > 화면을 닫은 뒤에도 구독과 비동기 요청이 남으면 종료된 화면의 상태를 갱신할 수 있음
@@ -143,7 +156,7 @@ listen({
 });
 ```
 
-### **3. Codegen TurboModule로 RN의 저장소 직접 접근 차단**
+### **4. Codegen TurboModule로 RN의 저장소 직접 접근 차단**
 > **문제**<br>
 > RN과 Swift가 호출 형식을 따로 정의하면 한쪽만 바뀌어도 호출이 어긋날 수 있음
 >
@@ -166,19 +179,43 @@ export interface Spec extends TurboModule {
 
 ---
 
+## 프로젝트 개요
+
+화면과 상태는 RN이 담당하고 iOS 실행 환경과 시스템 자원은 Swift가 담당하는 브라운필드 앱
+
+| 영역 | 담당 | 이유 |
+| --- | --- | --- |
+| 화면 구성과 화면 상태, 화면 전환과 상세 시트 (Home, Search, TextDetail, ImageDetail) | RN | 시스템 자원 없이 화면에서만 사용하며 `AppRoot` 하나가 전환을 소유 |
+| 검색 결과 계산과 하이라이트 | RN | `getClips()` 결과를 Rust 코어로 계산하며 검색어 정규화와 비교, 강조 범위 계산은 JS 스레드의 동기 호출이고 ASCII와 완성형 한글 밖 문자가 있는 텍스트의 정규화와 위치 맵핑 미리 생성은 작업 스레드에서 실행 |
+| 토스트 | RN | `showToast`를 JavaScript에서 직접 호출 |
+| 글자 수와 접두어 계산 | RN | `Model/clipText.ts`에서 `unicode-segmenter`로 계산 |
+| 이미지 용량 표시 문구 | RN | `formatByteCount`가 한국어 `ByteCountFormatter` 출력을 재현 |
+| 앱과 Scene 생명주기, RN 런타임, RN 루트 호스트 | Swift | iOS 실행 환경 필요 |
+| 상세 화면의 닫기, 저장 버튼 (Liquid Glass) | Swift | UIKit `UIButton.Configuration.glass()` 버튼을 Fabric 컴포넌트로 RN 상단 바에 배치 (iOS 26 미만은 평면 버튼) |
+| TurboModule 구현과 wire 값 변환 | Swift | Codegen 인터페이스의 네이티브 구현 |
+| 클립 저장소(SQLite), 이미지 원본과 미리보기와 썸네일 파일, App Group | Swift | 저장 무결성과 앱과 Extension 간 공유 필요 |
+| 클립 정렬(`ClipSortOrder`) | Swift | Share Extension 반입 경로에서 사용 |
+| `isWebLink` 판정 | Swift | Foundation `URL`과 WHATWG `URL`의 판정 차이를 재현할 수 없음 |
+| 클립보드 읽기와 쓰기, `lastUsedAt` 갱신 | Swift | 시스템 API와 다른 앱과의 권한 동작에 의존 |
+| 사진 저장 | Swift | RN으로 옮겨도 사진 보관함 권한 판정은 Swift에 남아 책임이 나뉨 |
+| 최근 검색어의 규칙과 저장 | Swift | 대소문자 비교 결과가 달라지고 목록을 원자적으로 교체해야 함 |
+| Share Extension, Widget | Swift | Extension 실행 환경 필요 |
+
+![클립 데이터 흐름](./docs/data-flow.png)
+
 ## 기술 스택
 
 | 구분 | 스택 |
 | --- | --- |
 | 최소 지원 버전 | iOS 17.0+ |
 | 지원 기기 | iPhone |
-| 언어 | TypeScript 6.0.3, Swift 6.0 |
+| 언어 | TypeScript 6.0.3, Swift 6.0, Kotlin 2.1.20(Android 연결), Rust 1.99.1, C++20 |
 | 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5 |
 | 앱 확장 | Share Extension, Widget Extension |
 | 상태 관리 | Redux Toolkit 2.13.0, React Redux 9.3.0 (RN 화면)<br>ReactorKit 3.2.0, RxSwift 6.10.2 (Share Extension 상태 관리) |
-| 네이티브 브리지 | TurboModule, Codegen |
+| 네이티브 브리지 | TurboModule, Codegen, C++ TurboModule(JSI) |
 | 앱 통합 | React Native Brownfield 5.3.0, XCFramework |
 | 저장소 | SQLiteData 1.12.0, GRDB 7.11.1, swift-structured-queries 0.39.2 |
 | Apple 프레임워크 | UIKit, Foundation, WidgetKit, SwiftUI, ImageIO, Photos |
-| 테스트 | Jest 29.7.0, XCTest |
+| 테스트 | Jest 29.7.0, XCTest, cargo test |
 | 자동화 | GitHub Actions, fastlane |

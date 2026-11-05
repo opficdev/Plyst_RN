@@ -1,174 +1,153 @@
 import type { ClipRecord } from '../../Model/clipRecord';
 import type { ClipTextRange } from '../../Shared/UI';
 import { edgeWhitespace } from '../../Model/clipWhitespace';
-import { clusters } from '../../Model/clipText';
+import { cancelSearchCorePrebuild, createSearchCore, filterSearchCore, freeSearchCore, prebuildSearchCore, searchCoreCardText, syncSearchCore } from 'plyst-search';
 
-const simpleText = /^[ -~\n\r\t가-힣ㄱ-ㆎ]*$/u;
 const fold = (text: string) => text.normalize('NFC').toUpperCase();
 
 export function normalizeSearchQuery(raw: string): string {
   return raw.replace(edgeWhitespace, '');
 }
 
-type ClusterMap = {
-  starts: Int32Array;
-  ends: Int32Array;
-  boundaries: Uint8Array;
-};
-type SearchText = {
-  original: string;
-  folded: string;
-  isSimple: boolean;
-  map?: ClusterMap;
-  query?: string;
-  ranges?: ClipTextRange[];
+// Rust 필드 번호와 같은 순서
+const nameField = 0;
+const bodyField = 1;
+const timeField = 2;
+
+export type SearchCardText = {
+  nameRanges: ClipTextRange[];
+  bodyRanges: ClipTextRange[];
+  excerptStart: number;
 };
 
-function prepare(text: string): SearchText {
-  const isSimple = simpleText.test(text);
-  return {
-    original: text,
-    folded: isSimple
-      ? text.toUpperCase()
-      : clusters(text)
-          .map(({ segment }) => fold(segment))
-          .join(''),
-    isSimple,
-  };
-}
+const emptyCardText: SearchCardText = {
+  nameRanges: [],
+  bodyRanges: [],
+  excerptStart: 0,
+};
 
-function buildMap(value: SearchText): ClusterMap {
-  if (value.map) return value.map;
-  const starts = new Int32Array(value.folded.length);
-  const ends = new Int32Array(value.folded.length);
-  const boundaries = new Uint8Array(value.folded.length + 1);
-  let offset = 0;
-  for (const { segment, index } of clusters(value.original)) {
-    const length = fold(segment).length;
-    boundaries[offset] = 1;
-    starts.fill(index, offset, offset + length);
-    ends.fill(index + segment.length, offset, offset + length);
-    offset += length;
-    boundaries[offset] = 1;
-  }
-  value.map = { starts, ends, boundaries };
-  return value.map;
-}
-
-function firstRange(value: SearchText, query: string, cursor: number): { range: ClipTextRange; next: number } | null {
-  while (cursor < value.folded.length) {
-    const start = value.folded.indexOf(query, cursor);
-    if (start < 0) return null;
-    const end = start + query.length;
-    if (value.isSimple) return { range: { location: start, length: query.length }, next: end };
-    const map = buildMap(value);
-    if (map.boundaries[start] && map.boundaries[end]) {
-      const location = map.starts[start];
-      const originalEnd = map.ends[end - 1];
-      cursor = end;
-      while (cursor < value.folded.length && map.starts[cursor] < originalEnd) cursor += 1;
-      return {
-        range: { location, length: originalEnd - location },
-        next: cursor,
-      };
-    }
-    cursor = start + 1;
-  }
-  return null;
-}
-
-function textRanges(value: SearchText, rawQuery: string): ClipTextRange[] {
-  const query = fold(normalizeSearchQuery(rawQuery));
-  if (!query) return [];
-  if (value.query === query && value.ranges) return value.ranges;
+function rangesOf(values: number[]): ClipTextRange[] {
   const ranges: ClipTextRange[] = [];
-  let cursor = 0;
-  while (cursor < value.folded.length) {
-    const found = firstRange(value, query, cursor);
-    if (!found) break;
-    ranges.push(found.range);
-    cursor = found.next;
-  }
-  value.query = query;
-  value.ranges = ranges;
+  for (let i = 0; i + 1 < values.length; i += 2) ranges.push({ location: values[i], length: values[i + 1] });
   return ranges;
 }
 
-export function searchRanges(text: string, rawQuery: string): ClipTextRange[] {
-  return textRanges(prepare(text), rawQuery);
-}
-
 export function createSearchIndex() {
-  const entries = new Map<string, Map<string, SearchText>>();
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  function cancelPrebuild() {
-    if (timer !== undefined) clearTimeout(timer);
-    timer = undefined;
+  let handle: number | null = null;
+  let synced: ClipRecord[] | null = null;
+  let syncedNow: number | null = null;
+  // 클립마다 마지막으로 보낸 필드 값
+  let sent = new Map<string, (string | undefined)[]>();
+  const cards = new Map<string, { name: string; body: string; query: string; value: SearchCardText }>();
+
+  // 실패한 핸들은 버리고 다음 호출이 새 핸들에 전체를 다시 보냄
+  function reset() {
+    if (handle !== null) freeSearchCore(handle);
+    handle = null;
+    synced = null;
+    syncedNow = null;
+    sent = new Map();
+    cards.clear();
   }
-  function entry(id: string, field: string, text: string) {
-    let fields = entries.get(id);
-    if (!fields) {
-      fields = new Map();
-      entries.set(id, fields);
+
+  function ensure(): number | null {
+    if (handle === null) {
+      const created = createSearchCore();
+      if (created === 0) return null;
+      handle = created;
     }
-    let value = fields.get(field);
-    if (!value || value.original !== text) {
-      value = prepare(text);
-      fields.set(field, value);
-    }
-    return value;
+    return handle;
   }
-  function retain(clips: ClipRecord[]) {
-    cancelPrebuild();
-    const valid = new Set(clips.map((clip) => clip.id));
-    for (const id of entries.keys()) if (!valid.has(id)) entries.delete(id);
-    for (const clip of clips) {
-      const fields = entries.get(clip.id);
-      if (!fields) continue;
-      for (const [field, text] of [
-        ['name', clip.name ?? ''],
-        ['body', clip.text ?? ''],
-      ]) {
-        if (fields.get(field)?.original !== text) fields.delete(field);
-      }
+
+  // 같은 clips와 같은 now면 보내지 않음
+  // 이미지 클립의 시간 필드는 times가 있을 때만 보냄
+  function sync(clips: ClipRecord[], times?: { now: number; texts: (clip: ClipRecord) => string[] }): number | null {
+    const current = ensure();
+    if (current === null) return null;
+    const isSameClips = synced === clips;
+    if (isSameClips && (times === undefined || syncedNow === times.now)) return current;
+    const order: string[] = [];
+    const positions: number[] = [];
+    const fields: number[] = [];
+    const texts: string[] = [];
+    const next = new Map<string, (string | undefined)[]>();
+    clips.forEach((clip, position) => {
+      order.push(clip.id);
+      const previous = sent.get(clip.id) ?? [];
+      const values = [...previous];
+      const update = (field: number, text: string) => {
+        values[field] = text;
+        if (previous[field] === text) return;
+        positions.push(position);
+        fields.push(field);
+        texts.push(text);
+      };
+      update(nameField, clip.name ?? '');
+      if (clip.image === null) update(bodyField, clip.text ?? '');
+      else if (times) times.texts(clip).forEach((text, offset) => update(timeField + offset, text));
+      next.set(clip.id, values);
+    });
+    if (!(isSameClips && texts.length === 0) && !syncSearchCore(current, order, positions, fields, texts)) {
+      reset();
+      return null;
     }
+    sent = next;
+    for (const id of cards.keys()) if (!next.has(id)) cards.delete(id);
+    synced = clips;
+    if (times) syncedNow = times.now;
+    else if (!isSameClips) syncedNow = null;
+    return current;
   }
-  function prebuild(clips: ClipRecord[]) {
-    retain(clips);
-    let cursor = 0;
-    function work() {
-      const start = performance.now();
-      while (cursor < clips.length) {
-        const clip = clips[cursor++];
-        for (const [field, text] of [
-          ['name', clip.name ?? ''],
-          ['body', clip.text ?? ''],
-        ]) {
-          const value = entry(clip.id, field, text);
-          if (!value.isSimple) buildMap(value);
-        }
-        if (8 <= performance.now() - start) break;
-      }
-      timer = cursor < clips.length ? setTimeout(work, 0) : undefined;
-    }
-    timer = setTimeout(work, 0);
-    return cancelPrebuild;
-  }
+
   return {
-    matches(id: string, field: string, text: string, rawQuery: string) {
-      const query = fold(normalizeSearchQuery(rawQuery));
-      return !!query && firstRange(entry(id, field, text), query, 0) !== null;
+    // clips 차분 동기화 뒤 작업 스레드 시작
+    prebuild(clips: ClipRecord[]) {
+      const current = sync(clips);
+      if (current !== null && !prebuildSearchCore(current)) reset();
     },
-    ranges(id: string, field: string, text: string, rawQuery: string) {
-      return textRanges(entry(id, field, text), rawQuery);
+    // 일치 클립을 입력 순서로 반환
+    filter(clips: ClipRecord[], rawQuery: string, now: number, times: (clip: ClipRecord) => string[]): ClipRecord[] {
+      const query = normalizeSearchQuery(rawQuery);
+      if (!query) return [];
+      const current = sync(clips, { now, texts: times });
+      if (current === null) return [];
+      const found = filterSearchCore(current, query);
+      if (found === null) {
+        reset();
+        return [];
+      }
+      return found.map((position) => clips[position]);
     },
-    retain,
-    prebuild,
-    cancelPrebuild,
-    dispose() {
-      cancelPrebuild();
-      entries.clear();
+    // 같은 이름, 본문, 접은 질의면 이전 결과를 그대로 반환
+    cardText(clip: ClipRecord, rawQuery: string): SearchCardText {
+      const query = normalizeSearchQuery(rawQuery);
+      const folded = fold(query);
+      if (!folded) return emptyCardText;
+      const name = clip.name ?? '';
+      const body = clip.text ?? '';
+      const cached = cards.get(clip.id);
+      if (cached?.name === name && cached.body === body && cached.query === folded) return cached.value;
+      const current = ensure();
+      // Rust는 원문을 두지 않으므로 마지막으로 보낸 값과 같은지 여기서 판단
+      const values = sent.get(clip.id);
+      const isSynced = values !== undefined && values[nameField] === name && (clip.image !== null || values[bodyField] === body);
+      const result = current === null ? null : searchCoreCardText(current, clip.id, name, body, query, isSynced);
+      if (result === null) {
+        reset();
+        return emptyCardText;
+      }
+      const value = {
+        nameRanges: rangesOf(result.nameRanges),
+        bodyRanges: rangesOf(result.bodyRanges),
+        excerptStart: result.excerptStart,
+      };
+      cards.set(clip.id, { name, body, query: folded, value });
+      return value;
     },
+    cancelPrebuild() {
+      if (handle !== null) cancelSearchCorePrebuild(handle);
+    },
+    dispose: reset,
   };
 }
 

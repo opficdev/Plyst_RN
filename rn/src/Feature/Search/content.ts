@@ -3,7 +3,6 @@ import type { ClipFilter } from '../ClipGrid/filter';
 import type { ClipLoadPhase } from '../ClipGrid/loadPhase';
 import { clipSectionKind, clipSectionTitles } from '../ClipGrid/section';
 import { formatClipCardTime } from '../ClipGrid/cardFormat';
-import { clusters } from '../../Model/clipText';
 import { normalizeSearchQuery } from './match';
 import type { SearchIndex } from './match';
 
@@ -41,14 +40,14 @@ export function makeSearchContent(clips: ClipRecord[], rawQuery: string, filter:
   const query = normalizeSearchQuery(rawQuery);
   const results = !query
     ? []
-    : clips.filter((clip) => {
-        if (filter === 'text' && clip.text === null) return false;
-        if (filter === 'image' && clip.image === null) return false;
-        if (filter === 'pinned' && clip.pinnedAt === null) return false;
-        if (index.matches(clip.id, 'name', clip.name ?? '', query)) return true;
-        if (clip.image === null) return index.matches(clip.id, 'body', clip.text ?? '', query);
-        return times.texts(clip, now).some((text, position) => index.matches(clip.id, `time:${position}`, text, query));
-      });
+    : index
+        .filter(clips, query, now, (clip) => times.texts(clip, now))
+        .filter((clip) => {
+          if (filter === 'text' && clip.text === null) return false;
+          if (filter === 'image' && clip.image === null) return false;
+          if (filter === 'pinned' && clip.pinnedAt === null) return false;
+          return true;
+        });
   return {
     query,
     results,
@@ -79,12 +78,6 @@ export function searchEmptyStrings(query: string, filter: ClipFilter, isFailed: 
         title: `‘${query}’ 결과 없음`,
         message: filter === 'all' ? '이미지는 이름과 저장 시각으로만 찾을 수 있어요.' : '필터를 ‘전체’로 바꾸거나 다른 단어로 검색해 보세요.',
       };
-}
-
-export function searchExcerptStart(body: string, location: number): number {
-  const letters = clusters(body);
-  const position = letters.findIndex((letter) => letter.index === location);
-  return 40 < position ? letters[position - 14].index : 0;
 }
 
 export function searchRecentDisplay(phase: 'initial' | 'loaded' | 'failed', terms: string[]) {

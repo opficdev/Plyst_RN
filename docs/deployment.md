@@ -37,7 +37,7 @@
 make deploy-setup
 ```
 
-- `mise trust`와 `mise install node`로 `.mise.toml`의 Node 설치
+- `mise trust`와 `mise install node rust`로 `.mise.toml`의 Node와 Rust 설치
 - `bundle config set --local path vendor/bundle`과 `bundle install`로 Ruby gem 설치
 	- 워크트리마다 다시 필요
 - `fastlane/secrets.json`이 없을 때만 `fastlane/secrets.example.json`을 복사
@@ -77,7 +77,8 @@ make deploy-check
 - 실패한 항목을 모두 출력한 뒤 종료
 - 확인하는 항목
 	- Xcode 27 선택 여부와 첫 실행 설정
-	- `.mise.toml`에 지정한 Node 실행 여부
+	- `.mise.toml`에 지정한 Node와 Rust 실행 여부
+	- Rust iOS 대상 설치 여부
 	- `pod` 설치 여부
 	- Ruby gem 설치 여부
 	- 시크릿 파일의 존재와 JSON 형식과 키 7개 값

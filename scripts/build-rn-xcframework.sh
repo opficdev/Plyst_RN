@@ -169,6 +169,42 @@ if [ "$path" = js ]; then
 fi
 
 if [ "$path" = full ]; then
+	# plyst-search pod이 vendored_frameworks로 쓰므로 pod install 전에 만듦
+	# 작업 트리마다 cargo 출력을 따로 두어 다른 트리의 라이브러리를 집지 않게 함
+	# build는 무시 규칙에 들어 있어 입력 해시에 포함되지 않음
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않음
+	stage_begin search-core
+	set -- cargo
+	if command -v mise >/dev/null 2>&1; then
+		set -- mise exec -- cargo
+	fi
+	search_crate=$repository_root/rn/modules/plyst-search/rust
+	search_output=$repository_root/rn/modules/plyst-search/build
+	search_target=$search_output/target
+	if [ -n "${CI:-}" ] || [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+		rm -rf "$search_target"
+	fi
+	for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+		IPHONEOS_DEPLOYMENT_TARGET=15.1 "$@" build \
+			--manifest-path "$search_crate/Cargo.toml" \
+			--release \
+			--locked \
+			--target "$target" \
+			--target-dir "$search_target"
+	done
+	search_library=libplyst_search_core.a
+	mkdir -p "$search_output/simulator"
+	xcrun lipo -create \
+		"$search_target/aarch64-apple-ios-sim/release/$search_library" \
+		"$search_target/x86_64-apple-ios/release/$search_library" \
+		-output "$search_output/simulator/$search_library"
+	rm -rf "$search_output/PlystSearchCore.xcframework"
+	xcodebuild -create-xcframework \
+		-library "$search_target/aarch64-apple-ios/release/$search_library" \
+		-library "$search_output/simulator/$search_library" \
+		-output "$search_output/PlystSearchCore.xcframework" > /dev/null
+	stage_end
+
 	stage_begin npm-ci
 	if [ -f "$npm_marker" ] && [ "$(cat "$npm_marker")" = "$npm_state" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		stage_skip npm-ci
