@@ -1,0 +1,8 @@
+[bindings.swift]
+ffi_module_name = "PlystCoreFFI"
+ffi_module_filename = "PlystCoreFFI"
+module_name = "PlystCore"
+
+[bindings.kotlin]
+package_name = "opfic.plyst.core"
+cdylib_name = "plyst_core"

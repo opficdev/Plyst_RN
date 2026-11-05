@@ -77,13 +77,15 @@ rn-test:
 
 rn-verify: rn-typecheck rn-lint rn-test
 
+RUST_CRATES := rn/modules/plyst-search/rust core
+
 rn-rust-test:
-	cd rn/modules/plyst-search/rust && mise exec -- cargo test --locked
+	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo test --locked) || exit 1; done
 
 rn-rust-lint:
-	cd rn/modules/plyst-search/rust && mise exec -- cargo fmt --check
-	cd rn/modules/plyst-search/rust && mise exec -- cargo clippy --locked --all-targets -- -D warnings
-	cd rn/modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
+	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo fmt --check) || exit 1; done
+	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo clippy --locked --all-targets -- -D warnings) || exit 1; done
+	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo check --locked --target aarch64-linux-android) || exit 1; done
 
 # 빌드 시간을 줄이려고 실기기 ABI 하나만 빌드
 rn-android-build:

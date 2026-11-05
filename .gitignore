@@ -40,6 +40,10 @@ rn/.expo/
 rn/modules/plyst-search/rust/target/
 Plyst/Packages/PlystReactNative/Frameworks/
 
+# Rust 공통 코어
+core/target/
+core/bindgen/target/
+
 # Fastlane
 .bundle/
 .fastlane/
