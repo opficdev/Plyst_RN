@@ -13,7 +13,7 @@
         "backgroundImage": "../Plyst/Plyst/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
       },
       "package": "opfic.plyst",
-      "version": "1.1",
+      "version": "1.2",
       "versionCode": 1,
       "permissions": [],
       "blockedPermissions": [
