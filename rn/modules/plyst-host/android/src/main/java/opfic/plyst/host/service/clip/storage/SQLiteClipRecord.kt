@@ -3,10 +3,11 @@ package opfic.plyst.host.service.clip.storage
 import android.content.ContentValues
 import android.database.Cursor
 import java.util.UUID
-import kotlin.math.roundToLong
 import opfic.plyst.host.model.Clip
 import opfic.plyst.host.model.ClipContent
 import opfic.plyst.host.model.ClipImageMetadata
+import opfic.plyst.host.model.epochMilliseconds
+import opfic.plyst.host.model.referenceSeconds
 
 // 영구 저장 필드와 도메인 값의 변환
 // 날짜는 iOS 저장소와 같이 2001-01-01 기준 초를 저장
@@ -54,9 +55,6 @@ internal object SQLiteClipRecord {
       )
       """,
     )
-
-  // 1970-01-01부터 2001-01-01까지의 초
-  private const val REFERENCE_DATE_OFFSET = 978_307_200.0
 
   fun values(clip: Clip) =
     ContentValues().apply {
@@ -146,7 +144,7 @@ internal object SQLiteClipRecord {
     key: String,
     milliseconds: Long?,
   ) {
-    if (milliseconds == null) putNull(key) else put(key, milliseconds / 1000.0 - REFERENCE_DATE_OFFSET)
+    if (milliseconds == null) putNull(key) else put(key, milliseconds.referenceSeconds)
   }
 
   private fun Cursor.string(column: String): String? {
@@ -164,6 +162,6 @@ internal object SQLiteClipRecord {
     if (isNull(index)) return null
     val seconds = getDouble(index)
     if (!seconds.isFinite()) throw ClipStorageError.CorruptedData
-    return ((seconds + REFERENCE_DATE_OFFSET) * 1000).roundToLong()
+    return seconds.epochMilliseconds
   }
 }
