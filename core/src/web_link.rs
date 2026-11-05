@@ -1,5 +1,5 @@
 // Foundation URL(string:) 판정을 재현한 호스트 검사
-// tests/cases.json이 Foundation 결과를 고정
+// PlystTests의 ClipCoreFoundationTests가 실행 중인 OS의 Foundation 결과와 비교
 // 비ASCII 호스트의 IDNA 검사는 재현하지 않으며 아이콘만 달라짐
 
 use crate::whitespace::{is_whitespace, trim};

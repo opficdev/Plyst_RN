@@ -1,5 +1,5 @@
 // Foundation whitespacesAndNewlines와 같은 집합
-// tests/cases.json이 Foundation 전수 대조 결과를 고정
+// PlystTests의 ClipCoreFoundationTests가 실행 중인 OS의 Foundation과 전수 비교
 
 pub(crate) fn is_whitespace(c: char) -> bool {
     matches!(

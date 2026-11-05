@@ -1,30 +1,11 @@
-// iOS Foundation에서 얻은 기대값으로 클립 규칙 검증
+// 클립 규칙의 대표 사례 검증
+// Foundation 결과와의 전수 비교는 PlystTests의 ClipCoreFoundationTests가 담당
 // 판정 함수는 공개 함수로 호출하므로 테스트 전용 진입점이 없음
 
 use plyst_core::{
     clip_image_is_valid, clip_pinned_at, clip_sort_order, clip_text_is_valid,
     clip_text_is_web_link, clip_usage_applies, ClipContentValue, ClipIdentity,
 };
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-struct Case {
-    input: String,
-    expected: bool,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Cases {
-    whitespace: Vec<u32>,
-    web_link: Vec<Case>,
-    web_link_known_differences: Vec<Case>,
-    text_is_valid: Vec<Case>,
-}
-
-fn cases() -> Cases {
-    serde_json::from_str(include_str!("cases.json")).unwrap()
-}
 
 fn text(value: &str) -> ClipContentValue {
     ClipContentValue::Text {
@@ -39,6 +20,14 @@ fn image() -> ClipContentValue {
         pixel_width: 1,
         pixel_height: 1,
         byte_count: 1,
+    }
+}
+
+fn identity(id: &str, content: ClipContentValue, created_at: f64) -> ClipIdentity {
+    ClipIdentity {
+        id: id.to_owned(),
+        content,
+        created_at,
     }
 }
 
@@ -58,56 +47,72 @@ fn order(bytes: Vec<u8>) -> Vec<u32> {
         .collect()
 }
 
-fn identity(id: &str, content: ClipContentValue, created_at: f64) -> ClipIdentity {
-    ClipIdentity {
-        id: id.to_owned(),
-        content,
-        created_at,
-    }
-}
-
-// 읽기 경로의 판정이므로 표 밖 스칼라가 없어야 함
 #[test]
-fn whitespace_matches_foundation_for_every_scalar() {
-    let whitespace = cases().whitespace;
-    assert_eq!(whitespace.len(), 26);
-    for scalar in (0..=0x10FFFF).filter_map(char::from_u32) {
-        let expected = !whitespace.contains(&(scalar as u32));
-        assert_eq!(
-            clip_text_is_valid(&scalar.to_string()),
-            expected,
-            "U+{:04X}",
-            scalar as u32
-        );
+fn text_validity_uses_foundation_whitespace() {
+    for blank in ["", " \n\t", "\u{200B}", "\u{85}", "\u{3000}\u{2028}"] {
+        assert!(!clip_text_is_valid(blank), "{blank:?}");
+    }
+    for valid in [
+        "a", " a ", "\u{1C}", "\u{1F}", "\u{FEFF}", "\u{200D}", " \u{301}",
+    ] {
+        assert!(clip_text_is_valid(valid), "{valid:?}");
     }
 }
 
 #[test]
-fn text_validity_matches_foundation() {
-    for case in cases().text_is_valid {
-        assert_eq!(
-            clip_text_is_valid(&case.input),
-            case.expected,
-            "{:?}",
-            case.input
-        );
+fn web_link_accepts_foundation_hosts() {
+    for link in [
+        "https://example.com",
+        " HTTP://EXAMPLE.COM/Path\n",
+        "https://한글.com",
+        "https://exa_mple.com/",
+        "https://a..b/",
+        "https://example.com/a|b",
+        "https://example.com/%zz",
+        "https://user:pw@example.com:8080/x",
+        "https://[::1]:80/",
+        "https://[fe80::1%en0]",
+        "https://%41/",
+        "https://a:",
+    ] {
+        assert!(clip_text_is_web_link(link), "{link:?}");
     }
 }
 
 #[test]
-fn web_link_matches_foundation() {
-    for case in cases().web_link {
-        assert_eq!(
-            clip_text_is_web_link(&case.input),
-            case.expected,
-            "{:?}",
-            case.input
-        );
+fn web_link_rejects_foundation_failures() {
+    for text in [
+        "",
+        "example.com",
+        "ftp://example.com",
+        "https://",
+        "https:example.com",
+        "https://example.com hello",
+        "https://a b/",
+        "https://%zz/",
+        "https://a|b/",
+        "https://a:80a",
+        "https://a:b:c/",
+        "https://a@/",
+        "https://[]/",
+        "https://[::1]x",
+        "https://[한]/",
+        "\u{FEFF}https://a/",
+    ] {
+        assert!(!clip_text_is_web_link(text), "{text:?}");
+    }
+}
+
+// IDNA를 재현하지 않아 Foundation과 다른 입력
+#[test]
+fn web_link_does_not_check_idna() {
+    for text in ["https://한-/", "https://-한/", "https://\u{E000}.com/"] {
+        assert!(clip_text_is_web_link(text), "{text:?}");
     }
 }
 
 #[test]
-fn web_link_long_input_matches_foundation() {
+fn web_link_long_input_stays_valid() {
     assert!(clip_text_is_web_link(&format!(
         "https://example.com/{}",
         "a".repeat(1 << 20)
@@ -116,23 +121,6 @@ fn web_link_long_input_matches_foundation() {
         "https://{}.com/",
         "a".repeat(1 << 20)
     )));
-}
-
-// IDNA를 재현하지 않아 Foundation과 다른 입력
-// 차이가 사라지거나 늘면 표를 다시 확인해야 하므로 지금 값을 고정
-#[test]
-fn web_link_known_differences_stay_opposite() {
-    let differences = cases().web_link_known_differences;
-    assert!(!differences.is_empty());
-    for case in differences {
-        assert!(!case.input.is_ascii(), "{:?}", case.input);
-        assert_ne!(
-            clip_text_is_web_link(&case.input),
-            case.expected,
-            "{:?}",
-            case.input
-        );
-    }
 }
 
 #[test]
