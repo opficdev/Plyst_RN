@@ -26,12 +26,13 @@ class ClipImageService(
 
   suspend fun saveImage(
     data: ByteArray,
+    memo: String? = null,
     id: UUID = UUID.randomUUID(),
     createdAt: Long = System.currentTimeMillis(),
   ): ClipImageMutationResult<Clip> =
     serialized {
       val image = io { files.save(data) }
-      val clip = Clip(id = id, content = ClipContent.Image(image), createdAt = createdAt)
+      val clip = Clip(id = id, content = ClipContent.Image(image), memo = memo, createdAt = createdAt)
       try {
         storage.insert(clip)
       } catch (error: Exception) {
