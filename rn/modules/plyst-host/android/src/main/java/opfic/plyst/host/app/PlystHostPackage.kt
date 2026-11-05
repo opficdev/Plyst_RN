@@ -3,6 +3,7 @@ package opfic.plyst.host.app
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import expo.modules.core.interfaces.ApplicationLifecycleListener
 import expo.modules.core.interfaces.Package
@@ -24,6 +25,11 @@ class PlystHostPackage : Package {
           activity: Activity,
           savedInstanceState: Bundle?,
         ) = HostLifecycle.onActivityCreate(activity)
+
+        override fun onNewIntent(intent: Intent): Boolean {
+          HostLifecycle.onActivityNewIntent(intent)
+          return false
+        }
 
         override fun onDestroy(activity: Activity) = HostLifecycle.onActivityDestroy(activity)
       },

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS WidgetView와 같은 구성이며 34pt 도구 아이콘은 SF 이미지 영역 크기 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/plyst_widget_background"
+    android:gravity="center"
+    android:orientation="vertical">
+
+  <ImageView
+      android:layout_width="42dp"
+      android:layout_height="47dp"
+      android:importantForAccessibility="no"
+      android:src="@drawable/sf_doc_on_clipboard"
+      android:tint="@color/HomePrimaryText" />
+
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="8dp"
+      android:fontFamily="sans-serif-medium"
+      android:text="@string/plyst_widget_label"
+      android:textColor="@color/HomePrimaryText"
+      android:textSize="17sp" />
+</LinearLayout>
