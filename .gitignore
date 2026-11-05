@@ -43,6 +43,8 @@ Plyst/Packages/PlystReactNative/Frameworks/
 # Rust 공통 코어
 core/target/
 core/bindgen/target/
+Plyst/Packages/PlystCore/Frameworks/
+Plyst/Packages/PlystCore/Sources/
 
 # Fastlane
 .bundle/
