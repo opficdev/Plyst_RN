@@ -14,6 +14,7 @@ android {
 
 dependencies {
   implementation project(':plyst-bridge')
+  implementation project(':plyst-core')
   implementation "com.facebook.react:react-android"
   // react-native-brownfield가 쓰는 것과 같은 버전
   implementation "androidx.core:core-ktx:1.17.0"
