@@ -13,7 +13,7 @@ DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 MATCH_FORCE ?= false
 
-.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
+.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -84,6 +84,11 @@ rn-rust-lint:
 	cd rn/modules/plyst-search/rust && mise exec -- cargo fmt --check
 	cd rn/modules/plyst-search/rust && mise exec -- cargo clippy --locked --all-targets -- -D warnings
 	cd rn/modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
+
+# 빌드 시간을 줄이려고 실기기 ABI 하나만 빌드
+rn-android-build:
+	cd rn && mise exec -- npx expo prebuild --platform android --no-install
+	cd rn/android && mise exec -- ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --console=plain
 
 rn-start:
 	cd rn && npx expo start
