@@ -1,6 +1,6 @@
 # Plyst RN
 
-> 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone 클립 보관함<br>
+> 복사한 내용을 필요할 때 다시 꺼내 쓰는 iPhone, Android 클립 보관함<br>
 > 클립을 찾고 상세 화면에서 이름과 고정 여부를 편집하는 React Native 앱
 
 <a href="https://github.com/opficdev/Plyst"><img src="./docs/badges/uikit.svg" alt="UIKit 버전" /></a>
@@ -30,6 +30,32 @@
     <td width="33.3%"><img src="./docs/image_detail.png" alt="이미지 상세" width="100%" /></td>
     <td width="33.3%"><img src="./docs/widget.png" alt="Widget" width="100%" /></td>
     <td width="33.3%"><img src="./docs/share.png" alt="Share Extension" width="100%" /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th width="33.3%">Android Home</th>
+    <th width="33.3%">Android Search</th>
+    <th width="33.3%">Android 텍스트 상세</th>
+  </tr>
+  <tr>
+    <td width="33.3%"><img src="./docs/android_home.png" alt="Android Home" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/android_search.png" alt="Android Search" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/android_text_detail.png" alt="Android 텍스트 상세" width="100%" /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th width="33.3%">Android 이미지 상세</th>
+    <th width="33.3%">Android Widget</th>
+    <th width="33.3%">Android 공유</th>
+  </tr>
+  <tr>
+    <td width="33.3%"><img src="./docs/android_image_detail.png" alt="Android 이미지 상세" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/android_widget.png" alt="Android Widget" width="100%" /></td>
+    <td width="33.3%"><img src="./docs/android_share.png" alt="Android 공유" width="100%" /></td>
   </tr>
 </table>
 
