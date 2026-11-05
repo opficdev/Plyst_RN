@@ -1,0 +1,13 @@
+<!-- Material Symbols Outlined의 check_circle 아이콘 fill1 (Apache License 2.0) -->
+<!-- viewport는 SF Symbols 이미지 영역이고 글리프는 SF 글리프 경계 안 가운데에 맞춤 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="23.64dp"
+    android:height="22.73dp"
+    android:viewportWidth="945.45"
+    android:viewportHeight="909.09">
+  <group android:translateX="-7.27" android:translateY="934.55">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="m424-296 282-282-56-56-226 226-114-114-56 56 170 170Zm56 216q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
+  </group>
+</vector>
