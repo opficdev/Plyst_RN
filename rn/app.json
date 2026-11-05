@@ -12,7 +12,15 @@
         "foregroundImage": "../Plyst/Plyst/Assets.xcassets/AppIcon.appiconset/AppIcon.png",
         "backgroundImage": "../Plyst/Plyst/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
       },
-      "package": "com.anonymous.PlystRN"
+      "package": "opfic.plyst",
+      "version": "1.2",
+      "versionCode": 1,
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE"
+      ]
     },
     "plugins": [
       "@callstack/react-native-brownfield",

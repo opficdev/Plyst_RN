@@ -9,7 +9,7 @@ import opfic.plyst.host.model.ClipContent
 
 // 첫 항목의 형식을 확인하고 읽음
 // 변경을 감시하거나 읽기를 재시도하지 않음
-// Android 10부터 클립보드는 화면에 보이는 앱만 읽을 수 있음
+// Android 10부터 클립보드는 창 포커스를 가진 앱만 읽을 수 있음
 class SystemClipboardReader(private val context: Context) : ClipboardReader {
   override suspend fun read(): ClipboardReadResult {
     val item =

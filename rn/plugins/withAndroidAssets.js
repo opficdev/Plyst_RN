@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { AndroidConfig, withAndroidColors, withAndroidColorsNight, withDangerousMod, withFinalizedMod, withStringsXml } = require('expo/config-plugins');
+const { AndroidConfig, withAndroidColors, withAndroidColorsNight, withAndroidManifest, withDangerousMod, withFinalizedMod, withStringsXml } = require('expo/config-plugins');
 
 // iOS 에셋 카탈로그가 색과 이미지의 단일 원본
 const catalogPath = '../Plyst/Plyst/Assets.xcassets';
@@ -173,8 +173,28 @@ function withAppDisplayName(config) {
   });
 }
 
+// 위젯 정보가 앱 리소스를 참조하므로 라이브러리 매니페스트가 아니라 앱 매니페스트에 등록
+const widgetProvider = 'opfic.plyst.host.app.PlystWidgetProvider';
+
+function withClipboardWidget(config) {
+  return withAndroidManifest(config, (config) => {
+    const application = AndroidConfig.Manifest.getMainApplicationOrThrow(config.modResults);
+    const receivers = (application.receiver ?? []).filter((receiver) => receiver.$['android:name'] !== widgetProvider);
+    application.receiver = [
+      ...receivers,
+      {
+        $: { 'android:name': widgetProvider, 'android:exported': 'false', 'android:label': '@string/plyst_widget_label' },
+        'intent-filter': [{ action: [{ $: { 'android:name': 'android.appwidget.action.APPWIDGET_UPDATE' } }] }],
+        'meta-data': [{ $: { 'android:name': 'android.appwidget.provider', 'android:resource': '@xml/plyst_widget_info' } }],
+      },
+    ];
+    return config;
+  });
+}
+
 module.exports = function withAndroidAssets(config) {
   config = withAppDisplayName(config);
+  config = withClipboardWidget(config);
   config = withCatalogColors(config);
   config = withCatalogImages(config);
   return withLauncherForegroundInset(config);

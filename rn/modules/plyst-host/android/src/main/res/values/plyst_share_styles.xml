@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- 보낸 앱 위에 시트처럼 올라오는 공유 화면 -->
+  <style name="PlystShareTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <item name="android:backgroundDimEnabled">true</item>
+    <item name="android:backgroundDimAmount">0.4</item>
+    <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:windowAnimationStyle">@style/PlystShareAnimation</item>
+  </style>
+
+  <style name="PlystShareAnimation" parent="@android:style/Animation.Activity">
+    <item name="android:activityOpenEnterAnimation">@anim/plyst_share_enter</item>
+    <item name="android:activityCloseExitAnimation">@anim/plyst_share_exit</item>
+  </style>
+</resources>
