@@ -11,7 +11,4 @@ data class ClipImageMetadata(
   val pixelWidth: Int,
   val pixelHeight: Int,
   val byteCount: Int,
-) {
-  val isValid: Boolean
-    get() = contentType.isNotBlank() && 0 < pixelWidth && 0 < pixelHeight && 0 < byteCount
-}
+)
