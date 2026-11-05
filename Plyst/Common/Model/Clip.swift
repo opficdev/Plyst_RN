@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PlystCore
 
 /// 저장된 클립의 불변 스냅샷
 /// 추가 이후 콘텐츠와 생성 시각은 변경되지 않음
@@ -35,5 +36,13 @@ struct Clip: Equatable, Identifiable, Sendable {
         self.memo = memo
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt
+    }
+
+    var coreIdentity: ClipIdentity {
+        ClipIdentity(
+            id: id.uuidString,
+            content: content.coreValue,
+            createdAt: createdAt.timeIntervalSinceReferenceDate
+        )
     }
 }

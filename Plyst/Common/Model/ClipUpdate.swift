@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PlystCore
 
 enum ClipUpdate: Equatable, Sendable {
     /// 편집 가능한 상세 정보를 한 번에 교체
@@ -26,16 +27,18 @@ enum ClipUpdate: Equatable, Sendable {
                 id: clip.id,
                 content: clip.content,
                 name: name,
-                pinnedAt: isPinned ? (clip.pinnedAt ?? requestedAt) : nil,
+                pinnedAt: clipPinnedAt(
+                    current: clip.pinnedAt?.timeIntervalSinceReferenceDate,
+                    isPinned: isPinned,
+                    requestedAt: requestedAt.timeIntervalSinceReferenceDate
+                ).map(Date.init(timeIntervalSinceReferenceDate:)),
                 memo: memo,
                 createdAt: clip.createdAt,
                 lastUsedAt: clip.lastUsedAt
             )
         case let .lastUsedAt(date, expected):
             if let expected {
-                guard expected.id == clip.id,
-                      expected.content == clip.content,
-                      expected.createdAt == clip.createdAt else { return clip }
+                guard clipUsageApplies(expected: expected.coreIdentity, current: clip.coreIdentity) else { return clip }
             }
             return Clip(
                 id: clip.id,
