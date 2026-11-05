@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PlystCore
 
 enum ClipContent: Equatable, Sendable {
 
@@ -19,25 +20,27 @@ enum ClipContent: Equatable, Sendable {
     /// 문장 안에 섞인 URL은 링크로 보지 않음
     var isWebLink: Bool {
         guard case .text(let text) = self else { return false }
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
-              let url = URL(string: trimmed),
-              let scheme = url.scheme?.lowercased(),
-              scheme == "http" || scheme == "https",
-              let host = url.host(),
-              !host.isEmpty else { return false }
-        return true
+        return clipTextIsWebLink(text: text)
     }
 
     /// 이미지의 메타데이터만 검증
     /// 이미지 디코딩과 파일 존재 여부 검사는 이미지 파일 서비스의 책임
     var isValid: Bool {
+        clipContentIsValid(content: coreValue)
+    }
+
+    var coreValue: ClipContentValue {
         switch self {
         case .text(let text):
-            return !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return .text(text: text)
         case .image(let image):
-            return image.isValid
+            return .image(
+                fileId: image.fileID.uuidString,
+                contentType: image.contentType,
+                pixelWidth: Int64(image.pixelWidth),
+                pixelHeight: Int64(image.pixelHeight),
+                byteCount: Int64(image.byteCount)
+            )
         }
     }
 }
