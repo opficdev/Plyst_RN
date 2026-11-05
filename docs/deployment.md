@@ -157,6 +157,7 @@ make signing-sync
 3. `check` 모드는 환경 확인 후 종료
 4. `bundle check`로 Ruby gem 설치 여부 확인
 5. `make rn-xcframework RN_CONFIGURATION=Release`로 Release XCFramework 생성 (`sync_appstore_profiles` 제외)
+	- `make plyst-core`가 먼저 실행되어 Rust 공통 코어 `PlystCore`도 처음부터 생성
 	- `scripts/build-rn-xcframework.sh`가 프레임워크 `Info.plist` 키를 보충한 뒤 서명
 	- 배포 스크립트는 `RN_XCFRAMEWORK_CLEAN=1`을 지정해 입력 해시와 관계없이 처음부터 빌드하고 컴파일 캐시를 쓰지 않음
 6. `project.pbxproj` 백업 (`sync_appstore_profiles` 제외)
