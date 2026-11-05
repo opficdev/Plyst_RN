@@ -1,6 +1,7 @@
 package opfic.plyst.host.model
 
 import java.util.UUID
+import opfic.plyst.core.ClipIdentity
 
 // 저장된 클립의 불변 스냅샷
 // 추가 이후 콘텐츠와 생성 시각은 변경되지 않음
@@ -15,3 +16,6 @@ data class Clip(
   // 클립을 다시 복사하는 작업이 성공하기 전까지는 null
   val lastUsedAt: Long? = null,
 )
+
+internal val Clip.coreIdentity: ClipIdentity
+  get() = ClipIdentity(id.toString().uppercase(), content.coreValue, createdAt.referenceSeconds)

@@ -13,6 +13,10 @@
 		DFA00029306A4A9700115D10 /* PlystSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00026306A4A9700115D10 /* PlystSQLite */; };
 		DFA0002A306A4A9700115D10 /* PlystSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00027306A4A9700115D10 /* PlystSQLite */; };
 		DFA0002B306A4A9700115D10 /* PlystSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00028306A4A9700115D10 /* PlystSQLite */; };
+		DFA00035306A4A9700115D10 /* PlystCore in Embed Frameworks */ = {isa = PBXBuildFile; productRef = DFA0002F306A4A9700115D10 /* PlystCore */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DFA00032306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0002F306A4A9700115D10 /* PlystCore */; };
+		DFA00033306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00030306A4A9700115D10 /* PlystCore */; };
+		DFA00034306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00031306A4A9700115D10 /* PlystCore */; };
 		DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00024306A4A9700115D10 /* PlystReactNative */; };
 		DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFC00002306A4A9700115D10 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFD00002306A4A9700115D10 /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -49,6 +53,7 @@
 			dstSubfolder = Frameworks;
 			files = (
 				DFA0002C306A4A9700115D10 /* PlystSQLite in Embed Frameworks */,
+				DFA00035306A4A9700115D10 /* PlystCore in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 		};
@@ -149,6 +154,7 @@
 				DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */,
 				DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */,
 				DFA0002A306A4A9700115D10 /* PlystSQLite in Frameworks */,
+				DFA00033306A4A9700115D10 /* PlystCore in Frameworks */,
 			);
 		};
 		DFD00006306A4A9700115D10 /* Frameworks */ = {
@@ -160,6 +166,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				DFA00029306A4A9700115D10 /* PlystSQLite in Frameworks */,
+				DFA00032306A4A9700115D10 /* PlystCore in Frameworks */,
 				DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */,
 			);
 		};
@@ -167,6 +174,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				DFA0002B306A4A9700115D10 /* PlystSQLite in Frameworks */,
+				DFA00034306A4A9700115D10 /* PlystCore in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -217,6 +225,7 @@
 				DFA00018306A4A9700115D10 /* ReactorKit */,
 				DFA00019306A4A9700115D10 /* RxSwift */,
 				DFA00027306A4A9700115D10 /* PlystSQLite */,
+				DFA00030306A4A9700115D10 /* PlystCore */,
 			);
 			productName = ShareExtension;
 			productReference = DFC00002306A4A9700115D10 /* ShareExtension.appex */;
@@ -265,6 +274,7 @@
 			name = Plyst;
 			packageProductDependencies = (
 				DFA00026306A4A9700115D10 /* PlystSQLite */,
+				DFA0002F306A4A9700115D10 /* PlystCore */,
 				DFA00024306A4A9700115D10 /* PlystReactNative */,
 			);
 			productName = Plyst;
@@ -290,6 +300,7 @@
 			name = PlystTests;
 			packageProductDependencies = (
 				DFA00028306A4A9700115D10 /* PlystSQLite */,
+				DFA00031306A4A9700115D10 /* PlystCore */,
 			);
 			productName = PlystTests;
 			productReference = DFEB0A37306A4A9700115D10 /* PlystTests.xctest */;
@@ -334,6 +345,7 @@
 				DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */,
 				DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */,
 				DFA00025306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystSQLite" */,
+				DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DFEB0A22306A4A9500115D10 /* Products */;
@@ -856,6 +868,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PlystSQLite;
 		};
+		DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/PlystCore;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -907,6 +923,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */;
 			productName = PlystReactNative;
+		};
+		DFA0002F306A4A9700115D10 /* PlystCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */;
+			productName = PlystCore;
+		};
+		DFA00030306A4A9700115D10 /* PlystCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */;
+			productName = PlystCore;
+		};
+		DFA00031306A4A9700115D10 /* PlystCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */;
+			productName = PlystCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

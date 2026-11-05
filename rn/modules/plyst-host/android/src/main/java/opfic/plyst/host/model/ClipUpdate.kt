@@ -1,5 +1,8 @@
 package opfic.plyst.host.model
 
+import opfic.plyst.core.clipPinnedAt
+import opfic.plyst.core.clipUsageApplies
+
 sealed interface ClipUpdate {
   // 편집 가능한 상세 정보를 한 번에 교체
   // null은 대응하는 필드의 값을 제거하는 의미
@@ -26,13 +29,11 @@ sealed interface ClipUpdate {
         clip.copy(
           name = name,
           memo = memo,
-          pinnedAt = if (isPinned) clip.pinnedAt ?: requestedAt else null,
+          pinnedAt = clipPinnedAt(clip.pinnedAt?.referenceSeconds, isPinned, requestedAt.referenceSeconds)?.epochMilliseconds,
         )
       is LastUsedAt -> {
         val expected = matching
-        if (expected != null &&
-          (expected.id != clip.id || expected.content != clip.content || expected.createdAt != clip.createdAt)
-        ) {
+        if (expected != null && !clipUsageApplies(expected.coreIdentity, clip.coreIdentity)) {
           clip
         } else {
           clip.copy(lastUsedAt = date)

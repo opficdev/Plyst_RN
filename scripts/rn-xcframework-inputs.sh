@@ -3,11 +3,12 @@
 # RN XCFramework 빌드 입력의 해시를 한 곳에서 정의
 # 로컬 빌드 스크립트와 CI 캐시 키가 같은 파일 집합을 쓰도록 이 스크립트의 출력만 사용
 #
-# 사용법: rn-xcframework-inputs.sh [lock|native|all|files]
+# 사용법: rn-xcframework-inputs.sh [lock|native|all|files|core]
 #   lock     rn/package-lock.json의 해시
 #   native   의존성과 Pods 구성을 정하는 입력과 rn/modules 네이티브 소스 내용의 해시
 #   all      native 입력과 JS 번들 입력의 해시 (기본값)
 #   files    all에 포함되는 파일 경로 목록
+#   core     PlystCore 패키지를 만드는 입력의 해시
 
 set -eu
 
@@ -52,7 +53,7 @@ lock_lines() {
 }
 
 # 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 rn/modules의 ios 소스는 이름만 포함
-# Android 전용 소스와 plyst-host와 Rust 테스트는 iOS 프레임워크에 들어가지 않아 제외
+# Android 전용 소스와 plyst-core, plyst-host와 Rust 테스트는 iOS 프레임워크에 들어가지 않아 제외
 base_lines() {
 	content_lines \
 		rn/package.json \
@@ -64,6 +65,7 @@ base_lines() {
 		.mise.toml \
 		':(exclude,glob)rn/modules/**/ios/**' \
 		':(exclude,glob)rn/modules/**/android/**' \
+		':(exclude)rn/modules/plyst-core' \
 		':(exclude)rn/modules/plyst-host' \
 		':(exclude)rn/modules/plyst-search/rust/tests' \
 		':(exclude)rn/modules/plyst-search/react-native.config.js' \
@@ -75,6 +77,17 @@ base_lines() {
 native_lines() {
 	base_lines
 	content_lines ':(glob)rn/modules/**/ios/**'
+}
+
+core_lines() {
+	content_lines \
+		':(exclude)core/tests' \
+		core \
+		scripts/build-plyst-core.sh \
+		scripts/generate-plyst-core-bindings.sh \
+		Plyst/Packages/PlystCore/Package.swift \
+		.mise.toml
+	deployment_target_line
 }
 
 bundle_lines() {
@@ -102,12 +115,13 @@ case "${1:-all}" in
 	lock) hash_of lock_lines ;;
 	native) hash_of native_lines ;;
 	all) hash_of all_lines ;;
+	core) hash_of core_lines ;;
 	files)
 		lines=$(all_lines)
 		printf '%s\n' "$lines" | grep -v '^deployment_target' | cut -d ' ' -f 3-
 		;;
 	*)
-		printf '사용법: %s [lock|native|all|files]\n' "$0" >&2
+		printf '사용법: %s [lock|native|all|files|core]\n' "$0" >&2
 		exit 1
 		;;
 esac

@@ -1,0 +1,18 @@
+[package]
+name = "plyst-core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "plyst_core"
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+uniffi = { version = "=0.32.2", default-features = false }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "unwind"

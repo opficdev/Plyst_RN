@@ -17,11 +17,4 @@ struct ClipImageMetadata: Equatable, Sendable {
     let pixelWidth: Int
     let pixelHeight: Int
     let byteCount: Int
-
-    var isValid: Bool {
-        !contentType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && 0 < pixelWidth
-            && 0 < pixelHeight
-            && 0 < byteCount
-    }
 }

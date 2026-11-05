@@ -100,7 +100,22 @@ jobs:
 
       - name: Hash XCFramework inputs
         id: input-hash
-        run: echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
+          echo "core=$(scripts/rn-xcframework-inputs.sh core)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Plyst core
+        uses: actions/cache@v4
+        with:
+          path: |
+            Plyst/Packages/PlystCore/Frameworks
+            Plyst/Packages/PlystCore/Sources
+          key: plyst-core-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ steps.input-hash.outputs.core }}
+
+      - name: Build Plyst core
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make plyst-core
 
       - name: Cache XCFrameworks
         id: xcframework-cache
@@ -114,7 +129,7 @@ jobs:
         run: make rn-xcframework
 
       - name: Archive XCFrameworks
-        run: tar -C Plyst/Packages/PlystReactNative -cf frameworks.tar Frameworks
+        run: tar -C Plyst/Packages -cf frameworks.tar PlystReactNative/Frameworks PlystCore/Frameworks PlystCore/Sources
 
       - name: Upload XCFrameworks
         uses: actions/upload-artifact@v4
@@ -149,7 +164,7 @@ jobs:
           path: /tmp/rn-xcframeworks
 
       - name: Extract XCFrameworks
-        run: tar -C Plyst/Packages/PlystReactNative -xf /tmp/rn-xcframeworks/frameworks.tar
+        run: tar -C Plyst/Packages -xf /tmp/rn-xcframeworks/frameworks.tar
 
       - name: Build
         if: matrix.target == 'build'

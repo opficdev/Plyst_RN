@@ -1,0 +1,16 @@
+[package]
+name = "plyst-core-bindgen"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+uniffi = { version = "=0.32.2", features = ["cli"] }
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[[bin]]
+name = "uniffi-bindgen-swift"
+path = "src/bin/uniffi-bindgen-swift.rs"

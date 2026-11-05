@@ -177,7 +177,7 @@ export interface Spec extends TurboModule {
 ## 앱 아키텍처
 
 - 화면과 상태는 iOS와 Android가 같은 RN 코드를 사용
-- 검색 계산은 두 플랫폼이 같은 Rust 코어를 사용
+- 검색 계산과 클립 값 규칙은 두 플랫폼이 같은 Rust 코드를 사용
 - 실행 환경과 시스템 자원은 플랫폼별 네이티브 호스트가 담당
 
 ![앱 아키텍처](./docs/architecture.png)
@@ -192,7 +192,7 @@ export interface Spec extends TurboModule {
 | 화면 | React Native 0.86.3, React 19.2.3, Expo 57.0.27, FlashList 2.3.3, expo-image 57.0.5 |
 | 앱 확장 | Share Extension, Widget Extension (iOS)<br>App Widget, Share Activity (Android) |
 | 상태 관리 | Redux Toolkit 2.13.0, React Redux 9.3.0 (RN 화면)<br>ReactorKit 3.2.0, RxSwift 6.10.2 (Share Extension 상태 관리) |
-| 네이티브 브리지 | TurboModule, Codegen, C++ TurboModule(JSI) |
+| 네이티브 브리지 | TurboModule, Codegen, C++ TurboModule(JSI)<br>UniFFI 0.32.2, JNA 5.17.0 (Rust 공통 코어) |
 | 앱 통합 | React Native Brownfield 5.3.0, XCFramework (iOS)<br>Expo prebuild (Android) |
 | 저장소 | SQLiteData 1.12.0, GRDB 7.11.1, swift-structured-queries 0.39.2 (iOS)<br>Android SQLite API (Android) |
 | Apple 프레임워크 | UIKit, Foundation, WidgetKit, SwiftUI, ImageIO, Photos |

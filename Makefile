@@ -13,7 +13,7 @@ DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 MATCH_FORCE ?= false
 
-.PHONY: lint build test-build test-device-id test-without-building test verify rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
+.PHONY: lint build test-build test-device-id test-without-building test verify plyst-core rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
@@ -63,7 +63,10 @@ test:
 
 verify: lint build test-build
 
-rn-xcframework:
+plyst-core:
+	scripts/build-plyst-core.sh
+
+rn-xcframework: plyst-core
 	RN_CONFIGURATION="$(RN_CONFIGURATION)" scripts/build-rn-xcframework.sh
 
 rn-typecheck:
@@ -77,13 +80,15 @@ rn-test:
 
 rn-verify: rn-typecheck rn-lint rn-test
 
+RUST_CRATES := rn/modules/plyst-search/rust core
+
 rn-rust-test:
-	cd rn/modules/plyst-search/rust && mise exec -- cargo test --locked
+	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo test --locked) || exit 1; done
 
 rn-rust-lint:
-	cd rn/modules/plyst-search/rust && mise exec -- cargo fmt --check
-	cd rn/modules/plyst-search/rust && mise exec -- cargo clippy --locked --all-targets -- -D warnings
-	cd rn/modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
+	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo fmt --check) || exit 1; done
+	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo clippy --locked --all-targets -- -D warnings) || exit 1; done
+	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo check --locked --target aarch64-linux-android) || exit 1; done
 
 # 빌드 시간을 줄이려고 실기기 ABI 하나만 빌드
 rn-android-build:

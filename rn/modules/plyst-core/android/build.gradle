@@ -1,0 +1,47 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+def repositoryRoot = file("../../../..")
+def crate = new File(repositoryRoot, "core")
+def bindingsDirectory = layout.buildDirectory.dir("generated/uniffi")
+
+// 생성 Kotlin은 빌드 산출물이고 저장소에 두지 않음
+def generateBindings = tasks.register("generatePlystCoreBindings", Exec) {
+  inputs.dir(new File(crate, "src"))
+  inputs.files(new File(crate, "Cargo.lock"), new File(crate, "uniffi.toml"))
+  outputs.dir(bindingsDirectory)
+  commandLine new File(repositoryRoot, "scripts/generate-plyst-core-bindings.sh"), "kotlin", bindingsDirectory.get().asFile
+}
+
+android {
+  namespace "opfic.plyst.core"
+  // expo-module-gradle-plugin이 요구하는 값이며 package.json version과 같음
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+    ndk {
+      abiFilters(*findProperty("reactNativeArchitectures").split(","))
+    }
+  }
+  externalNativeBuild {
+    cmake {
+      path "CMakeLists.txt"
+    }
+  }
+  sourceSets {
+    main {
+      java.srcDir(bindingsDirectory)
+    }
+  }
+}
+
+tasks.named("preBuild") {
+  dependsOn generateBindings
+}
+
+dependencies {
+  // UniFFI 생성 Kotlin의 공개 형식에 JNA 타입이 드러남
+  api "net.java.dev.jna:jna:5.17.0@aar"
+}
