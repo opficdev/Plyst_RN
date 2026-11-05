@@ -46,8 +46,20 @@ pub fn clip_text_is_web_link(text: &str) -> bool {
 
 // false는 읽기 실패로 이어져 홈 전체를 막으므로 패닉 때는 true
 #[uniffi::export]
-pub fn clip_content_is_valid(content: ClipContentValue) -> bool {
-    guard(true, || content::is_valid(&content))
+pub fn clip_text_is_valid(text: &str) -> bool {
+    guard(true, || content::is_text_valid(text))
+}
+
+#[uniffi::export]
+pub fn clip_image_is_valid(
+    content_type: &str,
+    pixel_width: i64,
+    pixel_height: i64,
+    byte_count: i64,
+) -> bool {
+    guard(true, || {
+        content::is_image_valid(content_type, pixel_width, pixel_height, byte_count)
+    })
 }
 
 // 패닉 때는 고정 시각을 잃지 않도록 current 유지
@@ -64,11 +76,11 @@ pub fn clip_usage_applies(expected: ClipIdentity, current: ClipIdentity) -> bool
     guard(false, || update::usage_applies(&expected, &current))
 }
 
-// created_at[i]와 ids[i * 16..][..16]이 같은 클립
+// created_at은 f64 8바이트, ids는 UUID 16바이트, 결과는 u32 4바이트의 리틀 엔디언 나열
 // 길이가 맞지 않거나 패닉이면 입력 순서 유지
 #[uniffi::export]
-pub fn clip_sort_order(created_at: Vec<f64>, ids: Vec<u8>) -> Vec<u32> {
-    guard((0..created_at.len() as u32).collect(), || {
+pub fn clip_sort_order(created_at: Vec<u8>, ids: Vec<u8>) -> Vec<u8> {
+    guard(sort::input_order(created_at.len() / 8), || {
         sort::order(&created_at, &ids)
     })
 }

@@ -1,7 +1,8 @@
 package opfic.plyst.host.model
 
 import opfic.plyst.core.ClipContentValue
-import opfic.plyst.core.clipContentIsValid
+import opfic.plyst.core.clipImageIsValid
+import opfic.plyst.core.clipTextIsValid
 import opfic.plyst.core.clipTextIsWebLink
 
 sealed interface ClipContent {
@@ -19,7 +20,17 @@ sealed interface ClipContent {
   // 이미지의 메타데이터만 검증
   // 이미지 디코딩과 파일 존재 여부 검사는 이미지 파일 서비스의 책임
   val isValid: Boolean
-    get() = clipContentIsValid(coreValue)
+    get() =
+      when (this) {
+        is Text -> clipTextIsValid(text.wellFormed)
+        is Image ->
+          clipImageIsValid(
+            image.contentType.wellFormed,
+            image.pixelWidth.toLong(),
+            image.pixelHeight.toLong(),
+            image.byteCount.toLong(),
+          )
+      }
 }
 
 internal val ClipContent.coreValue: ClipContentValue

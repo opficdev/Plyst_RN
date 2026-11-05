@@ -19,9 +19,15 @@ enum ClipSortOrder: Equatable, Sendable {
         for clip in clips {
             withUnsafeBytes(of: clip.id.uuid) { ids.append(contentsOf: $0) }
         }
-        return clipSortOrder(
-            createdAt: clips.map { $0.createdAt.timeIntervalSinceReferenceDate },
+        let times = clips.map { $0.createdAt.timeIntervalSinceReferenceDate.bitPattern.littleEndian }
+        let order = clipSortOrder(
+            createdAt: times.withUnsafeBytes { Data($0) },
             ids: ids
-        ).map { clips[Int($0)] }
+        )
+        return order.withUnsafeBytes { bytes in
+            stride(from: 0, to: bytes.count, by: MemoryLayout<UInt32>.size).map {
+                clips[Int(UInt32(littleEndian: bytes.loadUnaligned(fromByteOffset: $0, as: UInt32.self)))]
+            }
+        }
     }
 }

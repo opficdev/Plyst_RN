@@ -2,8 +2,8 @@
 // 판정 함수는 공개 함수로 호출하므로 테스트 전용 진입점이 없음
 
 use plyst_core::{
-    clip_content_is_valid, clip_pinned_at, clip_sort_order, clip_text_is_web_link,
-    clip_usage_applies, ClipContentValue, ClipIdentity,
+    clip_image_is_valid, clip_pinned_at, clip_sort_order, clip_text_is_valid,
+    clip_text_is_web_link, clip_usage_applies, ClipContentValue, ClipIdentity,
 };
 use serde::Deserialize;
 
@@ -32,19 +32,30 @@ fn text(value: &str) -> ClipContentValue {
     }
 }
 
-fn image(
-    content_type: &str,
-    pixel_width: i64,
-    pixel_height: i64,
-    byte_count: i64,
-) -> ClipContentValue {
+fn image() -> ClipContentValue {
     ClipContentValue::Image {
         file_id: "00000000-0000-0000-0000-000000000001".to_owned(),
-        content_type: content_type.to_owned(),
-        pixel_width,
-        pixel_height,
-        byte_count,
+        content_type: "public.png".to_owned(),
+        pixel_width: 1,
+        pixel_height: 1,
+        byte_count: 1,
     }
+}
+
+fn times(values: &[f64]) -> Vec<u8> {
+    values
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect()
+}
+
+fn order(bytes: Vec<u8>) -> Vec<u32> {
+    bytes
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .map(|chunk| u32::from_le_bytes(*chunk))
+        .collect()
 }
 
 fn identity(id: &str, content: ClipContentValue, created_at: f64) -> ClipIdentity {
@@ -63,7 +74,7 @@ fn whitespace_matches_foundation_for_every_scalar() {
     for scalar in (0..=0x10FFFF).filter_map(char::from_u32) {
         let expected = !whitespace.contains(&(scalar as u32));
         assert_eq!(
-            clip_content_is_valid(text(&scalar.to_string())),
+            clip_text_is_valid(&scalar.to_string()),
             expected,
             "U+{:04X}",
             scalar as u32
@@ -75,7 +86,7 @@ fn whitespace_matches_foundation_for_every_scalar() {
 fn text_validity_matches_foundation() {
     for case in cases().text_is_valid {
         assert_eq!(
-            clip_content_is_valid(text(&case.input)),
+            clip_text_is_valid(&case.input),
             case.expected,
             "{:?}",
             case.input
@@ -126,11 +137,11 @@ fn web_link_known_differences_stay_opposite() {
 
 #[test]
 fn image_validity_checks_every_field() {
-    assert!(clip_content_is_valid(image("public.png", 1, 1, 1)));
-    assert!(!clip_content_is_valid(image(" \u{200B}\n", 1, 1, 1)));
-    assert!(!clip_content_is_valid(image("public.png", 0, 1, 1)));
-    assert!(!clip_content_is_valid(image("public.png", 1, -1, 1)));
-    assert!(!clip_content_is_valid(image("public.png", 1, 1, 0)));
+    assert!(clip_image_is_valid("public.png", 1, 1, 1));
+    assert!(!clip_image_is_valid(" \u{200B}\n", 1, 1, 1));
+    assert!(!clip_image_is_valid("public.png", 0, 1, 1));
+    assert!(!clip_image_is_valid("public.png", 1, -1, 1));
+    assert!(!clip_image_is_valid("public.png", 1, 1, 0));
 }
 
 #[test]
@@ -157,10 +168,7 @@ fn usage_applies_only_to_same_clip() {
         identity("A", text("a"), 2.0),
         current.clone()
     ));
-    assert!(!clip_usage_applies(
-        identity("A", image("public.png", 1, 1, 1), 1.0),
-        current
-    ));
+    assert!(!clip_usage_applies(identity("A", image(), 1.0), current));
 }
 
 #[test]
@@ -168,15 +176,19 @@ fn sort_order_is_newest_first_then_id() {
     let id = |byte: u8| [byte; 16];
     let ids = [id(2), id(1), id(3), id(0)].concat();
     assert_eq!(
-        clip_sort_order(vec![1.0, 1.0, 2.0, -0.0], ids),
+        order(clip_sort_order(times(&[1.0, 1.0, 2.0, -0.0]), ids)),
         vec![2, 1, 0, 3]
     );
     let ids = [id(2), id(1)].concat();
-    assert_eq!(clip_sort_order(vec![0.0, -0.0], ids), vec![1, 0]);
+    assert_eq!(order(clip_sort_order(times(&[0.0, -0.0]), ids)), vec![1, 0]);
 }
 
 #[test]
 fn sort_order_keeps_input_when_sizes_differ() {
-    assert_eq!(clip_sort_order(vec![1.0, 2.0], vec![0; 16]), vec![0, 1]);
+    assert_eq!(
+        order(clip_sort_order(times(&[1.0, 2.0]), vec![0; 16])),
+        vec![0, 1]
+    );
+    assert_eq!(order(clip_sort_order(vec![0; 17], vec![0; 32])), vec![0, 1]);
     assert!(clip_sort_order(vec![], vec![]).is_empty());
 }
