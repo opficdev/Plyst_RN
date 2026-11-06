@@ -39,5 +39,7 @@ add_custom_target(plyst_core_rust DEPENDS ${RUST_LIBRARY})
 
 add_library(plyst_core SHARED src/main/c/plyst_core_stub.c)
 add_dependencies(plyst_core plyst_core_rust)
+# 정적 라이브러리가 바뀌면 다시 링크
+set_target_properties(plyst_core PROPERTIES LINK_DEPENDS ${RUST_LIBRARY})
 target_link_options(plyst_core PRIVATE -Wl,--whole-archive ${RUST_LIBRARY} -Wl,--no-whole-archive -Wl,-z,max-page-size=16384)
 target_link_libraries(plyst_core log dl m)

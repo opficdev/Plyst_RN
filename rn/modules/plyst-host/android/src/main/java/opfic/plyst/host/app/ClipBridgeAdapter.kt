@@ -61,10 +61,11 @@ class ClipBridgeAdapter(
   override suspend fun searchHistory(): List<String> =
     bridged(ClipBridgeError.READ_FAILED) { history.fetchSearchHistory().terms }
 
-  override suspend fun recordSearchTerm(term: String): List<String>? {
-    val query = ClipSearchQuery.of(term) ?: return null
-    return bridged(ClipBridgeError.WRITE_FAILED) { history.recordSearchTerm(query).terms }
-  }
+  override suspend fun recordSearchTerm(term: String): List<String>? =
+    bridged(ClipBridgeError.WRITE_FAILED) {
+      val query = ClipSearchQuery.of(term) ?: return@bridged null
+      history.recordSearchTerm(query).terms
+    }
 
   override suspend fun removeSearchTerm(term: String): List<String> =
     bridged(ClipBridgeError.WRITE_FAILED) { history.removeSearchTerm(term).terms }

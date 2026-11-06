@@ -242,11 +242,11 @@ extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
     }
 
     func recordSearchTerm(_ query: ClipSearchQuery) throws -> ClipSearchHistory {
-        try replaceSearchHistory(operation: "recordSearchTerm") { $0.record(query) }
+        try replaceSearchHistory(operation: "recordSearchTerm") { try $0.record(query) }
     }
 
     func removeSearchTerm(_ term: String) throws -> ClipSearchHistory {
-        try replaceSearchHistory(operation: "removeSearchTerm") { $0.remove(term) }
+        try replaceSearchHistory(operation: "removeSearchTerm") { try $0.remove(term) }
     }
 
     func removeAllSearchTerms() throws {
@@ -259,13 +259,13 @@ extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
     /// 결과가 같으면 쓰지 않음
     private func replaceSearchHistory(
         operation: String,
-        change: (inout ClipSearchHistory) -> Void
+        change: (inout ClipSearchHistory) throws -> Void
     ) throws -> ClipSearchHistory {
         try access(operation, fallback: .writeFailed) {
             try database.write { connection in
                 let current = try Self.fetchSearchHistory(from: connection)
                 var updated = current
-                change(&updated)
+                try change(&updated)
                 guard updated != current else { return current }
                 try SQLiteClipSearchTermRecord.delete().execute(connection)
                 for (position, term) in updated.terms.enumerated() {
@@ -280,7 +280,7 @@ extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
 
     private static func fetchSearchHistory(from connection: Database) throws -> ClipSearchHistory {
         let records = try SQLiteClipSearchTermRecord.order(by: \.position).fetchAll(connection)
-        guard let history = ClipSearchHistory(terms: records.map(\.term)) else {
+        guard let history = try ClipSearchHistory(terms: records.map(\.term)) else {
             throw ClipStorageError.corruptedData
         }
         return history
