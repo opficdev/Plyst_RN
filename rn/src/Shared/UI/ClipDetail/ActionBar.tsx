@@ -11,7 +11,8 @@ export function ClipDetailActionBar({ isBusy = false, onDeleteButtonPress, onCop
   return (
     <View style={styles.container}>
       <View style={styles.line} />
-      <View style={[styles.stack, isBusy && styles.busy]}>
+      {/* opacity가 빠지면 Fabric이 이 View를 평탄화해 버튼을 다른 부모로 옮기고 Android 시트의 닫힘 전환과 충돌하므로 평탄화 금지 */}
+      <View style={[styles.stack, isBusy && styles.busy]} collapsable={false}>
         <Pressable style={styles.deleteButton} disabled={isBusy} onPress={onDeleteButtonPress}>
           <Text allowFontScaling={false} style={styles.deleteTitle} numberOfLines={1}>
             삭제
