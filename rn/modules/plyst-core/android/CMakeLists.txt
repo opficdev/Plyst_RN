@@ -39,7 +39,7 @@ add_custom_command(
     CFLAGS_${RUST_TARGET_ENV}=--target=${CMAKE_C_COMPILER_TARGET}
     ${CARGO_COMMAND} build --release --locked --target ${RUST_TARGET} --target-dir ${RUST_TARGET_DIR}
   WORKING_DIRECTORY ${RUST_CRATE}
-  DEPENDS ${RUST_SOURCES} ${RUST_CRATE}/Cargo.toml ${RUST_CRATE}/Cargo.lock
+  DEPENDS ${RUST_SOURCES} ${RUST_CRATE}/Cargo.toml ${RUST_CRATE}/Cargo.lock ${RUST_CRATE}/.cargo/config.toml
   VERBATIM
 )
 add_custom_target(plyst_core_rust DEPENDS ${RUST_LIBRARY})
