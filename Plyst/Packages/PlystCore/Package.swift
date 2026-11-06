@@ -10,6 +10,10 @@ let package = Package(
     ],
     targets: [
         .binaryTarget(name: "PlystCoreFFI", path: "Frameworks/PlystCoreFFI.xcframework"),
-        .target(name: "PlystCore", dependencies: ["PlystCoreFFI"]),
+        .target(
+            name: "PlystCore",
+            dependencies: ["PlystCoreFFI"],
+            resources: [.copy("PrivacyInfo.xcprivacy")]
+        ),
     ]
 )
