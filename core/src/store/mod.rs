@@ -18,6 +18,16 @@ use crate::{search_history, sort};
 
 const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// iOS 시스템 SQLite의 WAL 파일 한도
+#[cfg(not(target_os = "android"))]
+const WAL_SIZE: &str = "PRAGMA journal_size_limit = 32768;";
+
+/// Android 시스템 SQLite와 같은 값
+/// 두 값을 함께 써야 쓰기 시간이 기존 Android 저장소와 같아짐
+#[cfg(target_os = "android")]
+const WAL_SIZE: &str = "PRAGMA wal_autocheckpoint = 100;
+    PRAGMA journal_size_limit = 524288;";
+
 fn read_failed(error: rusqlite::Error) -> ClipStoreError {
     ClipStoreError::classify(error, Fallback::Read)
 }
@@ -227,10 +237,10 @@ fn configure(connection: &Connection) -> Result<(), ClipStoreError> {
         .execute_batch(
             "PRAGMA synchronous = 2;
             PRAGMA checkpoint_fullfsync = 1;
-            PRAGMA journal_size_limit = 32768;
             PRAGMA cache_size = 128;",
         )
-        .map_err(read_failed)
+        .map_err(read_failed)?;
+    connection.execute_batch(WAL_SIZE).map_err(read_failed)
 }
 
 enum FindFailure {
