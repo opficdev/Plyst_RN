@@ -55,7 +55,10 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     func fetchAll(order: ClipSortOrder) throws -> [Clip] {
         let clips = try access(fallback: .readFailed) {
-            try store.fetchAll(order: order.coreValue).map(Self.clip)
+            guard let clips = try Clip.list(coreBytes: store.fetchAllEncoded(order: order.coreValue)) else {
+                throw ClipStorageError.corruptedData
+            }
+            return clips
         }
         Self.logger.debug("전체 클립 조회 완료: 정렬 \(String(describing: order), privacy: .public), 결과 \(clips.count, privacy: .public)개")
         return clips

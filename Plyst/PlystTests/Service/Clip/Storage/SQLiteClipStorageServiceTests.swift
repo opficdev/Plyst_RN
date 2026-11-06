@@ -30,6 +30,8 @@ final class SQLiteClipStorageServiceTests: ClipTemporaryDirectoryTestCase {
         let restoredImage = try await restored.fetch(id: image.id)
         XCTAssertEqual(restoredText, text)
         XCTAssertEqual(restoredImage, image)
+        let listed = try await restored.fetchAll(order: .createdAt)
+        XCTAssertEqual(listed, [image, text])
     }
 
     func testEventsFollowCommitOrderAndUnchangedUpdatePublishesNothing() async throws {

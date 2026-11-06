@@ -23,6 +23,7 @@ import opfic.plyst.host.model.ClipSearchQuery
 import opfic.plyst.host.model.ClipSortOrder
 import opfic.plyst.host.model.ClipUpdate
 import opfic.plyst.host.model.clip
+import opfic.plyst.host.model.clips
 import opfic.plyst.host.model.coreValue
 import opfic.plyst.host.model.wellFormed
 
@@ -54,7 +55,7 @@ class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSea
 
   override suspend fun fetchAll(order: ClipSortOrder): List<Clip> =
     access(ClipStorageError.ReadFailed) {
-      store.fetchAll(order.coreValue).map(::clip)
+      clips(store.fetchAllEncoded(order.coreValue)) ?: throw ClipStorageError.CorruptedData
     }
 
   override suspend fun fetch(id: UUID): Clip? = access(ClipStorageError.ReadFailed) { store.fetch(idString(id))?.let(::clip) }

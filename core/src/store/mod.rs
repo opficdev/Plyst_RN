@@ -1,6 +1,7 @@
 mod error;
 mod schema;
 mod value;
+mod wire;
 
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
@@ -45,19 +46,10 @@ impl ClipStore {
         }))
     }
 
-    pub fn fetch_all(&self, order: ClipSortOrderValue) -> Result<Vec<ClipValue>, ClipStoreError> {
-        let connection = self.lock();
-        let mut statement = connection
-            .prepare_cached(&format!("SELECT {COLUMNS} FROM clips"))
-            .map_err(read_failed)?;
-        let mut rows = statement.query([]).map_err(read_failed)?;
-        let mut clips = Vec::new();
-        while let Some(row) = rows.next().map_err(read_failed)? {
-            clips.push(ClipValue::from_row(row)?);
-        }
-        match order {
-            ClipSortOrderValue::CreatedAt => Ok(sorted(clips)),
-        }
+    /// 목록은 필드별 UniFFI 직렬화 대신 한 버퍼로 전달
+    /// 형식은 wire 모듈이 소유
+    pub fn fetch_all_encoded(&self, order: ClipSortOrderValue) -> Result<Vec<u8>, ClipStoreError> {
+        Ok(wire::encoded(&self.fetch_all(order)?))
     }
 
     pub fn fetch(&self, id: String) -> Result<Option<ClipValue>, ClipStoreError> {
@@ -153,6 +145,21 @@ impl ClipStore {
 }
 
 impl ClipStore {
+    pub fn fetch_all(&self, order: ClipSortOrderValue) -> Result<Vec<ClipValue>, ClipStoreError> {
+        let connection = self.lock();
+        let mut statement = connection
+            .prepare_cached(&format!("SELECT {COLUMNS} FROM clips"))
+            .map_err(read_failed)?;
+        let mut rows = statement.query([]).map_err(read_failed)?;
+        let mut clips = Vec::new();
+        while let Some(row) = rows.next().map_err(read_failed)? {
+            clips.push(ClipValue::from_row(row)?);
+        }
+        match order {
+            ClipSortOrderValue::CreatedAt => Ok(sorted(clips)),
+        }
+    }
+
     /// 패닉 뒤에도 트랜잭션은 Drop에서 롤백되었으므로 연결을 계속 사용
     fn lock(&self) -> MutexGuard<'_, Connection> {
         self.connection
@@ -280,7 +287,7 @@ fn sorted(clips: Vec<ClipValue>) -> Vec<ClipValue> {
 
 /// UUID 문자열의 16바이트 값
 /// 형식은 stored_id가 보장
-fn id_bytes(id: &str) -> [u8; 16] {
+pub(crate) fn id_bytes(id: &str) -> [u8; 16] {
     let mut bytes = [0; 16];
     let digits = id.chars().filter_map(|digit| digit.to_digit(16));
     for (index, digit) in digits.enumerate() {
