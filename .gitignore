@@ -45,7 +45,7 @@ core/target/
 core/bindgen/target/
 rn/modules/plyst-core/android/.cxx/
 Plyst/Packages/PlystCore/Frameworks/
-Plyst/Packages/PlystCore/Sources/
+Plyst/Packages/PlystCore/Sources/PlystCore/PlystCore.swift
 
 # Fastlane
 .bundle/

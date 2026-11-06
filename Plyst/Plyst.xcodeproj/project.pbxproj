@@ -9,10 +9,6 @@
 /* Begin PBXBuildFile section */
 		DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00018306A4A9700115D10 /* ReactorKit */; };
 		DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00019306A4A9700115D10 /* RxSwift */; };
-		DFA0002C306A4A9700115D10 /* PlystSQLite in Embed Frameworks */ = {isa = PBXBuildFile; productRef = DFA00026306A4A9700115D10 /* PlystSQLite */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DFA00029306A4A9700115D10 /* PlystSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00026306A4A9700115D10 /* PlystSQLite */; };
-		DFA0002A306A4A9700115D10 /* PlystSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00027306A4A9700115D10 /* PlystSQLite */; };
-		DFA0002B306A4A9700115D10 /* PlystSQLite in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00028306A4A9700115D10 /* PlystSQLite */; };
 		DFA00035306A4A9700115D10 /* PlystCore in Embed Frameworks */ = {isa = PBXBuildFile; productRef = DFA0002F306A4A9700115D10 /* PlystCore */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DFA00032306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0002F306A4A9700115D10 /* PlystCore */; };
 		DFA00033306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00030306A4A9700115D10 /* PlystCore */; };
@@ -52,7 +48,6 @@
 			dstPath = "";
 			dstSubfolder = Frameworks;
 			files = (
-				DFA0002C306A4A9700115D10 /* PlystSQLite in Embed Frameworks */,
 				DFA00035306A4A9700115D10 /* PlystCore in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -153,7 +148,6 @@
 			files = (
 				DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */,
 				DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */,
-				DFA0002A306A4A9700115D10 /* PlystSQLite in Frameworks */,
 				DFA00033306A4A9700115D10 /* PlystCore in Frameworks */,
 			);
 		};
@@ -165,7 +159,6 @@
 		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				DFA00029306A4A9700115D10 /* PlystSQLite in Frameworks */,
 				DFA00032306A4A9700115D10 /* PlystCore in Frameworks */,
 				DFA00022306A4A9700115D10 /* PlystReactNative in Frameworks */,
 			);
@@ -173,7 +166,6 @@
 		DFEB0A34306A4A9700115D10 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
-				DFA0002B306A4A9700115D10 /* PlystSQLite in Frameworks */,
 				DFA00034306A4A9700115D10 /* PlystCore in Frameworks */,
 			);
 		};
@@ -224,7 +216,6 @@
 			packageProductDependencies = (
 				DFA00018306A4A9700115D10 /* ReactorKit */,
 				DFA00019306A4A9700115D10 /* RxSwift */,
-				DFA00027306A4A9700115D10 /* PlystSQLite */,
 				DFA00030306A4A9700115D10 /* PlystCore */,
 			);
 			productName = ShareExtension;
@@ -273,7 +264,6 @@
 			);
 			name = Plyst;
 			packageProductDependencies = (
-				DFA00026306A4A9700115D10 /* PlystSQLite */,
 				DFA0002F306A4A9700115D10 /* PlystCore */,
 				DFA00024306A4A9700115D10 /* PlystReactNative */,
 			);
@@ -299,7 +289,6 @@
 			);
 			name = PlystTests;
 			packageProductDependencies = (
-				DFA00028306A4A9700115D10 /* PlystSQLite */,
 				DFA00031306A4A9700115D10 /* PlystCore */,
 			);
 			productName = PlystTests;
@@ -344,7 +333,6 @@
 				DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */,
 				DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */,
 				DFA00023306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystReactNative" */,
-				DFA00025306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystSQLite" */,
 				DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -864,10 +852,6 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PlystReactNative;
 		};
-		DFA00025306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystSQLite" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/PlystSQLite;
-		};
 		DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PlystCore;
@@ -903,21 +887,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
 			productName = RxSwift;
-		};
-		DFA00026306A4A9700115D10 /* PlystSQLite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00025306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystSQLite" */;
-			productName = PlystSQLite;
-		};
-		DFA00027306A4A9700115D10 /* PlystSQLite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00025306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystSQLite" */;
-			productName = PlystSQLite;
-		};
-		DFA00028306A4A9700115D10 /* PlystSQLite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DFA00025306A4A9700115D10 /* XCLocalSwiftPackageReference "Packages/PlystSQLite" */;
-			productName = PlystSQLite;
 		};
 		DFA00024306A4A9700115D10 /* PlystReactNative */ = {
 			isa = XCSwiftPackageProductDependency;

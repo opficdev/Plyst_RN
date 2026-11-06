@@ -7,13 +7,11 @@
 
 import PlystCore
 
-/// 최근 검색어의 정규화, 중복 제거, 순서, 개수 규칙
+/// 정규화, 중복 제거, 순서, 개수 규칙을 만족하는 최근 검색어
 /// 첫 요소가 가장 최근
 /// 대소문자만 다른 검색어는 같은 항목으로 봄
 struct ClipSearchHistory: Equatable, Sendable {
-    private(set) var terms = [String]()
-
-    init() {}
+    let terms: [String]
 
     /// 저장된 목록이 규칙을 이미 만족할 때만 생성
     /// 각 항목은 정규화된 형태여야 함
@@ -22,23 +20,5 @@ struct ClipSearchHistory: Equatable, Sendable {
     init?(terms: [String]) throws {
         guard let restored = try clipSearchHistoryRestored(terms: terms) else { return nil }
         self.terms = restored
-    }
-
-    /// 같은 항목을 제거하고 새 표기를 맨 앞에 둠
-    /// 최대 개수를 넘으면 가장 오래된 항목을 제거
-    mutating func record(_ query: ClipSearchQuery) throws {
-        terms = try clipSearchHistoryRecording(
-            terms: terms,
-            query: query.text
-        )
-    }
-
-    /// 대소문자를 무시하고 같은 항목을 제거
-    /// 정규화 결과가 비었거나 일치하는 항목이 없으면 변경하지 않음
-    mutating func remove(_ term: String) throws {
-        terms = try clipSearchHistoryRemoving(
-            terms: terms,
-            term: term
-        )
     }
 }

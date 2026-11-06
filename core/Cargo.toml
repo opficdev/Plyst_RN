@@ -9,6 +9,7 @@ name = "plyst_core"
 crate-type = ["staticlib", "rlib"]
 
 [dependencies]
+rusqlite = { version = "=0.41.1", features = ["bundled"] }
 unicode-normalization = "=0.1.26"
 uniffi = { version = "=0.32.2", default-features = false }
 

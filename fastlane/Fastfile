@@ -292,7 +292,7 @@ platform :ios do
       output_directory: output_directory,
       output_name: "#{APP_PRODUCT_NAME}.ipa",
       include_symbols: true,
-      xcargs: "CURRENT_PROJECT_VERSION=#{next_build_number} DEBUG_INFORMATION_FORMAT=dwarf-with-dsym -skipPackagePluginValidation -skipMacroValidation"
+      xcargs: "CURRENT_PROJECT_VERSION=#{next_build_number} DEBUG_INFORMATION_FORMAT=dwarf-with-dsym -skipPackagePluginValidation"
     )
     archive_duration_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - archive_started_at
     UI.message("Archive duration seconds: #{archive_duration_seconds}")

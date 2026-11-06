@@ -168,7 +168,7 @@ jobs:
 
       - name: Build
         if: matrix.target == 'build'
-        run: make build XCODEBUILD_FLAGS=-skipMacroValidation
+        run: make build
 
       - name: Select simulator
         if: matrix.target == 'test'
@@ -179,7 +179,7 @@ jobs:
       - name: Build for testing
         if: matrix.target == 'test'
         timeout-minutes: 12
-        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID" XCODEBUILD_FLAGS=-skipMacroValidation
+        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID"
 
       # simslim은 부팅 시간을 줄이는 최적화이고 테스트는 simslim이 끄는 데몬에 의존하지 않음
       # 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행
@@ -235,7 +235,7 @@ jobs:
       - name: Test
         if: matrix.target == 'test'
         timeout-minutes: 9
-        run: make test-without-building XCODEBUILD_FLAGS="-skipMacroValidation -parallel-testing-enabled NO -skipPackageUpdates -disableAutomaticPackageResolution"
+        run: make test-without-building XCODEBUILD_FLAGS="-parallel-testing-enabled NO -skipPackageUpdates -disableAutomaticPackageResolution"
 
       - name: Test summary
         if: always() && matrix.target == 'test'

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SQLiteData
 import XCTest
 @testable import Plyst
 
@@ -31,52 +30,30 @@ final class SQLiteClipStorageServiceTests: ClipTemporaryDirectoryTestCase {
         let restoredImage = try await restored.fetch(id: image.id)
         XCTAssertEqual(restoredText, text)
         XCTAssertEqual(restoredImage, image)
+        let listed = try await restored.fetchAll(order: .createdAt)
+        XCTAssertEqual(listed, [image, text])
     }
 
-    func testDetailsPreserveLatestUsageAndDeletionPersists() async throws {
-        let clip = Clip(
-            content: .text("원문"),
-            name: "이름",
-            pinnedAt: Date(timeIntervalSince1970: 100),
-            memo: "메모"
-        )
+    func testEventsFollowCommitOrderAndUnchangedUpdatePublishesNothing() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
-        let other = try SQLiteClipStorageService(databaseURL: url)
-        try await storage.insert(clip)
-        let date = Date(timeIntervalSinceReferenceDate: 800)
-        _ = try await other.update(id: clip.id, change: .lastUsedAt(date))
-        let updated = try await storage.update(id: clip.id, change: .details(name: nil, memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300)))
-        XCTAssertEqual(updated.id, clip.id)
-        XCTAssertEqual(updated.content, clip.content)
-        XCTAssertEqual(updated.createdAt, clip.createdAt)
-        XCTAssertEqual(updated.lastUsedAt, date)
-        XCTAssertNil(updated.name)
-        XCTAssertNil(updated.memo)
-        XCTAssertNil(updated.pinnedAt)
-        try await storage.delete(id: clip.id)
-        let deleted = try await other.fetch(id: clip.id)
-        XCTAssertNil(deleted)
-        await assertError(.notFound(clip.id)) { _ = try await storage.update(id: clip.id, change: .lastUsedAt(date)) }
-        await assertError(.notFound(clip.id)) { try await storage.delete(id: clip.id) }
-    }
-
-    func testFailedUpdateRollsBackAndDoesNotPublishAnEvent() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"), name: "기존 이름")
-        try await storage.insert(clip)
         let stream = await storage.changes()
-        try execute("""
-            CREATE TRIGGER rejectUpdate AFTER UPDATE ON clips
-            BEGIN SELECT RAISE(ABORT, 'Rejected update'); END
-            """)
-        await assertError(.writeFailed) {
-            _ = try await storage.update(id: clip.id, change: .details(name: "실패한 이름", memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300)))
-        }
-        let preserved = try await storage.fetch(id: clip.id)
-        XCTAssertEqual(preserved, clip)
-        try execute("DROP TRIGGER rejectUpdate")
-        let updated = try await storage.update(id: clip.id, change: .details(name: "저장된 이름", memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300)))
-        await assertEvents(stream, expected: [.updated(updated)])
+        let clip = Clip(content: .text("원문"), name: "이름")
+        try await storage.insert(clip)
+        let change = ClipUpdate.details(name: "새 이름", memo: nil, isPinned: false, requestedAt: Date(timeIntervalSince1970: 300))
+        let updated = try await storage.update(id: clip.id, change: change)
+        let unchanged = try await storage.update(id: clip.id, change: change)
+        try await storage.delete(id: clip.id)
+        XCTAssertEqual(unchanged, updated)
+        await assertEvents(stream, expected: [.inserted(clip), .updated(updated), .deleted(clip.id)])
+    }
+
+    func testStoreErrorsKeepTheirMeaning() async throws {
+        let storage = try SQLiteClipStorageService(databaseURL: url)
+        let clip = Clip(content: .text("원문"))
+        await assertError(.notFound(clip.id)) { try await storage.delete(id: clip.id) }
+        try await storage.insert(clip)
+        await assertError(.duplicateID(clip.id)) { try await storage.insert(clip) }
+        await assertError(.invalidContent) { try await storage.insert(Clip(content: .text("   "))) }
     }
 
     func testCorruptedFileIsReportedWithoutReplacingItsContents() throws {
@@ -89,113 +66,6 @@ final class SQLiteClipStorageServiceTests: ClipTemporaryDirectoryTestCase {
         XCTAssertEqual(try Data(contentsOf: url), contents)
     }
 
-    func testInvalidStoredContentIsReportedAsCorruptedData() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        try execute("UPDATE clips SET text = '   '")
-        await assertError(.corruptedData) { _ = try await storage.fetch(id: clip.id) }
-        await assertError(.corruptedData) { _ = try await storage.fetchAll(order: .createdAt) }
-    }
-
-    func testSchemaRejectsInvalidContentShapesAndStorageTypes() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let text = Clip(content: .text("원문"))
-        let image = Clip(content: .image(ClipImageMetadata(
-            fileID: UUID(), contentType: "public.png", pixelWidth: 640, pixelHeight: 480, byteCount: 4096
-        )))
-        try await storage.insert(text)
-        try await storage.insert(image)
-        let invalid = [
-            "UPDATE clips SET kind = 'unknown' WHERE kind = 'text'",
-            "UPDATE clips SET text = NULL WHERE kind = 'text'",
-            "UPDATE clips SET imageFileID = 'file' WHERE kind = 'text'",
-            "UPDATE clips SET createdAt = 'invalid'",
-            "UPDATE clips SET pinnedAt = 'invalid'",
-            "UPDATE clips SET text = 'text' WHERE kind = 'image'",
-            "UPDATE clips SET imageFileID = NULL WHERE kind = 'image'",
-            "UPDATE clips SET imageContentType = NULL WHERE kind = 'image'",
-            "UPDATE clips SET pixelWidth = 0 WHERE kind = 'image'",
-            "UPDATE clips SET pixelHeight = -1 WHERE kind = 'image'",
-            "UPDATE clips SET byteCount = 0 WHERE kind = 'image'"
-        ]
-        for sql in invalid {
-            XCTAssertThrowsError(try execute(sql)) {
-                XCTAssertEqual(($0 as? DatabaseError)?.resultCode, .SQLITE_CONSTRAINT)
-            }
-        }
-        let storedText = try await storage.fetch(id: text.id)
-        let storedImage = try await storage.fetch(id: image.id)
-        XCTAssertEqual(storedText, text)
-        XCTAssertEqual(storedImage, image)
-    }
-
-    func testUnknownStoredKindIsReportedAsCorruptedData() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        try execute("""
-            PRAGMA ignore_check_constraints = ON;
-            UPDATE clips SET kind = 'unknown';
-            """)
-        await assertError(.corruptedData) { _ = try await storage.fetch(id: clip.id) }
-        await assertError(.corruptedData) { _ = try await storage.fetchAll(order: .createdAt) }
-    }
-
-    func testNonFiniteStoredPinTimeIsReportedAsCorruptedData() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
-        try execute("UPDATE clips SET pinnedAt = 1e999")
-        await assertError(.corruptedData) { _ = try await storage.fetch(id: clip.id) }
-        await assertError(.corruptedData) { _ = try await storage.fetchAll(order: .createdAt) }
-    }
-
-    func testNonFinitePinTimeIsRejectedBeforeWriting() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let clip = Clip(content: .text("원문"), pinnedAt: Date(timeIntervalSinceReferenceDate: .infinity))
-        await assertError(.invalidContent) { try await storage.insert(clip) }
-    }
-
-    func testRecordedTermsAreRestoredInOrderByAnotherStorage() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        _ = try await storage.recordSearchTerm(try query("first"))
-        _ = try await storage.recordSearchTerm(try query("second"))
-
-        let restored = try SQLiteClipStorageService(databaseURL: url)
-        let history = try await restored.fetchSearchHistory()
-
-        XCTAssertEqual(history.terms, ["second", "first"])
-    }
-
-    func testVersionOneDatabaseGainsSearchTermsAndKeepsClips() async throws {
-        let clip = Clip(content: .text("원문"))
-        let original = try SQLiteClipStorageService(databaseURL: url)
-        try await original.insert(clip)
-        try execute("DROP TABLE clipSearchTerms")
-        try execute("DELETE FROM grdb_migrations WHERE identifier = 'CreateClipSearchTerms'")
-
-        let upgraded = try SQLiteClipStorageService(databaseURL: url)
-        let stored = try await upgraded.fetch(id: clip.id)
-        let empty = try await upgraded.fetchSearchHistory()
-        let recorded = try await upgraded.recordSearchTerm(try query("alpha"))
-        let reopened = try SQLiteClipStorageService(databaseURL: url)
-        let restored = try await reopened.fetchSearchHistory()
-
-        XCTAssertEqual(stored, clip)
-        XCTAssertEqual(empty, ClipSearchHistory())
-        XCTAssertEqual(restored, recorded)
-    }
-
-    func testUnknownMigrationIsRejectedAsDowngrade() throws {
-        _ = try SQLiteClipStorageService(databaseURL: url)
-        try execute("INSERT INTO grdb_migrations (identifier) VALUES ('FutureMigration')")
-
-        XCTAssertThrowsError(try SQLiteClipStorageService(databaseURL: url)) {
-            XCTAssertEqual($0 as? ClipStorageError, .corruptedData)
-        }
-    }
-
     private func assertError(_ expected: ClipStorageError, operation: () async throws -> Void) async {
         do {
             try await operation()
@@ -203,14 +73,5 @@ final class SQLiteClipStorageServiceTests: ClipTemporaryDirectoryTestCase {
         } catch {
             XCTAssertEqual(error as? ClipStorageError, expected)
         }
-    }
-
-    private func query(_ raw: String) throws -> ClipSearchQuery {
-        try XCTUnwrap(ClipSearchQuery(raw))
-    }
-
-    private func execute(_ sql: String) throws {
-        let connection = try DatabaseQueue(path: url.path)
-        try connection.write { try $0.execute(sql: sql) }
     }
 }

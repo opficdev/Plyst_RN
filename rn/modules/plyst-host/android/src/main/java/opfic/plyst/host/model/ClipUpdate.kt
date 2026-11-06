@@ -1,7 +1,6 @@
 package opfic.plyst.host.model
 
-import opfic.plyst.core.clipPinnedAt
-import opfic.plyst.core.clipUsageApplies
+import opfic.plyst.core.ClipUpdateValue
 
 sealed interface ClipUpdate {
   // 편집 가능한 상세 정보를 한 번에 교체
@@ -21,23 +20,11 @@ sealed interface ClipUpdate {
     val date: Long,
     val matching: Clip? = null,
   ) : ClipUpdate
-
-  // 저장소의 직렬화된 쓰기 작업 내부에서 현재 저장된 최신 클립에 적용
-  fun applying(clip: Clip): Clip =
-    when (this) {
-      is Details ->
-        clip.copy(
-          name = name,
-          memo = memo,
-          pinnedAt = clipPinnedAt(clip.pinnedAt?.referenceSeconds, isPinned, requestedAt.referenceSeconds)?.epochMilliseconds,
-        )
-      is LastUsedAt -> {
-        val expected = matching
-        if (expected != null && !clipUsageApplies(expected.coreIdentity, clip.coreIdentity)) {
-          clip
-        } else {
-          clip.copy(lastUsedAt = date)
-        }
-      }
-    }
 }
+
+internal val ClipUpdate.coreValue: ClipUpdateValue
+  get() =
+    when (this) {
+      is ClipUpdate.Details -> ClipUpdateValue.Details(name?.wellFormed, memo?.wellFormed, isPinned, requestedAt.referenceSeconds)
+      is ClipUpdate.LastUsedAt -> ClipUpdateValue.LastUsedAt(date.referenceSeconds, matching?.coreIdentity)
+    }

@@ -14,6 +14,22 @@ enum ClipContent: Equatable, Sendable {
     case text(String)
     case image(ClipImageMetadata)
 
+    init?(coreValue value: ClipContentValue) {
+        switch value {
+        case .text(let text):
+            self = .text(text)
+        case let .image(fileId, contentType, pixelWidth, pixelHeight, byteCount):
+            guard let fileID = UUID(uuidString: fileId) else { return nil }
+            self = .image(ClipImageMetadata(
+                fileID: fileID,
+                contentType: contentType,
+                pixelWidth: Int(pixelWidth),
+                pixelHeight: Int(pixelHeight),
+                byteCount: Int(byteCount)
+            ))
+        }
+    }
+
     /// 앞뒤 공백을 제외한 전체가 공백 없는 단일 http 또는 https URL인지 여부
     /// 저장 형식은 그대로 텍스트
     /// 화면에서 아이콘을 고를 때만 사용

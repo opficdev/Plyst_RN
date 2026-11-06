@@ -19,36 +19,17 @@ enum ClipUpdate: Equatable, Sendable {
     /// 상세 정보 편집은 허용
     case lastUsedAt(Date, matching: Clip? = nil)
 
-    /// 저장소의 직렬화된 쓰기 작업 내부에서 현재 저장된 최신 클립에 적용
-    func applying(to clip: Clip) -> Clip {
+    var coreValue: ClipUpdateValue {
         switch self {
         case let .details(name, memo, isPinned, requestedAt):
-            return Clip(
-                id: clip.id,
-                content: clip.content,
+            return .details(
                 name: name,
-                pinnedAt: clipPinnedAt(
-                    current: clip.pinnedAt?.timeIntervalSinceReferenceDate,
-                    isPinned: isPinned,
-                    requestedAt: requestedAt.timeIntervalSinceReferenceDate
-                ).map(Date.init(timeIntervalSinceReferenceDate:)),
                 memo: memo,
-                createdAt: clip.createdAt,
-                lastUsedAt: clip.lastUsedAt
+                isPinned: isPinned,
+                requestedAt: requestedAt.timeIntervalSinceReferenceDate
             )
-        case let .lastUsedAt(date, expected):
-            if let expected {
-                guard clipUsageApplies(expected: expected.coreIdentity, current: clip.coreIdentity) else { return clip }
-            }
-            return Clip(
-                id: clip.id,
-                content: clip.content,
-                name: clip.name,
-                pinnedAt: clip.pinnedAt,
-                memo: clip.memo,
-                createdAt: clip.createdAt,
-                lastUsedAt: date
-            )
+        case let .lastUsedAt(date, matching):
+            return .lastUsedAt(date: date.timeIntervalSinceReferenceDate, matching: matching?.coreIdentity)
         }
     }
 }

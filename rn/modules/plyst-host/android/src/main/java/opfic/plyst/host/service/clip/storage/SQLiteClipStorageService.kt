@@ -1,7 +1,5 @@
 package opfic.plyst.host.service.clip.storage
 
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteDatabaseCorruptException
 import android.util.Log
 import java.io.File
 import java.util.UUID
@@ -16,19 +14,26 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
+import opfic.plyst.core.ClipStore
+import opfic.plyst.core.ClipStoreException
+import opfic.plyst.core.ClipValue
 import opfic.plyst.host.model.Clip
 import opfic.plyst.host.model.ClipSearchHistory
 import opfic.plyst.host.model.ClipSearchQuery
 import opfic.plyst.host.model.ClipSortOrder
 import opfic.plyst.host.model.ClipUpdate
+import opfic.plyst.host.model.clip
+import opfic.plyst.host.model.clips
+import opfic.plyst.host.model.coreValue
+import opfic.plyst.host.model.wellFormed
 
-// SQLite로 클립과 최근 검색어를 저장
+// PlystCore의 ClipStore로 클립과 최근 검색어를 저장
 // 모든 화면은 같은 인스턴스를 공유하여 클립 변경을 관찰
 // 최근 검색어 연산은 ClipStorageEvent를 발행하지 않음
 class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSearchHistoryStorageService {
   // 쓰기 확정과 이벤트 발행 순서를 지키도록 모든 연산을 한 줄로 실행
   private val dispatcher = Dispatchers.IO.limitedParallelism(1)
-  private val database: SQLiteDatabase
+  private val store: ClipStore
   private val subscriptions = CopyOnWriteArraySet<SendChannel<ClipStorageEvent>>()
 
   init {
@@ -38,47 +43,26 @@ class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSea
       Log.e(TAG, "저장소 디렉터리 생성 실패")
       throw ClipStorageError.WriteFailed
     }
-    database =
+    store =
       try {
-        SQLiteDatabase.openDatabase(
-          databaseFile.path,
-          null,
-          SQLiteDatabase.CREATE_IF_NECESSARY or SQLiteDatabase.ENABLE_WRITE_AHEAD_LOGGING,
-        )
+        ClipStore.open(databaseFile.path)
       } catch (error: Exception) {
         Log.e(TAG, "데이터베이스 초기화 실패: ${error.javaClass.simpleName}")
         throw map(error, ClipStorageError.ReadFailed)
       }
-    try {
-      // WAL 기본값 NORMAL 대신 iOS 저장소와 같은 FULL 적용
-      database.execSQL("PRAGMA synchronous = FULL")
-      migrate()
-    } catch (error: Exception) {
-      Log.e(TAG, "마이그레이션 실패: ${error.javaClass.simpleName}")
-      database.close()
-      throw map(error, ClipStorageError.WriteFailed)
-    }
     Log.i(TAG, "저장소 초기화 완료")
   }
 
   override suspend fun fetchAll(order: ClipSortOrder): List<Clip> =
     access(ClipStorageError.ReadFailed) {
-      database.query(SQLiteClipRecord.TABLE, null, null, null, null, null, null).use { cursor ->
-        val clips = mutableListOf<Clip>()
-        while (cursor.moveToNext()) clips.add(SQLiteClipRecord.clip(cursor))
-        order.sorted(clips)
-      }
+      clips(store.fetchAllEncoded(order.coreValue)) ?: throw ClipStorageError.CorruptedData
     }
 
-  override suspend fun fetch(id: UUID): Clip? = access(ClipStorageError.ReadFailed) { find(id) }
+  override suspend fun fetch(id: UUID): Clip? = access(ClipStorageError.ReadFailed) { store.fetch(idString(id))?.let(::clip) }
 
   override suspend fun insert(clip: Clip) =
     access(ClipStorageError.WriteFailed) {
-      validate(clip)
-      write {
-        if (find(clip.id) != null) throw ClipStorageError.DuplicateID(clip.id)
-        database.insertOrThrow(SQLiteClipRecord.TABLE, null, SQLiteClipRecord.values(clip))
-      }
+      store.insert(clip.coreValue)
       publish(ClipStorageEvent.Inserted(clip))
     }
 
@@ -87,30 +71,15 @@ class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSea
     change: ClipUpdate,
   ): Clip =
     access(ClipStorageError.WriteFailed) {
-      val (clip, changed) =
-        write {
-          val current = find(id) ?: throw ClipStorageError.NotFound(id)
-          val updated = change.applying(current)
-          if (updated == current) return@write current to false
-          validate(updated)
-          database.update(
-            SQLiteClipRecord.TABLE,
-            SQLiteClipRecord.values(updated),
-            "id = ?",
-            arrayOf(SQLiteClipRecord.idString(id)),
-          )
-          updated to true
-        }
-      if (changed) publish(ClipStorageEvent.Updated(clip))
+      val result = store.update(idString(id), change.coreValue)
+      val clip = clip(result.clip)
+      if (result.changed) publish(ClipStorageEvent.Updated(clip))
       clip
     }
 
   override suspend fun delete(id: UUID) =
     access(ClipStorageError.WriteFailed) {
-      write {
-        if (find(id) == null) throw ClipStorageError.NotFound(id)
-        database.delete(SQLiteClipRecord.TABLE, "id = ?", arrayOf(SQLiteClipRecord.idString(id)))
-      }
+      store.delete(idString(id))
       publish(ClipStorageEvent.Deleted(id))
     }
 
@@ -120,71 +89,17 @@ class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSea
       awaitClose { subscriptions.remove(channel) }
     }.buffer(Channel.UNLIMITED)
 
-  override suspend fun fetchSearchHistory(): ClipSearchHistory = access(ClipStorageError.ReadFailed) { readSearchHistory() }
+  override suspend fun fetchSearchHistory(): ClipSearchHistory = access(ClipStorageError.ReadFailed) { history(store.fetchSearchTerms()) }
 
-  override suspend fun recordSearchTerm(query: ClipSearchQuery) = replaceSearchHistory { it.recording(query) }
+  override suspend fun recordSearchTerm(query: ClipSearchQuery) =
+    access(ClipStorageError.WriteFailed) { history(store.recordSearchTerm(query.text.wellFormed)) }
 
-  override suspend fun removeSearchTerm(term: String) = replaceSearchHistory { it.removing(term) }
+  override suspend fun removeSearchTerm(term: String) =
+    access(ClipStorageError.WriteFailed) { history(store.removeSearchTerm(term.wellFormed)) }
 
-  override suspend fun removeAllSearchTerms() =
-    access(ClipStorageError.WriteFailed) {
-      write { database.delete(SQLiteClipRecord.SEARCH_TERM_TABLE, null, null) }
-      Unit
-    }
+  override suspend fun removeAllSearchTerms() = access(ClipStorageError.WriteFailed) { store.removeAllSearchTerms() }
 
-  // 읽기, 규칙 적용, 전체 교체를 하나의 트랜잭션으로 처리
-  // 결과가 같으면 쓰지 않음
-  private suspend fun replaceSearchHistory(change: (ClipSearchHistory) -> ClipSearchHistory) =
-    access(ClipStorageError.WriteFailed) {
-      write {
-        val current = readSearchHistory()
-        val updated = change(current)
-        if (updated == current) return@write current
-        database.delete(SQLiteClipRecord.SEARCH_TERM_TABLE, null, null)
-        updated.terms.forEachIndexed { position, term ->
-          database.execSQL(
-            "INSERT INTO ${SQLiteClipRecord.SEARCH_TERM_TABLE} (position, term) VALUES (?, ?)",
-            arrayOf<Any>(position, term),
-          )
-        }
-        updated
-      }
-    }
-
-  private fun readSearchHistory(): ClipSearchHistory {
-    val terms =
-      database.query(SQLiteClipRecord.SEARCH_TERM_TABLE, arrayOf("term"), null, null, null, null, "position").use { cursor ->
-        buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }
-      }
-    return ClipSearchHistory.restoring(terms) ?: throw ClipStorageError.CorruptedData
-  }
-
-  private fun find(id: UUID): Clip? =
-    database.query(SQLiteClipRecord.TABLE, null, "id = ?", arrayOf(SQLiteClipRecord.idString(id)), null, null, null).use { cursor ->
-      if (cursor.moveToFirst()) SQLiteClipRecord.clip(cursor) else null
-    }
-
-  // 알려진 개수보다 많이 적용된 저장소는 이후 버전이 만든 것이라 해석하지 않음
-  private fun migrate() {
-    val applied = database.version
-    if (SQLiteClipRecord.migrations.size < applied) throw ClipStorageError.CorruptedData
-    if (applied == SQLiteClipRecord.migrations.size) return
-    write {
-      SQLiteClipRecord.migrations.drop(applied).forEach(database::execSQL)
-      database.version = SQLiteClipRecord.migrations.size
-    }
-  }
-
-  private fun <T> write(operation: () -> T): T {
-    database.beginTransaction()
-    try {
-      val value = operation()
-      database.setTransactionSuccessful()
-      return value
-    } finally {
-      database.endTransaction()
-    }
-  }
+  private fun history(terms: List<String>) = ClipSearchHistory.restoring(terms) ?: throw ClipStorageError.CorruptedData
 
   private fun publish(event: ClipStorageEvent) {
     subscriptions.forEach { it.trySend(event) }
@@ -208,9 +123,10 @@ class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSea
       }
     }
 
-  private fun validate(clip: Clip) {
-    if (!clip.content.isValid) throw ClipStorageError.InvalidContent
-  }
+  private fun idString(id: UUID) = id.toString().uppercase()
+
+  // 코어가 식별자 형식을 검사하므로 저장이 확정된 값의 변환은 실패하지 않음
+  private fun clip(value: ClipValue) = value.clip ?: throw ClipStorageError.CorruptedData
 
   private fun map(
     error: Exception,
@@ -218,7 +134,12 @@ class SQLiteClipStorageService(databaseFile: File) : ClipStorageService, ClipSea
   ): Exception =
     when (error) {
       is ClipStorageError -> error
-      is SQLiteDatabaseCorruptException -> ClipStorageError.CorruptedData
+      is ClipStoreException.DuplicateId -> ClipStorageError.DuplicateID(UUID.fromString(error.id))
+      is ClipStoreException.NotFound -> ClipStorageError.NotFound(UUID.fromString(error.id))
+      is ClipStoreException.InvalidContent -> ClipStorageError.InvalidContent
+      is ClipStoreException.ReadFailed -> ClipStorageError.ReadFailed
+      is ClipStoreException.WriteFailed -> ClipStorageError.WriteFailed
+      is ClipStoreException.CorruptedData -> ClipStorageError.CorruptedData
       else -> fallback
     }
 

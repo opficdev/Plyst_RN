@@ -86,6 +86,7 @@ core_lines() {
 		scripts/build-plyst-core.sh \
 		scripts/generate-plyst-core-bindings.sh \
 		Plyst/Packages/PlystCore/Package.swift \
+		Plyst/Packages/PlystCore/Sources/PlystCore/PrivacyInfo.xcprivacy \
 		.mise.toml
 	deployment_target_line
 }

@@ -1,11 +1,14 @@
 // 최근 검색어 규칙의 대표 사례 검증
 // Foundation 결과와의 전수 비교는 PlystTests의 ClipSearchCoreFoundationTests가 담당
-// 같은 항목 판정은 복원 함수의 결과로 확인하므로 테스트 전용 진입점이 없음
+// 같은 항목 판정은 복원 함수의 결과로 확인하고 기록과 삭제는 ClipStore로 호출하므로 테스트 전용 진입점이 없음
 
-use plyst_core::{
-    clip_search_history_recording, clip_search_history_removing, clip_search_history_restored,
-    clip_search_query_normalized,
-};
+mod support;
+
+use std::sync::Arc;
+
+use plyst_core::store::ClipStore;
+use plyst_core::{clip_search_history_restored, clip_search_query_normalized};
+use support::{open, Directory};
 
 fn terms(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| (*value).to_owned()).collect()
@@ -15,12 +18,27 @@ fn query(raw: &str) -> Option<String> {
     clip_search_query_normalized(raw).unwrap()
 }
 
+// 첫 요소가 가장 최근이 되도록 오래된 항목부터 기록
+fn seeded(directory: &Directory, values: &[&str]) -> Arc<ClipStore> {
+    let store = open(&directory.database());
+    for value in values.iter().rev() {
+        store.record_search_term((*value).to_owned()).unwrap();
+    }
+    store
+}
+
 fn record(values: &[&str], term: &str) -> Vec<String> {
-    clip_search_history_recording(terms(values), term.to_owned()).unwrap()
+    let directory = Directory::new();
+    seeded(&directory, values)
+        .record_search_term(term.to_owned())
+        .unwrap()
 }
 
 fn remove(values: &[&str], term: &str) -> Vec<String> {
-    clip_search_history_removing(terms(values), term).unwrap()
+    let directory = Directory::new();
+    seeded(&directory, values)
+        .remove_search_term(term.to_owned())
+        .unwrap()
 }
 
 fn restore(values: &[&str]) -> Option<Vec<String>> {

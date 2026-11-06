@@ -88,7 +88,8 @@ rn-rust-test:
 rn-rust-lint:
 	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo fmt --check) || exit 1; done
 	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo clippy --locked --all-targets -- -D warnings) || exit 1; done
-	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo check --locked --target aarch64-linux-android) || exit 1; done
+	# core의 번들 SQLite는 NDK가 필요해 Android 잡의 CMake 빌드가 검사
+	cd rn/modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
 
 # 빌드 시간을 줄이려고 실기기 ABI 하나만 빌드
 rn-android-build:

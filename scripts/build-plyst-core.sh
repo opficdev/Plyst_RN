@@ -27,7 +27,8 @@ if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ] \
 	exit 0
 fi
 
-cd "$repository_root"
+# core/.cargo/config.toml이 읽히도록 크레이트 폴더에서 실행
+cd "$crate"
 set -- cargo
 if command -v mise >/dev/null 2>&1; then
 	set -- mise exec -- cargo

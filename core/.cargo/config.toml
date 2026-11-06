@@ -1,0 +1,4 @@
+# iOS 시스템 SQLite와 같은 행 크기 한도
+# 번들 기본값 1GB에서는 이전 빌드가 저장한 큰 행 하나로 전체 조회 실패
+[env]
+LIBSQLITE3_FLAGS = "SQLITE_MAX_LENGTH=2147483645"

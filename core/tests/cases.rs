@@ -2,50 +2,7 @@
 // Foundation 결과와의 전수 비교는 PlystTests의 ClipCoreFoundationTests가 담당
 // 판정 함수는 공개 함수로 호출하므로 테스트 전용 진입점이 없음
 
-use plyst_core::{
-    clip_image_is_valid, clip_pinned_at, clip_sort_order, clip_text_is_valid,
-    clip_text_is_web_link, clip_usage_applies, ClipContentValue, ClipIdentity,
-};
-
-fn text(value: &str) -> ClipContentValue {
-    ClipContentValue::Text {
-        text: value.to_owned(),
-    }
-}
-
-fn image() -> ClipContentValue {
-    ClipContentValue::Image {
-        file_id: "00000000-0000-0000-0000-000000000001".to_owned(),
-        content_type: "public.png".to_owned(),
-        pixel_width: 1,
-        pixel_height: 1,
-        byte_count: 1,
-    }
-}
-
-fn identity(id: &str, content: ClipContentValue, created_at: f64) -> ClipIdentity {
-    ClipIdentity {
-        id: id.to_owned(),
-        content,
-        created_at,
-    }
-}
-
-fn times(values: &[f64]) -> Vec<u8> {
-    values
-        .iter()
-        .flat_map(|value| value.to_le_bytes())
-        .collect()
-}
-
-fn order(bytes: Vec<u8>) -> Vec<u32> {
-    bytes
-        .as_chunks::<4>()
-        .0
-        .iter()
-        .map(|chunk| u32::from_le_bytes(*chunk))
-        .collect()
-}
+use plyst_core::{clip_image_is_valid, clip_text_is_valid, clip_text_is_web_link};
 
 #[test]
 fn text_validity_uses_foundation_whitespace() {
@@ -130,53 +87,4 @@ fn image_validity_checks_every_field() {
     assert!(!clip_image_is_valid("public.png", 0, 1, 1));
     assert!(!clip_image_is_valid("public.png", 1, -1, 1));
     assert!(!clip_image_is_valid("public.png", 1, 1, 0));
-}
-
-#[test]
-fn pinned_at_keeps_existing_time() {
-    assert_eq!(clip_pinned_at(None, true, 5.0), Some(5.0));
-    assert_eq!(clip_pinned_at(Some(3.0), true, 5.0), Some(3.0));
-    assert_eq!(clip_pinned_at(Some(3.0), false, 5.0), None);
-    assert_eq!(clip_pinned_at(None, false, 5.0), None);
-}
-
-#[test]
-fn usage_applies_only_to_same_clip() {
-    let current = identity("A", text("a"), 1.0);
-    assert!(clip_usage_applies(current.clone(), current.clone()));
-    assert!(!clip_usage_applies(
-        identity("B", text("a"), 1.0),
-        current.clone()
-    ));
-    assert!(!clip_usage_applies(
-        identity("A", text("b"), 1.0),
-        current.clone()
-    ));
-    assert!(!clip_usage_applies(
-        identity("A", text("a"), 2.0),
-        current.clone()
-    ));
-    assert!(!clip_usage_applies(identity("A", image(), 1.0), current));
-}
-
-#[test]
-fn sort_order_is_newest_first_then_id() {
-    let id = |byte: u8| [byte; 16];
-    let ids = [id(2), id(1), id(3), id(0)].concat();
-    assert_eq!(
-        order(clip_sort_order(times(&[1.0, 1.0, 2.0, -0.0]), ids)),
-        vec![2, 1, 0, 3]
-    );
-    let ids = [id(2), id(1)].concat();
-    assert_eq!(order(clip_sort_order(times(&[0.0, -0.0]), ids)), vec![1, 0]);
-}
-
-#[test]
-fn sort_order_keeps_input_when_sizes_differ() {
-    assert_eq!(
-        order(clip_sort_order(times(&[1.0, 2.0]), vec![0; 16])),
-        vec![0, 1]
-    );
-    assert_eq!(order(clip_sort_order(vec![0; 17], vec![0; 32])), vec![0, 1]);
-    assert!(clip_sort_order(vec![], vec![]).is_empty());
 }
