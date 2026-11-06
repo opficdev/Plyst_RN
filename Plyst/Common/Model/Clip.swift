@@ -38,6 +38,32 @@ struct Clip: Equatable, Identifiable, Sendable {
         self.lastUsedAt = lastUsedAt
     }
 
+    /// 식별자가 UUID 형식이 아니면 nil
+    init?(coreValue value: ClipValue) {
+        guard let id = UUID(uuidString: value.id), let content = ClipContent(coreValue: value.content) else { return nil }
+        self.init(
+            id: id,
+            content: content,
+            name: value.name,
+            pinnedAt: value.pinnedAt.map(Date.init(timeIntervalSinceReferenceDate:)),
+            memo: value.memo,
+            createdAt: Date(timeIntervalSinceReferenceDate: value.createdAt),
+            lastUsedAt: value.lastUsedAt.map(Date.init(timeIntervalSinceReferenceDate:))
+        )
+    }
+
+    var coreValue: ClipValue {
+        ClipValue(
+            id: id.uuidString,
+            content: content.coreValue,
+            name: name,
+            pinnedAt: pinnedAt?.timeIntervalSinceReferenceDate,
+            memo: memo,
+            createdAt: createdAt.timeIntervalSinceReferenceDate,
+            lastUsedAt: lastUsedAt?.timeIntervalSinceReferenceDate
+        )
+    }
+
     var coreIdentity: ClipIdentity {
         ClipIdentity(
             id: id.uuidString,

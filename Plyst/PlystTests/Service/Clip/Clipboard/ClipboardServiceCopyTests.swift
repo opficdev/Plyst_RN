@@ -43,7 +43,15 @@ final class ClipboardServiceCopyTests: ClipTemporaryDirectoryTestCase {
 
         guard case .copied(let updated) = result else { return XCTFail("복사 성공 결과 누락") }
         let usedAt = try XCTUnwrap(updated.lastUsedAt)
-        XCTAssertEqual(updated, ClipUpdate.lastUsedAt(usedAt).applying(to: clip))
+        XCTAssertEqual(updated, Clip(
+            id: clip.id,
+            content: clip.content,
+            name: clip.name,
+            pinnedAt: clip.pinnedAt,
+            memo: clip.memo,
+            createdAt: clip.createdAt,
+            lastUsedAt: usedAt
+        ))
         XCTAssertLessThanOrEqual(startedAt, usedAt)
         XCTAssertLessThanOrEqual(usedAt, Date())
         XCTAssertEqual(writer.contents, [.text(text)])
@@ -99,7 +107,15 @@ final class ClipboardServiceCopyTests: ClipTemporaryDirectoryTestCase {
 
         guard case .copied(let copied) = result else { return XCTFail("상세 편집과 병행한 복사 성공 결과 누락") }
         let usedAt = try XCTUnwrap(copied.lastUsedAt)
-        let expected = ClipUpdate.lastUsedAt(usedAt).applying(to: details.applying(to: clip))
+        let expected = Clip(
+            id: clip.id,
+            content: clip.content,
+            name: "새 이름",
+            pinnedAt: Date(timeIntervalSince1970: 300),
+            memo: "새 메모",
+            createdAt: clip.createdAt,
+            lastUsedAt: usedAt
+        )
         XCTAssertEqual(copied, expected)
         XCTAssertEqual(writer.contents, [.text("편집 중인 원문")])
         let stored = try await storage.fetch(id: clip.id)

@@ -7,9 +7,9 @@
 
 import Foundation
 import OSLog
-import SQLiteData
+import PlystCore
 
-/// SQLiteData로 클립과 최근 검색어를 저장
+/// PlystCore의 ClipStore로 클립과 최근 검색어를 저장
 /// 모든 화면은 같은 인스턴스를 공유하여 클립 변경을 관찰
 /// 최근 검색어 연산은 ClipStorageEvent를 발행하지 않음
 actor SQLiteClipStorageService: ClipStorageService {
@@ -19,7 +19,7 @@ actor SQLiteClipStorageService: ClipStorageService {
         category: String(describing: SQLiteClipStorageService.self)
     )
 
-    private let database: DatabaseQueue
+    private let store: ClipStore
     private var subscriptions = [UUID: AsyncStream<ClipStorageEvent>.Continuation]()
 
     init(databaseURL: URL) throws {
@@ -37,28 +37,12 @@ actor SQLiteClipStorageService: ClipStorageService {
             Self.logFailure(error, operation: "저장소 디렉터리 생성")
             throw ClipStorageError.writeFailed
         }
-        let database: DatabaseQueue
         do {
-            var configuration = Configuration()
-            configuration.busyMode = .timeout(5)
-            configuration.journalMode = .wal
-            database = try DatabaseQueue(path: databaseURL.path, configuration: configuration)
-            // GRDB의 WAL 초기화가 NORMAL을 설정하므로 초기화 후 FULL을 적용
-            try database.writeWithoutTransaction { connection in
-                try connection.execute(sql: "PRAGMA synchronous = 2")
-            }
+            store = try ClipStore.open(path: databaseURL.path)
         } catch {
             Self.logFailure(error, operation: "데이터베이스 초기화")
             throw Self.map(error, fallback: .readFailed)
         }
-        do {
-            Self.logger.debug("마이그레이션 시작")
-            try SQLiteClipRecord.migrate(database)
-        } catch {
-            Self.logFailure(error, operation: "마이그레이션")
-            throw Self.map(error, fallback: .writeFailed)
-        }
-        self.database = database
         Self.logger.info("저장소 초기화 완료")
     }
 
@@ -71,10 +55,7 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     func fetchAll(order: ClipSortOrder) throws -> [Clip] {
         let clips = try access(fallback: .readFailed) {
-            let clips = try database.read { connection in
-                try Self.decode { try SQLiteClipRecord.fetchAll(connection).map { try $0.clip() } }
-            }
-            return order.sorted(clips)
+            try store.fetchAll(order: order.coreValue).map(Self.clip)
         }
         Self.logger.debug("전체 클립 조회 완료: 정렬 \(String(describing: order), privacy: .public), 결과 \(clips.count, privacy: .public)개")
         return clips
@@ -82,7 +63,7 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     func fetch(id: Clip.ID) throws -> Clip? {
         let clip = try access(fallback: .readFailed) {
-            try database.read { try Self.fetch(id: id, from: $0) }
+            try store.fetch(id: id.uuidString).map(Self.clip)
         }
         Self.logger.debug("클립 조회 완료: id \(id.uuidString, privacy: .private(mask: .hash)), 존재 \(clip != nil, privacy: .public)")
         return clip
@@ -90,13 +71,7 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     func insert(_ clip: Clip) throws {
         try access(fallback: .writeFailed) {
-            try Self.validate(clip)
-            try database.write { connection in
-                guard try Self.fetch(id: clip.id, from: connection) == nil else {
-                    throw ClipStorageError.duplicateID(clip.id)
-                }
-                try SQLiteClipRecord.insert { SQLiteClipRecord(clip) }.execute(connection)
-            }
+            try store.insert(clip: clip.coreValue)
         }
         Self.logger.info("클립 추가 완료: id \(clip.id.uuidString, privacy: .private(mask: .hash))")
         publish(.inserted(clip))
@@ -104,16 +79,8 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     func update(id: Clip.ID, change: ClipUpdate) throws -> Clip {
         let result = try access(fallback: .writeFailed) {
-            try database.write { connection in
-                guard let current = try Self.fetch(id: id, from: connection) else {
-                    throw ClipStorageError.notFound(id)
-                }
-                let updated = change.applying(to: current)
-                guard updated != current else { return (clip: current, changed: false) }
-                try Self.validate(updated)
-                try SQLiteClipRecord.update(SQLiteClipRecord(updated)).execute(connection)
-                return (clip: updated, changed: true)
-            }
+            let result = try store.update(id: id.uuidString, change: change.coreValue)
+            return (clip: try Self.clip(result.clip), changed: result.changed)
         }
         if result.changed {
             Self.logger.info("클립 수정 완료: id \(id.uuidString, privacy: .private(mask: .hash))")
@@ -126,12 +93,7 @@ actor SQLiteClipStorageService: ClipStorageService {
 
     func delete(id: Clip.ID) throws {
         try access(fallback: .writeFailed) {
-            try database.write { connection in
-                guard try Self.fetch(id: id, from: connection) != nil else {
-                    throw ClipStorageError.notFound(id)
-                }
-                try SQLiteClipRecord.find(id).delete().execute(connection)
-            }
+            try store.delete(id: id.uuidString)
         }
         Self.logger.info("클립 삭제 완료: id \(id.uuidString, privacy: .private(mask: .hash))")
         publish(.deleted(id))
@@ -160,7 +122,7 @@ actor SQLiteClipStorageService: ClipStorageService {
         Self.logger.debug("변경 이벤트 발행: 구독자 \(self.subscriptions.count, privacy: .public)개")
     }
 
-    /// write가 확정될 때까지 actor를 중단하지 않아 저장과 이벤트 발행 순서를 보존
+    /// 코어 호출이 확정될 때까지 actor를 중단하지 않아 저장과 이벤트 발행 순서를 보존
     private func access<Value>(_ name: String = #function, fallback: ClipStorageError, operation: () throws -> Value) throws -> Value {
         Self.logger.debug("\(name, privacy: .public) 시작")
         do {
@@ -178,10 +140,17 @@ actor SQLiteClipStorageService: ClipStorageService {
             logger.debug("\(operation, privacy: .public) 취소")
             return
         }
-        if let error = error as? DatabaseError {
-            let resultCode = error.resultCode.rawValue
-            let extendedResultCode = error.extendedResultCode.rawValue
-            logger.error("\(operation, privacy: .public) 실패: SQLite 코드 \(resultCode, privacy: .public), 확장 코드 \(extendedResultCode, privacy: .public)")
+        if let error = error as? ClipStoreError {
+            switch error {
+            case let .ReadFailed(code, extendedCode), let .WriteFailed(code, extendedCode), let .CorruptedData(code, extendedCode):
+                logger.error("\(operation, privacy: .public) 실패: SQLite 코드 \(code, privacy: .public), 확장 코드 \(extendedCode, privacy: .public)")
+            case .DuplicateId:
+                logger.error("\(operation, privacy: .public) 실패: duplicateID")
+            case .NotFound:
+                logger.error("\(operation, privacy: .public) 실패: notFound")
+            case .InvalidContent:
+                logger.error("\(operation, privacy: .public) 실패: invalidContent")
+            }
             return
         }
         if let error = error as? ClipStorageError {
@@ -200,87 +169,61 @@ actor SQLiteClipStorageService: ClipStorageService {
         logger.error("\(operation, privacy: .public) 실패: 오류 영역 \(error.domain, privacy: .public), 코드 \(error.code, privacy: .public)")
     }
 
-    private static func fetch(id: Clip.ID, from connection: Database) throws -> Clip? {
-        try decode { try SQLiteClipRecord.find(id).fetchOne(connection)?.clip() }
-    }
-
-    private static func decode<Value>(_ operation: () throws -> Value) throws -> Value {
-        do {
-            return try operation()
-        } catch let error as DatabaseError {
-            throw error
-        } catch {
-            throw ClipStorageError.corruptedData
-        }
-    }
-
-    private static func validate(_ clip: Clip) throws {
-        guard clip.content.isValid, clip.createdAt.timeIntervalSinceReferenceDate.isFinite,
-              clip.lastUsedAt?.timeIntervalSinceReferenceDate.isFinite != false,
-              clip.pinnedAt?.timeIntervalSinceReferenceDate.isFinite != false else {
-            throw ClipStorageError.invalidContent
-        }
+    /// 코어가 식별자 형식을 검사하므로 저장이 확정된 값의 변환은 실패하지 않음
+    private static func clip(_ value: ClipValue) throws -> Clip {
+        guard let clip = Clip(coreValue: value) else { throw ClipStorageError.corruptedData }
+        return clip
     }
 
     private static func map(_ error: Error, fallback: ClipStorageError) -> Error {
         if error is CancellationError || error is ClipStorageError { return error }
-        if let error = error as? DatabaseError,
-           error.resultCode == .SQLITE_CORRUPT || error.resultCode == .SQLITE_NOTADB {
+        guard let error = error as? ClipStoreError else { return fallback }
+        switch error {
+        case .DuplicateId(let id):
+            return UUID(uuidString: id).map(ClipStorageError.duplicateID) ?? fallback
+        case .NotFound(let id):
+            return UUID(uuidString: id).map(ClipStorageError.notFound) ?? fallback
+        case .InvalidContent:
+            return ClipStorageError.invalidContent
+        case .ReadFailed:
+            return ClipStorageError.readFailed
+        case .WriteFailed:
+            return ClipStorageError.writeFailed
+        case .CorruptedData:
             return ClipStorageError.corruptedData
         }
-        return fallback
     }
 }
 
-// database와 access 등 private 멤버를 그대로 쓰기 위해 같은 파일에 둠
+// store와 access 등 private 멤버를 그대로 쓰기 위해 같은 파일에 둠
 // 연결과 마이그레이션은 이 actor가 계속 소유
 extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
     func fetchSearchHistory() throws -> ClipSearchHistory {
         try access(fallback: .readFailed) {
-            try database.read { try Self.fetchSearchHistory(from: $0) }
+            try Self.history(store.fetchSearchTerms())
         }
     }
 
     func recordSearchTerm(_ query: ClipSearchQuery) throws -> ClipSearchHistory {
-        try replaceSearchHistory(operation: "recordSearchTerm") { try $0.record(query) }
+        try access(fallback: .writeFailed) {
+            try Self.history(store.recordSearchTerm(query: query.text))
+        }
     }
 
     func removeSearchTerm(_ term: String) throws -> ClipSearchHistory {
-        try replaceSearchHistory(operation: "removeSearchTerm") { try $0.remove(term) }
+        try access(fallback: .writeFailed) {
+            try Self.history(store.removeSearchTerm(term: term))
+        }
     }
 
     func removeAllSearchTerms() throws {
         try access(fallback: .writeFailed) {
-            try database.write { try SQLiteClipSearchTermRecord.delete().execute($0) }
+            try store.removeAllSearchTerms()
         }
     }
 
-    /// 읽기, 규칙 적용, 전체 교체를 하나의 트랜잭션으로 처리
-    /// 결과가 같으면 쓰지 않음
-    private func replaceSearchHistory(
-        operation: String,
-        change: (inout ClipSearchHistory) throws -> Void
-    ) throws -> ClipSearchHistory {
-        try access(operation, fallback: .writeFailed) {
-            try database.write { connection in
-                let current = try Self.fetchSearchHistory(from: connection)
-                var updated = current
-                try change(&updated)
-                guard updated != current else { return current }
-                try SQLiteClipSearchTermRecord.delete().execute(connection)
-                for (position, term) in updated.terms.enumerated() {
-                    try SQLiteClipSearchTermRecord.insert {
-                        SQLiteClipSearchTermRecord(position: position, term: term)
-                    }.execute(connection)
-                }
-                return updated
-            }
-        }
-    }
-
-    private static func fetchSearchHistory(from connection: Database) throws -> ClipSearchHistory {
-        let records = try SQLiteClipSearchTermRecord.order(by: \.position).fetchAll(connection)
-        guard let history = try ClipSearchHistory(terms: records.map(\.term)) else {
+    private static func history(_ terms: [String]) throws -> ClipSearchHistory {
+        guard let history = try ClipSearchHistory(terms: terms) else {
             throw ClipStorageError.corruptedData
         }
         return history
