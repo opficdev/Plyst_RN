@@ -196,7 +196,6 @@ actor SQLiteClipStorageService: ClipStorageService {
 }
 
 // store와 access 등 private 멤버를 그대로 쓰기 위해 같은 파일에 둠
-// 연결과 마이그레이션은 이 actor가 계속 소유
 extension SQLiteClipStorageService: ClipSearchHistoryStorageService {
     func fetchSearchHistory() throws -> ClipSearchHistory {
         try access(fallback: .readFailed) {
