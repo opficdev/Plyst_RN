@@ -55,9 +55,9 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
     }
 
     func recordSearchTerm(_ term: String) async throws -> [String]? {
-        guard let query = ClipSearchQuery(term) else { return nil }
-        return try await bridged(fallback: .writeFailed) {
-            try await history.recordSearchTerm(query).terms
+        try await bridged(fallback: .writeFailed) {
+            guard let query = try ClipSearchQuery(term) else { return nil }
+            return try await history.recordSearchTerm(query).terms
         }
     }
 
