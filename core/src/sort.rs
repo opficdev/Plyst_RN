@@ -1,29 +1,6 @@
 use std::cmp::Ordering;
 
-const TIME_SIZE: usize = 8;
 const ID_SIZE: usize = 16;
-
-pub(crate) fn input_order(count: usize) -> Vec<u8> {
-    (0..count as u32).flat_map(u32::to_le_bytes).collect()
-}
-
-// 입력 시각과 결과는 원소별 직렬화를 피하려고 리틀 엔디언 원시 바이트로 전달
-pub(crate) fn encoded_order(created_at: &[u8], ids: &[u8]) -> Vec<u8> {
-    let count = created_at.len() / TIME_SIZE;
-    if !created_at.len().is_multiple_of(TIME_SIZE) || ids.len() != count * ID_SIZE {
-        return input_order(count);
-    }
-    let times: Vec<f64> = created_at
-        .as_chunks::<TIME_SIZE>()
-        .0
-        .iter()
-        .map(|bytes| f64::from_le_bytes(*bytes))
-        .collect();
-    order(&times, ids)
-        .into_iter()
-        .flat_map(u32::to_le_bytes)
-        .collect()
-}
 
 // 생성 시각의 내림차순으로 정렬
 // 생성 시각이 같으면 식별자의 오름차순으로 순서를 결정
