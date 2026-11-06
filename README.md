@@ -194,7 +194,7 @@ export interface Spec extends TurboModule {
 | 상태 관리 | Redux Toolkit 2.13.0, React Redux 9.3.0 (RN 화면)<br>ReactorKit 3.2.0, RxSwift 6.10.2 (Share Extension 상태 관리) |
 | 네이티브 브리지 | TurboModule, Codegen, C++ TurboModule(JSI)<br>UniFFI 0.32.2, JNA 5.17.0 (Rust 공통 코어) |
 | 앱 통합 | React Native Brownfield 5.3.0, XCFramework (iOS)<br>Expo prebuild (Android) |
-| 저장소 | SQLiteData 1.12.0, GRDB 7.11.1, swift-structured-queries 0.39.2 (iOS)<br>Android SQLite API (Android) |
+| 저장소 | rusqlite 0.41.1 번들 SQLite (Rust 공통 코어) |
 | Apple 프레임워크 | UIKit, Foundation, WidgetKit, SwiftUI, ImageIO, Photos |
 | Android 프레임워크 | AppWidget, ClipboardManager, MediaStore, FileProvider |
 | 테스트 | Jest 29.7.0, XCTest, cargo test |
