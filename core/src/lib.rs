@@ -1,4 +1,5 @@
 // 클립 값 규칙의 공통 코어
+// 클립 저장소는 store 모듈이 소유
 // 호스트가 실패를 구분하지 않는 함수는 패닉을 catch_unwind로 막고 정해진 대체값을 돌려줌
 // 비던지기 UniFFI 함수의 패닉은 Swift 프로세스를 끝내므로 경계 밖으로 내보내지 않음
 // 호스트가 실패를 구분해야 하는 함수는 Result를 돌려주어 패닉을 오류로 전달
@@ -9,6 +10,7 @@ mod case_fold_table;
 mod content;
 mod search_history;
 mod sort;
+pub mod store;
 mod update;
 mod web_link;
 mod whitespace;
@@ -85,7 +87,7 @@ pub fn clip_usage_applies(expected: ClipIdentity, current: ClipIdentity) -> bool
 #[uniffi::export]
 pub fn clip_sort_order(created_at: Vec<u8>, ids: Vec<u8>) -> Vec<u8> {
     guard(sort::input_order(created_at.len() / 8), || {
-        sort::order(&created_at, &ids)
+        sort::encoded_order(&created_at, &ids)
     })
 }
 
