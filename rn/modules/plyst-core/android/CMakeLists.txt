@@ -23,14 +23,21 @@ else()
   set(CARGO_COMMAND ${CARGO_PROGRAM})
 endif()
 
+string(REPLACE "-" "_" RUST_TARGET_ENV ${RUST_TARGET})
+
 set(RUST_CRATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../../core)
 set(RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/rust)
 set(RUST_LIBRARY ${RUST_TARGET_DIR}/${RUST_TARGET}/release/libplyst_core.a)
-file(GLOB RUST_SOURCES CONFIGURE_DEPENDS ${RUST_CRATE}/src/*.rs)
+file(GLOB_RECURSE RUST_SOURCES CONFIGURE_DEPENDS ${RUST_CRATE}/src/*.rs)
 
 add_custom_command(
   OUTPUT ${RUST_LIBRARY}
-  COMMAND ${CARGO_COMMAND} build --release --locked --target ${RUST_TARGET} --target-dir ${RUST_TARGET_DIR}
+  # rusqlite의 번들 SQLite를 NDK 컴파일러로 빌드
+  COMMAND ${CMAKE_COMMAND} -E env
+    CC_${RUST_TARGET_ENV}=${CMAKE_C_COMPILER}
+    AR_${RUST_TARGET_ENV}=${CMAKE_AR}
+    CFLAGS_${RUST_TARGET_ENV}=--target=${CMAKE_C_COMPILER_TARGET}
+    ${CARGO_COMMAND} build --release --locked --target ${RUST_TARGET} --target-dir ${RUST_TARGET_DIR}
   WORKING_DIRECTORY ${RUST_CRATE}
   DEPENDS ${RUST_SOURCES} ${RUST_CRATE}/Cargo.toml ${RUST_CRATE}/Cargo.lock
   VERBATIM
