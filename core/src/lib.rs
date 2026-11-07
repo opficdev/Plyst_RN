@@ -100,3 +100,5 @@ pub fn clip_search_query_normalized(raw: &str) -> Result<Option<String>, CoreErr
 pub fn clip_search_history_restored(terms: Vec<String>) -> Result<Option<Vec<String>>, CoreError> {
     Ok(search_history::restored(terms))
 }
+
+// CI 측정용 주석
