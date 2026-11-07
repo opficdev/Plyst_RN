@@ -62,11 +62,6 @@ impl ClipImageFiles {
         }
     }
 
-    pub fn original_path(&self, file_id: &str) -> Result<String, ClipImageFilesError> {
-        let (path, _) = self.original(file_id)?;
-        Ok(text(&path))
-    }
-
     /// 기록된 크기와 다른 원본은 내용을 읽기 전에 거부
     pub fn validated_original_path(
         &self,
@@ -364,7 +359,7 @@ mod tests {
 
         assert_eq!(files.create(&file_id, b"other"), Ok(false));
         assert_eq!(
-            fs::read(files.original_path(&file_id).unwrap()).unwrap(),
+            fs::read(root.join(&file_id).join(ORIGINAL)).unwrap(),
             b"original"
         );
         fs::remove_dir_all(root).unwrap();
