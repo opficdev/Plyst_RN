@@ -9,27 +9,6 @@ import Foundation
 import OSLog
 import PlystCore
 
-/// 실행 중인 Task의 취소 상태를 코어 판정 지점에 전달
-private final class ClipTaskCancellation: ClipCancellationSource {
-    func isCancelled() -> Bool { Task.isCancelled }
-}
-
-/// 코어 호출을 전용 직렬 큐에서 실행하는 줄
-/// 코어 잠금 대기가 협력 스레드를 막지 않게 함
-private actor ClipCoreLane {
-    private let queue: DispatchSerialQueue
-
-    nonisolated var unownedExecutor: UnownedSerialExecutor { queue.asUnownedSerialExecutor() }
-
-    init(label: String) {
-        queue = DispatchSerialQueue(label: label)
-    }
-
-    func run<Value: Sendable>(_ operation: @Sendable () throws -> Value) throws -> Value {
-        try operation()
-    }
-}
-
 /// 데이터베이스와 이미지 루트 쌍 하나를 다루는 코어 호출 지점
 /// 코어 객체 소유, 실행 줄, 취소 전달, 값과 오류 변환, 원본 읽기를 담당
 /// 규칙, 순서, 실패, 정리, 저장 확정과 변경 알림의 순서는 코어가 결정
