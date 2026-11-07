@@ -3,7 +3,10 @@ SCHEME := Plyst
 CONFIGURATION ?= Debug
 RN_CONFIGURATION ?= Release
 DESTINATION ?= generic/platform=iOS Simulator
-TEST_DEVICE_ID ?= $(shell xcrun simctl list devices available iPhone | grep -Eo '[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}' | tail -1)
+DEVICE_ID_PATTERN := [0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}
+# iPhone 18 Pro 우선 선택
+# 없는 환경은 목록의 마지막 iPhone 사용
+TEST_DEVICE_ID ?= $(shell xcrun simctl list devices available iPhone | grep -E '$(DEVICE_ID_PATTERN)' | awk '/iPhone 18 Pro .[0-9A-F]/ { preferred = $$0 } { last = $$0 } END { print (preferred != "" ? preferred : last) }' | grep -Eo '$(DEVICE_ID_PATTERN)')
 TEST_DESTINATION ?= platform=iOS Simulator,id=$(TEST_DEVICE_ID)
 RESULT_BUNDLE_PATH ?= /tmp/plyst-test-results.xcresult
 TEST_FLAGS ?= -test-timeouts-enabled YES \
