@@ -201,10 +201,18 @@ jobs:
           restore-keys: |
             rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.native }}-
 
+      # 네이티브 입력이 같은 프레임워크를 복원했으면 컴파일하지 않음
+      - name: Check restored frameworks
+        id: restored
+        run: |
+          if [ -f Plyst/Packages/PlystReactNative/Frameworks/.inputs ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
       # Xcode 컴파일 캐시
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
       - name: Restore compilation cache
-        if: github.event_name == 'pull_request' && steps.xcframework-cache.outputs.cache-hit != 'true'
+        if: github.event_name == 'pull_request' && steps.restored.outputs.found != 'true'
         uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/rn-compilation-cache
