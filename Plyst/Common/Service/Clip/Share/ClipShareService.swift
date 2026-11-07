@@ -13,22 +13,22 @@ import UniformTypeIdentifiers
 /// 여러 항목은 다루지 않음
 ///
 /// 지원하는 첫 첨부가 이미지 형식을 가지면 변환 없이 원본 바이트를 이름 없는 이미지 클립으로 저장
-/// 그 외에는 텍스트나 URL을 텍스트 클립으로 저장
-/// 지원하는 첫 첨부가 URL 하나뿐이고 경로나 쿼리 값에 든 주소의 확장자가 이미지 형식이면 이미지를 내려받아 원본 URL을 메모로 둔 이미지 클립으로 저장
-/// 내려받기나 이미지 검증에 실패하면 같은 URL을 텍스트 클립으로 저장하며 일반 페이지 링크는 네트워크 요청을 하지 않음
+/// 그 외에는 텍스트나 URL을 코어에 넘겨 저장
+/// 지원하는 첫 첨부가 URL 하나뿐일 때만 코어가 이미지 주소를 내려받도록 허용
+/// 이미지 주소 판정, 내려받기 순서, 실패 시 텍스트 저장, 제목 정리는 코어가 결정
 /// 저장을 시도할 때마다 첨부를 다시 읽으므로 읽기 실패 후에도 같은 항목으로 다시 시도할 수 있음
 /// 읽기에 실패하면 저장소에 쓰지 않음
 /// 이미지 검증 오류와 저장소 오류와 CancellationError는 그대로 전파
 struct ClipShareService: Sendable {
     private let core: ClipCoreAdapter
-    private let downloads: ClipImageDownloadService
+    private let downloader: SystemClipImageDownloader
 
     init(
         core: ClipCoreAdapter,
-        downloads: ClipImageDownloadService
+        downloader: SystemClipImageDownloader
     ) {
         self.core = core
-        self.downloads = downloads
+        self.downloader = downloader
     }
 
     func save(_ item: ClipShareItem) async throws -> ClipShareSaveResult {
@@ -54,37 +54,14 @@ struct ClipShareService: Sendable {
             try Task.checkCancellation()
             return .loadFailed
         }
-        guard let text, ClipContent.text(text).isValid else { return .empty }
-        if await Self.isURLOnly(item),
-           let url = Self.imageURL(from: text),
-           let result = try await saveDownloadedImage(from: url) {
-            return result
-        }
-        // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
-        try Task.checkCancellation()
-        let clip = Clip(content: .text(text), name: item.title)
-        try await core.insert(clip)
-        return .saved(clip)
-    }
-
-    /// 내려받기나 이미지 검증에 실패하면 nil이며 텍스트 경로가 이어서 처리
-    /// 저장소 오류는 전파하고 취소는 CancellationError로 전파
-    private func saveDownloadedImage(from url: URL) async throws -> ClipShareSaveResult? {
-        let data: Data
-        do {
-            data = try await downloads.loadImage(from: url)
-        } catch {
-            try Task.checkCancellation()
-            return nil
-        }
-        // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
-        try Task.checkCancellation()
-        do {
-            let result = try await core.saveImage(data, memo: url.absoluteString)
-            return .saved(result.value)
-        } catch let error as ClipImageFileError where error == .invalidImage || error == .unsupportedImage {
-            return nil
-        }
+        guard let text else { return .empty }
+        let clip = try await core.saveSharedText(
+            text,
+            title: item.title,
+            allowsDownload: await Self.isURLOnly(item),
+            downloader: downloader
+        )
+        return clip.map(ClipShareSaveResult.saved) ?? .empty
     }
 
     /// 지원하는 첫 첨부가 이미지와 텍스트 형식 없이 URL 형식만 가지는지 확인
@@ -96,19 +73,6 @@ struct ClipShareService: Sendable {
             $0.hasItemConformingToTypeIdentifier(textType) || $0.hasItemConformingToTypeIdentifier(urlType)
         }) else { return false }
         return provider.hasItemConformingToTypeIdentifier(urlType) && !provider.hasItemConformingToTypeIdentifier(textType)
-    }
-
-    /// 단일 http 또는 https URL이고 경로나 쿼리 값에 든 주소의 확장자가 이미지 형식일 때만 URL을 돌려줌
-    /// 네트워크 요청은 하지 않으며 돌려주는 URL은 쿼리를 포함한 원본 그대로
-    private static func imageURL(from text: String) -> URL? {
-        guard ClipContent.text(text).isWebLink, let url = URL(string: text) else { return nil }
-        let queryURLs = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
-            .compactMap { $0.value.flatMap { URL(string: $0) } } ?? []
-        return ([url] + queryURLs).contains(where: hasImageExtension) ? url : nil
-    }
-
-    private static func hasImageExtension(_ url: URL) -> Bool {
-        UTType(filenameExtension: url.pathExtension)?.conforms(to: .image) == true
     }
 
     /// 텍스트와 URL과 이미지 중 지원하는 첫 첨부만 확인

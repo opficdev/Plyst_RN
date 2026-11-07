@@ -9,33 +9,13 @@ import Foundation
 import OSLog
 import PlystCore
 
-/// 실행 중인 Task의 취소 상태를 코어 판정 지점에 전달
-private final class ClipTaskCancellation: ClipCancellationSource {
-    func isCancelled() -> Bool { Task.isCancelled }
-}
-
-/// 코어 호출을 전용 직렬 큐에서 실행하는 줄
-/// 코어 잠금 대기가 협력 스레드를 막지 않게 함
-private actor ClipCoreLane {
-    private let queue: DispatchSerialQueue
-
-    nonisolated var unownedExecutor: UnownedSerialExecutor { queue.asUnownedSerialExecutor() }
-
-    init(label: String) {
-        queue = DispatchSerialQueue(label: label)
-    }
-
-    func run<Value: Sendable>(_ operation: @Sendable () throws -> Value) throws -> Value {
-        try operation()
-    }
-}
-
 /// 데이터베이스와 이미지 루트 쌍 하나를 다루는 코어 호출 지점
 /// 코어 객체 소유, 실행 줄, 취소 전달, 값과 오류 변환, 원본 읽기를 담당
 /// 규칙, 순서, 실패, 정리, 저장 확정과 변경 알림의 순서는 코어가 결정
 ///
 /// 쌍 하나에 인스턴스 하나만 만들고 모든 호출부가 공유
 /// 저장소 줄과 이미지 줄을 나누어 썸네일 생성이 목록 조회를 막지 않음
+/// 공유 텍스트 저장은 공유 줄에서 실행해 내려받기가 복구와 이미지 첨부 저장을 막지 않음
 /// 별도 프로세스의 변경은 조율하지 않음
 ///
 /// 쓰기 실패 시 기존 상태를 보존하고 ClipStorageEvent를 발행하지 않음
@@ -47,6 +27,7 @@ private actor ClipCoreLane {
 /// 저장과 `recoverPendingCleanup`은 Share Extension만 실행
 /// 본 앱은 읽기와 `delete(id:)`만 실행
 /// 본 앱이 복구를 실행하면 Extension이 저장 중이라 아직 참조되지 않은 파일을 지울 수 있음
+/// 같은 인스턴스가 내려받는 중인 폴더는 복구가 건너뜀
 /// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일
 /// 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않음
 final class ClipCoreAdapter: Sendable {
@@ -57,10 +38,12 @@ final class ClipCoreAdapter: Sendable {
 
     private let storageLane = ClipCoreLane(label: "opfic.Plyst.ClipCoreAdapter.storage")
     private let imageLane = ClipCoreLane(label: "opfic.Plyst.ClipCoreAdapter.image")
+    private let shareLane = ClipCoreLane(label: "opfic.Plyst.ClipCoreAdapter.share")
     private let subscribers = ClipStorageSubscribers()
     private let store: ClipStore
     private let images: ClipImageOperations
     private let clipboard: ClipboardOperations
+    private let share: ClipShareOperations
 
     init(
         databaseURL: URL,
@@ -87,6 +70,7 @@ final class ClipCoreAdapter: Sendable {
         self.store = store
         self.images = images
         clipboard = ClipboardOperations(images: images)
+        share = ClipShareOperations(images: images)
     }
 
     /// 반환 전에 독립적인 구독을 등록
@@ -273,6 +257,30 @@ final class ClipCoreAdapter: Sendable {
             try Self.coreCall(fallback: ClipImageFileError.deleteFailed) {
                 try images.recoverPendingCleanup(cancellation: $0)
             }.compactMap(UUID.init(uuidString:))
+        }
+    }
+
+    /// 공유받은 텍스트를 저장하고 공백뿐이면 nil
+    /// 이미지 주소 판정과 내려받기와 실패 시 텍스트 저장은 코어가 결정
+    /// 공유 줄에서 실행하며 내려받는 동안 이미지 줄과 코어 잠금을 쥐지 않음
+    func saveSharedText(
+        _ text: String,
+        title: String?,
+        allowsDownload: Bool,
+        downloader: any ClipImageDownloader
+    ) async throws -> Clip? {
+        try await shareLane.run {
+            let saved = try Self.coreCall(fallback: ClipStorageError.writeFailed) {
+                try share.saveText(
+                    text: text,
+                    title: title,
+                    allowsDownload: allowsDownload,
+                    downloader: downloader,
+                    cancellation: $0
+                )
+            }
+            guard case .saved(let clip) = saved else { return nil }
+            return try Self.clip(clip)
         }
     }
 

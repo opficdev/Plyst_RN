@@ -88,11 +88,11 @@ final class ClipShareServiceTests: ClipTemporaryDirectoryTestCase {
     }
 
     private func makeService(core: ClipCoreAdapter) -> ClipShareService {
-        let session = URLSession(configuration: ClipImageDownloadService.configuration)
+        let session = URLSession(configuration: SystemClipImageDownloader.configuration)
         addTeardownBlock { session.invalidateAndCancel() }
         return ClipShareService(
             core: core,
-            downloads: ClipImageDownloadService(session: session)
+            downloader: SystemClipImageDownloader(session: session)
         )
     }
 

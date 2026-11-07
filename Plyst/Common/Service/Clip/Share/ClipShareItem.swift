@@ -12,13 +12,12 @@ import Foundation
 @MainActor
 final class ClipShareItem {
     let providers: [NSItemProvider]
-    /// 앞뒤 공백을 제거한 공유 항목 제목
-    /// 공백뿐이면 nil
+    /// 공유 항목 제목 원문
+    /// 앞뒤 공백 제거와 빈 제목 판정은 코어가 맡음
     nonisolated let title: String?
 
     init(item: NSExtensionItem?) {
         providers = item?.attachments ?? []
-        let trimmed = item?.attributedTitle?.string.trimmingCharacters(in: .whitespacesAndNewlines)
-        title = trimmed?.isEmpty == false ? trimmed : nil
+        title = item?.attributedTitle?.string
     }
 }
