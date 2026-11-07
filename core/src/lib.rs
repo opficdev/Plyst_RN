@@ -1,5 +1,6 @@
 // 클립 값 규칙의 공통 코어
 // 클립 저장소는 store 모듈이 소유
+// 이미지 파일 트리 규칙은 image_files 모듈이 소유
 // 호스트가 실패를 구분하지 않는 함수는 패닉을 catch_unwind로 막고 정해진 대체값을 돌려줌
 // 비던지기 UniFFI 함수의 패닉은 Swift 프로세스를 끝내므로 경계 밖으로 내보내지 않음
 // 호스트가 실패를 구분해야 하는 함수는 Result를 돌려주어 패닉을 오류로 전달
@@ -8,6 +9,7 @@
 mod case_fold;
 mod case_fold_table;
 mod content;
+pub mod image_files;
 mod search_history;
 mod sort;
 pub mod store;
