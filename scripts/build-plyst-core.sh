@@ -47,7 +47,9 @@ set -- cargo
 if command -v mise >/dev/null 2>&1; then
 	set -- mise exec -- cargo
 fi
-if [ -n "${CI:-}" ] || [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+# 배포 빌드(RN_XCFRAMEWORK_CLEAN)만 cargo 출력을 지워 처음부터 빌드
+# CI는 develop 실행이 저장한 cargo 출력을 복원해 바뀐 크레이트만 다시 컴파일
+if [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 	rm -rf "$output"
 fi
 

@@ -186,7 +186,7 @@ if [ "$path" = full ]; then
 	# plyst-search pod이 vendored_frameworks로 쓰므로 pod install 전에 만듦
 	# 작업 트리마다 cargo 출력을 따로 두어 다른 트리의 라이브러리를 집지 않게 함
 	# build는 무시 규칙에 들어 있어 입력 해시에 포함되지 않음
-	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않음
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 cargo 출력을 쓰지 않음
 	stage_begin search-core
 	set -- cargo
 	if command -v mise >/dev/null 2>&1; then
@@ -195,7 +195,7 @@ if [ "$path" = full ]; then
 	search_crate=$repository_root/rn/modules/plyst-search/rust
 	search_output=$repository_root/rn/modules/plyst-search/build
 	search_target=$search_output/target
-	if [ -n "${CI:-}" ] || [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	if [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		rm -rf "$search_target"
 	fi
 	simulator_targets=aarch64-apple-ios-sim
