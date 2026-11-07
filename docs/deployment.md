@@ -234,9 +234,10 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 	- `js`: JS 입력만 바뀌어 `main.jsbundle`만 다시 만들어 교체하고 다시 서명함
 	- `full`: 그 밖의 경우로 `rn/ios`를 다시 만들고 두 slice를 빌드함
 - `RN_XCFRAMEWORK_CLEAN=1`을 주면 항상 `full`로 실행하고 `npm ci`도 다시 실행함
-- 로컬 `full` 빌드는 컴파일 결과를 `~/Library/Caches/Plyst/RNCompilationCache`에 캐시함
+- `full` 빌드는 컴파일 결과를 `~/Library/Caches/Plyst/RNCompilationCache`에 캐시함
 	- 위치는 `RN_COMPILATION_CACHE`로 바꿀 수 있음
-	- `CI`가 설정되어 있거나 `RN_XCFRAMEWORK_CLEAN=1`이면 캐시를 쓰지 않음
+	- CI는 `develop` 실행이 저장한 캐시를 복원해 씀
+	- `RN_XCFRAMEWORK_CLEAN=1`이면 캐시를 쓰지 않음
 - 단계별 소요 시간은 `[rn-xcframework] stage=...` 줄로 출력됨
 
 ## 관련 파일

@@ -48,6 +48,25 @@ deployment_target_line() {
 	printf 'deployment_target  %s\n' "$deployment_target"
 }
 
+# expo.android는 Android prebuild만 읽으므로 iOS 프레임워크 입력에서 제외
+# 키 순서와 공백에 관계없이 같은 값이 나오도록 정렬한 JSON의 해시를 사용
+# 변환이 실패하면 빈 값의 해시가 되지 않도록 결과를 먼저 변수에 받음
+app_config_line() {
+	config=$(python3 -I -c '
+import json, sys
+config = json.load(open(sys.argv[1], encoding="utf-8"))
+config["expo"].pop("android", None)
+sys.stdout.write(json.dumps(config, sort_keys=True, ensure_ascii=False))
+' rn/app.json)
+	printf 'app_config  %s\n' "$(printf '%s' "$config" | shasum -a 256 | cut -d ' ' -f 1)"
+}
+
+# SwiftLint 버전은 프레임워크 빌드에 쓰이지 않으므로 .mise.toml에서 제외
+mise_line() {
+	tools=$(grep -v '^"aqua:realm/SwiftLint"' .mise.toml)
+	printf 'mise  %s\n' "$(printf '%s' "$tools" | shasum -a 256 | cut -d ' ' -f 1)"
+}
+
 lock_lines() {
 	content_lines rn/package-lock.json
 }
@@ -55,14 +74,14 @@ lock_lines() {
 # 파일 추가와 삭제는 Pods를 다시 만들어야 하므로 rn/modules의 ios 소스는 이름만 포함
 # Android 전용 소스와 plyst-core, plyst-host와 Rust 테스트는 iOS 프레임워크에 들어가지 않아 제외
 base_lines() {
+	app_config_line
+	mise_line
 	content_lines \
 		rn/package.json \
 		rn/package-lock.json \
-		rn/app.json \
 		scripts/build-rn-xcframework.sh \
 		scripts/rn-xcframework-inputs.sh \
 		Plyst/Packages/PlystReactNative/Package.swift \
-		.mise.toml \
 		':(exclude,glob)rn/modules/**/ios/**' \
 		':(exclude,glob)rn/modules/**/android/**' \
 		':(exclude)rn/modules/plyst-core' \
@@ -86,8 +105,8 @@ core_lines() {
 		scripts/build-plyst-core.sh \
 		scripts/generate-plyst-core-bindings.sh \
 		Plyst/Packages/PlystCore/Package.swift \
-		Plyst/Packages/PlystCore/Sources/PlystCore/PrivacyInfo.xcprivacy \
-		.mise.toml
+		Plyst/Packages/PlystCore/Sources/PlystCore/PrivacyInfo.xcprivacy
+	mise_line
 	deployment_target_line
 }
 
@@ -119,7 +138,8 @@ case "${1:-all}" in
 	core) hash_of core_lines ;;
 	files)
 		lines=$(all_lines)
-		printf '%s\n' "$lines" | grep -v '^deployment_target' | cut -d ' ' -f 3-
+		printf '%s\n' "$lines" | grep -v -e '^deployment_target' -e '^app_config' -e '^mise' | cut -d ' ' -f 3-
+		printf '%s\n' rn/app.json .mise.toml
 		;;
 	*)
 		printf '사용법: %s [lock|native|all|files|core]\n' "$0" >&2

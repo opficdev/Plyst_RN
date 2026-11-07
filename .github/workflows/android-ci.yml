@@ -1,7 +1,16 @@
 name: Android CI
 
+# develop 푸시는 PR이 읽을 캐시를 만드는 실행
 on:
   pull_request:
+  push:
+    branches:
+      - develop
+
+# 같은 PR이나 브랜치에 새 푸시가 오면 진행 중인 앞 실행 취소
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -40,7 +49,47 @@ jobs:
         working-directory: rn
         run: mise exec -- npm ci
 
+      # rn/android는 prebuild가 만들므로 사용자 수준 설정으로 지정
+      # 기본값(힙 2GB, Metaspace 512MB)에서는 처음 빌드할 때 데몬이 Metaspace를 소진
+      # 빌드 캐시를 켜서 바뀌지 않은 모듈의 작업 결과를 재사용
+      - name: Configure Gradle
+        run: |
+          mkdir -p ~/.gradle
+          printf '%s\n' 'org.gradle.caching=true' 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g' >> ~/.gradle/gradle.properties
+
+      # Gradle 빌드 캐시
+      # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
+      - name: Restore Gradle build cache
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+
+      # 바인딩 생성기와 호스트용 core의 cargo 출력
+      # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
+      - name: Restore cargo output
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: core/build/host
+          key: cargo-host-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
+
       - name: Build
         env:
           MISE_AUTO_INSTALL: 0
         run: make rn-android-build
+
+      - name: Save Gradle build cache
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+
+      - name: Save cargo output
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: core/build/host
+          key: cargo-host-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}

@@ -9,6 +9,20 @@ script_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repository_root=$(CDPATH= cd "$script_directory/.." && pwd)
 configuration=${RN_CONFIGURATION:-Release}
 
+# CI는 RN_XCFRAMEWORK_SIMULATOR_ARCHS=arm64로 시뮬레이터 x86_64 슬라이스를 생략
+# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 항상 두 아키텍처를 빌드
+simulator_archs=${RN_XCFRAMEWORK_SIMULATOR_ARCHS:-arm64 x86_64}
+if [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	simulator_archs='arm64 x86_64'
+fi
+case "$simulator_archs" in
+	'arm64 x86_64' | arm64) ;;
+	*)
+		printf '오류: 지원하지 않는 시뮬레이터 아키텍처입니다: %s\n' "$simulator_archs" >&2
+		exit 1
+		;;
+esac
+
 script_started=$(date +%s)
 stage_name=
 stage_started=$script_started
@@ -88,7 +102,7 @@ cd "$repository_root/rn"
 # JS 입력만 바뀌었으면 main.jsbundle만 다시 만들어 교체
 # RN_XCFRAMEWORK_CLEAN이 비어 있지 않으면 항상 처음부터 빌드
 node_version=$("$node_binary" --version)
-environment="$(xcodebuild -version | tr '\n' ' ')node=$node_version configuration=$configuration"
+environment="$(xcodebuild -version | tr '\n' ' ')node=$node_version configuration=$configuration simulator_archs=$simulator_archs"
 all_hash=$("$inputs_script" all)
 native_hash=$("$inputs_script" native)
 npm_state="lock=$("$inputs_script" lock) node=$node_version npm=$(npm --version)"
@@ -142,6 +156,116 @@ rebuild_bundle() {
 	done
 }
 
+# 같은 잠금 파일과 도구로 설치된 node_modules가 있으면 npm ci를 건너뜀
+install_node_modules() {
+	stage_begin npm-ci
+	if [ -f "$npm_marker" ] && [ "$(cat "$npm_marker")" = "$npm_state" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+		stage_skip npm-ci
+	else
+		npm ci
+		printf '%s\n' "$npm_state" > "$npm_marker"
+		stage_end
+	fi
+}
+
+# rn/ios 빌드 결과가 없는 CI에서 설치된 BrownfieldLib의 main.jsbundle만 다시 만들어 교체
+# 번들 단계는 전체 빌드와 같은 Products 경로와 npm 패키지의 hermesc를 씀
+replace_installed_bundle() {
+	[ "$configuration" = Release ] || return 1
+	[ -d "$destination/BrownfieldLib.xcframework" ] || return 1
+
+	ios_directory=$repository_root/rn/ios
+	entry_file=$("$node_binary" -e "require('expo/scripts/resolveAppEntry')" "$repository_root/rn" ios absolute | tail -n 1)
+	cli_path=$("$node_binary" --print "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })")
+	bundle_script=$("$node_binary" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'")
+	hermes_cli=$("$node_binary" --print "require('path').dirname(require.resolve('hermes-compiler/package.json')) + '/hermesc/osx-bin/hermesc'")
+	[ -x "$hermes_cli" ] || return 1
+
+	for platform in iphoneos iphonesimulator; do
+		products=$products_directory/$configuration-$platform
+		framework=$products/BrownfieldLib.framework
+		rm -rf "$framework"
+		mkdir -p "$framework"
+
+		(
+			export CONFIGURATION=$configuration
+			export PLATFORM_NAME=$platform
+			export CONFIGURATION_BUILD_DIR=$products
+			export UNLOCALIZED_RESOURCES_FOLDER_PATH=BrownfieldLib.framework
+			export PROJECT_DIR=$ios_directory
+			export SRCROOT=$ios_directory
+			export PODS_ROOT=$ios_directory/Pods
+			export PROJECT_ROOT=$repository_root/rn
+			export NODE_BINARY=$node_binary
+			export ENTRY_FILE=$entry_file
+			export CLI_PATH=$cli_path
+			export BUNDLE_COMMAND=export:embed
+			export HERMES_CLI_PATH=$hermes_cli
+			bash "$bundle_script"
+		) > /dev/null 2>&1 || return 1
+
+		case $platform in
+			iphoneos) pattern='*/ios-arm64/BrownfieldLib.framework' ;;
+			*) pattern='*/ios-*simulator/BrownfieldLib.framework' ;;
+		esac
+		slice=$(find "$destination/BrownfieldLib.xcframework" -type d -path "$pattern" | sed -n '1p')
+		[ -n "$slice" ] || return 1
+
+		# 에셋이 바뀌었거나 번들 외의 파일이 새로 생기면 교체만으로는 결과가 달라지므로 전체 빌드로 넘어감
+		if [ -d "$framework/assets" ] || [ -d "$slice/assets" ]; then
+			diff -rq "$framework/assets" "$slice/assets" > /dev/null 2>&1 || return 1
+		fi
+		for file in "$framework"/*; do
+			name=$(basename "$file")
+			case $name in
+				main.jsbundle | assets) continue ;;
+			esac
+			cmp -s "$file" "$slice/$name" || return 1
+		done
+		cp "$framework/main.jsbundle" "$slice/main.jsbundle" || return 1
+		codesign --force --sign - --timestamp=none "$slice" > /dev/null 2>&1 || return 1
+	done
+}
+
+# 설치된 프레임워크를 확인하고 입력 마커를 기록
+finish_build() {
+	stage_begin verify
+
+	if [ "$configuration" = Release ]; then
+		brownfield_xcframework=$destination/BrownfieldLib.xcframework
+		if ! [ -d "$brownfield_xcframework" ]; then
+			printf '오류: Release 번들을 확인할 수 없습니다: %s\n' "$brownfield_xcframework" >&2
+			exit 1
+		fi
+
+		main_bundle=$(find "$brownfield_xcframework" -type f \
+			-path '*/BrownfieldLib.framework/main.jsbundle' -print | sed -n '1p')
+		if [ -z "$main_bundle" ]; then
+			printf '오류: Release XCFramework에 main.jsbundle이 없습니다.\n' >&2
+			find "$brownfield_xcframework" -type d -name 'BrownfieldLib.framework' \
+				-exec sh -c 'for framework do
+					printf "누락: %s/main.jsbundle\n" "$framework" >&2
+				done' sh {} +
+			exit 1
+		fi
+	fi
+
+	verify_framework_names || exit 1
+
+	printf '%s\n' "$configuration" > "$destination/.configuration"
+
+	# 빌드 중 입력이 바뀌었으면 마커를 쓰지 않아 다음 실행이 다시 빌드
+	if [ "$("$inputs_script" all)" = "$all_hash" ]; then
+		printf 'all=%s\nnative=%s\nenvironment=%s\n' "$all_hash" "$native_hash" "$environment" \
+			> "$inputs_marker.tmp"
+		mv "$inputs_marker.tmp" "$inputs_marker"
+	else
+		printf '경고: 빌드 중 입력이 바뀌어 입력 마커를 쓰지 않았습니다.\n' >&2
+	fi
+	stage_end
+	printf '[rn-xcframework] path=%s total=%s\n' "$path" "$(($(date +%s) - script_started))"
+}
+
 path=full
 if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ] \
 	&& [ "$(marker_value "$inputs_marker" environment)" = "$environment" ] \
@@ -158,6 +282,19 @@ if [ "$path" = skip ]; then
 	exit 0
 fi
 
+# CI처럼 rn/ios 빌드 결과가 없으면 설치된 프레임워크의 번들을 바로 교체하고 끝냄
+if [ "$path" = js ] && ! [ -d "$build_directory/BrownfieldLib.xcframework" ]; then
+	install_node_modules
+	stage_begin bundle-js
+	if replace_installed_bundle; then
+		stage_end
+		finish_build
+		exit 0
+	fi
+	printf '[rn-xcframework] JS 번들만 교체할 수 없어 전체 빌드로 넘어갑니다.\n'
+	path=full
+fi
+
 if [ "$path" = js ]; then
 	stage_begin bundle-js
 	if rebuild_bundle; then
@@ -172,7 +309,7 @@ if [ "$path" = full ]; then
 	# plyst-search pod이 vendored_frameworks로 쓰므로 pod install 전에 만듦
 	# 작업 트리마다 cargo 출력을 따로 두어 다른 트리의 라이브러리를 집지 않게 함
 	# build는 무시 규칙에 들어 있어 입력 해시에 포함되지 않음
-	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않음
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 cargo 출력을 쓰지 않음
 	stage_begin search-core
 	set -- cargo
 	if command -v mise >/dev/null 2>&1; then
@@ -181,10 +318,14 @@ if [ "$path" = full ]; then
 	search_crate=$repository_root/rn/modules/plyst-search/rust
 	search_output=$repository_root/rn/modules/plyst-search/build
 	search_target=$search_output/target
-	if [ -n "${CI:-}" ] || [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	if [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		rm -rf "$search_target"
 	fi
-	for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+	simulator_targets=aarch64-apple-ios-sim
+	case "$simulator_archs" in
+		*x86_64*) simulator_targets="$simulator_targets x86_64-apple-ios" ;;
+	esac
+	for target in aarch64-apple-ios $simulator_targets; do
 		IPHONEOS_DEPLOYMENT_TARGET=15.1 "$@" build \
 			--manifest-path "$search_crate/Cargo.toml" \
 			--release \
@@ -193,11 +334,12 @@ if [ "$path" = full ]; then
 			--target-dir "$search_target"
 	done
 	search_library=libplyst_search_core.a
+	set --
+	for target in $simulator_targets; do
+		set -- "$@" "$search_target/$target/release/$search_library"
+	done
 	mkdir -p "$search_output/simulator"
-	xcrun lipo -create \
-		"$search_target/aarch64-apple-ios-sim/release/$search_library" \
-		"$search_target/x86_64-apple-ios/release/$search_library" \
-		-output "$search_output/simulator/$search_library"
+	xcrun lipo -create "$@" -output "$search_output/simulator/$search_library"
 	rm -rf "$search_output/PlystSearchCore.xcframework"
 	xcodebuild -create-xcframework \
 		-library "$search_target/aarch64-apple-ios/release/$search_library" \
@@ -205,14 +347,7 @@ if [ "$path" = full ]; then
 		-output "$search_output/PlystSearchCore.xcframework" > /dev/null
 	stage_end
 
-	stage_begin npm-ci
-	if [ -f "$npm_marker" ] && [ "$(cat "$npm_marker")" = "$npm_state" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
-		stage_skip npm-ci
-	else
-		npm ci
-		printf '%s\n' "$npm_state" > "$npm_marker"
-		stage_end
-	fi
+	install_node_modules
 
 	# 아래 brownfield package:ios가 ios를 다시 만든 뒤 pod install을 한 번 실행하므로 여기서는 설치하지 않음
 	stage_begin prebuild
@@ -220,16 +355,25 @@ if [ "$path" = full ]; then
 	printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
 	stage_end
 
-	# 로컬 빌드는 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않음
-	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않음
+	# 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않음
+	# CI는 develop 실행이 저장한 캐시를 복원해 씀
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 캐시를 쓰지 않음
 	stage_begin package-ios
 	# 사전 컴파일 Expo 모듈은 쓰지 않는 모듈까지 별도 프레임워크로 실음
 	# Expo 모듈을 소스로 빌드해 BrownfieldLib에 정적으로 합치고 autolinking 제외 설정을 적용
 	export EXPO_USE_PRECOMPILED_MODULES=0
 	set -- --scheme BrownfieldLib --configuration "$configuration" --use-prebuilt-expo false
-	if [ -z "${CI:-}" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	extra_params=
+	# 기기 빌드도 arm64만 만들므로 두 빌드에 같은 값을 넘김
+	if [ "$simulator_archs" = arm64 ]; then
+		extra_params=ARCHS=arm64
+	fi
+	if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		cache_directory=${RN_COMPILATION_CACHE:-$HOME/Library/Caches/Plyst/RNCompilationCache}
-		set -- "$@" --extra-params "COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
+		extra_params="${extra_params:+$extra_params }COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
+	fi
+	if [ -n "$extra_params" ]; then
+		set -- "$@" --extra-params "$extra_params"
 	fi
 	npx brownfield package:ios "$@"
 	stage_end
@@ -277,7 +421,7 @@ for platform in iphoneos iphonesimulator; do
 	architectures=arm64
 	suffix=
 	if [ "$platform" = iphonesimulator ]; then
-		architectures='arm64 x86_64'
+		architectures=$simulator_archs
 		suffix=-simulator
 	fi
 	for architecture in $architectures; do
@@ -396,38 +540,4 @@ find "$destination" -type d -path '*/ios-*/*.framework' ! -path '*maccatalyst*' 
 	-exec codesign --force --sign - --timestamp=none {} +
 stage_end
 
-stage_begin verify
-
-if [ "$configuration" = Release ]; then
-	brownfield_xcframework=$destination/BrownfieldLib.xcframework
-	if ! [ -d "$brownfield_xcframework" ]; then
-		printf '오류: Release 번들을 확인할 수 없습니다: %s\n' "$brownfield_xcframework" >&2
-		exit 1
-	fi
-
-	main_bundle=$(find "$brownfield_xcframework" -type f \
-		-path '*/BrownfieldLib.framework/main.jsbundle' -print | sed -n '1p')
-	if [ -z "$main_bundle" ]; then
-		printf '오류: Release XCFramework에 main.jsbundle이 없습니다.\n' >&2
-		find "$brownfield_xcframework" -type d -name 'BrownfieldLib.framework' \
-			-exec sh -c 'for framework do
-				printf "누락: %s/main.jsbundle\n" "$framework" >&2
-			done' sh {} +
-		exit 1
-	fi
-fi
-
-verify_framework_names || exit 1
-
-printf '%s\n' "$configuration" > "$destination/.configuration"
-
-# 빌드 중 입력이 바뀌었으면 마커를 쓰지 않아 다음 실행이 다시 빌드
-if [ "$("$inputs_script" all)" = "$all_hash" ]; then
-	printf 'all=%s\nnative=%s\nenvironment=%s\n' "$all_hash" "$native_hash" "$environment" \
-		> "$inputs_marker.tmp"
-	mv "$inputs_marker.tmp" "$inputs_marker"
-else
-	printf '경고: 빌드 중 입력이 바뀌어 입력 마커를 쓰지 않았습니다.\n' >&2
-fi
-stage_end
-printf '[rn-xcframework] path=%s total=%s\n' "$path" "$(($(date +%s) - script_started))"
+finish_build
