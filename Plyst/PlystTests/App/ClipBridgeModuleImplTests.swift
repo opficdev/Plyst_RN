@@ -17,9 +17,9 @@ final class ClipBridgeModuleImplTests: ClipTemporaryDirectoryTestCase {
     }
 
     func testImageRecordContainsRawSizeWithoutURI() async throws {
-        let adapter = try makeAdapter(storage: makeStorage())
+        let adapter = try makeAdapter(core: makeCore())
         let data = try ClipImageTestFixture.data()
-        let clip = try await adapter.images.saveImage(data).value
+        let clip = try await adapter.core.saveImage(data).value
         await ClipBridge.register(adapter)
         let completion = expectation(description: "이미지 조회 완료")
         ClipBridgeModuleImpl(emit: { _, _ in }).getClip(clip.id.uuidString) { record, code in
@@ -35,12 +35,12 @@ final class ClipBridgeModuleImplTests: ClipTemporaryDirectoryTestCase {
     }
 
     func testGetClipsReturnsDictionaries() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
+        let core = try makeCore()
+        let adapter = makeAdapter(core: core)
         let link = Clip(content: .text("https://example.com"), createdAt: Date(timeIntervalSince1970: 2))
         let plain = Clip(content: .text("원문"), createdAt: Date(timeIntervalSince1970: 1))
-        try await storage.insert(plain)
-        try await storage.insert(link)
+        try await core.insert(plain)
+        try await core.insert(link)
         await ClipBridge.register(adapter)
         let completion = expectation(description: "목록 조회 완료")
 
@@ -62,10 +62,10 @@ final class ClipBridgeModuleImplTests: ClipTemporaryDirectoryTestCase {
     }
 
     func testUpdateArgumentsReachStoredClipThroughAdapter() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
+        let core = try makeCore()
+        let adapter = makeAdapter(core: core)
         let clip = Clip(content: .text("원문"))
-        try await storage.insert(clip)
+        try await core.insert(clip)
         await ClipBridge.register(adapter)
         let completion = expectation(description: "수정 완료")
 
@@ -82,7 +82,7 @@ final class ClipBridgeModuleImplTests: ClipTemporaryDirectoryTestCase {
         }
 
         await fulfillment(of: [completion], timeout: 2)
-        let fetched = try await storage.fetch(id: clip.id)
+        let fetched = try await core.fetch(id: clip.id)
         let stored = try XCTUnwrap(fetched)
         XCTAssertEqual(stored.name, "이름")
         XCTAssertEqual(stored.memo, "메모")

@@ -14,23 +14,19 @@ enum ClipPhotoLibrarySaveResult: Equatable, Sendable {
 }
 
 /// 명시적인 사용자 요청에서만 사진 앱에 원본을 추가
-/// storage와 images는 같은 저장소를 사용
 struct ClipPhotoLibraryService: Sendable {
-    private let storage: any ClipStorageService
-    private let images: ClipImageService
+    private let core: ClipCoreAdapter
     private let writer: any PhotoLibraryWriter
 
     init(
-        storage: any ClipStorageService,
-        images: ClipImageService,
+        core: ClipCoreAdapter,
         writer: any PhotoLibraryWriter = SystemPhotoLibraryWriter()
     ) {
-        self.storage = storage
-        self.images = images
+        self.core = core
         self.writer = writer
     }
 
-    /// 권한 대기 중에는 이미지 서비스의 작업 순서를 점유하지 않음
+    /// 권한 대기 중에는 이미지 줄을 점유하지 않음
     func save(id: Clip.ID) async throws -> ClipPhotoLibrarySaveResult {
         try Task.checkCancellation()
         switch try await writer.requestAddAuthorization() {
@@ -42,9 +38,9 @@ struct ClipPhotoLibraryService: Sendable {
             break
         }
         try Task.checkCancellation()
-        guard let clip = try await storage.fetch(id: id) else { throw ClipStorageError.notFound(id) }
+        guard let clip = try await core.fetch(id: id) else { throw ClipStorageError.notFound(id) }
         guard case .image(let image) = clip.content else { throw ClipImageFileError.notImage(id) }
-        let data = try await images.loadImage(image)
+        let data = try await core.loadImage(image)
         try Task.checkCancellation()
         try await writer.write(data, contentType: image.contentType)
         // 쓰기 확정 이후에는 취소를 다시 확인하지 않음

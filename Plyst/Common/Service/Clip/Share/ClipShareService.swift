@@ -20,17 +20,14 @@ import UniformTypeIdentifiers
 /// 읽기에 실패하면 저장소에 쓰지 않음
 /// 이미지 검증 오류와 저장소 오류와 CancellationError는 그대로 전파
 struct ClipShareService: Sendable {
-    private let storage: any ClipStorageService
-    private let images: ClipImageService
+    private let core: ClipCoreAdapter
     private let downloads: ClipImageDownloadService
 
     init(
-        storage: any ClipStorageService,
-        images: ClipImageService,
+        core: ClipCoreAdapter,
         downloads: ClipImageDownloadService
     ) {
-        self.storage = storage
-        self.images = images
+        self.core = core
         self.downloads = downloads
     }
 
@@ -45,7 +42,7 @@ struct ClipShareService: Sendable {
         guard let data else { return try await saveText(item) }
         // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
         try Task.checkCancellation()
-        let result = try await images.saveImage(data)
+        let result = try await core.saveImage(data)
         return .saved(result.value)
     }
 
@@ -66,7 +63,7 @@ struct ClipShareService: Sendable {
         // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
         try Task.checkCancellation()
         let clip = Clip(content: .text(text), name: item.title)
-        try await storage.insert(clip)
+        try await core.insert(clip)
         return .saved(clip)
     }
 
@@ -83,7 +80,7 @@ struct ClipShareService: Sendable {
         // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
         try Task.checkCancellation()
         do {
-            let result = try await images.saveImage(data, memo: url.absoluteString)
+            let result = try await core.saveImage(data, memo: url.absoluteString)
             return .saved(result.value)
         } catch let error as ClipImageFileError where error == .invalidImage || error == .unsupportedImage {
             return nil

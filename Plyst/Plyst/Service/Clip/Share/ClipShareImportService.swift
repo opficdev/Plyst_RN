@@ -12,6 +12,7 @@ import Foundation
 /// Inbox 연결은 호출마다 열고 호출이 끝나면 닫음
 /// Inbox 파일이 없거나 비어 있으면 본 저장소에 쓰지 않으므로 이벤트도 발행하지 않음
 /// 클립은 오래된 순서로 처리하며 본 저장소에 확정된 뒤에만 Inbox에서 제거
+/// Inbox 이미지 파일 정리가 보류되어도 Share Extension이 다음 실행에서 복구
 /// 같은 식별자가 본 저장소에 이미 있으면 이전 반입이 중단된 경우로 보고 Inbox에서만 제거
 /// 같은 클립이 두 번 추가되지 않음
 /// 한 클립의 복사나 제거가 실패해도 그 클립을 Inbox에 남기고 나머지를 계속 처리
@@ -25,25 +26,24 @@ import Foundation
 struct ClipShareImportService: Sendable {
     private let inboxDatabaseURL: URL
     private let inboxImagesURL: URL
-    private let storage: any ClipStorageService
-    private let images: ClipImageService
+    private let core: ClipCoreAdapter
 
     init(
         inboxDatabaseURL: URL,
         inboxImagesURL: URL,
-        storage: any ClipStorageService,
-        images: ClipImageService
+        core: ClipCoreAdapter
     ) {
         self.inboxDatabaseURL = inboxDatabaseURL
         self.inboxImagesURL = inboxImagesURL
-        self.storage = storage
-        self.images = images
+        self.core = core
     }
 
     func importPendingClips() async throws -> ClipShareImportResult {
         guard FileManager.default.fileExists(atPath: inboxDatabaseURL.path) else { return .empty }
-        let inbox = try SQLiteClipStorageService(databaseURL: inboxDatabaseURL)
-        let inboxImages = try ClipImageService(storage: inbox, rootURL: inboxImagesURL)
+        let inbox = try ClipCoreAdapter(
+            databaseURL: inboxDatabaseURL,
+            imagesURL: inboxImagesURL
+        )
         let clips = try await inbox.fetchAll(order: .createdAt).reversed()
         var importedCount = 0
         var remainingCount = 0
@@ -51,7 +51,7 @@ struct ClipShareImportService: Sendable {
         for clip in clips {
             try Task.checkCancellation()
             do {
-                let copied = try await copy(clip, inboxImages: inboxImages)
+                let copied = try await copy(clip, inbox: inbox)
                 if copied.isNew { importedCount += 1 }
                 if copied.hasPendingCleanup { hasPendingCleanup = true }
             } catch {
@@ -60,7 +60,7 @@ struct ClipShareImportService: Sendable {
                 continue
             }
             do {
-                try await remove(clip, inbox: inbox, inboxImages: inboxImages)
+                _ = try await inbox.delete(id: clip.id)
             } catch ClipStorageError.notFound {
                 // 이미 제거되어 있으면 목적을 달성한 상태
             } catch {
@@ -79,16 +79,16 @@ struct ClipShareImportService: Sendable {
     /// 같은 식별자가 이미 있으면 새로 추가하지 않고 isNew를 false로 반환
     private func copy(
         _ clip: Clip,
-        inboxImages: ClipImageService
+        inbox: ClipCoreAdapter
     ) async throws -> (isNew: Bool, hasPendingCleanup: Bool) {
         do {
             switch clip.content {
             case .text:
-                try await storage.insert(clip)
+                try await core.insert(clip)
                 return (true, false)
             case .image(let image):
-                let data = try await inboxImages.loadImage(image)
-                let result = try await images.saveImage(
+                let data = try await inbox.loadImage(image)
+                let result = try await core.saveImage(
                     data,
                     id: clip.id,
                     name: clip.name,
@@ -100,21 +100,6 @@ struct ClipShareImportService: Sendable {
             }
         } catch ClipStorageError.duplicateID {
             return (false, false)
-        }
-    }
-
-    /// 본 저장소에 확정된 클립을 Inbox에서 제거
-    /// 이미지 파일 정리가 보류되어도 Share Extension이 다음 실행에서 복구
-    private func remove(
-        _ clip: Clip,
-        inbox: SQLiteClipStorageService,
-        inboxImages: ClipImageService
-    ) async throws {
-        switch clip.content {
-        case .text:
-            try await inbox.delete(id: clip.id)
-        case .image:
-            _ = try await inboxImages.delete(id: clip.id)
         }
     }
 }

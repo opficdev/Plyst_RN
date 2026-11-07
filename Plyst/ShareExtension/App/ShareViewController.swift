@@ -53,13 +53,14 @@ final class ShareViewController: UIViewController {
     private func prepare() {
         do {
             let directory = try ClipAppGroupDirectory()
-            let storage = try SQLiteClipStorageService(databaseURL: directory.shareInboxDatabaseURL)
-            let images = try ClipImageService(storage: storage, rootURL: directory.shareInboxImagesURL)
-            startPendingCleanupRecovery(images)
+            let core = try ClipCoreAdapter(
+                databaseURL: directory.shareInboxDatabaseURL,
+                imagesURL: directory.shareInboxImagesURL
+            )
+            startPendingCleanupRecovery(core)
             let item = ClipShareItem(item: extensionContext?.inputItems.first as? NSExtensionItem)
             let service = ClipShareService(
-                storage: storage,
-                images: images,
+                core: core,
                 downloads: ClipImageDownloadService(session: downloadSession)
             )
             bind(ShareReactor(item: item, service: service))
@@ -70,13 +71,13 @@ final class ShareViewController: UIViewController {
     }
 
     /// 이전 실행에서 중단된 저장이 남긴 불완전한 이미지 파일을 정리
-    /// 같은 ClipImageService 안에서는 정리와 저장이 직렬화됨
+    /// 같은 ClipCoreAdapter 안에서는 정리와 저장이 직렬화됨
     /// 화면이 해제되면 정리를 중단하고 다음 실행에서 다시 시도
-    private func startPendingCleanupRecovery(_ images: ClipImageService) {
+    private func startPendingCleanupRecovery(_ core: ClipCoreAdapter) {
         recoveryTask?.cancel()
         recoveryTask = Task {
             do {
-                let pending = try await images.recoverPendingCleanup()
+                let pending = try await core.recoverPendingCleanup()
                 if !pending.isEmpty {
                     Self.logger.warning("이미지 정리 보류: \(pending.count, privacy: .public)개")
                 }
