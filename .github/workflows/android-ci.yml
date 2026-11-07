@@ -51,7 +51,23 @@ jobs:
         working-directory: rn
         run: mise exec -- npm ci
 
+      # 바인딩 생성기와 호스트용 core의 cargo 출력
+      # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
+      - name: Restore cargo output
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: core/build/host
+          key: cargo-host-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
+
       - name: Build
         env:
           MISE_AUTO_INSTALL: 0
         run: make rn-android-build
+
+      - name: Save cargo output
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: core/build/host
+          key: cargo-host-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
