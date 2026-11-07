@@ -12,6 +12,7 @@ mod search_history;
 mod sort;
 pub mod store;
 mod update;
+mod uuid_form;
 mod web_link;
 mod whitespace;
 

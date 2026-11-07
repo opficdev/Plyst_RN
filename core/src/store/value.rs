@@ -2,6 +2,7 @@ use rusqlite::types::FromSql;
 use rusqlite::Row;
 
 use super::error::ClipStoreError;
+use crate::uuid_form::is_uuid_form;
 use crate::{content, update, ClipContentValue, ClipIdentity};
 
 pub(crate) const COLUMNS: &str = "id, kind, text, imageFileID, imageContentType, pixelWidth, pixelHeight, byteCount, name, pinnedAt, memo, createdAt, lastUsedAt";
@@ -49,19 +50,7 @@ pub struct ClipUpdateResult {
 /// 36자 형식과 16진수만 허용하고 소문자로 통일
 /// iOS 저장값이 소문자이므로 바인딩 값도 이 표기를 씀
 pub(crate) fn stored_id(value: &str) -> Option<String> {
-    let bytes = value.as_bytes();
-    if bytes.len() != 36 {
-        return None;
-    }
-    for (index, byte) in bytes.iter().enumerate() {
-        let is_hyphen_position = matches!(index, 8 | 13 | 18 | 23);
-        if is_hyphen_position != (*byte == b'-')
-            || (!is_hyphen_position && !byte.is_ascii_hexdigit())
-        {
-            return None;
-        }
-    }
-    Some(value.to_ascii_lowercase())
+    is_uuid_form(value).then(|| value.to_ascii_lowercase())
 }
 
 /// 저장값을 경계 밖 표기로 변환
