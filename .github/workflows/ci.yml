@@ -35,9 +35,10 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make lint
 
+  # macOS 동시 실행 수를 아끼려고 Linux에서 실행
   js:
     name: JS
-    runs-on: xcode-27
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
