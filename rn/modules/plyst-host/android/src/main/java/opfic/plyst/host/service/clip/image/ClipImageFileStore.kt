@@ -117,7 +117,6 @@ class ClipImageFileStore(root: File) {
 
   // UniFFI 바이트 인자는 direct buffer만 받음
   // 상한 이하 데이터는 버퍼를 재사용해 할당 비용을 줄이고 초과분은 메모리에 남지 않게 따로 할당
-  // 생성 코드는 포인터만 넘기므로 코어 호출이 끝날 때까지 버퍼 회수와 재사용을 막음
   private inline fun <T> withDirectBuffer(
     data: ByteArray,
     body: (ByteBuffer) -> T,
@@ -127,7 +126,8 @@ class ClipImageFileStore(root: File) {
       buffer.clear()
       buffer.put(data)
       buffer.flip()
-      body(buffer)
+      // 생성 코드는 포인터만 넘기므로 코어 호출이 끝날 때까지 버퍼 회수를 막음
+      synchronized(buffer) { body(buffer) }
     }
 
   private companion object {
