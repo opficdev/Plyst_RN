@@ -26,7 +26,7 @@ final class ShareViewController: UIViewController {
 
     /// 이미지 URL 내려받기에 쓰는 세션
     /// 화면이 해제될 때 진행 중인 전송과 함께 무효화
-    private let downloadSession = URLSession(configuration: ClipImageDownloadService.configuration)
+    private let downloadSession = URLSession(configuration: SystemClipImageDownloader.configuration)
     private var reactor: ShareReactor?
     private var task: Task<Void, Never>?
     private var finishTask: Task<Void, Never>?
@@ -61,7 +61,7 @@ final class ShareViewController: UIViewController {
             let item = ClipShareItem(item: extensionContext?.inputItems.first as? NSExtensionItem)
             let service = ClipShareService(
                 core: core,
-                downloads: ClipImageDownloadService(session: downloadSession)
+                downloader: SystemClipImageDownloader(session: downloadSession)
             )
             bind(ShareReactor(item: item, service: service))
         } catch {
@@ -71,7 +71,7 @@ final class ShareViewController: UIViewController {
     }
 
     /// 이전 실행에서 중단된 저장이 남긴 불완전한 이미지 파일을 정리
-    /// 같은 ClipCoreAdapter 안에서는 정리와 저장이 직렬화됨
+    /// 같은 ClipCoreAdapter가 내려받는 중인 폴더는 정리가 건너뜀
     /// 화면이 해제되면 정리를 중단하고 다음 실행에서 다시 시도
     private func startPendingCleanupRecovery(_ core: ClipCoreAdapter) {
         recoveryTask?.cancel()
