@@ -6,11 +6,16 @@
 //
 
 import Foundation
+import PlystCore
 import UIKit
 import UniformTypeIdentifiers
 
 /// 기기 간 전송 여부와 만료일을 명시적으로 구성하는 시스템 클립보드 쓰기 구현
-struct SystemClipboardWriter: ClipboardWriter {
+/// UIKit 객체 대신 값 타입을 받아 명시적인 요청에서만 클립보드에 씀
+/// 오류는 쓰기를 시작하기 전에만 던지고 쓰기 이후에는 관찰 결과를 반환
+/// observed는 쓰기 직후 첫 항목에서 요청한 표현을 확인했다는 뜻이고 notObserved는 확인하지 못했다는 뜻
+/// 이후의 유지, 다른 앱의 붙여넣기, 클립보드 미변경은 보장하지 않음
+final class SystemClipboardWriter: ClipboardWriting {
     private let localOnly: Bool
     private let expirationDate: Date?
 
@@ -22,10 +27,8 @@ struct SystemClipboardWriter: ClipboardWriter {
         self.expirationDate = expirationDate
     }
 
-    /// 호출자의 actor 밖에서 쓰기와 기록된 표현의 확인을 수행
-    @concurrent
-    func write(_ content: ClipboardWriteContent) async throws -> ClipboardWriteResult {
-        try Task.checkCancellation()
+    /// 코어의 취소 판정을 지난 호출만 들어오므로 취소를 다시 확인하지 않음
+    func write(content: ClipboardWriteValue) throws -> ClipboardWriteOutcome {
         let pasteboard = UIPasteboard.general
         var options = [UIPasteboard.OptionsKey: Any]()
         options[.localOnly] = localOnly
@@ -39,7 +42,8 @@ struct SystemClipboardWriter: ClipboardWriter {
             pasteboard.setItems([[type: text]], options: options)
             let written = pasteboard.value(forPasteboardType: type) as? String
             return written == text ? .observed : .notObserved
-        case let .image(data, contentType):
+        case let .image(path, contentType):
+            guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { throw ClipboardWriteError.ReadFailed }
             pasteboard.setItems([[contentType: data]], options: options)
             let written = pasteboard.data(forPasteboardType: contentType)
             return written == data ? .observed : .notObserved

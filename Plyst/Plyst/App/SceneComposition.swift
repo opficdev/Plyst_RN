@@ -44,9 +44,11 @@ final class SceneComposition {
         try directory.setResourceValues(values)
 
         let storage = try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
-        let files = try ClipImageFileStore(rootURL: directory.appendingPathComponent("images", isDirectory: true))
-        let images = ClipImageService(storage: storage, files: files)
-        let clipboard = ClipboardService(storage: storage, images: images)
+        let images = try ClipImageService(
+            storage: storage,
+            rootURL: directory.appendingPathComponent("images", isDirectory: true)
+        )
+        let clipboard = ClipboardService(images: images)
         self.storage = storage
         self.images = images
         self.clipboard = clipboard

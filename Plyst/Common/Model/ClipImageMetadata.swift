@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PlystCore
 
 struct ClipImageMetadata: Equatable, Sendable {
 
@@ -17,4 +18,14 @@ struct ClipImageMetadata: Equatable, Sendable {
     let pixelWidth: Int
     let pixelHeight: Int
     let byteCount: Int
+
+    var coreValue: ClipImageValue {
+        ClipImageValue(
+            fileId: fileID.uuidString,
+            contentType: contentType,
+            pixelWidth: Int64(pixelWidth),
+            pixelHeight: Int64(pixelHeight),
+            byteCount: Int64(byteCount)
+        )
+    }
 }

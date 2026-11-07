@@ -8,16 +8,68 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import PlystCore
 import UniformTypeIdentifiers
 
 /// 이미지 형식과 크기 판독, 저장 전 검증, 축소본 생성
 /// 파일 경로 규칙과 파일 쓰기는 소유하지 않음
-enum ClipImageCodec {
+/// 코어가 부르는 구현은 모든 오류를 선언된 코덱 오류로 변환
+final class ClipImageCodec: ClipImageCoding {
     /// 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수
     /// 검증이 원본 해상도 비트맵을 만들지 않게 함
     private static let validationPixelDimension = 64
 
-    static func properties(of data: Data) throws -> (type: String, size: (width: Int, height: Int)) {
+    func properties(path: String) throws -> ClipImagePropertiesValue {
+        do {
+            return try Self.validated(Data(contentsOf: URL(fileURLWithPath: path)))
+        } catch {
+            throw Self.codecError(error)
+        }
+    }
+
+    func thumbnail(
+        path: String,
+        image: ClipImageValue,
+        maximumPixelDimension: Int64
+    ) throws -> Data {
+        do {
+            return try Self.thumbnail(
+                of: URL(fileURLWithPath: path),
+                contentType: image.contentType,
+                pixelWidth: Int(image.pixelWidth),
+                pixelHeight: Int(image.pixelHeight),
+                maximumPixelDimension: Int(maximumPixelDimension)
+            )
+        } catch {
+            throw Self.codecError(error)
+        }
+    }
+
+    /// 저장 전 검증
+    /// 검증을 통과한 이미지의 형식과 크기를 코어 값으로 반환
+    static func validated(_ data: Data) throws -> ClipImagePropertiesValue {
+        // UniFFI 바이트 인자의 길이가 Int32이므로 초과분은 호출 전에 거부
+        guard data.count <= Int32.max else { throw ClipImageFileError.writeFailed }
+        let properties = try properties(of: data)
+        return ClipImagePropertiesValue(
+            contentType: properties.type,
+            pixelWidth: Int64(properties.size.width),
+            pixelHeight: Int64(properties.size.height)
+        )
+    }
+
+    private static func codecError(_ error: any Error) -> ClipCodecError {
+        if error is CancellationError { return .Cancelled }
+        if let error = error as? ClipCodecError { return error }
+        guard let error = error as? ClipImageFileError else { return .ReadFailed }
+        return switch error {
+        case .invalidImage, .unsupportedImage, .corruptedImage: .Corrupted
+        case .readFailed: .ReadFailed
+        default: .Unexpected
+        }
+    }
+
+    private static func properties(of data: Data) throws -> (type: String, size: (width: Int, height: Int)) {
         try Task.checkCancellation()
         guard !data.isEmpty, let source = CGImageSourceCreateWithData(data as CFData, nil),
               let identifier = CGImageSourceGetType(source) else { throw ClipImageFileError.invalidImage }
@@ -56,18 +108,20 @@ enum ClipImageCodec {
 
     /// 원본을 Data로 적재하지 않고 첫 프레임을 표시 크기로 축소
     /// 저장된 파일은 변경하지 않음
-    static func thumbnail(
+    private static func thumbnail(
         of original: URL,
-        image: ClipImageMetadata,
+        contentType: String,
+        pixelWidth: Int,
+        pixelHeight: Int,
         maximumPixelDimension: Int
     ) throws -> Data {
         let options = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let source = CGImageSourceCreateWithURL(original as CFURL, options),
-              CGImageSourceGetType(source) as String? == image.contentType,
+              CGImageSourceGetType(source) as String? == contentType,
               let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as NSDictionary?,
-              properties[kCGImagePropertyPixelWidth] as? Int == image.pixelWidth,
-              properties[kCGImagePropertyPixelHeight] as? Int == image.pixelHeight else {
-            throw ClipImageFileError.corruptedImage(image.fileID)
+              properties[kCGImagePropertyPixelWidth] as? Int == pixelWidth,
+              properties[kCGImagePropertyPixelHeight] as? Int == pixelHeight else {
+            throw ClipCodecError.Corrupted
         }
         let thumbnailOptions = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -84,7 +138,7 @@ enum ClipImageCodec {
                 1,
                 nil
               ) else {
-            throw ClipImageFileError.corruptedImage(image.fileID)
+            throw ClipCodecError.Corrupted
         }
         try Task.checkCancellation()
         CGImageDestinationAddImage(destination, thumbnail, nil)

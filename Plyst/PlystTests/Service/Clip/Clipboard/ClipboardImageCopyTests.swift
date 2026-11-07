@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PlystCore
 import UniformTypeIdentifiers
 import XCTest
 @testable import Plyst
@@ -14,14 +15,9 @@ import XCTest
 final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
     func testImageCopyPreservesOriginalBytesTypeAndMetadata() async throws {
         let storage = try SQLiteClipStorageService(databaseURL: url)
-        let files = try ClipImageFileStore(rootURL: root)
-        let images = ClipImageService(storage: storage, files: files)
+        let images = try ClipImageService(storage: storage, rootURL: root)
         let writer = ClipboardWriterSpy()
-        let service = ClipboardService(
-            storage: storage,
-            images: images,
-            writer: writer
-        )
+        let service = ClipboardService(images: images, writer: writer)
         for type in [UTType.png.identifier, UTType.jpeg.identifier, UTType.gif.identifier] {
             let data = try ClipImageTestFixture.data(
                 type: type,
@@ -38,10 +34,11 @@ final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
             XCTAssertEqual(copied.content, clip.content)
             XCTAssertEqual(copied.createdAt, clip.createdAt)
             XCTAssertNotNil(copied.lastUsedAt)
-            XCTAssertEqual(writer.contents.last, .image(data: data, contentType: type))
-            XCTAssertEqual(try files.load(fileID: image.fileID), data)
-            XCTAssertEqual(try files.load(image: image), data)
-            XCTAssertEqual(try files.pendingFileIDs(), [])
+            guard case let .image(path, contentType) = writer.contents.last else { return XCTFail("이미지 쓰기 누락") }
+            XCTAssertEqual(contentType, type)
+            XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: path)), data)
+            let loaded = try await images.loadImage(image)
+            XCTAssertEqual(loaded, data)
             let stored = try await storage.fetch(id: clip.id)
             XCTAssertEqual(stored, copied)
         }

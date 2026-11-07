@@ -82,19 +82,18 @@ final class ClipShareServiceTests: ClipTemporaryDirectoryTestCase {
         let reopened = try makeStorage()
         let stored = try await reopened.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip])
-        let images = ClipImageService(storage: reopened, files: try ClipImageFileStore(rootURL: root))
+        let images = try ClipImageService(storage: reopened, rootURL: root)
         let loaded = try await images.loadImage(image)
         XCTAssertEqual(loaded, data)
         XCTAssertEqual(try entryCount(at: root), 1)
     }
 
-    private func makeService(storage: any ClipStorageService) throws -> ClipShareService {
-        let files = try ClipImageFileStore(rootURL: root)
+    private func makeService(storage: SQLiteClipStorageService) throws -> ClipShareService {
         let session = URLSession(configuration: ClipImageDownloadService.configuration)
         addTeardownBlock { session.invalidateAndCancel() }
         return ClipShareService(
             storage: storage,
-            images: ClipImageService(storage: storage, files: files),
+            images: try ClipImageService(storage: storage, rootURL: root),
             downloads: ClipImageDownloadService(session: session)
         )
     }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PlystCore
 import UIKit
 import UniformTypeIdentifiers
 import XCTest
@@ -13,7 +14,10 @@ import XCTest
 
 /// 기존 클립보드 복구 절차를 공유하고 시스템 클립보드를 쓰는 검증을 같은 XCTestCase에 배치
 extension SystemClipboardReaderTests {
-    func testWriterCopiesOriginalImageDataAndTypeWithoutReencoding() async throws {
+    func testWriterCopiesOriginalImageDataAndTypeWithoutReencoding() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Plyst-\(UUID())", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
         let writer = SystemClipboardWriter(localOnly: true, expirationDate: nil)
         for type in [UTType.png.identifier, UTType.jpeg.identifier, UTType.gif.identifier] {
             let data = try ClipImageTestFixture.data(
@@ -22,7 +26,10 @@ extension SystemClipboardReaderTests {
                 orientation: 6
             )
 
-            let result = try await writer.write(.image(data: data, contentType: type))
+            let original = directory.appendingPathComponent(UUID().uuidString)
+            try data.write(to: original)
+
+            let result = try writer.write(content: .image(path: original.path, contentType: type))
 
             XCTAssertEqual(result, .observed)
             XCTAssertEqual(UIPasteboard.general.numberOfItems, 1)

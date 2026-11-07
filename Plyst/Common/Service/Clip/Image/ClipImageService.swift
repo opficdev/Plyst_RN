@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import PlystCore
 
-/// 같은 루트의 이미지 쓰기와 복구를 하나의 인스턴스에서 조율
+/// 같은 루트의 이미지 쓰기와 복구는 코어의 ClipImageOperations가 조율
+/// 이 타입은 실행 위치, 값 변환, 오류 변환, 원본 읽기를 담당
 /// 별도 프로세스의 변경은 조율하지 않음
 ///
 /// `ShareInboxImages`는 두 프로세스가 다룸
@@ -17,18 +19,21 @@ import Foundation
 /// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일
 /// 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않음
 actor ClipImageService {
-    private static let previewPixelDimension = 1600
-    private let storage: any ClipStorageService
-    private let files: ClipImageFileStore
-    private var isBusy = false
-    private var waiters = [CheckedContinuation<Void, Never>]()
+    private let queue = DispatchSerialQueue(label: "opfic.Plyst.ClipImageService")
+    let core: ClipImageOperations
+
+    /// 코어 잠금 대기가 협력 스레드를 막지 않도록 전용 직렬 큐에서 실행
+    nonisolated var unownedExecutor: UnownedSerialExecutor { queue.asUnownedSerialExecutor() }
 
     init(
-        storage: any ClipStorageService,
-        files: ClipImageFileStore
-    ) {
-        self.storage = storage
-        self.files = files
+        storage: SQLiteClipStorageService,
+        rootURL: URL
+    ) throws {
+        guard rootURL.isFileURL, !rootURL.path.contains("\0") else { throw ClipImageFileError.invalidRoot }
+        let root = rootURL.standardizedFileURL.resolvingSymlinksInPath().path
+        core = try clipCoreCall(fallback: ClipImageFileError.writeFailed) { _ in
+            try ClipImageOperations.open(store: storage.store, root: root, codec: ClipImageCodec())
+        }
     }
 
     func saveImage(
@@ -38,47 +43,38 @@ actor ClipImageService {
         memo: String? = nil,
         pinnedAt: Date? = nil,
         createdAt: Date = Date()
-    ) async throws -> ClipImageMutationResult<Clip> {
-        try await acquire()
-        defer { release() }
-        let image = try files.save(data)
-        let clip = Clip(
-            id: id,
-            content: .image(image),
+    ) throws -> ClipImageMutationResult<Clip> {
+        let properties = try ClipImageCodec.validated(data)
+        let draft = ClipImageDraftValue(
+            id: id.uuidString,
             name: name,
-            pinnedAt: pinnedAt,
             memo: memo,
-            createdAt: createdAt
+            pinnedAt: pinnedAt?.timeIntervalSinceReferenceDate,
+            createdAt: createdAt.timeIntervalSinceReferenceDate
         )
-        do {
-            try await storage.insert(clip)
-        } catch {
-            try? files.delete(fileID: image.fileID)
-            throw error
+        let saved = try clipCoreCall(fallback: ClipImageFileError.writeFailed) {
+            try core.saveImage(data: data, properties: properties, draft: draft, cancellation: $0)
         }
-        let cleanup: ClipImageCleanupState
-        do {
-            try files.finishPending(fileID: image.fileID)
-            cleanup = .completed
-        } catch {
-            cleanup = .pending(image.fileID)
-        }
-        return ClipImageMutationResult(value: clip, cleanup: cleanup)
+        guard let clip = Clip(coreValue: saved.clip) else { throw ClipStorageError.corruptedData }
+        return ClipImageMutationResult(value: clip, cleanup: ClipImageCleanupState(coreValue: saved.cleanup))
     }
 
     /// 클립을 재조회하지 않고 전달받은 메타데이터에 대응하는 원본을 검증
-    func loadImage(_ image: ClipImageMetadata) async throws -> Data {
-        try await acquire()
-        defer { release() }
-        return try files.load(image: image)
+    func loadImage(_ image: ClipImageMetadata) throws -> Data {
+        let path = try clipCoreCall(fallback: ClipImageFileError.readFailed) {
+            try core.loadImage(image: image.coreValue, cancellation: $0)
+        }
+        // 이 actor의 다른 작업이 끼어들 수 없으므로 삭제와 섞이지 않음
+        do { return try Data(contentsOf: URL(fileURLWithPath: path)) } catch { throw ClipImageFileError.readFailed }
     }
 
     /// 본 앱 이미지 루트에서만 호출
     /// 삭제와 직렬화하여 원본에서 미리보기 파일을 매번 다시 만듦
-    func makePreviewFileURL(_ image: ClipImageMetadata) async throws -> URL {
-        try await acquire()
-        defer { release() }
-        return try files.writePreview(image: image, maximumPixelDimension: Self.previewPixelDimension)
+    func makePreviewFileURL(_ image: ClipImageMetadata) throws -> URL {
+        let path = try clipCoreCall(fallback: ClipImageFileError.writeFailed) {
+            try core.makePreview(image: image.coreValue, cancellation: $0)
+        }
+        return URL(fileURLWithPath: path)
     }
 
     /// 본 앱 이미지 루트에서만 호출
@@ -86,88 +82,31 @@ actor ClipImageService {
     func makeThumbnailFileURL(
         _ image: ClipImageMetadata,
         maximumPixelDimension: Int
-    ) async throws -> URL {
-        try await acquire()
-        defer { release() }
-        return try files.writeThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
+    ) throws -> URL {
+        let path = try clipCoreCall(fallback: ClipImageFileError.writeFailed) {
+            try core.makeThumbnail(
+                image: image.coreValue,
+                maximumPixelDimension: Int64(maximumPixelDimension),
+                cancellation: $0
+            )
+        }
+        return URL(fileURLWithPath: path)
     }
 
     /// DB 삭제 확정 후 파일 정리에 실패해도 확정된 삭제를 실패로 반환하지 않음
-    func delete(id: Clip.ID) async throws -> ClipImageMutationResult<Clip.ID> {
-        try await acquire()
-        defer { release() }
-        guard let clip = try await storage.fetch(id: id) else { throw ClipStorageError.notFound(id) }
-        if case .image(let image) = clip.content { try files.markPending(fileID: image.fileID) }
-        try await storage.delete(id: id)
-        var cleanup = ClipImageCleanupState.completed
-        if case .image(let image) = clip.content { cleanup = await clean(fileID: image.fileID) }
-        return ClipImageMutationResult(value: id, cleanup: cleanup)
+    func delete(id: Clip.ID) throws -> ClipImageMutationResult<Clip.ID> {
+        let cleanup = try clipCoreCall(fallback: ClipStorageError.writeFailed) {
+            try core.deleteClip(id: id.uuidString, cancellation: $0)
+        }
+        return ClipImageMutationResult(value: id, cleanup: ClipImageCleanupState(coreValue: cleanup))
     }
 
     /// 초기화 이후 명시적으로 호출
     /// 이번에 정리하지 못한 fileID만 반환
     /// DB 조회에 실패하면 후보를 변경하지 않고 오류를 반환
-    func recoverPendingCleanup() async throws -> [UUID] {
-        try await acquire()
-        defer { release() }
-        let candidates = try files.pendingFileIDs()
-        guard !candidates.isEmpty else { return [] }
-        let references = try await imageReferences()
-        var pending = [UUID]()
-        for fileID in candidates {
-            do {
-                try clean(fileID: fileID, referenced: references.contains(fileID))
-            } catch { pending.append(fileID) }
-        }
-        return pending
-    }
-
-    private func imageReferences() async throws -> Set<UUID> {
-        let clips = try await storage.fetchAll(order: .createdAt)
-        return Set(clips.compactMap { clip in
-            guard case .image(let image) = clip.content else { return nil }
-            return image.fileID
-        })
-    }
-
-    private func clean(fileID: UUID) async -> ClipImageCleanupState {
-        do {
-            let references = try await imageReferences()
-            try clean(fileID: fileID, referenced: references.contains(fileID))
-            return .completed
-        } catch {
-            return .pending(fileID)
-        }
-    }
-
-    private func clean(
-        fileID: UUID,
-        referenced: Bool
-    ) throws {
-        if referenced {
-            try files.finishPending(fileID: fileID)
-        } else { try files.delete(fileID: fileID) }
-    }
-
-    /// actor는 await 중에 재진입할 수 있으므로 외부 호출을 포함한 작업 전체의 순서를 보호
-    private func acquire() async throws {
-        try Task.checkCancellation()
-        if isBusy {
-            await withCheckedContinuation { waiters.append($0) }
-        } else {
-            isBusy = true
-        }
-        do {
-            try Task.checkCancellation()
-        } catch {
-            release()
-            throw error
-        }
-    }
-
-    private func release() {
-        if waiters.isEmpty {
-            isBusy = false
-        } else { waiters.removeFirst().resume() }
+    func recoverPendingCleanup() throws -> [UUID] {
+        try clipCoreCall(fallback: ClipImageFileError.deleteFailed) {
+            try core.recoverPendingCleanup(cancellation: $0)
+        }.compactMap(UUID.init(uuidString:))
     }
 }

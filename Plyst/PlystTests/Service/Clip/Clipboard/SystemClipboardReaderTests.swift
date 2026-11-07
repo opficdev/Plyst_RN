@@ -34,7 +34,7 @@ final class SystemClipboardReaderTests: XCTestCase {
             UTType.url.identifier: url
         ]]
 
-        let result = try await SystemClipboardReader().read()
+        let result = try SystemClipboardReader().read()
 
         XCTAssertEqual(result, .image(data))
     }
@@ -43,7 +43,7 @@ final class SystemClipboardReaderTests: XCTestCase {
         let data = try ClipImageTestFixture.data(type: UTType.gif.identifier, count: 2)
         UIPasteboard.general.items = [[UTType.gif.identifier: data]]
 
-        let result = try await SystemClipboardReader().read()
+        let result = try SystemClipboardReader().read()
 
         XCTAssertEqual(result, .image(data))
     }
