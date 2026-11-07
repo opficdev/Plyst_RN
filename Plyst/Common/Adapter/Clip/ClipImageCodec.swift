@@ -19,9 +19,11 @@ final class ClipImageCodec: ClipImageCoder {
     /// 검증이 원본 해상도 비트맵을 만들지 않게 함
     private static let validationPixelDimension = 64
 
+    /// 파일을 메모리에 복사하지 않고 매핑해 읽음
+    /// 코어가 순서 잠금을 쥔 동안 부르므로 읽는 도중 파일이 바뀌지 않음
     func properties(path: String) throws -> ClipImagePropertiesValue {
         do {
-            return try Self.validated(Data(contentsOf: URL(fileURLWithPath: path)))
+            return try Self.validated(Data(contentsOf: URL(fileURLWithPath: path), options: .alwaysMapped))
         } catch {
             throw Self.codecError(error)
         }
