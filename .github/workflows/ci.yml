@@ -76,6 +76,7 @@ jobs:
         run: make rn-test
 
   # PlystCore를 먼저 만들어 올린 뒤 Rust 검사를 실행
+  # Test 잡은 업로드만 기다리므로 검사 시간은 임계 경로에 들어가지 않음
   rust:
     name: Rust
     runs-on: xcode-27
@@ -184,24 +185,13 @@ jobs:
           path: rn-xcframeworks.tar
           overwrite: true
 
-  xcode:
-    # fail-fast로 한쪽이 실패하면 진행 중인 나머지 잡을 즉시 취소
+  build:
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
-    name: ${{ matrix.name }}
+    name: Build
     if: github.event_name == 'pull_request'
     needs: [xcframework, rust]
     runs-on: xcode-27
-    timeout-minutes: ${{ matrix.timeout }}
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - name: Build
-            target: build
-            timeout: 20
-          - name: Test
-            target: test
-            timeout: 25
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
 
@@ -223,25 +213,30 @@ jobs:
           tar -C Plyst/Packages -xf /tmp/plyst-core/plyst-core.tar
 
       - name: Build
-        if: matrix.target == 'build'
         run: make build
 
+  # 산출물을 기다리지 않고 시작해 시뮬레이터를 먼저 부팅
+  # 빌드는 다른 러너에서 진행되므로 이 러너에서는 부팅과 빌드가 겹치지 않음
+  test:
+    # 잡 이름은 필수 상태 체크 이름과 같아야 함
+    name: Test
+    if: github.event_name == 'pull_request'
+    runs-on: xcode-27
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+
       - name: Select simulator
-        if: matrix.target == 'test'
         timeout-minutes: 2
         run: echo "TEST_DEVICE_ID=$(make -s test-device-id)" >> "$GITHUB_ENV"
-
-      # 시뮬레이터를 빌드와 겹쳐 부팅했을 때 빌드가 12분 안에 끝나지 않은 사례가 있어 시뮬레이터는 빌드 이후에 부팅
-      - name: Build for testing
-        if: matrix.target == 'test'
-        timeout-minutes: 12
-        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID"
 
       # simslim은 부팅 시간을 줄이는 최적화이고 테스트는 simslim이 끄는 데몬에 의존하지 않음
       # 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행
       - name: Install simslim
         id: simslim
-        if: matrix.target == 'test'
         continue-on-error: true
         timeout-minutes: 2
         env:
@@ -263,7 +258,7 @@ jobs:
       # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅
       # 제한 시간이 지나도 진행 중인 부팅은 다음 단계가 기다림
       - name: Slim simulator
-        if: matrix.target == 'test' && steps.simslim.outputs.path != ''
+        if: steps.simslim.outputs.path != ''
         continue-on-error: true
         timeout-minutes: 4
         env:
@@ -277,7 +272,6 @@ jobs:
           fi
 
       - name: Boot simulator
-        if: matrix.target == 'test'
         timeout-minutes: 5
         run: |
           # 종료 상태가 아니면 부팅 명령을 보내지 않음
@@ -287,14 +281,57 @@ jobs:
           fi
           xcrun simctl bootstatus "$TEST_DEVICE_ID" -b
 
+      # 두 산출물이 모두 올라오면 끝남
+      # 만드는 잡이 산출물 없이 끝나면 실패로 끝남
+      - name: Wait for frameworks
+        timeout-minutes: 35
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run="repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          while :; do
+            names=$(gh api "$run/artifacts" --jq '.artifacts[].name')
+            if printf '%s\n' "$names" | grep -qx rn-xcframeworks \
+              && printf '%s\n' "$names" | grep -qx plyst-core; then
+              break
+            fi
+            failed=$(gh api "$run/attempts/$GITHUB_RUN_ATTEMPT/jobs" --paginate \
+              --jq '.jobs[] | select((.name == "XCFramework" or .name == "Rust") and .status == "completed" and .conclusion != "success") | .name')
+            if [ -n "$failed" ]; then
+              printf '::error title=산출물 대기::%s 잡이 산출물 없이 끝났습니다.\n' "$(printf '%s' "$failed" | tr '\n' ' ')"
+              exit 1
+            fi
+            sleep 10
+          done
+
+      - name: Download XCFrameworks
+        uses: actions/download-artifact@v4
+        with:
+          name: rn-xcframeworks
+          path: /tmp/rn-xcframeworks
+
+      - name: Download Plyst core
+        uses: actions/download-artifact@v4
+        with:
+          name: plyst-core
+          path: /tmp/plyst-core
+
+      - name: Extract frameworks
+        run: |
+          tar -C Plyst/Packages -xf /tmp/rn-xcframeworks/rn-xcframeworks.tar
+          tar -C Plyst/Packages -xf /tmp/plyst-core/plyst-core.tar
+
+      - name: Build for testing
+        timeout-minutes: 12
+        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID"
+
       # 병렬 테스트는 복제 시뮬레이터 부팅 지연과 멈춤의 원인으로 의심되어 CI에서만 끔
       - name: Test
-        if: matrix.target == 'test'
         timeout-minutes: 9
         run: make test-without-building XCODEBUILD_FLAGS="-parallel-testing-enabled NO -skipPackageUpdates -disableAutomaticPackageResolution"
 
       - name: Test summary
-        if: always() && matrix.target == 'test'
+        if: always()
         timeout-minutes: 2
         run: |
           if [ -f /tmp/plyst-test-results.xcresult/Info.plist ]; then
@@ -302,7 +339,7 @@ jobs:
           fi
 
       - name: Simulator diagnostics
-        if: failure() && matrix.target == 'test'
+        if: failure()
         timeout-minutes: 3
         run: |
           xcrun simctl list devices
