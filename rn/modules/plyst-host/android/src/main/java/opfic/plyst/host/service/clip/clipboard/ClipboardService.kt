@@ -8,7 +8,7 @@ import opfic.plyst.core.ClipboardCopyValue
 import opfic.plyst.core.ClipboardOperations
 import opfic.plyst.core.ClipboardSaveValue
 import opfic.plyst.core.ClipboardUsageFailureValue
-import opfic.plyst.core.ClipboardWriting
+import opfic.plyst.core.ClipboardWriter
 import opfic.plyst.core.ClipValue
 import opfic.plyst.host.model.Clip
 import opfic.plyst.host.model.clip
@@ -46,9 +46,9 @@ sealed interface ClipboardSaveResult {
 class ClipboardService(
   private val images: ClipImageService,
   private val reader: ClipboardReader,
-  writer: ClipboardWriting,
+  private val writer: ClipboardWriter,
 ) {
-  private val core = ClipboardOperations(images.core, writer)
+  private val core = ClipboardOperations(images.core)
 
   // 저장과 복사 작업 전체를 요청 순서대로 처리
   private val mutex = Mutex()
@@ -83,7 +83,7 @@ class ClipboardService(
   // 쓰기가 확인된 이후의 사용 시각 저장 실패는 부분 성공으로 반환
   suspend fun copy(id: UUID): ClipboardCopyResult =
     mutex.withLock {
-      val copied = coreCall(Dispatchers.IO, ClipImageFileError.ReadFailed) { core.copy(id.toString().uppercase(), it) }
+      val copied = coreCall(Dispatchers.IO, ClipImageFileError.ReadFailed) { core.copy(id.toString().uppercase(), writer, it) }
       when (copied) {
         is ClipboardCopyValue.Copied -> ClipboardCopyResult.Copied(clip(copied.clip))
         is ClipboardCopyValue.WriteNotObserved -> ClipboardCopyResult.WriteNotObserved(id)

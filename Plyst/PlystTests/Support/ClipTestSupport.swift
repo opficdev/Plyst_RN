@@ -124,7 +124,7 @@ final class ClipboardReaderSpy: ClipboardReader {
     }
 }
 
-final class ClipboardWriterSpy: ClipboardWriting {
+final class ClipboardWriterSpy: ClipboardWriter {
     private let written = OSAllocatedUnfairLock(initialState: [ClipboardWriteValue]())
 
     var contents: [ClipboardWriteValue] { written.withLock { $0 } }

@@ -13,14 +13,14 @@ import kotlinx.coroutines.withContext
 import opfic.plyst.core.ClipboardWriteException
 import opfic.plyst.core.ClipboardWriteOutcome
 import opfic.plyst.core.ClipboardWriteValue
-import opfic.plyst.core.ClipboardWriting
+import opfic.plyst.core.ClipboardWriter
 import opfic.plyst.host.service.clip.image.ClipImageContentType
 
 // 쓰기 후 기록된 표현을 다시 읽어 확인
 // 이미지는 FileProvider URI로 공유하며 직전에 쓴 이미지 파일만 남김
 // 코어가 Dispatchers.IO 계열 스레드에서 호출하므로 runBlocking이 Main 스레드를 막지 않음
 // 오류는 쓰기를 시작하기 전에만 던지고 쓰기 이후에는 관찰 결과를 반환
-class SystemClipboardWriter(private val context: Context) : ClipboardWriting {
+class SystemClipboardWriter(private val context: Context) : ClipboardWriter {
   override fun write(content: ClipboardWriteValue): ClipboardWriteOutcome =
     try {
       runBlocking { written(content) }

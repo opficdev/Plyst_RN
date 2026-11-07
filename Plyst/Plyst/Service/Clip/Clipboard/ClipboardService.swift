@@ -27,6 +27,7 @@ actor ClipboardService {
     private let queue = DispatchSerialQueue(label: "opfic.Plyst.ClipboardService")
     private let core: ClipboardOperations
     private let reader: any ClipboardReader
+    private let writer: any ClipboardWriter
 
     /// 코어 잠금 대기가 협력 스레드를 막지 않도록 전용 직렬 큐에서 실행
     nonisolated var unownedExecutor: UnownedSerialExecutor { queue.asUnownedSerialExecutor() }
@@ -34,10 +35,11 @@ actor ClipboardService {
     init(
         images: ClipImageService,
         reader: any ClipboardReader = SystemClipboardReader(),
-        writer: any ClipboardWriting = SystemClipboardWriter(localOnly: true, expirationDate: nil)
+        writer: any ClipboardWriter = SystemClipboardWriter(localOnly: true, expirationDate: nil)
     ) {
-        core = ClipboardOperations(images: images.core, writer: writer)
+        core = ClipboardOperations(images: images.core)
         self.reader = reader
+        self.writer = writer
     }
 
     /// 저장소 오류와 CancellationError는 그대로 전파
@@ -79,7 +81,7 @@ actor ClipboardService {
     /// 쓰기가 확인된 이후의 사용 시각 저장 실패는 부분 성공으로 반환
     func copy(id: Clip.ID) throws -> ClipboardCopyResult {
         let copied = try clipCoreCall(fallback: ClipImageFileError.readFailed) {
-            try core.copy(id: id.uuidString, cancellation: $0)
+            try core.copy(id: id.uuidString, writer: writer, cancellation: $0)
         }
         switch copied {
         case .copied(let clip):

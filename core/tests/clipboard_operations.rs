@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use plyst_core::operations::{
     ClipCancellationSource, ClipOperationError, ClipboardCopyValue, ClipboardOperations,
     ClipboardSaveValue, ClipboardUsageFailureValue, ClipboardWriteError, ClipboardWriteOutcome,
-    ClipboardWriteValue, ClipboardWriting,
+    ClipboardWriteValue, ClipboardWriter,
 };
 use plyst_core::store::{ClipChangeValue, ClipStoreError, ClipUpdateValue, ClipValue};
 use plyst_core::ClipContentValue;
@@ -37,7 +37,7 @@ impl RecordedWrites {
     }
 }
 
-impl ClipboardWriting for RecordedWrites {
+impl ClipboardWriter for RecordedWrites {
     fn write(
         &self,
         content: ClipboardWriteValue,
@@ -60,7 +60,7 @@ impl Fixture {
     fn new() -> Self {
         let operations = Operations::new();
         let writes = RecordedWrites::observed();
-        let clipboard = ClipboardOperations::new(operations.images.clone(), writes.clone());
+        let clipboard = ClipboardOperations::new(operations.images.clone());
         Self {
             operations,
             writes,
@@ -86,7 +86,8 @@ impl Fixture {
     }
 
     fn copy(&self, clip: &ClipValue) -> Result<ClipboardCopyValue, ClipOperationError> {
-        self.clipboard.copy(clip.id.clone(), never_cancelled())
+        self.clipboard
+            .copy(clip.id.clone(), self.writes.clone(), never_cancelled())
     }
 
     fn cancelled_copy(
@@ -94,7 +95,8 @@ impl Fixture {
         clip: &ClipValue,
         cancellation: Arc<dyn ClipCancellationSource>,
     ) -> Result<ClipboardCopyValue, ClipOperationError> {
-        self.clipboard.copy(clip.id.clone(), cancellation)
+        self.clipboard
+            .copy(clip.id.clone(), self.writes.clone(), cancellation)
     }
 }
 

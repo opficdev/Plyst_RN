@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 /// 이미지 형식과 크기 판독, 저장 전 검증, 축소본 생성
 /// 파일 경로 규칙과 파일 쓰기는 소유하지 않음
 /// 코어가 부르는 구현은 모든 오류를 선언된 코덱 오류로 변환
-final class ClipImageCodec: ClipImageCoding {
+final class ClipImageCodec: ClipImageCoder {
     /// 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수
     /// 검증이 원본 해상도 비트맵을 만들지 않게 함
     private static let validationPixelDimension = 64
