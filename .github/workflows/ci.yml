@@ -201,7 +201,6 @@ jobs:
           restore-keys: |
             rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.native }}-
 
-      # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
       # Xcode 컴파일 캐시
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
       - name: Restore compilation cache
@@ -211,6 +210,7 @@ jobs:
           path: ${{ runner.temp }}/rn-compilation-cache
           key: rn-compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('rn/package-lock.json') }}
 
+      # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
       - name: Build XCFrameworks
         if: steps.xcframework-cache.outputs.cache-hit != 'true'
         env:
