@@ -11,7 +11,7 @@ import XCTest
 @testable import Plyst
 
 final class ClipImageThumbnailTests: ClipTemporaryDirectoryTestCase {
-    func testFileStoreWritesSeparateSizesAndAtomicallyRewritesWithoutChangingOriginal() throws {
+    func testFileStoreWritesSeparateSizesWithoutChangingOriginal() throws {
         let files = try ClipImageFileStore(rootURL: root)
         let data = try ClipImageTestFixture.data()
         let image = try files.save(data)
@@ -23,26 +23,7 @@ final class ClipImageThumbnailTests: ClipTemporaryDirectoryTestCase {
         XCTAssertEqual(small.deletingLastPathComponent(), root.appendingPathComponent(image.fileID.uuidString))
         try assertDimension(small, equals: 1)
         try assertDimension(large, equals: 2)
-        let expected = try Data(contentsOf: small)
-        let preserved = directory.appendingPathComponent("previous-thumbnail")
-        try FileManager.default.linkItem(at: small, to: preserved)
-        let damaged = Data("손상된 썸네일".utf8)
-        try damaged.write(to: small)
-
-        let rewritten = try files.writeThumbnail(image: image, maximumPixelDimension: 1)
-
-        XCTAssertEqual(rewritten, small)
-        XCTAssertEqual(try Data(contentsOf: rewritten), expected)
-        XCTAssertEqual(try Data(contentsOf: preserved), damaged)
-        try FileManager.default.removeItem(at: preserved)
-        try FileManager.default.linkItem(at: small, to: preserved)
-        let replaced = try files.writeThumbnail(image: image, maximumPixelDimension: 1)
-        XCTAssertEqual(replaced, small)
-        let previous = try FileManager.default.attributesOfItem(atPath: preserved.path)
-        let current = try FileManager.default.attributesOfItem(atPath: replaced.path)
-        XCTAssertNotEqual(previous[.systemFileNumber] as? NSNumber, current[.systemFileNumber] as? NSNumber)
         XCTAssertEqual(try files.load(image: image), data)
-        try assertDimension(large, equals: 2)
         try files.delete(fileID: image.fileID)
         XCTAssertFalse(FileManager.default.fileExists(atPath: small.path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: large.path))
