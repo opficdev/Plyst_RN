@@ -8,15 +8,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import opfic.plyst.host.adapter.clip.ClipCoreAdapter
 import opfic.plyst.host.service.clip.clipboard.ClipboardService
 import opfic.plyst.host.service.clip.clipboard.SystemClipboardReader
 import opfic.plyst.host.service.clip.clipboard.SystemClipboardWriter
 import opfic.plyst.host.service.clip.download.ClipImageDownloadService
-import opfic.plyst.host.service.clip.image.ClipImageService
 import opfic.plyst.host.service.clip.photolibrary.ClipPhotoLibraryService
 import opfic.plyst.host.service.clip.photolibrary.SystemPhotoLibraryWriter
 import opfic.plyst.host.service.clip.share.ClipShareService
-import opfic.plyst.host.service.clip.storage.SQLiteClipStorageService
 
 // 앱 프로세스가 유지되는 동안 공유하는 Service를 만들고 소유
 // iOS SceneComposition과 같은 저장 위치 구성
@@ -26,8 +25,7 @@ class HostComposition(
   currentActivity: () -> Activity?,
 ) {
   val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-  val storage: SQLiteClipStorageService
-  val images: ClipImageService
+  val core: ClipCoreAdapter
   val clipboard: ClipboardService
   val photos: ClipPhotoLibraryService
   val shares: ClipShareService
@@ -35,18 +33,15 @@ class HostComposition(
   init {
     // 백업에서 제외되는 위치
     val directory = File(context.noBackupFilesDir, "Plyst")
-    storage = SQLiteClipStorageService(File(directory, "clips.sqlite"))
-    images = ClipImageService(storage, File(directory, "images"))
-    clipboard = ClipboardService(images, SystemClipboardReader(context), SystemClipboardWriter(context))
-    photos = ClipPhotoLibraryService(storage, images, SystemPhotoLibraryWriter(context, currentActivity))
-    shares = ClipShareService(context, storage, images, ClipImageDownloadService())
+    core = ClipCoreAdapter(File(directory, "clips.sqlite"), File(directory, "images"))
+    clipboard = ClipboardService(core, SystemClipboardReader(context), SystemClipboardWriter(context))
+    photos = ClipPhotoLibraryService(core, SystemPhotoLibraryWriter(context, currentActivity))
+    shares = ClipShareService(context, core, ClipImageDownloadService())
   }
 
   fun makeAdapter() =
     ClipBridgeAdapter(
-      storage = storage,
-      history = storage,
-      images = images,
+      core = core,
       clipboard = clipboard,
       photos = photos,
       scope = scope,
@@ -55,7 +50,7 @@ class HostComposition(
   fun startPendingCleanupRecovery() {
     scope.launch {
       try {
-        val pending = images.recoverPendingCleanup()
+        val pending = core.recoverPendingCleanup()
         if (pending.isNotEmpty()) Log.w(TAG, "이미지 정리 보류: ${pending.size}개")
       } catch (error: Exception) {
         Log.e(TAG, "이미지 정리 재시도 실패: ${error.javaClass.simpleName}")

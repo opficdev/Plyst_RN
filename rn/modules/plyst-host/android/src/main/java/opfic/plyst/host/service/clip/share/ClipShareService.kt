@@ -14,11 +14,10 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import opfic.plyst.host.model.Clip
 import opfic.plyst.host.model.ClipContent
+import opfic.plyst.host.adapter.clip.ClipCoreAdapter
+import opfic.plyst.host.adapter.clip.ClipImageFileError
 import opfic.plyst.host.service.clip.download.ClipImageDownloadError
 import opfic.plyst.host.service.clip.download.ClipImageDownloadService
-import opfic.plyst.host.service.clip.image.ClipImageFileError
-import opfic.plyst.host.service.clip.image.ClipImageService
-import opfic.plyst.host.service.clip.storage.ClipStorageService
 
 // 공유 시트로 받은 항목을 클립으로 저장
 // 여러 항목은 다루지 않음
@@ -33,8 +32,7 @@ import opfic.plyst.host.service.clip.storage.ClipStorageService
 // 이미지 검증 오류와 저장소 오류와 CancellationException은 그대로 전파
 class ClipShareService(
   private val context: Context,
-  private val storage: ClipStorageService,
-  private val images: ClipImageService,
+  private val core: ClipCoreAdapter,
   private val downloads: ClipImageDownloadService,
 ) {
   // 공유 화면은 앱과 같은 프로세스이므로 큰 이미지의 메모리 부족이 앱 전체를 끝내지 않게 읽기 실패로 바꿈
@@ -57,7 +55,7 @@ class ClipShareService(
     if (data == null) return saveText(item)
     // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
     currentCoroutineContext().ensureActive()
-    return withContext(NonCancellable) { ClipShareSaveResult.Saved(images.saveImage(data).value) }
+    return withContext(NonCancellable) { ClipShareSaveResult.Saved(core.saveImage(data).value) }
   }
 
   private suspend fun saveText(item: ClipShareItem): ClipShareSaveResult {
@@ -67,7 +65,7 @@ class ClipShareService(
     // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
     currentCoroutineContext().ensureActive()
     val clip = Clip(content = ClipContent.Text(text), name = item.title)
-    withContext(NonCancellable) { storage.insert(clip) }
+    withContext(NonCancellable) { core.insert(clip) }
     return ClipShareSaveResult.Saved(clip)
   }
 
@@ -83,7 +81,7 @@ class ClipShareService(
     // 저장이 시작된 뒤에는 취소를 다시 확인하지 않음
     currentCoroutineContext().ensureActive()
     return try {
-      withContext(NonCancellable) { ClipShareSaveResult.Saved(images.saveImage(data, memo = url).value) }
+      withContext(NonCancellable) { ClipShareSaveResult.Saved(core.saveImage(data, memo = url).value) }
     } catch (error: ClipImageFileError) {
       if (error != ClipImageFileError.InvalidImage && error != ClipImageFileError.UnsupportedImage) throw error
       null

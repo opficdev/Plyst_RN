@@ -18,7 +18,7 @@ sealed interface ClipContent {
     get() = this is Text && clipTextIsWebLink(text.wellFormed)
 
   // 이미지의 메타데이터만 검증
-  // 이미지 디코딩과 파일 존재 여부 검사는 이미지 파일 서비스의 책임
+  // 이미지 디코딩과 파일 존재 여부 검사는 ClipCoreAdapter의 책임
   val isValid: Boolean
     get() =
       when (this) {

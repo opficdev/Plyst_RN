@@ -50,7 +50,7 @@ internal object HostLifecycle {
     return composition?.shares
   }
 
-  // 저장소와 이미지 Service는 인스턴스 하나를 전제로 하므로 이미 구성했으면 만들지 않음
+  // ClipCoreAdapter는 인스턴스 하나를 전제로 하므로 이미 구성했으면 만들지 않음
   private fun configure() {
     if (composition != null) return
     val application = application ?: return

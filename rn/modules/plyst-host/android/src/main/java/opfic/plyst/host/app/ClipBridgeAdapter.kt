@@ -16,35 +16,31 @@ import opfic.plyst.bridge.ClipBridgeException
 import opfic.plyst.bridge.ClipBridgePhotoSaveResult
 import opfic.plyst.bridge.ClipBridgeProvider
 import opfic.plyst.bridge.ClipBridgeRecord
+import opfic.plyst.host.adapter.clip.ClipCoreAdapter
+import opfic.plyst.host.adapter.clip.ClipStorageError
+import opfic.plyst.host.adapter.clip.ClipStorageEvent
+import opfic.plyst.host.adapter.clip.ClipboardCopyResult
+import opfic.plyst.host.adapter.clip.ClipboardSaveResult
 import opfic.plyst.host.model.Clip
 import opfic.plyst.host.model.ClipContent
 import opfic.plyst.host.model.ClipImageMetadata
 import opfic.plyst.host.model.ClipSearchQuery
 import opfic.plyst.host.model.ClipSortOrder
 import opfic.plyst.host.model.ClipUpdate
-import opfic.plyst.host.service.clip.clipboard.ClipboardCopyResult
-import opfic.plyst.host.service.clip.clipboard.ClipboardSaveResult
 import opfic.plyst.host.service.clip.clipboard.ClipboardService
-import opfic.plyst.host.service.clip.image.ClipImageService
 import opfic.plyst.host.service.clip.photolibrary.ClipPhotoLibrarySaveResult
 import opfic.plyst.host.service.clip.photolibrary.ClipPhotoLibraryService
-import opfic.plyst.host.service.clip.storage.ClipSearchHistoryStorageService
-import opfic.plyst.host.service.clip.storage.ClipStorageError
-import opfic.plyst.host.service.clip.storage.ClipStorageEvent
-import opfic.plyst.host.service.clip.storage.ClipStorageService
 
-// Service API만 호출하여 브릿지 값과 오류 코드로 바꿈
+// ClipCoreAdapter와 Service API만 호출하여 브릿지 값과 오류 코드로 바꿈
 class ClipBridgeAdapter(
-  private val storage: ClipStorageService,
-  private val history: ClipSearchHistoryStorageService,
-  private val images: ClipImageService,
+  private val core: ClipCoreAdapter,
   private val clipboard: ClipboardService,
   private val photos: ClipPhotoLibraryService,
   // 응답과 별개로 이어서 실행할 정리 작업의 수명
   private val scope: CoroutineScope,
 ) : ClipBridgeProvider {
   override fun changes(): Flow<ClipBridgeChange> =
-    storage.changes().map { event ->
+    core.changes().map { event ->
       when (event) {
         is ClipStorageEvent.Inserted -> ClipBridgeChange(ClipBridgeChange.Kind.INSERTED, event.clip.id)
         is ClipStorageEvent.Updated -> ClipBridgeChange(ClipBridgeChange.Kind.UPDATED, event.clip.id)
@@ -53,26 +49,26 @@ class ClipBridgeAdapter(
     }
 
   override suspend fun clip(id: UUID): ClipBridgeRecord? =
-    bridged(ClipBridgeError.READ_FAILED) { storage.fetch(id)?.let(::record) }
+    bridged(ClipBridgeError.READ_FAILED) { core.fetch(id)?.let(::record) }
 
   override suspend fun clips(): List<ClipBridgeRecord> =
-    bridged(ClipBridgeError.READ_FAILED) { storage.fetchAll(ClipSortOrder.CREATED_AT).map(::record) }
+    bridged(ClipBridgeError.READ_FAILED) { core.fetchAll(ClipSortOrder.CREATED_AT).map(::record) }
 
   override suspend fun searchHistory(): List<String> =
-    bridged(ClipBridgeError.READ_FAILED) { history.fetchSearchHistory().terms }
+    bridged(ClipBridgeError.READ_FAILED) { core.fetchSearchHistory().terms }
 
   override suspend fun recordSearchTerm(term: String): List<String>? =
     bridged(ClipBridgeError.WRITE_FAILED) {
       val query = ClipSearchQuery.of(term) ?: return@bridged null
-      history.recordSearchTerm(query).terms
+      core.recordSearchTerm(query).terms
     }
 
   override suspend fun removeSearchTerm(term: String): List<String> =
-    bridged(ClipBridgeError.WRITE_FAILED) { history.removeSearchTerm(term).terms }
+    bridged(ClipBridgeError.WRITE_FAILED) { core.removeSearchTerm(term).terms }
 
   override suspend fun removeAllSearchTerms() {
     try {
-      history.removeAllSearchTerms()
+      core.removeAllSearchTerms()
     } catch (error: CancellationException) {
       throw error
     } catch (error: Exception) {
@@ -89,7 +85,7 @@ class ClipBridgeAdapter(
     bridged(ClipBridgeError.WRITE_FAILED) {
       try {
         val change = ClipUpdate.Details(name, memo, isPinned, System.currentTimeMillis())
-        record(storage.update(id, change))
+        record(core.update(id, change))
       } catch (error: ClipStorageError.NotFound) {
         null
       }
@@ -98,7 +94,7 @@ class ClipBridgeAdapter(
   override suspend fun deleteClip(id: UUID) =
     bridged(ClipBridgeError.WRITE_FAILED) {
       try {
-        images.delete(id)
+        core.delete(id)
       } catch (error: ClipStorageError.NotFound) {
         // 이미 없으면 삭제된 것으로 처리
       }
@@ -112,7 +108,7 @@ class ClipBridgeAdapter(
         is ClipboardSaveResult.SavedWithPendingCleanup -> {
           scope.launch {
             try {
-              images.recoverPendingCleanup()
+              core.recoverPendingCleanup()
             } catch (error: Exception) {
               // 다음 시작에서 다시 정리
             }
@@ -146,12 +142,12 @@ class ClipBridgeAdapter(
     }
 
   override suspend fun getClipImagePreview(id: UUID): String? =
-    imageFile(id) { image -> images.makePreviewFile(image) }
+    imageFile(id) { image -> core.makePreviewFile(image) }
 
   override suspend fun getClipThumbnail(
     id: UUID,
     maximumPixelDimension: Int,
-  ): String? = imageFile(id) { image -> images.makeThumbnailFile(image, maximumPixelDimension) }
+  ): String? = imageFile(id) { image -> core.makeThumbnailFile(image, maximumPixelDimension) }
 
   override suspend fun saveClipImageToPhotos(id: UUID): ClipBridgePhotoSaveResult? =
     try {
@@ -173,7 +169,7 @@ class ClipBridgeAdapter(
     make: suspend (ClipImageMetadata) -> File,
   ): String? =
     try {
-      val image = (storage.fetch(id)?.content as? ClipContent.Image)?.image
+      val image = (core.fetch(id)?.content as? ClipContent.Image)?.image
       image?.let { Uri.fromFile(make(it)).toString() }
     } catch (error: CancellationException) {
       throw error

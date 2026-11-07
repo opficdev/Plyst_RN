@@ -1,4 +1,4 @@
-package opfic.plyst.host.service.clip.image
+package opfic.plyst.host.adapter.clip
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -12,6 +12,7 @@ import opfic.plyst.core.ClipCodecException
 import opfic.plyst.core.ClipImageCoder
 import opfic.plyst.core.ClipImagePropertiesValue
 import opfic.plyst.core.ClipImageValue
+import opfic.plyst.host.model.ClipImageContentType
 
 // 이미지 형식과 크기 판독, 저장 전 검증, 축소본 생성
 // 파일 경로 규칙과 파일 쓰기는 소유하지 않음

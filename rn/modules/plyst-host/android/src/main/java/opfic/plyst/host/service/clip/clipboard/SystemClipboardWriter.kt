@@ -14,7 +14,7 @@ import opfic.plyst.core.ClipboardWriteException
 import opfic.plyst.core.ClipboardWriteOutcome
 import opfic.plyst.core.ClipboardWriteValue
 import opfic.plyst.core.ClipboardWriter
-import opfic.plyst.host.service.clip.image.ClipImageContentType
+import opfic.plyst.host.model.ClipImageContentType
 
 // 쓰기 후 기록된 표현을 다시 읽어 확인
 // 이미지는 FileProvider URI로 공유하며 직전에 쓴 이미지 파일만 남김

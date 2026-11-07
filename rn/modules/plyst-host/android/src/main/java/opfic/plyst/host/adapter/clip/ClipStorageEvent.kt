@@ -1,4 +1,4 @@
-package opfic.plyst.host.service.clip.storage
+package opfic.plyst.host.adapter.clip
 
 import java.util.UUID
 import opfic.plyst.host.model.Clip
