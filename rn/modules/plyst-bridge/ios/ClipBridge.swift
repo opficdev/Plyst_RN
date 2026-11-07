@@ -186,3 +186,5 @@ public enum ClipBridge {
         provider = nil
     }
 }
+
+// CI 측정용 주석
