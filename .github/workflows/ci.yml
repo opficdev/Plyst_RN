@@ -75,44 +75,28 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make rn-test
 
-  xcframework:
-    name: XCFramework
+  # PlystCore를 먼저 만들어 올린 뒤 Rust 검사를 실행
+  rust:
+    name: Rust
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up tools
+      - name: Set up Rust
         uses: jdx/mise-action@v4
         with:
           install: true
           cache: true
-
-      - name: Lint Rust core
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-rust-lint
-
-      - name: Test Rust core
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-rust-test
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+          install_args: rust
 
       - name: Read Xcode version
         id: xcode
         run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
 
-      - name: Hash XCFramework inputs
+      - name: Hash Plyst core inputs
         id: input-hash
-        run: |
-          echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
-          echo "core=$(scripts/rn-xcframework-inputs.sh core)" >> "$GITHUB_OUTPUT"
+        run: echo "core=$(scripts/rn-xcframework-inputs.sh core)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Plyst core
         uses: actions/cache@v4
@@ -127,6 +111,55 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make plyst-core
 
+      - name: Archive Plyst core
+        run: tar -C Plyst/Packages -cf plyst-core.tar PlystCore/Frameworks PlystCore/Sources
+
+      # 잡 전체를 다시 실행하면 같은 이름의 앞 산출물을 덮음
+      - name: Upload Plyst core
+        uses: actions/upload-artifact@v4
+        with:
+          name: plyst-core
+          path: plyst-core.tar
+          overwrite: true
+
+      - name: Lint Rust core
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-rust-lint
+
+      - name: Test Rust core
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-rust-test
+
+  xcframework:
+    name: XCFramework
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up tools
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+          install_args: node rust
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+
+      - name: Read Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
+
+      - name: Hash XCFramework inputs
+        id: input-hash
+        run: echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
+
       - name: Cache XCFrameworks
         id: xcframework-cache
         uses: actions/cache@v4
@@ -134,27 +167,29 @@ jobs:
           path: Plyst/Packages/PlystReactNative/Frameworks
           key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ steps.input-hash.outputs.hash }}
 
+      # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
       - name: Build XCFrameworks
         if: steps.xcframework-cache.outputs.cache-hit != 'true'
         env:
           MISE_AUTO_INSTALL: 0
-        run: make rn-xcframework
+        run: make -o plyst-core rn-xcframework
 
       - name: Archive XCFrameworks
-        run: tar -C Plyst/Packages -cf frameworks.tar PlystReactNative/Frameworks PlystCore/Frameworks PlystCore/Sources
+        run: tar -C Plyst/Packages -cf rn-xcframeworks.tar PlystReactNative/Frameworks
 
       - name: Upload XCFrameworks
         uses: actions/upload-artifact@v4
         with:
           name: rn-xcframeworks
-          path: frameworks.tar
+          path: rn-xcframeworks.tar
+          overwrite: true
 
   xcode:
     # fail-fast로 한쪽이 실패하면 진행 중인 나머지 잡을 즉시 취소
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
     name: ${{ matrix.name }}
     if: github.event_name == 'pull_request'
-    needs: xcframework
+    needs: [xcframework, rust]
     runs-on: xcode-27
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
@@ -176,8 +211,16 @@ jobs:
           name: rn-xcframeworks
           path: /tmp/rn-xcframeworks
 
-      - name: Extract XCFrameworks
-        run: tar -C Plyst/Packages -xf /tmp/rn-xcframeworks/frameworks.tar
+      - name: Download Plyst core
+        uses: actions/download-artifact@v4
+        with:
+          name: plyst-core
+          path: /tmp/plyst-core
+
+      - name: Extract frameworks
+        run: |
+          tar -C Plyst/Packages -xf /tmp/rn-xcframeworks/rn-xcframeworks.tar
+          tar -C Plyst/Packages -xf /tmp/plyst-core/plyst-core.tar
 
       - name: Build
         if: matrix.target == 'build'
