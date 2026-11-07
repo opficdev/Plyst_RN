@@ -146,7 +146,7 @@ class PlystClipModule(context: ReactApplicationContext) : NativePlystClipSpec(co
     operation: suspend (ClipBridgeProvider, UUID) -> T,
     resolve: (T) -> Any?,
   ) = execute(promise, fallback, { provider ->
-    val clipID = parseWireID(identifier) ?: throw ClipBridgeException(ClipBridgeError.INVALID_ID)
+    val clipID = ClipBridge.parseWireID(identifier) ?: throw ClipBridgeException(ClipBridgeError.INVALID_ID)
     operation(provider, clipID)
   }, resolve)
 
@@ -182,7 +182,7 @@ class PlystClipModule(context: ReactApplicationContext) : NativePlystClipSpec(co
 
   private fun map(record: ClipBridgeRecord): WritableMap =
     Arguments.createMap().apply {
-      putString("id", wireID(record.id))
+      putString("id", ClipBridge.wireID(record.id))
       putString("text", record.text)
       val image = record.image
       if (image == null) {

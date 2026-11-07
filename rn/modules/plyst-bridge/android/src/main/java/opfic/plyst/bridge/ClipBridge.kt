@@ -146,14 +146,14 @@ object ClipBridge {
     changesJob = null
     provider = null
   }
+
+  private val uuidPattern =
+    Regex("^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$")
+
+  // Swift uuidString과 같은 대문자 형식
+  internal fun wireID(id: UUID) = id.toString().uppercase()
+
+  // UUID.fromString은 자릿수가 모자란 문자열도 받아서 Swift UUID(uuidString:)과 같은 형식만 허용
+  internal fun parseWireID(value: String): UUID? =
+    if (uuidPattern.matches(value)) UUID.fromString(value) else null
 }
-
-private val uuidPattern =
-  Regex("^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$")
-
-// Swift uuidString과 같은 대문자 형식
-internal fun wireID(id: UUID) = id.toString().uppercase()
-
-// UUID.fromString은 자릿수가 모자란 문자열도 받아서 Swift UUID(uuidString:)과 같은 형식만 허용
-internal fun parseWireID(value: String): UUID? =
-  if (uuidPattern.matches(value)) UUID.fromString(value) else null
