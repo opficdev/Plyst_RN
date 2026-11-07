@@ -19,7 +19,21 @@ frameworks=$package/Frameworks
 sources=$package/Sources/PlystCore
 marker=$frameworks/.inputs
 
-inputs="$("$script_directory/rn-xcframework-inputs.sh" core) $(xcodebuild -version | tr '\n' ' ')"
+# CI는 RN_XCFRAMEWORK_SIMULATOR_ARCHS=arm64로 시뮬레이터 x86_64 슬라이스를 생략
+# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 항상 두 아키텍처를 빌드
+simulator_archs=${RN_XCFRAMEWORK_SIMULATOR_ARCHS:-arm64 x86_64}
+if [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	simulator_archs='arm64 x86_64'
+fi
+case "$simulator_archs" in
+	'arm64 x86_64' | arm64) ;;
+	*)
+		printf '오류: 지원하지 않는 시뮬레이터 아키텍처입니다: %s\n' "$simulator_archs" >&2
+		exit 1
+		;;
+esac
+
+inputs="$("$script_directory/rn-xcframework-inputs.sh" core) $(xcodebuild -version | tr '\n' ' ')simulator_archs=$simulator_archs"
 if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ] \
 	&& [ -f "$marker" ] && [ "$(cat "$marker")" = "$inputs" ] \
 	&& [ -d "$frameworks/PlystCoreFFI.xcframework" ] && [ -f "$sources/PlystCore.swift" ]; then
@@ -37,7 +51,11 @@ if [ -n "${CI:-}" ] || [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 	rm -rf "$output"
 fi
 
-for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+simulator_targets=aarch64-apple-ios-sim
+case "$simulator_archs" in
+	*x86_64*) simulator_targets="$simulator_targets x86_64-apple-ios" ;;
+esac
+for target in aarch64-apple-ios $simulator_targets; do
 	IPHONEOS_DEPLOYMENT_TARGET=17.0 "$@" build \
 		--manifest-path "$crate/Cargo.toml" \
 		--release \
@@ -47,11 +65,12 @@ for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
 done
 
 library=libplyst_core.a
+set --
+for target in $simulator_targets; do
+	set -- "$@" "$target_directory/$target/release/$library"
+done
 mkdir -p "$output/simulator"
-xcrun lipo -create \
-	"$target_directory/aarch64-apple-ios-sim/release/$library" \
-	"$target_directory/x86_64-apple-ios/release/$library" \
-	-output "$output/simulator/$library"
+xcrun lipo -create "$@" -output "$output/simulator/$library"
 
 bindings=$output/bindings
 rm -rf "$bindings"

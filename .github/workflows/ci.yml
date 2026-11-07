@@ -17,6 +17,11 @@ concurrency:
 permissions:
   contents: read
 
+# 시뮬레이터 x86_64 슬라이스는 CI에서 만들지 않음
+# Build와 Test는 arm64 시뮬레이터에서만 실행
+env:
+  RN_XCFRAMEWORK_SIMULATOR_ARCHS: arm64
+
 jobs:
   lint:
     name: SwiftLint
@@ -107,7 +112,7 @@ jobs:
           path: |
             Plyst/Packages/PlystCore/Frameworks
             Plyst/Packages/PlystCore/Sources
-          key: plyst-core-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ steps.input-hash.outputs.core }}
+          key: plyst-core-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.core }}
 
       - name: Build Plyst core
         env:
@@ -168,7 +173,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Plyst/Packages/PlystReactNative/Frameworks
-          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ steps.input-hash.outputs.hash }}
+          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.hash }}
 
       # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
       - name: Build XCFrameworks
@@ -226,7 +231,7 @@ jobs:
           tar -C Plyst/Packages -xf /tmp/plyst-core/plyst-core.tar
 
       - name: Build
-        run: make build
+        run: make build XCODEBUILD_FLAGS="ARCHS=${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}"
 
   # 산출물을 기다리지 않고 시작해 시뮬레이터를 먼저 부팅
   # 빌드는 다른 러너에서 진행되므로 이 러너에서는 부팅과 빌드가 겹치지 않음

@@ -9,6 +9,20 @@ script_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repository_root=$(CDPATH= cd "$script_directory/.." && pwd)
 configuration=${RN_CONFIGURATION:-Release}
 
+# CI는 RN_XCFRAMEWORK_SIMULATOR_ARCHS=arm64로 시뮬레이터 x86_64 슬라이스를 생략
+# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 항상 두 아키텍처를 빌드
+simulator_archs=${RN_XCFRAMEWORK_SIMULATOR_ARCHS:-arm64 x86_64}
+if [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	simulator_archs='arm64 x86_64'
+fi
+case "$simulator_archs" in
+	'arm64 x86_64' | arm64) ;;
+	*)
+		printf '오류: 지원하지 않는 시뮬레이터 아키텍처입니다: %s\n' "$simulator_archs" >&2
+		exit 1
+		;;
+esac
+
 script_started=$(date +%s)
 stage_name=
 stage_started=$script_started
@@ -88,7 +102,7 @@ cd "$repository_root/rn"
 # JS 입력만 바뀌었으면 main.jsbundle만 다시 만들어 교체
 # RN_XCFRAMEWORK_CLEAN이 비어 있지 않으면 항상 처음부터 빌드
 node_version=$("$node_binary" --version)
-environment="$(xcodebuild -version | tr '\n' ' ')node=$node_version configuration=$configuration"
+environment="$(xcodebuild -version | tr '\n' ' ')node=$node_version configuration=$configuration simulator_archs=$simulator_archs"
 all_hash=$("$inputs_script" all)
 native_hash=$("$inputs_script" native)
 npm_state="lock=$("$inputs_script" lock) node=$node_version npm=$(npm --version)"
@@ -184,7 +198,11 @@ if [ "$path" = full ]; then
 	if [ -n "${CI:-}" ] || [ -n "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		rm -rf "$search_target"
 	fi
-	for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+	simulator_targets=aarch64-apple-ios-sim
+	case "$simulator_archs" in
+		*x86_64*) simulator_targets="$simulator_targets x86_64-apple-ios" ;;
+	esac
+	for target in aarch64-apple-ios $simulator_targets; do
 		IPHONEOS_DEPLOYMENT_TARGET=15.1 "$@" build \
 			--manifest-path "$search_crate/Cargo.toml" \
 			--release \
@@ -193,11 +211,12 @@ if [ "$path" = full ]; then
 			--target-dir "$search_target"
 	done
 	search_library=libplyst_search_core.a
+	set --
+	for target in $simulator_targets; do
+		set -- "$@" "$search_target/$target/release/$search_library"
+	done
 	mkdir -p "$search_output/simulator"
-	xcrun lipo -create \
-		"$search_target/aarch64-apple-ios-sim/release/$search_library" \
-		"$search_target/x86_64-apple-ios/release/$search_library" \
-		-output "$search_output/simulator/$search_library"
+	xcrun lipo -create "$@" -output "$search_output/simulator/$search_library"
 	rm -rf "$search_output/PlystSearchCore.xcframework"
 	xcodebuild -create-xcframework \
 		-library "$search_target/aarch64-apple-ios/release/$search_library" \
@@ -227,9 +246,17 @@ if [ "$path" = full ]; then
 	# Expo 모듈을 소스로 빌드해 BrownfieldLib에 정적으로 합치고 autolinking 제외 설정을 적용
 	export EXPO_USE_PRECOMPILED_MODULES=0
 	set -- --scheme BrownfieldLib --configuration "$configuration" --use-prebuilt-expo false
+	extra_params=
+	# 기기 빌드도 arm64만 만들므로 두 빌드에 같은 값을 넘김
+	if [ "$simulator_archs" = arm64 ]; then
+		extra_params=ARCHS=arm64
+	fi
 	if [ -z "${CI:-}" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		cache_directory=${RN_COMPILATION_CACHE:-$HOME/Library/Caches/Plyst/RNCompilationCache}
-		set -- "$@" --extra-params "COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
+		extra_params="${extra_params:+$extra_params }COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
+	fi
+	if [ -n "$extra_params" ]; then
+		set -- "$@" --extra-params "$extra_params"
 	fi
 	npx brownfield package:ios "$@"
 	stage_end
@@ -277,7 +304,7 @@ for platform in iphoneos iphonesimulator; do
 	architectures=arm64
 	suffix=
 	if [ "$platform" = iphonesimulator ]; then
-		architectures='arm64 x86_64'
+		architectures=$simulator_archs
 		suffix=-simulator
 	fi
 	for architecture in $architectures; do
