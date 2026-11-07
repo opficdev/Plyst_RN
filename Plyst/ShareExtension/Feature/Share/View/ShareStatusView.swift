@@ -8,7 +8,7 @@
 import UIKit
 
 @MainActor
-final class ShareStatusView: UIView, ShareStatusLike {
+final class ShareStatusView: UIView {
     private let stack = UIStackView()
     let checkmarkView = UIImageView()
     let indicator = UIActivityIndicatorView(style: .medium)
