@@ -365,6 +365,13 @@ jobs:
               sleep 10
               continue
             fi
+            # 산출물을 이미 올린 잡은 뒤 단계가 실패해도 대기에 영향 없음
+            if printf '%s\n' "$names" | grep -qx plyst-core; then
+              failed=$(printf '%s\n' "$failed" | grep -vx Rust || true)
+            fi
+            if printf '%s\n' "$names" | grep -qx rn-xcframeworks; then
+              failed=$(printf '%s\n' "$failed" | grep -vx XCFramework || true)
+            fi
             if [ -n "$failed" ]; then
               printf '::error title=산출물 대기::%s 잡이 산출물 없이 끝났습니다.\n' "$(printf '%s' "$failed" | tr '\n' ' ')"
               exit 1
