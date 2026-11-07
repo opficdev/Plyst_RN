@@ -3,8 +3,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
-use plyst_core::store::{ClipContentValue, ClipStore, ClipStoreError, ClipValue};
+use plyst_core::store::{
+    ClipChangeListener, ClipChangeValue, ClipContentValue, ClipStore, ClipStoreError, ClipValue,
+};
 use plyst_core::ClipIdentity;
 use rusqlite::Connection;
 
@@ -51,8 +54,19 @@ impl Drop for Directory {
     }
 }
 
-pub fn open(path: &str) -> std::sync::Arc<ClipStore> {
-    ClipStore::open(path.to_string()).unwrap()
+/// 변경 알림을 쓰지 않는 시험의 리스너
+pub struct IgnoredChanges;
+
+impl ClipChangeListener for IgnoredChanges {
+    fn changed(&self, _: ClipChangeValue) {}
+}
+
+pub fn ignored_changes() -> Arc<dyn ClipChangeListener> {
+    Arc::new(IgnoredChanges)
+}
+
+pub fn open(path: &str) -> Arc<ClipStore> {
+    ClipStore::open(path.to_string(), ignored_changes()).unwrap()
 }
 
 /// 코어 밖의 별도 연결로 저장값을 바꾸어 실패를 재현

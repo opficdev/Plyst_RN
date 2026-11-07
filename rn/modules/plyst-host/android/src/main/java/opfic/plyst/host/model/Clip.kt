@@ -63,5 +63,5 @@ internal val ClipValue.clip: Clip?
     )
   }
 
-private val String.uuid: UUID?
+internal val String.uuid: UUID?
   get() = runCatching { UUID.fromString(this) }.getOrNull()

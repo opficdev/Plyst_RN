@@ -3,6 +3,9 @@ mod schema;
 mod value;
 mod wire;
 
+use std::collections::HashSet;
+use std::fs;
+use std::path::Path;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
 
@@ -14,7 +17,7 @@ use error::Fallback;
 use value::{stored_id, COLUMNS};
 pub use value::{ClipSortOrderValue, ClipUpdateResult, ClipUpdateValue, ClipValue};
 
-use crate::{search_history, sort};
+use crate::{guard, search_history, sort};
 
 const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -36,23 +39,48 @@ fn write_failed(error: rusqlite::Error) -> ClipStoreError {
     ClipStoreError::classify(error, Fallback::Write)
 }
 
+/// 커밋된 클립 변경
+#[derive(Debug, Clone, PartialEq, uniffi::Enum)]
+pub enum ClipChangeValue {
+    Inserted { clip: ClipValue },
+    Updated { clip: ClipValue },
+    Deleted { id: String },
+}
+
+/// 연결 잠금을 쥔 채 커밋 순서로 호출
+/// 구현은 값만 전달하고 코어를 다시 호출하거나 대기하지 않음
+#[uniffi::export(foreign)]
+pub trait ClipChangeListener: Send + Sync {
+    fn changed(&self, change: ClipChangeValue);
+}
+
 /// 클립과 최근 검색어 영구 저장
-/// 호출 직렬화와 이벤트 발행은 플랫폼 Service 소유
-/// Mutex는 FFI 객체의 Send와 Sync를 위한 것이라 실제 경합 없음
+/// 연결 잠금이 이미지 작업과 저장소 Service의 호출을 함께 직렬화
 #[derive(uniffi::Object)]
 pub struct ClipStore {
     connection: Mutex<Connection>,
+    listener: Arc<dyn ClipChangeListener>,
 }
 
 #[uniffi::export]
 impl ClipStore {
     #[uniffi::constructor]
-    pub fn open(path: String) -> Result<Arc<Self>, ClipStoreError> {
+    pub fn open(
+        path: String,
+        listener: Arc<dyn ClipChangeListener>,
+    ) -> Result<Arc<Self>, ClipStoreError> {
+        if let Some(directory) = Path::new(&path).parent() {
+            fs::create_dir_all(directory).map_err(|_| ClipStoreError::WriteFailed {
+                code: 0,
+                extended_code: 0,
+            })?;
+        }
         let mut connection = Connection::open(&path).map_err(read_failed)?;
         configure(&connection)?;
         schema::migrate(&mut connection)?;
         Ok(Arc::new(Self {
             connection: Mutex::new(connection),
+            listener,
         }))
     }
 
@@ -72,7 +100,7 @@ impl ClipStore {
             return Err(ClipStoreError::InvalidContent);
         }
         let id = stored_key(&clip.id)?;
-        self.write(|transaction| {
+        self.write_reporting(|transaction| {
             if find(transaction, &id).map_err(|failure| failure.into_error(Fallback::Write))?.is_some() {
                 return Err(ClipStoreError::DuplicateId { id: clip.id.clone() });
             }
@@ -83,7 +111,7 @@ impl ClipStore {
                     params![id, kind(&clip.content), text, file_id, content_type, width, height, count, clip.name, clip.pinned_at, clip.memo, clip.created_at, clip.last_used_at],
                 )
                 .map_err(write_failed)?;
-            Ok(())
+            Ok(((), Some(ClipChangeValue::Inserted { clip: clip.clone() })))
         })
     }
 
@@ -93,13 +121,13 @@ impl ClipStore {
         change: ClipUpdateValue,
     ) -> Result<ClipUpdateResult, ClipStoreError> {
         let key = stored_key(&id)?;
-        self.write(|transaction| {
+        self.write_reporting(|transaction| {
             let current = find(transaction, &key)
                 .map_err(|failure| failure.into_error(Fallback::Write))?
                 .ok_or_else(|| ClipStoreError::NotFound { id: id.clone() })?;
             let updated = current.applying(&change);
             if updated == current {
-                return Ok(ClipUpdateResult { clip: current, changed: false });
+                return Ok((ClipUpdateResult { clip: current, changed: false }, None));
             }
             if !updated.is_valid() {
                 return Err(ClipStoreError::InvalidContent);
@@ -110,13 +138,14 @@ impl ClipStore {
                     params![updated.name, updated.pinned_at, updated.memo, updated.last_used_at, key],
                 )
                 .map_err(write_failed)?;
-            Ok(ClipUpdateResult { clip: updated, changed: true })
+            let report = ClipChangeValue::Updated { clip: updated.clone() };
+            Ok((ClipUpdateResult { clip: updated, changed: true }, Some(report)))
         })
     }
 
     pub fn delete(&self, id: String) -> Result<(), ClipStoreError> {
         let key = stored_key(&id)?;
-        self.write(|transaction| {
+        self.write_reporting(|transaction| {
             if find(transaction, &key)
                 .map_err(|failure| failure.into_error(Fallback::Write))?
                 .is_none()
@@ -126,7 +155,12 @@ impl ClipStore {
             transaction
                 .execute("DELETE FROM clips WHERE id = ?1", [&key])
                 .map_err(write_failed)?;
-            Ok(())
+            Ok((
+                (),
+                Some(ClipChangeValue::Deleted {
+                    id: id.to_ascii_uppercase(),
+                }),
+            ))
         })
     }
 
@@ -170,6 +204,23 @@ impl ClipStore {
         }
     }
 
+    /// 이미지 클립이 참조하는 파일 식별자
+    /// 행을 fetch_all과 같게 검증하므로 손상된 행에서 같은 오류를 돌려줌
+    pub fn image_file_ids(&self) -> Result<HashSet<String>, ClipStoreError> {
+        let connection = self.lock();
+        let mut statement = connection
+            .prepare_cached(&format!("SELECT {COLUMNS} FROM clips"))
+            .map_err(read_failed)?;
+        let mut rows = statement.query([]).map_err(read_failed)?;
+        let mut ids = HashSet::new();
+        while let Some(row) = rows.next().map_err(read_failed)? {
+            if let ClipContentValue::Image { file_id, .. } = ClipValue::from_row(row)?.content {
+                ids.insert(file_id);
+            }
+        }
+        Ok(ids)
+    }
+
     /// 패닉 뒤에도 트랜잭션은 Drop에서 롤백되었으므로 연결을 계속 사용
     fn lock(&self) -> MutexGuard<'_, Connection> {
         self.connection
@@ -188,6 +239,26 @@ impl ClipStore {
             .map_err(write_failed)?;
         let value = operation(&transaction)?;
         transaction.commit().map_err(write_failed)?;
+        Ok(value)
+    }
+
+    /// 변경 알림이 커밋 순서를 따르도록 연결 잠금을 쥔 채 알림
+    /// 커밋 뒤의 알림 실패는 확정된 쓰기의 결과를 바꾸지 않음
+    fn write_reporting<Value>(
+        &self,
+        operation: impl FnOnce(
+            &Transaction<'_>,
+        ) -> Result<(Value, Option<ClipChangeValue>), ClipStoreError>,
+    ) -> Result<Value, ClipStoreError> {
+        let mut connection = self.lock();
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(write_failed)?;
+        let (value, change) = operation(&transaction)?;
+        transaction.commit().map_err(write_failed)?;
+        if let Some(change) = change {
+            guard((), || self.listener.changed(change));
+        }
         Ok(value)
     }
 

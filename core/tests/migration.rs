@@ -4,7 +4,7 @@ use std::fs;
 
 use plyst_core::store::{ClipContentValue, ClipSortOrderValue, ClipStore, ClipStoreError};
 use rusqlite::Connection;
-use support::{execute, open, text, Directory, CORRUPTED};
+use support::{execute, ignored_changes, open, text, Directory, CORRUPTED};
 
 const FIRST: &str = "11111111-AAAA-4BBB-8CCC-DDDDDDDDDDDD";
 const SECOND: &str = "22222222-AAAA-4BBB-8CCC-DDDDDDDDDDDD";
@@ -45,7 +45,10 @@ fn user_version(path: &str) -> i64 {
 
 fn assert_rejected_without_change(path: &str, expected: ClipStoreError) {
     let before = fs::read(path).unwrap();
-    assert_eq!(ClipStore::open(path.to_string()).err(), Some(expected));
+    assert_eq!(
+        ClipStore::open(path.to_string(), ignored_changes()).err(),
+        Some(expected)
+    );
     assert_eq!(fs::read(path).unwrap(), before);
 }
 
@@ -165,7 +168,7 @@ fn corrupted_file_is_reported_without_replacing_its_contents() {
     let path = directory.database();
     fs::write(&path, "Invalid SQLite data").unwrap();
     assert!(matches!(
-        ClipStore::open(path.clone()),
+        ClipStore::open(path.clone(), ignored_changes()),
         Err(ClipStoreError::CorruptedData { .. })
     ));
     assert_eq!(fs::read(&path).unwrap(), b"Invalid SQLite data");
@@ -234,7 +237,7 @@ fn failed_android_rebuild_keeps_the_original_tables() {
         INSERT INTO clips (id, kind, text, createdAt) VALUES ('BBBBBBBB-1111-4111-8111-111111111111', 'text', '타입 오류', '문자열');",
     );
     assert!(matches!(
-        ClipStore::open(path.clone()),
+        ClipStore::open(path.clone(), ignored_changes()),
         Err(ClipStoreError::WriteFailed { .. })
     ));
     let connection = Connection::open(&path).unwrap();
@@ -252,7 +255,7 @@ fn simultaneous_first_opens_all_succeed() {
     let threads: Vec<_> = (0..8)
         .map(|_| {
             let path = path.clone();
-            std::thread::spawn(move || ClipStore::open(path).map(|_| ()))
+            std::thread::spawn(move || ClipStore::open(path, ignored_changes()).map(|_| ()))
         })
         .collect();
     for thread in threads {
