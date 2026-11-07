@@ -5,53 +5,32 @@
 //  Created by opfic on 9/29/26.
 //
 
-import CoreGraphics
 import Foundation
-import ImageIO
-import UniformTypeIdentifiers
+import PlystCore
 
 /// 주입한 전용 루트에서 원본 바이트를 관리
+/// 파일 규칙은 코어의 ClipImageFiles가 소유하고 이 타입은 취소, 오류 변환, 원본 읽기를 담당
 /// 같은 루트의 변경은 ClipImageService 하나가 조율해야 함
 /// `ShareInboxImages`는 예외
 /// 저장과 정리 복구는 Share Extension만 실행하고 본 앱은 읽기와 삭제만 실행
-/// `<fileID>/preview`와 `<fileID>/thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일
-/// 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않음
+/// 파생 파일은 본 앱 이미지 루트에서만 생성하며 `ShareInboxImages`에서는 생성하지 않음
 struct ClipImageFileStore: Sendable {
-    /// 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수
-    /// 검증이 원본 해상도 비트맵을 만들지 않게 함
-    private static let validationPixelDimension = 64
-
-    private let root: URL
+    private let files: ClipImageFiles
 
     init(rootURL: URL) throws {
         guard rootURL.isFileURL, !rootURL.path.contains("\0") else { throw ClipImageFileError.invalidRoot }
-        root = rootURL.standardizedFileURL.resolvingSymlinksInPath()
-        do {
-            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        } catch {
-            throw ClipImageFileError.writeFailed
-        }
-        try validateRoot()
+        let root = rootURL.standardizedFileURL.resolvingSymlinksInPath().path
+        files = try converted(fallback: .writeFailed) { try ClipImageFiles.open(root: root) }
     }
 
     /// 검증한 원본을 재인코딩 없이 저장
     /// 반환된 fileID의 정리 후보는 메타데이터 저장 확정 후 해제해야 함
     func save(_ data: Data) throws -> ClipImageMetadata {
-        let properties = try imageProperties(data)
-        try validateRoot()
-        var fileID = UUID()
-        while try attributes(at: url(for: fileID)) != nil { fileID = UUID() }
-        let directory = url(for: fileID)
-        do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
-            try markPending(fileID: fileID)
-            try data.write(to: directory.appendingPathComponent("original"), options: .atomic)
-        } catch {
-            // 원자적 쓰기의 임시 파일까지 함께 정리
-            // 실패한 정리는 후보 또는 불완전한 디렉터리로 남음
-            try? delete(fileID: fileID)
-            throw ClipImageFileError.writeFailed
-        }
+        let properties = try ClipImageCodec.properties(of: data)
+        // UniFFI 바이트 인자의 길이가 Int32이므로 초과분은 호출 전에 거부
+        guard data.count <= Int32.max else { throw ClipImageFileError.writeFailed }
+        let fileID = try converted(fallback: .writeFailed) { UUID(uuidString: try files.save(data: data)) }
+        guard let fileID else { throw ClipImageFileError.writeFailed }
         return ClipImageMetadata(
             fileID: fileID,
             contentType: properties.type,
@@ -62,11 +41,8 @@ struct ClipImageFileStore: Sendable {
     }
 
     func load(fileID: UUID) throws -> Data {
-        guard let directory = try directory(for: fileID) else { throw ClipImageFileError.notFound(fileID) }
-        let original = directory.appendingPathComponent("original")
-        guard let attributes = try attributes(at: original) else { throw ClipImageFileError.notFound(fileID) }
-        guard attributes[.type] as? FileAttributeType == .typeRegular else { throw ClipImageFileError.unsafePath }
-        do { return try Data(contentsOf: original) } catch { throw ClipImageFileError.readFailed }
+        let path = try converted(fallback: .readFailed) { try files.originalPath(fileId: fileID.uuidString) }
+        do { return try Data(contentsOf: URL(fileURLWithPath: path)) } catch { throw ClipImageFileError.readFailed }
     }
 
     /// 저장된 메타데이터와 원본을 대조하며 파일이나 이미지 표현을 변경하지 않음
@@ -75,7 +51,7 @@ struct ClipImageFileStore: Sendable {
         let data = try load(fileID: image.fileID)
         guard data.count == image.byteCount else { throw ClipImageFileError.corruptedImage(image.fileID) }
         do {
-            let properties = try imageProperties(data)
+            let properties = try ClipImageCodec.properties(of: data)
             guard properties.type == image.contentType,
                   properties.size.width == image.pixelWidth,
                   properties.size.height == image.pixelHeight else { throw ClipImageFileError.corruptedImage(image.fileID) }
@@ -93,36 +69,14 @@ struct ClipImageFileStore: Sendable {
     ) throws -> Data {
         try Task.checkCancellation()
         guard 0 < maximumPixelDimension else { throw ClipImageFileError.readFailed }
-        let original = try validatedOriginalURL(image: image)
-        let options = [kCGImageSourceShouldCache: false] as CFDictionary
-        guard let source = CGImageSourceCreateWithURL(original as CFURL, options),
-              CGImageSourceGetType(source) as String? == image.contentType,
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as NSDictionary?,
-              properties[kCGImagePropertyPixelWidth] as? Int == image.pixelWidth,
-              properties[kCGImagePropertyPixelHeight] as? Int == image.pixelHeight else {
-            throw ClipImageFileError.corruptedImage(image.fileID)
+        let path = try converted(fallback: .readFailed) {
+            try files.validatedOriginalPath(fileId: image.fileID.uuidString, byteCount: Int64(image.byteCount))
         }
-        let thumbnailOptions = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: maximumPixelDimension
-        ] as CFDictionary
-        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions),
-              CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
-              let output = CFDataCreateMutable(nil, 0),
-              let destination = CGImageDestinationCreateWithData(
-                output,
-                UTType.png.identifier as CFString,
-                1,
-                nil
-              ) else {
-            throw ClipImageFileError.corruptedImage(image.fileID)
-        }
-        try Task.checkCancellation()
-        CGImageDestinationAddImage(destination, thumbnail, nil)
-        guard CGImageDestinationFinalize(destination) else { throw ClipImageFileError.readFailed }
-        return output as Data
+        return try ClipImageCodec.thumbnail(
+            of: URL(fileURLWithPath: path),
+            image: image,
+            maximumPixelDimension: maximumPixelDimension
+        )
     }
 
     /// 본 앱 이미지 루트에서만 호출
@@ -131,7 +85,11 @@ struct ClipImageFileStore: Sendable {
         image: ClipImageMetadata,
         maximumPixelDimension: Int
     ) throws -> URL {
-        try writeDerivedFile(named: "preview", image: image, maximumPixelDimension: maximumPixelDimension)
+        let data = try loadThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
+        try Task.checkCancellation()
+        return try converted(fallback: .writeFailed) {
+            URL(fileURLWithPath: try files.writePreview(fileId: image.fileID.uuidString, data: data))
+        }
     }
 
     /// 본 앱 이미지 루트에서만 호출
@@ -140,169 +98,64 @@ struct ClipImageFileStore: Sendable {
         image: ClipImageMetadata,
         maximumPixelDimension: Int
     ) throws -> URL {
-        try writeDerivedFile(named: "thumbnail-\(maximumPixelDimension)", image: image, maximumPixelDimension: maximumPixelDimension)
-    }
-
-    private func writeDerivedFile(
-        named name: String,
-        image: ClipImageMetadata,
-        maximumPixelDimension: Int
-    ) throws -> URL {
         let data = try loadThumbnail(image: image, maximumPixelDimension: maximumPixelDimension)
-        guard let directory = try directory(for: image.fileID) else {
-            throw ClipImageFileError.notFound(image.fileID)
-        }
-        let file = directory.appendingPathComponent(name)
-        try validateFile(at: file)
         try Task.checkCancellation()
-        do { try data.write(to: file, options: .atomic) } catch { throw ClipImageFileError.writeFailed }
-        return file
-    }
-
-    private func validatedOriginalURL(image: ClipImageMetadata) throws -> URL {
-        guard let directory = try directory(for: image.fileID) else {
-            throw ClipImageFileError.notFound(image.fileID)
+        return try converted(fallback: .writeFailed) {
+            let path = try files.writeThumbnail(
+                fileId: image.fileID.uuidString,
+                maximumPixelDimension: Int64(maximumPixelDimension),
+                data: data
+            )
+            return URL(fileURLWithPath: path)
         }
-        let original = directory.appendingPathComponent("original")
-        guard let attributes = try attributes(at: original) else {
-            throw ClipImageFileError.notFound(image.fileID)
-        }
-        guard original.resolvingSymlinksInPath().standardizedFileURL == original.standardizedFileURL else {
-            throw ClipImageFileError.unsafePath
-        }
-        guard attributes[.type] as? FileAttributeType == .typeRegular else {
-            throw ClipImageFileError.unsafePath
-        }
-        guard attributes[.size] as? Int == image.byteCount else {
-            throw ClipImageFileError.corruptedImage(image.fileID)
-        }
-        return original
     }
 
     /// 이미 존재하지 않는 파일은 삭제된 것으로 처리
     func delete(fileID: UUID) throws {
-        guard let directory = try directory(for: fileID) else { return }
-        do {
-            let original = directory.appendingPathComponent("original")
-            if try attributes(at: original) != nil { try FileManager.default.removeItem(at: original) }
-            let entries = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-            for entry in entries where entry.lastPathComponent != "pending" {
-                try FileManager.default.removeItem(at: entry)
-            }
-            // 원본과 임시 파일이 모두 제거된 후에만 정리 기록을 해제
-            try finishPending(fileID: fileID)
-            // 여기서 중단되면 원본이 없는 디렉터리를 복구 후보로 찾을 수 있음
-            try FileManager.default.removeItem(at: directory)
-        } catch { throw ClipImageFileError.deleteFailed }
+        try converted(fallback: .deleteFailed) { try files.delete(fileId: fileID.uuidString) }
     }
 
     func markPending(fileID: UUID) throws {
-        guard let directory = try directory(for: fileID) else { return }
-        let marker = directory.appendingPathComponent("pending")
-        try validateFile(at: marker)
-        do { try Data().write(to: marker, options: .atomic) } catch { throw ClipImageFileError.writeFailed }
+        try converted(fallback: .writeFailed) { try files.markPending(fileId: fileID.uuidString) }
     }
 
     func finishPending(fileID: UUID) throws {
-        guard let directory = try directory(for: fileID) else { return }
-        let marker = directory.appendingPathComponent("pending")
-        guard try attributes(at: marker) != nil else { return }
-        try validateFile(at: marker)
-        do { try FileManager.default.removeItem(at: marker) } catch { throw ClipImageFileError.deleteFailed }
+        try converted(fallback: .deleteFailed) { try files.finishPending(fileId: fileID.uuidString) }
     }
 
     /// 정상 원본을 일괄 삭제하지 않음
     /// 정리 후보와 저장 중단으로 불완전한 디렉터리만 반환
     func pendingFileIDs() throws -> [UUID] {
-        try validateRoot()
-        let entries: [URL]
-        do {
-            entries = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
-        } catch { throw ClipImageFileError.readFailed }
-        var ids = [UUID]()
-        for entry in entries {
-            guard let fileID = UUID(uuidString: entry.lastPathComponent), fileID.uuidString == entry.lastPathComponent,
-                  let directory = try directory(for: fileID) else { continue }
-            let marker = directory.appendingPathComponent("pending")
-            try validateFile(at: marker)
-            if try attributes(at: marker) != nil || attributes(at: directory.appendingPathComponent("original")) == nil {
-                ids.append(fileID)
-            }
-        }
-        return ids.sorted { $0.uuidString < $1.uuidString }
+        try converted(fallback: .readFailed) { try files.pendingFileIds() }.compactMap(UUID.init(uuidString:))
     }
+}
 
-    private func imageProperties(_ data: Data) throws -> (type: String, size: (width: Int, height: Int)) {
-        try Task.checkCancellation()
-        guard !data.isEmpty, let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let identifier = CGImageSourceGetType(source) else { throw ClipImageFileError.invalidImage }
-        let type = identifier as String
-        let supported = CGImageSourceCopyTypeIdentifiers() as? [String] ?? []
-        guard supported.contains(type), UTType(type)?.conforms(to: .image) == true else { throw ClipImageFileError.unsupportedImage }
-        // ImageIO는 잘린 GIF도 남은 프레임만으로 statusComplete를 반환하므로 종료 바이트(0x3B)로 잘림을 판별
-        if type == UTType.gif.identifier, data.last != 0x3B { throw ClipImageFileError.invalidImage }
-        let count = CGImageSourceGetCount(source)
-        guard 0 < count else { throw ClipImageFileError.invalidImage }
-        // 원본 해상도 비트맵을 만들지 않도록 크기는 속성으로 읽고 무결성은 축소 디코딩으로 확인
-        let validationOptions = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: Self.validationPixelDimension
-        ] as CFDictionary
-        var size = (width: 0, height: 0)
-        for index in 0..<count {
-            try Task.checkCancellation()
-            // 프레임마다 즉시 디코딩하고 캐시를 해제하여 모든 프레임의 픽셀을 동시에 보관하지 않음
-            let dimensions = try autoreleasepool {
-                defer { CGImageSourceRemoveCacheAtIndex(source, index) }
-                guard let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as NSDictionary?,
-                      let width = properties[kCGImagePropertyPixelWidth] as? Int,
-                      let height = properties[kCGImagePropertyPixelHeight] as? Int,
-                      0 < width, 0 < height,
-                      CGImageSourceCreateThumbnailAtIndex(source, index, validationOptions) != nil,
-                      CGImageSourceGetStatusAtIndex(source, index) == .statusComplete else { throw ClipImageFileError.invalidImage }
-                return (width: width, height: height)
-            }
-            if index == 0 { size = dimensions }
-        }
-        guard CGImageSourceGetStatus(source) == .statusComplete else { throw ClipImageFileError.invalidImage }
-        return (type, size)
+/// 코어 오류를 저장소 오류로 변환
+/// 패닉은 연산별 대체 오류로 전달
+private func converted<T>(
+    fallback: ClipImageFileError,
+    _ body: () throws -> T
+) throws -> T {
+    do {
+        return try body()
+    } catch let error as ClipImageFilesError {
+        throw fileError(error, fallback: fallback)
+    } catch {
+        throw fallback
     }
+}
 
-    private func url(for fileID: UUID) -> URL {
-        root.appendingPathComponent(fileID.uuidString, isDirectory: true)
-    }
-
-    private func directory(for fileID: UUID) throws -> URL? {
-        try validateRoot()
-        let directory = url(for: fileID)
-        guard let attributes = try attributes(at: directory) else { return nil }
-        guard attributes[.type] as? FileAttributeType == .typeDirectory,
-              directory.resolvingSymlinksInPath().standardizedFileURL == directory.standardizedFileURL else {
-            throw ClipImageFileError.unsafePath
-        }
-        return directory
-    }
-
-    private func validateRoot() throws {
-        guard let attributes = try attributes(at: root), attributes[.type] as? FileAttributeType == .typeDirectory,
-              root.resolvingSymlinksInPath().standardizedFileURL == root.standardizedFileURL else { throw ClipImageFileError.unsafePath }
-    }
-
-    private func validateFile(at url: URL) throws {
-        if let attributes = try attributes(at: url), attributes[.type] as? FileAttributeType != .typeRegular {
-            throw ClipImageFileError.unsafePath
-        }
-    }
-
-    private func attributes(at url: URL) throws -> [FileAttributeKey: Any]? {
-        do {
-            return try FileManager.default.attributesOfItem(atPath: url.path)
-        } catch {
-            let error = error as NSError
-            if error.domain == NSCocoaErrorDomain,
-               error.code == CocoaError.fileNoSuchFile.rawValue || error.code == CocoaError.fileReadNoSuchFile.rawValue { return nil }
-            throw ClipImageFileError.readFailed
-        }
+private func fileError(
+    _ error: ClipImageFilesError,
+    fallback: ClipImageFileError
+) -> ClipImageFileError {
+    switch error {
+    case .InvalidRoot: .invalidRoot
+    case .UnsafePath: .unsafePath
+    case .ReadFailed: .readFailed
+    case .WriteFailed: .writeFailed
+    case .DeleteFailed: .deleteFailed
+    case .NotFound(let fileId): UUID(uuidString: fileId).map(ClipImageFileError.notFound) ?? fallback
+    case .SizeMismatch(let fileId): UUID(uuidString: fileId).map(ClipImageFileError.corruptedImage) ?? fallback
     }
 }
