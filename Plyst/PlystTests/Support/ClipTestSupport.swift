@@ -8,6 +8,8 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import os
+import PlystCore
 import UniformTypeIdentifiers
 import XCTest
 @testable import Plyst
@@ -28,13 +30,13 @@ class ClipTemporaryDirectoryTestCase: XCTestCase {
         try SQLiteClipStorageService(databaseURL: url)
     }
 
-    func makeAdapter(storage: any ClipStorageService) throws -> ClipBridgeAdapter {
-        let images = ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
+    func makeAdapter(storage: SQLiteClipStorageService) throws -> ClipBridgeAdapter {
+        let images = try ClipImageService(storage: storage, rootURL: root)
         return ClipBridgeAdapter(
             storage: storage,
             history: try makeStorage(),
             images: images,
-            clipboard: ClipboardService(storage: storage, images: images),
+            clipboard: ClipboardService(images: images),
             photos: ClipPhotoLibraryService(storage: storage, images: images)
         )
     }
@@ -72,42 +74,25 @@ extension XCTestCase {
     }
 }
 
-/// 실제 저장소 호출 앞에 거부와 동작을 끼워 넣는 대역
+/// 실제 저장소 호출 앞에 동작을 끼워 넣는 대역
 actor ClipStorageServiceSpy: ClipStorageService {
-    enum Operation: Hashable { case delete, list }
     private let storage: SQLiteClipStorageService
-    private var rejected = Set<Operation>()
-    private var yieldsBeforeInsert = false
     private let beforeInsert: @Sendable (Clip) throws -> Void
-    private let beforeUpdate: @Sendable () async throws -> Void
-    private let beforeDelete: @Sendable (Clip.ID) throws -> Void
 
     init(
         storage: SQLiteClipStorageService,
-        beforeInsert: @escaping @Sendable (Clip) throws -> Void = { _ in },
-        beforeUpdate: @escaping @Sendable () async throws -> Void = {},
-        beforeDelete: @escaping @Sendable (Clip.ID) throws -> Void = { _ in }
+        beforeInsert: @escaping @Sendable (Clip) throws -> Void = { _ in }
     ) {
         self.storage = storage
         self.beforeInsert = beforeInsert
-        self.beforeUpdate = beforeUpdate
-        self.beforeDelete = beforeDelete
     }
 
-    func reject(_ operation: Operation) { rejected.insert(operation) }
-    func allow(_ operation: Operation) { rejected.remove(operation) }
-    func yieldBeforeInsert() { yieldsBeforeInsert = true }
-
-    func fetchAll(order: ClipSortOrder) async throws -> [Clip] {
-        if rejected.contains(.list) { throw ClipStorageError.readFailed }
-        return try await storage.fetchAll(order: order)
-    }
+    func fetchAll(order: ClipSortOrder) async throws -> [Clip] { try await storage.fetchAll(order: order) }
 
     func fetch(id: Clip.ID) async throws -> Clip? { try await storage.fetch(id: id) }
 
     func insert(_ clip: Clip) async throws {
         try beforeInsert(clip)
-        if yieldsBeforeInsert { await Task.yield() }
         try await storage.insert(clip)
     }
 
@@ -115,43 +100,37 @@ actor ClipStorageServiceSpy: ClipStorageService {
         id: Clip.ID,
         change: ClipUpdate
     ) async throws -> Clip {
-        try await beforeUpdate()
-        return try await storage.update(id: id, change: change)
+        try await storage.update(id: id, change: change)
     }
 
-    func delete(id: Clip.ID) async throws {
-        try beforeDelete(id)
-        if rejected.contains(.delete) { throw ClipStorageError.writeFailed }
-        try await storage.delete(id: id)
-    }
+    func delete(id: Clip.ID) async throws { try await storage.delete(id: id) }
 
     func changes() async -> AsyncStream<ClipStorageEvent> { await storage.changes() }
 }
 
-@MainActor
 final class ClipboardReaderSpy: ClipboardReader {
     private let result: ClipboardReadResult
-    private(set) var readCount = 0
+    private let reads = OSAllocatedUnfairLock(initialState: 0)
+
+    var readCount: Int { reads.withLock { $0 } }
 
     init(result: ClipboardReadResult) {
         self.result = result
     }
 
-    @MainActor
-    func read() async throws -> ClipboardReadResult {
-        readCount += 1
+    func read() throws -> ClipboardReadResult {
+        reads.withLock { $0 += 1 }
         return result
     }
 }
 
-@MainActor
-final class ClipboardWriterSpy: ClipboardWriter {
-    private(set) var contents = [ClipboardWriteContent]()
+final class ClipboardWriterSpy: ClipboardWriting {
+    private let written = OSAllocatedUnfairLock(initialState: [ClipboardWriteValue]())
 
-    @MainActor
-    func write(_ content: ClipboardWriteContent) async throws -> ClipboardWriteResult {
-        try Task.checkCancellation()
-        contents.append(content)
+    var contents: [ClipboardWriteValue] { written.withLock { $0 } }
+
+    func write(content: ClipboardWriteValue) throws -> ClipboardWriteOutcome {
+        written.withLock { $0.append(content) }
         return .observed
     }
 }

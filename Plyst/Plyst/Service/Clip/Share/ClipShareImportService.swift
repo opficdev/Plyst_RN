@@ -43,10 +43,7 @@ struct ClipShareImportService: Sendable {
     func importPendingClips() async throws -> ClipShareImportResult {
         guard FileManager.default.fileExists(atPath: inboxDatabaseURL.path) else { return .empty }
         let inbox = try SQLiteClipStorageService(databaseURL: inboxDatabaseURL)
-        let inboxImages = ClipImageService(
-            storage: inbox,
-            files: try ClipImageFileStore(rootURL: inboxImagesURL)
-        )
+        let inboxImages = try ClipImageService(storage: inbox, rootURL: inboxImagesURL)
         let clips = try await inbox.fetchAll(order: .createdAt).reversed()
         var importedCount = 0
         var remainingCount = 0

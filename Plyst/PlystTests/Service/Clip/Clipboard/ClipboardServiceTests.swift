@@ -51,16 +51,10 @@ final class ClipboardServiceTests: ClipTemporaryDirectoryTestCase {
     }
 
     private func makeService(
-        storage: any ClipStorageService,
+        storage: SQLiteClipStorageService,
         reader: any ClipboardReader
     ) throws -> ClipboardService {
-        let files = try ClipImageFileStore(rootURL: directory.appendingPathComponent("images", isDirectory: true))
-        let images = ClipImageService(storage: storage, files: files)
-        return ClipboardService(
-            storage: storage,
-            images: images,
-            reader: reader
-        )
+        ClipboardService(images: try ClipImageService(storage: storage, rootURL: root), reader: reader)
     }
 
     private func savedClip(_ result: ClipboardSaveResult) throws -> Clip {

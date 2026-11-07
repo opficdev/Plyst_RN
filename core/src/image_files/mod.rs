@@ -1,7 +1,8 @@
 //! 이미지 파일 트리 규칙
 //! 이미지마다 `<fileID>/original`, `pending`, `preview`, `thumbnail-<px>`를 둠
 //! `preview`와 `thumbnail-<px>`는 원본에서 다시 만들 수 있는 파생 파일
-//! 잠금과 캐시 없이 호출마다 디스크를 검사하므로 프로세스 간 역할 분담은 호스트가 유지
+//! 잠금과 캐시 없이 호출마다 디스크를 검사하므로 호출 직렬화는 `ClipImageOperations`가 맡음
+//! 프로세스 간 역할 분담은 호스트가 유지
 //! 원본 읽기는 호스트가 검사한 경로로 직접 수행
 
 mod error;
@@ -13,7 +14,7 @@ use std::process;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
-use crate::uuid_form::is_uuid_form;
+use crate::uuid_form::{is_uuid_form, new_uuid};
 
 pub use error::ClipImageFilesError;
 
@@ -24,7 +25,6 @@ const PREVIEW: &str = "preview";
 // 임시 파일 이름의 프로세스 내 순번
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
-#[derive(uniffi::Object)]
 pub struct ClipImageFiles {
     // 반환 경로의 앞부분이므로 호스트가 준 값을 유지
     root: PathBuf,
@@ -32,10 +32,8 @@ pub struct ClipImageFiles {
     canonical_root: PathBuf,
 }
 
-#[uniffi::export]
 impl ClipImageFiles {
     /// 없는 루트는 만들고 실제 경로를 기억
-    #[uniffi::constructor]
     pub fn open(root: String) -> Result<Arc<Self>, ClipImageFilesError> {
         let path = PathBuf::from(&root);
         if !path.is_absolute() || root.contains('\0') {
@@ -53,20 +51,15 @@ impl ClipImageFiles {
 
     /// 재인코딩 없이 그대로 저장하고 새 식별자를 반환
     /// 같은 폴더가 있으면 새 식별자로 재시도
-    /// 정리 표시는 메타데이터 저장 확정 후 호스트가 해제
+    /// 정리 표시는 메타데이터 저장 확정 후 호출자가 해제
     pub fn save(&self, data: &[u8]) -> Result<String, ClipImageFilesError> {
         self.validate_root()?;
         loop {
-            let file_id = new_file_id()?;
+            let file_id = new_uuid().ok_or(ClipImageFilesError::WriteFailed)?;
             if self.create(&file_id, data)? {
                 return Ok(file_id);
             }
         }
-    }
-
-    pub fn original_path(&self, file_id: &str) -> Result<String, ClipImageFilesError> {
-        let (path, _) = self.original(file_id)?;
-        Ok(text(&path))
     }
 
     /// 기록된 크기와 다른 원본은 내용을 읽기 전에 거부
@@ -262,24 +255,6 @@ impl ClipImageFiles {
     }
 }
 
-// UUID 버전 4의 대문자 표기
-// 난수를 얻지 못하면 약한 대체값 없이 저장 실패
-fn new_file_id() -> Result<String, ClipImageFilesError> {
-    let mut bytes = [0u8; 16];
-    getrandom::fill(&mut bytes).map_err(|_| ClipImageFilesError::WriteFailed)?;
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    let hex: String = bytes.iter().map(|byte| format!("{byte:02X}")).collect();
-    Ok(format!(
-        "{}-{}-{}-{}-{}",
-        &hex[..8],
-        &hex[8..12],
-        &hex[12..16],
-        &hex[16..20],
-        &hex[20..]
-    ))
-}
-
 // 디스크 폴더 이름은 대문자 표기만 허용
 fn is_file_id(value: &str) -> bool {
     is_uuid_form(value) && !value.bytes().any(|byte| byte.is_ascii_lowercase())
@@ -378,13 +353,13 @@ mod tests {
 
     #[test]
     fn an_existing_folder_is_refused_without_touching_its_files() {
-        let root = std::env::temp_dir().join(new_file_id().unwrap());
+        let root = std::env::temp_dir().join(new_uuid().unwrap());
         let files = ClipImageFiles::open(text(&root)).unwrap();
         let file_id = files.save(b"original").unwrap();
 
         assert_eq!(files.create(&file_id, b"other"), Ok(false));
         assert_eq!(
-            fs::read(files.original_path(&file_id).unwrap()).unwrap(),
+            fs::read(root.join(&file_id).join(ORIGINAL)).unwrap(),
             b"original"
         );
         fs::remove_dir_all(root).unwrap();
@@ -392,7 +367,7 @@ mod tests {
 
     #[test]
     fn new_identifiers_are_version_four_in_the_disk_form() {
-        let file_id = new_file_id().unwrap();
+        let file_id = new_uuid().unwrap();
         assert!(is_file_id(&file_id));
         assert_eq!(&file_id[14..15], "4");
         assert!(matches!(&file_id[19..20], "8" | "9" | "A" | "B"));

@@ -13,18 +13,10 @@ sealed interface ClipUpdate {
     val isPinned: Boolean,
     val requestedAt: Long,
   ) : ClipUpdate
-
-  // 편집 초안을 저장할 때 최신 사용 시각을 덮어쓰지 않도록 사용 기록을 별도로 갱신
-  // matching을 전달하면 식별자와 원본, 생성 시각이 같은 클립에만 적용
-  data class LastUsedAt(
-    val date: Long,
-    val matching: Clip? = null,
-  ) : ClipUpdate
 }
 
 internal val ClipUpdate.coreValue: ClipUpdateValue
   get() =
     when (this) {
       is ClipUpdate.Details -> ClipUpdateValue.Details(name?.wellFormed, memo?.wellFormed, isPinned, requestedAt.referenceSeconds)
-      is ClipUpdate.LastUsedAt -> ClipUpdateValue.LastUsedAt(date.referenceSeconds, matching?.coreIdentity)
     }

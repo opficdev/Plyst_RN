@@ -2,7 +2,6 @@ package opfic.plyst.host.model
 
 import java.util.UUID
 import opfic.plyst.core.ClipContentValue
-import opfic.plyst.core.ClipIdentity
 import opfic.plyst.core.ClipValue
 
 // 저장된 클립의 불변 스냅샷
@@ -18,9 +17,6 @@ data class Clip(
   // 클립을 다시 복사하는 작업이 성공하기 전까지는 null
   val lastUsedAt: Long? = null,
 )
-
-internal val Clip.coreIdentity: ClipIdentity
-  get() = ClipIdentity(id.toString().uppercase(), content.coreValue, createdAt.referenceSeconds)
 
 internal val Clip.coreValue: ClipValue
   get() =
@@ -63,5 +59,5 @@ internal val ClipValue.clip: Clip?
     )
   }
 
-private val String.uuid: UUID?
+internal val String.uuid: UUID?
   get() = runCatching { UUID.fromString(this) }.getOrNull()

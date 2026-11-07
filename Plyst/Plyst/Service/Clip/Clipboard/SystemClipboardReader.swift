@@ -8,15 +8,14 @@
 import UIKit
 import UniformTypeIdentifiers
 
-/// 호출자의 actor 밖에서 첫 항목의 형식을 확인하고 읽음
+/// 첫 항목의 형식을 확인하고 읽음
 /// 변경을 감시하거나 읽기를 재시도하지 않음
 struct SystemClipboardReader: ClipboardReader {
     // UIPasteboard.typeListString과 typeListURL은 Swift 6에서 공유 가변 상태로 취급되어 같은 형식 목록을 값으로 둠
     private static let textTypes = [UTType.utf8PlainText.identifier, UTType.plainText.identifier]
     private static let urlTypes = [UTType.url.identifier]
 
-    @concurrent
-    func read() async throws -> ClipboardReadResult {
+    func read() throws -> ClipboardReadResult {
         try Task.checkCancellation()
         let pasteboard = UIPasteboard.general
         let changeCount = pasteboard.changeCount

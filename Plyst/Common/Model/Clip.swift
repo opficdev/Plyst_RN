@@ -63,12 +63,4 @@ struct Clip: Equatable, Identifiable, Sendable {
             lastUsedAt: lastUsedAt?.timeIntervalSinceReferenceDate
         )
     }
-
-    var coreIdentity: ClipIdentity {
-        ClipIdentity(
-            id: id.uuidString,
-            content: content.coreValue,
-            createdAt: createdAt.timeIntervalSinceReferenceDate
-        )
-    }
 }

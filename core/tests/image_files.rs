@@ -79,7 +79,9 @@ fn saved_bytes_survive_reopening_and_stay_pending_until_released() {
     assert_eq!(files.pending_file_ids().unwrap(), [id.as_str()]);
 
     let reopened = open(&directory);
-    let path = reopened.original_path(&id).unwrap();
+    let path = reopened
+        .validated_original_path(&id, BYTES.len() as i64)
+        .unwrap();
     assert_eq!(fs::read(path).unwrap(), BYTES);
     reopened.finish_pending(&id).unwrap();
     reopened.finish_pending(&id).unwrap();
@@ -92,11 +94,11 @@ fn tree_written_by_the_swift_store_is_read_recovered_and_deleted() {
     let directory = Directory::new();
     let files = fixture(&directory);
     assert_eq!(files.pending_file_ids().unwrap(), [PENDING_ID]);
-    let original = files.original_path(COMPLETE_ID).unwrap();
+    let original = tree(&directory, COMPLETE_ID).join("original");
     let size = fs::metadata(&original).unwrap().len() as i64;
     assert_eq!(
         files.validated_original_path(COMPLETE_ID, size).unwrap(),
-        original
+        original.to_str().unwrap()
     );
 
     files.delete(PENDING_ID).unwrap();
@@ -230,10 +232,6 @@ fn links_are_refused_at_every_level_including_broken_ones() {
         fs::remove_file(tree(&directory, &id).join("original")).unwrap();
         symlink(&target, tree(&directory, &id).join("original")).unwrap();
         assert_eq!(
-            files.original_path(&id),
-            Err(ClipImageFilesError::UnsafePath)
-        );
-        assert_eq!(
             files.validated_original_path(&id, 6),
             Err(ClipImageFilesError::UnsafePath)
         );
@@ -265,7 +263,7 @@ fn links_are_refused_at_every_level_including_broken_ones() {
 
     symlink(&outside, tree(&directory, OTHER_ID)).unwrap();
     assert_eq!(
-        files.original_path(OTHER_ID),
+        files.validated_original_path(OTHER_ID, 1),
         Err(ClipImageFilesError::UnsafePath)
     );
     fs::remove_file(tree(&directory, OTHER_ID)).unwrap();
@@ -324,7 +322,7 @@ fn missing_files_and_wrong_sizes_are_distinguished() {
     let missing = ClipImageFilesError::NotFound {
         file_id: ID.to_string(),
     };
-    assert_eq!(files.original_path(ID), Err(missing.clone()));
+    assert_eq!(files.validated_original_path(ID, 1), Err(missing.clone()));
     assert_eq!(files.write_preview(ID, b"x"), Err(missing.clone()));
     assert_eq!(files.mark_pending(ID), Ok(()));
     assert_eq!(files.finish_pending(ID), Ok(()));
@@ -338,7 +336,7 @@ fn missing_files_and_wrong_sizes_are_distinguished() {
     );
     fs::remove_file(tree(&directory, &id).join("original")).unwrap();
     assert_eq!(
-        files.original_path(&id),
+        files.validated_original_path(&id, BYTES.len() as i64),
         Err(ClipImageFilesError::NotFound { file_id: id })
     );
 }
@@ -362,7 +360,10 @@ fn derived_files_are_replaced_atomically_and_never_touch_the_original() {
     assert_eq!(fs::read(&preserved).unwrap(), b"small");
     assert_eq!(fs::read(&small).unwrap(), b"newer");
 
-    assert_eq!(fs::read(files.original_path(&id).unwrap()).unwrap(), BYTES);
+    assert_eq!(
+        fs::read(tree(&directory, &id).join("original")).unwrap(),
+        BYTES
+    );
     assert!(!names(&tree(&directory, &id))
         .iter()
         .any(|name| name.starts_with('.')));

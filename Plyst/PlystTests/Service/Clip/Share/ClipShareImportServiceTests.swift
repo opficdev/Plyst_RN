@@ -104,7 +104,7 @@ final class ClipShareImportServiceTests: ClipTemporaryDirectoryTestCase {
                 if shouldFail.withLock({ $0 }) { throw ClipStorageError.writeFailed }
             }
         )
-        let service = try makeService(storage: spy)
+        let service = try makeService(storage: spy, images: makeImages(storage: storage))
 
         let first = try await service.importPendingClips()
 
@@ -195,15 +195,15 @@ final class ClipShareImportServiceTests: ClipTemporaryDirectoryTestCase {
         try SQLiteClipStorageService(databaseURL: inboxDatabaseURL)
     }
 
-    private func makeInboxImages(storage: any ClipStorageService) throws -> ClipImageService {
-        ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: inboxImagesURL))
+    private func makeInboxImages(storage: SQLiteClipStorageService) throws -> ClipImageService {
+        try ClipImageService(storage: storage, rootURL: inboxImagesURL)
     }
 
-    private func makeImages(storage: any ClipStorageService) throws -> ClipImageService {
-        ClipImageService(storage: storage, files: try ClipImageFileStore(rootURL: root))
+    private func makeImages(storage: SQLiteClipStorageService) throws -> ClipImageService {
+        try ClipImageService(storage: storage, rootURL: root)
     }
 
-    private func makeService(storage: any ClipStorageService) throws -> ClipShareImportService {
+    private func makeService(storage: SQLiteClipStorageService) throws -> ClipShareImportService {
         try makeService(storage: storage, images: makeImages(storage: storage))
     }
 

@@ -8,11 +8,15 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.max
 import kotlin.math.roundToInt
-import opfic.plyst.host.model.ClipImageMetadata
+import opfic.plyst.core.ClipCodecException
+import opfic.plyst.core.ClipImageCoding
+import opfic.plyst.core.ClipImagePropertiesValue
+import opfic.plyst.core.ClipImageValue
 
 // 이미지 형식과 크기 판독, 저장 전 검증, 축소본 생성
 // 파일 경로 규칙과 파일 쓰기는 소유하지 않음
-object ClipImageCodec {
+// 코어가 부르는 구현은 모든 오류를 선언된 코덱 오류로 변환
+object ClipImageCodec : ClipImageCoding {
   // 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수
   private const val VALIDATION_PIXEL_DIMENSION = 64
 
@@ -22,7 +26,41 @@ object ClipImageCodec {
     val height: Int,
   )
 
-  fun properties(data: ByteArray): ImageProperties {
+  override fun properties(path: String): ClipImagePropertiesValue = coded { validated(File(path).readBytes()) }
+
+  override fun thumbnail(
+    path: String,
+    image: ClipImageValue,
+    maximumPixelDimension: Long,
+  ): ByteArray = coded { reduced(File(path), image, maximumPixelDimension.toInt()) }
+
+  // 저장 전 검증
+  // 검증을 통과한 이미지의 형식과 크기를 코어 값으로 반환
+  fun validated(data: ByteArray): ClipImagePropertiesValue {
+    val properties = properties(data)
+    return ClipImagePropertiesValue(properties.type, properties.width.toLong(), properties.height.toLong())
+  }
+
+  private inline fun <T> coded(operation: () -> T): T =
+    try {
+      operation()
+    } catch (error: ClipCodecException) {
+      throw error
+    } catch (error: ClipImageFileError.InvalidImage) {
+      throw ClipCodecException.Corrupted()
+    } catch (error: ClipImageFileError.UnsupportedImage) {
+      throw ClipCodecException.Corrupted()
+    } catch (error: ClipImageFileError.ReadFailed) {
+      throw ClipCodecException.ReadFailed()
+    } catch (error: java.io.IOException) {
+      throw ClipCodecException.ReadFailed()
+    } catch (error: Exception) {
+      throw ClipCodecException.Unexpected()
+    } catch (error: OutOfMemoryError) {
+      throw ClipCodecException.Unexpected()
+    }
+
+  private fun properties(data: ByteArray): ImageProperties {
     if (data.isEmpty()) throw ClipImageFileError.InvalidImage
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeByteArray(data, 0, data.size, bounds)
@@ -92,21 +130,21 @@ object ClipImageCodec {
 
   // 원본을 메모리에 모두 올리지 않고 첫 프레임을 표시 크기로 축소한 PNG
   // 저장된 파일은 변경하지 않음
-  fun thumbnail(
+  private fun reduced(
     original: File,
-    image: ClipImageMetadata,
+    image: ClipImageValue,
     maximumPixelDimension: Int,
   ): ByteArray {
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeFile(original.path, bounds)
     if (bounds.outMimeType?.let(ClipImageContentType::identifier) != image.contentType ||
-      bounds.outWidth != image.pixelWidth ||
-      bounds.outHeight != image.pixelHeight
+      bounds.outWidth.toLong() != image.pixelWidth ||
+      bounds.outHeight.toLong() != image.pixelHeight
     ) {
-      throw ClipImageFileError.CorruptedImage(image.fileID)
+      throw ClipCodecException.Corrupted()
     }
     val options = BitmapFactory.Options().apply { inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, maximumPixelDimension) }
-    val decoded = BitmapFactory.decodeFile(original.path, options) ?: throw ClipImageFileError.CorruptedImage(image.fileID)
+    val decoded = BitmapFactory.decodeFile(original.path, options) ?: throw ClipCodecException.Corrupted()
     val thumbnail = oriented(scaled(decoded, maximumPixelDimension), original)
     return ByteArrayOutputStream().use { output ->
       if (!thumbnail.compress(Bitmap.CompressFormat.PNG, 100, output)) throw ClipImageFileError.ReadFailed
