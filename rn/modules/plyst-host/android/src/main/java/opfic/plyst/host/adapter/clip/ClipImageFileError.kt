@@ -1,4 +1,4 @@
-package opfic.plyst.host.service.clip.image
+package opfic.plyst.host.adapter.clip
 
 import java.util.UUID
 

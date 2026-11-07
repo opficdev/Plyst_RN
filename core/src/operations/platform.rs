@@ -46,7 +46,7 @@ impl From<UnexpectedUniFFICallbackError> for ClipCodecError {
 }
 
 #[uniffi::export(foreign)]
-pub trait ClipImageCoding: Send + Sync {
+pub trait ClipImageCoder: Send + Sync {
     fn properties(&self, path: String) -> Result<ClipImagePropertiesValue, ClipCodecError>;
     fn thumbnail(
         &self,
@@ -92,7 +92,7 @@ impl From<UnexpectedUniFFICallbackError> for ClipboardWriteError {
 /// 오류는 쓰기를 시작하기 전에만 던짐
 /// 쓰기 이후에는 관측 결과를 돌려줌
 #[uniffi::export(foreign)]
-pub trait ClipboardWriting: Send + Sync {
+pub trait ClipboardWriter: Send + Sync {
     fn write(
         &self,
         content: ClipboardWriteValue,

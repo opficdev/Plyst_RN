@@ -17,8 +17,7 @@ final class SceneComposition {
         category: String(describing: SceneComposition.self)
     )
 
-    let storage: SQLiteClipStorageService
-    let images: ClipImageService
+    let core: ClipCoreAdapter
     let clipboard: ClipboardService
     let photos: ClipPhotoLibraryService
     /// App Group 컨테이너를 찾지 못하면 nil
@@ -43,30 +42,23 @@ final class SceneComposition {
         values.isExcludedFromBackup = true
         try directory.setResourceValues(values)
 
-        let storage = try SQLiteClipStorageService(databaseURL: directory.appendingPathComponent("clips.sqlite"))
-        let images = try ClipImageService(
-            storage: storage,
-            rootURL: directory.appendingPathComponent("images", isDirectory: true)
+        let core = try ClipCoreAdapter(
+            databaseURL: directory.appendingPathComponent("clips.sqlite"),
+            imagesURL: directory.appendingPathComponent("images", isDirectory: true)
         )
-        let clipboard = ClipboardService(images: images)
-        self.storage = storage
-        self.images = images
-        self.clipboard = clipboard
-        photos = ClipPhotoLibraryService(storage: storage, images: images)
-        imports = Self.makeImportService(storage: storage, images: images)
+        self.core = core
+        clipboard = ClipboardService(core: core)
+        photos = ClipPhotoLibraryService(core: core)
+        imports = Self.makeImportService(core: core)
     }
 
-    private static func makeImportService(
-        storage: SQLiteClipStorageService,
-        images: ClipImageService
-    ) -> ClipShareImportService? {
+    private static func makeImportService(core: ClipCoreAdapter) -> ClipShareImportService? {
         do {
             let directory = try ClipAppGroupDirectory()
             return ClipShareImportService(
                 inboxDatabaseURL: directory.shareInboxDatabaseURL,
                 inboxImagesURL: directory.shareInboxImagesURL,
-                storage: storage,
-                images: images
+                core: core
             )
         } catch {
             logger.error("공유 저장소 위치 확인 실패: \(String(describing: type(of: error)), privacy: .public)")
@@ -124,9 +116,9 @@ final class SceneComposition {
     }
 
     func startPendingCleanupRecovery() {
-        Task { [images] in
+        Task { [core] in
             do {
-                let pending = try await images.recoverPendingCleanup()
+                let pending = try await core.recoverPendingCleanup()
                 if !pending.isEmpty {
                     Self.logger.warning("이미지 정리 보류: \(pending.count, privacy: .public)개")
                 }

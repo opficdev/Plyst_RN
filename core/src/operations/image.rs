@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use super::error::ClipOperationError;
 use super::platform::{
-    ClipCancellationSource, ClipImageCoding, ClipImagePropertiesValue, ClipImageValue,
+    ClipCancellationSource, ClipImageCoder, ClipImagePropertiesValue, ClipImageValue,
 };
 use super::{now, NO_RANDOM};
 use crate::image_files::{ClipImageFiles, ClipImageFilesError};
@@ -43,7 +43,7 @@ pub struct ClipImageSavedValue {
 pub struct ClipImageOperations {
     store: Arc<ClipStore>,
     files: Arc<ClipImageFiles>,
-    codec: Arc<dyn ClipImageCoding>,
+    codec: Arc<dyn ClipImageCoder>,
     order: Mutex<()>,
 }
 
@@ -53,7 +53,7 @@ impl ClipImageOperations {
     pub fn open(
         store: Arc<ClipStore>,
         root: String,
-        codec: Arc<dyn ClipImageCoding>,
+        codec: Arc<dyn ClipImageCoder>,
     ) -> Result<Arc<Self>, ClipOperationError> {
         Ok(Arc::new(Self {
             store,

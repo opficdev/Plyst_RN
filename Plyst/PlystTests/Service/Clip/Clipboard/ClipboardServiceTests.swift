@@ -12,13 +12,13 @@ import XCTest
 @MainActor
 final class ClipboardServiceTests: ClipTemporaryDirectoryTestCase {
     func testSavedTextPreservesOriginalDefaultsAndBecomesLatestRecord() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
+        let core = try makeCore()
         let previous = Clip(content: .text("이전 기록"), createdAt: Date(timeIntervalSinceReferenceDate: 100))
-        try await storage.insert(previous)
-        let stream = await storage.changes()
+        try await core.insert(previous)
+        let stream = core.changes()
         let text = " \n한글 'text'\0🙂\nhttps://example.com/path?query=value\t "
         let spy = ClipboardReaderSpy(result: .text(text))
-        let service = try makeService(storage: storage, reader: spy)
+        let service = ClipboardService(core: core, reader: spy)
 
         let clip = try savedClip(await service.saveCurrentClipboard())
 
@@ -29,32 +29,25 @@ final class ClipboardServiceTests: ClipTemporaryDirectoryTestCase {
         XCTAssertNil(clip.lastUsedAt)
         XCTAssertNotEqual(clip.id, previous.id)
         XCTAssertEqual(spy.readCount, 1)
-        let stored = try await storage.fetchAll(order: .createdAt)
+        let stored = try await core.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip, previous])
-        let reopened = try SQLiteClipStorageService(databaseURL: url)
+        let reopened = try makeCore()
         let restored = try await reopened.fetch(id: clip.id)
         XCTAssertEqual(restored, clip)
         await assertEvents(stream, expected: [.inserted(clip)])
     }
 
     func testURLTextIsStoredWithoutChangingItsRepresentation() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
+        let core = try makeCore()
         let text = "https://example.com/a%20b?query=value#section"
         let spy = ClipboardReaderSpy(result: .text(text))
-        let service = try makeService(storage: storage, reader: spy)
+        let service = ClipboardService(core: core, reader: spy)
 
         let clip = try savedClip(await service.saveCurrentClipboard())
 
         XCTAssertEqual(clip.content, .text(text))
-        let stored = try await storage.fetch(id: clip.id)
+        let stored = try await core.fetch(id: clip.id)
         XCTAssertEqual(stored, clip)
-    }
-
-    private func makeService(
-        storage: SQLiteClipStorageService,
-        reader: any ClipboardReader
-    ) throws -> ClipboardService {
-        ClipboardService(images: try ClipImageService(storage: storage, rootURL: root), reader: reader)
     }
 
     private func savedClip(_ result: ClipboardSaveResult) throws -> Clip {

@@ -26,18 +26,18 @@ class ClipTemporaryDirectoryTestCase: XCTestCase {
         try super.tearDownWithError()
     }
 
-    func makeStorage() throws -> SQLiteClipStorageService {
-        try SQLiteClipStorageService(databaseURL: url)
+    func makeCore() throws -> ClipCoreAdapter {
+        try ClipCoreAdapter(
+            databaseURL: url,
+            imagesURL: root
+        )
     }
 
-    func makeAdapter(storage: SQLiteClipStorageService) throws -> ClipBridgeAdapter {
-        let images = try ClipImageService(storage: storage, rootURL: root)
-        return ClipBridgeAdapter(
-            storage: storage,
-            history: try makeStorage(),
-            images: images,
-            clipboard: ClipboardService(images: images),
-            photos: ClipPhotoLibraryService(storage: storage, images: images)
+    func makeAdapter(core: ClipCoreAdapter) -> ClipBridgeAdapter {
+        ClipBridgeAdapter(
+            core: core,
+            clipboard: ClipboardService(core: core),
+            photos: ClipPhotoLibraryService(core: core)
         )
     }
 
@@ -74,40 +74,6 @@ extension XCTestCase {
     }
 }
 
-/// 실제 저장소 호출 앞에 동작을 끼워 넣는 대역
-actor ClipStorageServiceSpy: ClipStorageService {
-    private let storage: SQLiteClipStorageService
-    private let beforeInsert: @Sendable (Clip) throws -> Void
-
-    init(
-        storage: SQLiteClipStorageService,
-        beforeInsert: @escaping @Sendable (Clip) throws -> Void = { _ in }
-    ) {
-        self.storage = storage
-        self.beforeInsert = beforeInsert
-    }
-
-    func fetchAll(order: ClipSortOrder) async throws -> [Clip] { try await storage.fetchAll(order: order) }
-
-    func fetch(id: Clip.ID) async throws -> Clip? { try await storage.fetch(id: id) }
-
-    func insert(_ clip: Clip) async throws {
-        try beforeInsert(clip)
-        try await storage.insert(clip)
-    }
-
-    func update(
-        id: Clip.ID,
-        change: ClipUpdate
-    ) async throws -> Clip {
-        try await storage.update(id: id, change: change)
-    }
-
-    func delete(id: Clip.ID) async throws { try await storage.delete(id: id) }
-
-    func changes() async -> AsyncStream<ClipStorageEvent> { await storage.changes() }
-}
-
 final class ClipboardReaderSpy: ClipboardReader {
     private let result: ClipboardReadResult
     private let reads = OSAllocatedUnfairLock(initialState: 0)
@@ -124,7 +90,7 @@ final class ClipboardReaderSpy: ClipboardReader {
     }
 }
 
-final class ClipboardWriterSpy: ClipboardWriting {
+final class ClipboardWriterSpy: ClipboardWriter {
     private let written = OSAllocatedUnfairLock(initialState: [ClipboardWriteValue]())
 
     var contents: [ClipboardWriteValue] { written.withLock { $0 } }

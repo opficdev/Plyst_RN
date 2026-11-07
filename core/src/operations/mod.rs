@@ -18,9 +18,9 @@ pub use clipboard::{
 pub use error::ClipOperationError;
 pub use image::{ClipCleanupValue, ClipImageDraftValue, ClipImageOperations, ClipImageSavedValue};
 pub use platform::{
-    ClipCancellationSource, ClipCodecError, ClipImageCoding, ClipImagePropertiesValue,
+    ClipCancellationSource, ClipCodecError, ClipImageCoder, ClipImagePropertiesValue,
     ClipImageValue, ClipboardWriteError, ClipboardWriteOutcome, ClipboardWriteValue,
-    ClipboardWriting,
+    ClipboardWriter,
 };
 
 /// 시스템 난수를 읽지 못해 식별자를 만들 수 없을 때의 쓰기 실패

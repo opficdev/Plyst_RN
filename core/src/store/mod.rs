@@ -55,7 +55,7 @@ pub trait ClipChangeListener: Send + Sync {
 }
 
 /// 클립과 최근 검색어 영구 저장
-/// 연결 잠금이 이미지 작업과 저장소 Service의 호출을 함께 직렬화
+/// 연결 잠금이 이미지 작업과 어댑터의 저장소 호출을 함께 직렬화
 #[derive(uniffi::Object)]
 pub struct ClipStore {
     connection: Mutex<Connection>,

@@ -13,13 +13,13 @@ import XCTest
 @MainActor
 final class ClipboardImageServiceTests: ClipTemporaryDirectoryTestCase {
     func testSavedImagePreservesBytesMetadataAndDefaultsAsLatestRecord() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
+        let core = try makeCore()
         let previous = Clip(content: .text("이전 기록"), createdAt: Date(timeIntervalSinceReferenceDate: 100))
-        try await storage.insert(previous)
-        let stream = await storage.changes()
+        try await core.insert(previous)
+        let stream = core.changes()
         let data = try ClipImageTestFixture.data(type: UTType.jpeg.identifier, orientation: 6)
         let reader = ClipboardReaderSpy(result: .image(data))
-        let service = try makeService(storage: storage, reader: reader)
+        let service = ClipboardService(core: core, reader: reader)
 
         let clip = try savedClip(await service.saveCurrentClipboard())
 
@@ -33,21 +33,14 @@ final class ClipboardImageServiceTests: ClipTemporaryDirectoryTestCase {
         XCTAssertNil(clip.pinnedAt)
         XCTAssertNil(clip.lastUsedAt)
         XCTAssertEqual(reader.readCount, 1)
-        let stored = try await storage.fetchAll(order: .createdAt)
+        let stored = try await core.fetchAll(order: .createdAt)
         XCTAssertEqual(stored, [clip, previous])
-        let reopened = try SQLiteClipStorageService(databaseURL: url)
+        let reopened = try makeCore()
         let restored = try await reopened.fetch(id: clip.id)
         XCTAssertEqual(restored, clip)
         let original = root.appendingPathComponent(image.fileID.uuidString).appendingPathComponent("original")
         XCTAssertEqual(try Data(contentsOf: original), data)
         await assertEvents(stream, expected: [.inserted(clip)])
-    }
-
-    private func makeService(
-        storage: SQLiteClipStorageService,
-        reader: any ClipboardReader
-    ) throws -> ClipboardService {
-        ClipboardService(images: try ClipImageService(storage: storage, rootURL: root), reader: reader)
     }
 
     private func savedClip(_ result: ClipboardSaveResult) throws -> Clip {

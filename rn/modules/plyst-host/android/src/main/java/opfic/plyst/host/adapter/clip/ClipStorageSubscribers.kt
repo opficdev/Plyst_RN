@@ -1,4 +1,4 @@
-package opfic.plyst.host.service.clip.storage
+package opfic.plyst.host.adapter.clip
 
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlinx.coroutines.channels.Channel
@@ -13,7 +13,7 @@ import opfic.plyst.host.model.clip
 import opfic.plyst.host.model.uuid
 
 // 코어의 변경 알림을 구독자에게 전달
-// 코어가 이 객체를 강한 참조로 보관하므로 저장소 Service를 참조하지 않음
+// 코어가 이 객체를 강한 참조로 보관하므로 어댑터를 참조하지 않음
 // 연결 잠금을 쥔 채 호출되므로 코어를 호출하거나 대기하지 않음
 internal class ClipStorageSubscribers : ClipChangeListener {
   private val subscriptions = CopyOnWriteArraySet<SendChannel<ClipStorageEvent>>()

@@ -1,4 +1,4 @@
-package opfic.plyst.host.service.clip.image
+package opfic.plyst.host.adapter.clip
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,14 +9,15 @@ import java.io.File
 import kotlin.math.max
 import kotlin.math.roundToInt
 import opfic.plyst.core.ClipCodecException
-import opfic.plyst.core.ClipImageCoding
+import opfic.plyst.core.ClipImageCoder
 import opfic.plyst.core.ClipImagePropertiesValue
 import opfic.plyst.core.ClipImageValue
+import opfic.plyst.host.model.ClipImageContentType
 
 // 이미지 형식과 크기 판독, 저장 전 검증, 축소본 생성
 // 파일 경로 규칙과 파일 쓰기는 소유하지 않음
 // 코어가 부르는 구현은 모든 오류를 선언된 코덱 오류로 변환
-object ClipImageCodec : ClipImageCoding {
+object ClipImageCodec : ClipImageCoder {
   // 저장 전 검증에서 축소 디코딩하는 긴 변의 최대 픽셀 수
   private const val VALIDATION_PIXEL_DIMENSION = 64
 

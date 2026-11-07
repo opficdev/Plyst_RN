@@ -12,8 +12,8 @@ import XCTest
 
 final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
     func testTextClipPreservesFieldsAndUsesUnixMilliseconds() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
+        let core = try makeCore()
+        let adapter = makeAdapter(core: core)
         let clip = Clip(
             content: .text(" https://example.com 원문 "),
             name: "이름",
@@ -22,7 +22,7 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
             createdAt: Date(timeIntervalSince1970: 1234.5),
             lastUsedAt: Date(timeIntervalSince1970: 2345.5)
         )
-        try await storage.insert(clip)
+        try await core.insert(clip)
 
         let result = try await adapter.clip(id: clip.id)
         let record = try XCTUnwrap(result)
@@ -38,9 +38,9 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
     }
 
     func testMissingImageFileStillReturnsAndUpdatesTheClip() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
-        let result = try await adapter.images.saveImage(ClipImageTestFixture.data())
+        let core = try makeCore()
+        let adapter = makeAdapter(core: core)
+        let result = try await adapter.core.saveImage(ClipImageTestFixture.data())
         guard case .image(let metadata) = result.value.content else {
             return XCTFail("이미지 클립이 아닙니다.")
         }
@@ -58,20 +58,20 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
         XCTAssertEqual(updated?.name, "새 이름")
         XCTAssertEqual(updated?.memo, "메모")
         XCTAssertNotNil(updated?.pinnedAt)
-        let preserved = try await storage.fetch(id: result.value.id)
+        let preserved = try await core.fetch(id: result.value.id)
         XCTAssertEqual(preserved?.name, "새 이름")
     }
 
     func testUpdateReturnsStoredFieldsWithoutNormalization() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
+        let core = try makeCore()
+        let adapter = makeAdapter(core: core)
         let clip = Clip(
             content: .text("원문"),
             name: "기존 이름",
             memo: "기존 메모",
             lastUsedAt: Date(timeIntervalSince1970: 1234)
         )
-        try await storage.insert(clip)
+        try await core.insert(clip)
 
         let result = try await adapter.updateClip(
             id: clip.id,
@@ -80,7 +80,7 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
             isPinned: true
         )
         let record = try XCTUnwrap(result)
-        let fetched = try await storage.fetch(id: clip.id)
+        let fetched = try await core.fetch(id: clip.id)
         let stored = try XCTUnwrap(fetched)
 
         XCTAssertEqual(stored.name, " 이름 ")
@@ -107,7 +107,7 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
     }
 
     func testUpdateMissingClipReturnsNil() async throws {
-        let adapter = try makeAdapter(storage: makeStorage())
+        let adapter = try makeAdapter(core: makeCore())
         let record = try await adapter.updateClip(
             id: UUID(),
             name: nil,
@@ -118,9 +118,9 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
     }
 
     func testDeleteRemovesImageFile() async throws {
-        let storage = try makeStorage()
-        let adapter = try makeAdapter(storage: storage)
-        let result = try await adapter.images.saveImage(ClipImageTestFixture.data())
+        let core = try makeCore()
+        let adapter = makeAdapter(core: core)
+        let result = try await adapter.core.saveImage(ClipImageTestFixture.data())
         guard case .image(let metadata) = result.value.content else {
             return XCTFail("이미지 클립이 아닙니다.")
         }
@@ -128,7 +128,7 @@ final class ClipBridgeAdapterTests: ClipTemporaryDirectoryTestCase {
 
         try await adapter.deleteClip(id: result.value.id)
 
-        let fetched = try await storage.fetch(id: result.value.id)
+        let fetched = try await core.fetch(id: result.value.id)
         XCTAssertNil(fetched)
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }

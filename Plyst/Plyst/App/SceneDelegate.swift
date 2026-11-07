@@ -115,9 +115,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
             self.composition = composition
             ClipBridge.register(ClipBridgeAdapter(
-                storage: composition.storage,
-                history: composition.storage,
-                images: composition.images,
+                core: composition.core,
                 clipboard: composition.clipboard,
                 photos: composition.photos
             ))

@@ -15,7 +15,7 @@ import UniformTypeIdentifiers
 /// 오류는 쓰기를 시작하기 전에만 던지고 쓰기 이후에는 관찰 결과를 반환
 /// observed는 쓰기 직후 첫 항목에서 요청한 표현을 확인했다는 뜻이고 notObserved는 확인하지 못했다는 뜻
 /// 이후의 유지, 다른 앱의 붙여넣기, 클립보드 미변경은 보장하지 않음
-final class SystemClipboardWriter: ClipboardWriting {
+final class SystemClipboardWriter: ClipboardWriter {
     private let localOnly: Bool
     private let expirationDate: Date?
 

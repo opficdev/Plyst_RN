@@ -9,14 +9,12 @@ import Foundation
 import PlystBridge
 
 struct ClipBridgeAdapter: ClipBridgeProvider {
-    let storage: any ClipStorageService
-    let history: any ClipSearchHistoryStorageService
-    let images: ClipImageService
+    let core: ClipCoreAdapter
     let clipboard: ClipboardService
     let photos: ClipPhotoLibraryService
 
     func changes() async -> AsyncStream<ClipBridgeChange> {
-        let changes = await storage.changes()
+        let changes = core.changes()
         let (stream, continuation) = AsyncStream<ClipBridgeChange>.makeStream()
         let task = Task {
             defer { continuation.finish() }
@@ -38,38 +36,38 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
 
     func clip(id: UUID) async throws -> ClipBridgeRecord? {
         try await bridged(fallback: .readFailed) {
-            try await storage.fetch(id: id).map { record(from: $0) }
+            try await core.fetch(id: id).map { record(from: $0) }
         }
     }
 
     func clips() async throws -> [ClipBridgeRecord] {
         try await bridged(fallback: .readFailed) {
-            try await storage.fetchAll(order: .createdAt).map { record(from: $0) }
+            try await core.fetchAll(order: .createdAt).map { record(from: $0) }
         }
     }
 
     func searchHistory() async throws -> [String] {
         try await bridged(fallback: .readFailed) {
-            try await history.fetchSearchHistory().terms
+            try await core.fetchSearchHistory().terms
         }
     }
 
     func recordSearchTerm(_ term: String) async throws -> [String]? {
         try await bridged(fallback: .writeFailed) {
             guard let query = try ClipSearchQuery(term) else { return nil }
-            return try await history.recordSearchTerm(query).terms
+            return try await core.recordSearchTerm(query).terms
         }
     }
 
     func removeSearchTerm(_ term: String) async throws -> [String] {
         try await bridged(fallback: .writeFailed) {
-            try await history.removeSearchTerm(term).terms
+            try await core.removeSearchTerm(term).terms
         }
     }
 
     func removeAllSearchTerms() async throws {
         try await bridged(fallback: .writeFailed, mapsCorruption: false) {
-            try await history.removeAllSearchTerms()
+            try await core.removeAllSearchTerms()
         }
     }
 
@@ -87,7 +85,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
                     isPinned: isPinned,
                     requestedAt: Date()
                 )
-                let clip = try await storage.update(id: id, change: change)
+                let clip = try await core.update(id: id, change: change)
                 return record(from: clip)
             } catch ClipStorageError.notFound {
                 return nil
@@ -98,7 +96,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
     func deleteClip(id: UUID) async throws {
         try await bridged(fallback: .writeFailed) {
             do {
-                _ = try await images.delete(id: id)
+                _ = try await core.delete(id: id)
             } catch ClipStorageError.notFound {
                 return
             }
@@ -110,7 +108,7 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
             switch try await clipboard.saveCurrentClipboard() {
             case .saved: return .saved
             case .savedWithPendingCleanup:
-                Task { [images] in _ = try? await images.recoverPendingCleanup() }
+                Task { [core] in _ = try? await core.recoverPendingCleanup() }
                 return .saved
             case .empty: return .empty
             case .unsupported: return .unsupported
@@ -136,9 +134,9 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
 
     func getClipImagePreview(id: UUID) async throws -> String? {
         try await bridged(fallback: .imageUnavailable, mapsCorruption: false) {
-            guard let clip = try await storage.fetch(id: id),
+            guard let clip = try await core.fetch(id: id),
                   case .image(let image) = clip.content else { return nil }
-            return try await images.makePreviewFileURL(image).absoluteString
+            return try await core.makePreviewFileURL(image).absoluteString
         }
     }
 
@@ -147,9 +145,9 @@ struct ClipBridgeAdapter: ClipBridgeProvider {
         maximumPixelDimension: Int
     ) async throws -> String? {
         try await bridged(fallback: .imageUnavailable, mapsCorruption: false) {
-            guard let clip = try await storage.fetch(id: id),
+            guard let clip = try await core.fetch(id: id),
                   case .image(let image) = clip.content else { return nil }
-            return try await images.makeThumbnailFileURL(image, maximumPixelDimension: maximumPixelDimension).absoluteString
+            return try await core.makeThumbnailFileURL(image, maximumPixelDimension: maximumPixelDimension).absoluteString
         }
     }
 

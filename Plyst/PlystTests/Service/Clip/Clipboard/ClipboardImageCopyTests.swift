@@ -14,17 +14,16 @@ import XCTest
 @MainActor
 final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
     func testImageCopyPreservesOriginalBytesTypeAndMetadata() async throws {
-        let storage = try SQLiteClipStorageService(databaseURL: url)
-        let images = try ClipImageService(storage: storage, rootURL: root)
+        let core = try makeCore()
         let writer = ClipboardWriterSpy()
-        let service = ClipboardService(images: images, writer: writer)
+        let service = ClipboardService(core: core, writer: writer)
         for type in [UTType.png.identifier, UTType.jpeg.identifier, UTType.gif.identifier] {
             let data = try ClipImageTestFixture.data(
                 type: type,
                 count: type == UTType.gif.identifier ? 2 : 1,
                 orientation: 6
             )
-            let saved = try await images.saveImage(data)
+            let saved = try await core.saveImage(data)
             let clip = saved.value
             let image = try imageMetadata(in: clip)
 
@@ -37,9 +36,9 @@ final class ClipboardImageCopyTests: ClipTemporaryDirectoryTestCase {
             guard case let .image(path, contentType) = writer.contents.last else { return XCTFail("이미지 쓰기 누락") }
             XCTAssertEqual(contentType, type)
             XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: path)), data)
-            let loaded = try await images.loadImage(image)
+            let loaded = try await core.loadImage(image)
             XCTAssertEqual(loaded, data)
-            let stored = try await storage.fetch(id: clip.id)
+            let stored = try await core.fetch(id: clip.id)
             XCTAssertEqual(stored, copied)
         }
         XCTAssertEqual(writer.contents.count, 3)

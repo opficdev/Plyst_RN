@@ -5,7 +5,7 @@ pub(crate) fn is_text_valid(text: &str) -> bool {
 }
 
 // 이미지는 메타데이터만 검증
-// 이미지 디코딩과 파일 존재 여부 검사는 이미지 파일 서비스의 책임
+// 이미지 디코딩과 파일 존재 여부 검사는 코덱과 `ClipImageFiles`의 책임
 pub(crate) fn is_image_valid(
     content_type: &str,
     pixel_width: i64,

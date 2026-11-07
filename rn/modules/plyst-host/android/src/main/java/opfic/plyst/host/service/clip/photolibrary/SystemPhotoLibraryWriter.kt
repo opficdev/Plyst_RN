@@ -16,7 +16,7 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import opfic.plyst.host.service.clip.image.ClipImageContentType
+import opfic.plyst.host.model.ClipImageContentType
 
 // Android 10부터는 권한 없이 사진 모음에 추가하고 그보다 낮으면 iOS처럼 저장할 때 권한을 요청
 class SystemPhotoLibraryWriter(

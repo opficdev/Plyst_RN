@@ -5,7 +5,7 @@ use super::error::ClipOperationError;
 use super::image::{check, new_draft, ClipCleanupValue, ClipImageOperations};
 use super::platform::{
     ClipCancellationSource, ClipImagePropertiesValue, ClipImageValue, ClipboardWriteOutcome,
-    ClipboardWriteValue, ClipboardWriting,
+    ClipboardWriteValue, ClipboardWriter,
 };
 use super::{now, NO_RANDOM};
 use crate::store::{ClipStoreError, ClipUpdateResult, ClipUpdateValue, ClipValue};
@@ -47,14 +47,13 @@ pub enum ClipboardCopyValue {
 #[derive(uniffi::Object)]
 pub struct ClipboardOperations {
     images: Arc<ClipImageOperations>,
-    writer: Arc<dyn ClipboardWriting>,
 }
 
 #[uniffi::export]
 impl ClipboardOperations {
     #[uniffi::constructor]
-    pub fn new(images: Arc<ClipImageOperations>, writer: Arc<dyn ClipboardWriting>) -> Arc<Self> {
-        Arc::new(Self { images, writer })
+    pub fn new(images: Arc<ClipImageOperations>) -> Arc<Self> {
+        Arc::new(Self { images })
     }
 
     /// 호스트가 읽은 텍스트를 저장
@@ -106,6 +105,7 @@ impl ClipboardOperations {
     pub fn copy(
         &self,
         id: String,
+        writer: Arc<dyn ClipboardWriter>,
         cancellation: Arc<dyn ClipCancellationSource>,
     ) -> Result<ClipboardCopyValue, ClipOperationError> {
         check(&cancellation)?;
@@ -116,7 +116,7 @@ impl ClipboardOperations {
         let outcome = match &clip.content {
             ClipContentValue::Text { text } => {
                 check(&cancellation)?;
-                self.write(ClipboardWriteValue::Text { text: text.clone() })?
+                write(&writer, ClipboardWriteValue::Text { text: text.clone() })?
             }
             // 경로를 넘기므로 쓰기가 끝날 때까지 삭제와 섞이지 않게 잠금을 유지
             // 같은 클립 식별자가 재사용돼도 최초 조회한 메타데이터와 다른 원본을 섞지 않음
@@ -137,10 +137,13 @@ impl ClipboardOperations {
                     byte_count: *byte_count,
                 })?;
                 check(&cancellation)?;
-                self.write(ClipboardWriteValue::Image {
-                    path,
-                    content_type: content_type.clone(),
-                })?
+                write(
+                    &writer,
+                    ClipboardWriteValue::Image {
+                        path,
+                        content_type: content_type.clone(),
+                    },
+                )?
             }
         };
         if outcome != ClipboardWriteOutcome::Observed {
@@ -171,15 +174,6 @@ impl ClipboardOperations {
 }
 
 impl ClipboardOperations {
-    fn write(
-        &self,
-        content: ClipboardWriteValue,
-    ) -> Result<ClipboardWriteOutcome, ClipOperationError> {
-        self.writer
-            .write(content)
-            .map_err(ClipOperationError::from_write)
-    }
-
     fn record_usage(
         &self,
         clip: &ClipValue,
@@ -199,6 +193,15 @@ impl ClipboardOperations {
             },
         )
     }
+}
+
+fn write(
+    writer: &Arc<dyn ClipboardWriter>,
+    content: ClipboardWriteValue,
+) -> Result<ClipboardWriteOutcome, ClipOperationError> {
+    writer
+        .write(content)
+        .map_err(ClipOperationError::from_write)
 }
 
 /// 같은 식별자가 다른 원본이나 생성 시각의 클립으로 교체되었는지 판정

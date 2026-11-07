@@ -13,7 +13,7 @@ enum ClipboardUsageUpdateFailure: Equatable, Sendable {
     case storage(ClipStorageError)
     /// 같은 식별자가 다른 원본 또는 생성 시각의 클립으로 교체되어 사용 기록을 적용하지 않았음
     case replaced
-    /// 저장 서비스의 인터페이스에 포함되지 않은 오류
+    /// 저장소 오류에 포함되지 않은 오류
     /// 원본 오류 내용은 노출하지 않음
     case unknown
 }
@@ -33,7 +33,7 @@ extension ClipboardUsageUpdateFailure {
         case .cancelled:
             self = .cancelled
         case .storage(let error):
-            self = (clipStorageError(error, fallback: ClipStorageError.writeFailed) as? ClipStorageError).map(ClipboardUsageUpdateFailure.storage) ?? .unknown
+            self = (ClipCoreFailure.storageError(error, fallback: ClipStorageError.writeFailed) as? ClipStorageError).map(ClipboardUsageUpdateFailure.storage) ?? .unknown
         case .replaced:
             self = .replaced
         case .unknown:

@@ -1,4 +1,4 @@
-package opfic.plyst.host.service.clip.image
+package opfic.plyst.host.model
 
 // iOS 저장소와 같은 통일된 타입 식별자와 Android MIME 형식의 대응
 object ClipImageContentType {

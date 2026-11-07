@@ -40,7 +40,7 @@ enum ClipContent: Equatable, Sendable {
     }
 
     /// 이미지의 메타데이터만 검증
-    /// 이미지 디코딩과 파일 존재 여부 검사는 이미지 파일 서비스의 책임
+    /// 이미지 디코딩과 파일 존재 여부 검사는 ClipCoreAdapter의 책임
     var isValid: Bool {
         switch self {
         case .text(let text):

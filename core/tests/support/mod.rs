@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use plyst_core::operations::{
-    ClipCancellationSource, ClipCodecError, ClipImageCoding, ClipImageOperations,
+    ClipCancellationSource, ClipCodecError, ClipImageCoder, ClipImageOperations,
     ClipImagePropertiesValue, ClipImageValue,
 };
 use plyst_core::store::{
@@ -204,7 +204,7 @@ pub struct FixedCodec {
     pub properties: Mutex<Result<ClipImagePropertiesValue, ClipCodecError>>,
 }
 
-impl ClipImageCoding for FixedCodec {
+impl ClipImageCoder for FixedCodec {
     fn properties(&self, _: String) -> Result<ClipImagePropertiesValue, ClipCodecError> {
         self.properties.lock().unwrap().clone()
     }
