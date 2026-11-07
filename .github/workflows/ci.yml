@@ -197,10 +197,20 @@ jobs:
           key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.hash }}
 
       # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
+      # Xcode 컴파일 캐시
+      # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
+      - name: Restore compilation cache
+        if: github.event_name == 'pull_request' && steps.xcframework-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/rn-compilation-cache
+          key: rn-compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('rn/package-lock.json') }}
+
       - name: Build XCFrameworks
         if: steps.xcframework-cache.outputs.cache-hit != 'true'
         env:
           MISE_AUTO_INSTALL: 0
+          RN_COMPILATION_CACHE: ${{ runner.temp }}/rn-compilation-cache
         run: make -o plyst-core rn-xcframework
 
       - name: Archive XCFrameworks
@@ -212,6 +222,13 @@ jobs:
           name: rn-xcframeworks
           path: rn-xcframeworks.tar
           overwrite: true
+
+      - name: Save compilation cache
+        if: github.event_name == 'push' && steps.xcframework-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/rn-compilation-cache
+          key: rn-compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('rn/package-lock.json') }}
 
   # Rust는 필수 체크가 아니고 건너뛴 필수 체크는 통과로 처리됨
   # 선행 잡이 실패해도 실행해 이 필수 체크를 실패로 끝냄

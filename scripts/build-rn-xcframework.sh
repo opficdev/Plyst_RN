@@ -239,8 +239,9 @@ if [ "$path" = full ]; then
 	printf 'export NODE_BINARY=%s\n' "$node_binary" > ios/.xcode.env.local
 	stage_end
 
-	# 로컬 빌드는 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않음
-	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)와 CI는 캐시를 쓰지 않음
+	# 컴파일 결과를 저장소 밖에 캐시해 ios가 지워져도 다시 컴파일하지 않음
+	# CI는 develop 실행이 저장한 캐시를 복원해 씀
+	# 배포 빌드(RN_XCFRAMEWORK_CLEAN)는 캐시를 쓰지 않음
 	stage_begin package-ios
 	# 사전 컴파일 Expo 모듈은 쓰지 않는 모듈까지 별도 프레임워크로 실음
 	# Expo 모듈을 소스로 빌드해 BrownfieldLib에 정적으로 합치고 autolinking 제외 설정을 적용
@@ -251,7 +252,7 @@ if [ "$path" = full ]; then
 	if [ "$simulator_archs" = arm64 ]; then
 		extra_params=ARCHS=arm64
 	fi
-	if [ -z "${CI:-}" ] && [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
+	if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ]; then
 		cache_directory=${RN_COMPILATION_CACHE:-$HOME/Library/Caches/Plyst/RNCompilationCache}
 		extra_params="${extra_params:+$extra_params }COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=$cache_directory COMPILER_INDEX_STORE_ENABLE=NO"
 	fi
