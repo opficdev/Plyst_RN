@@ -177,7 +177,7 @@ export interface Spec extends TurboModule {
 ## 앱 아키텍처
 
 - 화면과 상태는 iOS와 Android가 같은 RN 코드를 사용
-- 검색 계산과 클립 값 규칙은 두 플랫폼이 같은 Rust 코드를 사용
+- 검색 계산과 클립 규칙, 저장소, 이미지 파일, 처리 순서는 두 플랫폼이 같은 Rust 코드를 사용
 - 실행 환경과 시스템 자원은 플랫폼별 네이티브 호스트가 담당
 
 ![앱 아키텍처](./docs/architecture.png)
