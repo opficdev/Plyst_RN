@@ -13,4 +13,4 @@ export function equivalent(left: string | null, right: string | null): boolean {
   return left.normalize('NFC') === right.normalize('NFC');
 }
 
-export const ci115Probe = "ci115-js-path-probe";
+export const ci115Probe = 'ci115-js-path-probe';
