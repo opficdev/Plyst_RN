@@ -25,7 +25,6 @@ const PREVIEW: &str = "preview";
 // 임시 파일 이름의 프로세스 내 순번
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
-#[derive(uniffi::Object)]
 pub struct ClipImageFiles {
     // 반환 경로의 앞부분이므로 호스트가 준 값을 유지
     root: PathBuf,
@@ -33,10 +32,8 @@ pub struct ClipImageFiles {
     canonical_root: PathBuf,
 }
 
-#[uniffi::export]
 impl ClipImageFiles {
     /// 없는 루트는 만들고 실제 경로를 기억
-    #[uniffi::constructor]
     pub fn open(root: String) -> Result<Arc<Self>, ClipImageFilesError> {
         let path = PathBuf::from(&root);
         if !path.is_absolute() || root.contains('\0') {
