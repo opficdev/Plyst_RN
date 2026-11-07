@@ -78,7 +78,7 @@ jobs:
         run: make rn-test
 
   # PlystCore를 먼저 만들어 올린 뒤 Rust 검사를 실행
-  # Test 잡은 업로드만 기다리므로 검사 시간은 임계 경로에 들어가지 않음
+  # Test 잡은 업로드만 기다리고 Build 잡은 검사 종료까지 기다림
   rust:
     name: Rust
     runs-on: xcode-27
@@ -187,14 +187,25 @@ jobs:
           path: rn-xcframeworks.tar
           overwrite: true
 
+  # Rust는 필수 체크가 아니고 건너뛴 필수 체크는 통과로 처리됨
+  # 선행 잡이 실패해도 실행해 이 필수 체크를 실패로 끝냄
   build:
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
     name: Build
-    if: github.event_name == 'pull_request'
+    if: ${{ !cancelled() && github.event_name == 'pull_request' }}
     needs: [xcframework, rust]
     runs-on: xcode-27
     timeout-minutes: 20
     steps:
+      - name: Check required jobs
+        if: needs.xcframework.result != 'success' || needs.rust.result != 'success'
+        env:
+          XCFRAMEWORK_RESULT: ${{ needs.xcframework.result }}
+          RUST_RESULT: ${{ needs.rust.result }}
+        run: |
+          printf '::error title=선행 잡::XCFramework=%s, Rust=%s\n' "$XCFRAMEWORK_RESULT" "$RUST_RESULT"
+          exit 1
+
       - uses: actions/checkout@v5
 
       - name: Download XCFrameworks
