@@ -12,7 +12,7 @@ import opfic.plyst.host.adapter.clip.ClipCoreAdapter
 import opfic.plyst.host.service.clip.clipboard.ClipboardService
 import opfic.plyst.host.service.clip.clipboard.SystemClipboardReader
 import opfic.plyst.host.service.clip.clipboard.SystemClipboardWriter
-import opfic.plyst.host.service.clip.download.ClipImageDownloadService
+import opfic.plyst.host.service.clip.download.SystemClipImageDownloader
 import opfic.plyst.host.service.clip.photolibrary.ClipPhotoLibraryService
 import opfic.plyst.host.service.clip.photolibrary.SystemPhotoLibraryWriter
 import opfic.plyst.host.service.clip.share.ClipShareService
@@ -36,7 +36,7 @@ class HostComposition(
     core = ClipCoreAdapter(File(directory, "clips.sqlite"), File(directory, "images"))
     clipboard = ClipboardService(core, SystemClipboardReader(context), SystemClipboardWriter(context))
     photos = ClipPhotoLibraryService(core, SystemPhotoLibraryWriter(context, currentActivity))
-    shares = ClipShareService(context, core, ClipImageDownloadService())
+    shares = ClipShareService(context, core, SystemClipImageDownloader())
   }
 
   fun makeAdapter() =

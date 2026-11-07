@@ -15,9 +15,12 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import opfic.plyst.core.ClipCancellationSource
 import opfic.plyst.core.ClipCleanupValue
+import opfic.plyst.core.ClipImageDownloader
 import opfic.plyst.core.ClipImageDraftValue
 import opfic.plyst.core.ClipImageOperations
 import opfic.plyst.core.ClipStore
+import opfic.plyst.core.ClipShareOperations
+import opfic.plyst.core.ClipShareSaveValue
 import opfic.plyst.core.ClipValue
 import opfic.plyst.core.ClipboardCopyValue
 import opfic.plyst.core.ClipboardOperations
@@ -66,6 +69,7 @@ class ClipCoreAdapter(
   private val store: ClipStore
   private val images: ClipImageOperations
   private val clipboard: ClipboardOperations
+  private val share: ClipShareOperations
 
   init {
     Log.d(TAG, "저장소 초기화 시작")
@@ -77,6 +81,7 @@ class ClipCoreAdapter(
         ClipImageOperations.open(store, imagesRoot.canonicalPath, ClipImageCodec)
       }
     clipboard = ClipboardOperations(images)
+    share = ClipShareOperations(images)
   }
 
   // 수집을 시작한 뒤의 모든 변경을 저장 확정 순서로 전달
@@ -119,17 +124,29 @@ class ClipCoreAdapter(
   // CorruptedData 상태에서 복구하는 경로
   suspend fun removeAllSearchTerms() = access("removeAllSearchTerms", ClipStorageError.WriteFailed) { store.removeAllSearchTerms() }
 
-  suspend fun saveImage(
-    data: ByteArray,
-    memo: String? = null,
-  ): ClipImageMutationResult<Clip> {
-    val draft = ClipImageDraftValue(wireID(UUID.randomUUID()), null, memo?.wellFormed, null, System.currentTimeMillis().referenceSeconds)
+  suspend fun saveImage(data: ByteArray): ClipImageMutationResult<Clip> {
+    val draft = ClipImageDraftValue(wireID(UUID.randomUUID()), null, null, null, System.currentTimeMillis().referenceSeconds)
     val saved =
       coreCall("saveImage", imageDispatcher, ClipImageFileError.WriteFailed) { cancellation ->
         val properties = ClipImageCodec.validated(data)
         withDirectBuffer(data) { images.saveImage(it, properties, draft, cancellation) }
       }
     return ClipImageMutationResult(saved.clip.clip ?: throw ClipStorageError.CorruptedData, cleanupState(saved.cleanup))
+  }
+
+  // 공유받은 텍스트를 저장하고 공백뿐이면 null
+  // 이미지 주소 판정과 내려받기와 실패 시 텍스트 저장은 코어가 결정
+  // 호출마다 Dispatchers.IO에서 실행해 내려받는 동안 이미지 줄과 코어 잠금을 쥐지 않고 공유 화면끼리 기다리지 않음
+  suspend fun saveSharedText(
+    text: String,
+    title: String?,
+    downloader: ClipImageDownloader,
+  ): Clip? {
+    val saved =
+      coreCall("saveSharedText", Dispatchers.IO, ClipStorageError.WriteFailed) {
+        share.saveText(text.wellFormed, title?.wellFormed, true, downloader, it)
+      }
+    return (saved as? ClipShareSaveValue.Saved)?.let { clip(it.clip) }
   }
 
   // 클립을 재조회하지 않고 전달받은 메타데이터에 대응하는 원본을 검증

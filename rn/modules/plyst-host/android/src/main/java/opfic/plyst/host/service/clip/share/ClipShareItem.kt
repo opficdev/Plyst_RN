@@ -11,9 +11,9 @@ class ClipShareItem(
   val text: String?,
   title: String?,
 ) {
-  // 앞뒤 공백을 제거한 공유 항목 제목
-  // 공백뿐이면 null
-  val title = title?.trim()?.takeIf { it.isNotEmpty() }
+  // 공유 항목 제목 원문
+  // 앞뒤 공백 제거와 빈 제목 판정은 코어가 맡음
+  val title = title
 
   companion object {
     fun of(intent: Intent) =
