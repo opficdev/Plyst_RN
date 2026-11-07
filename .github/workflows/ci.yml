@@ -187,14 +187,19 @@ jobs:
 
       - name: Hash XCFramework inputs
         id: input-hash
-        run: echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "native=$(scripts/rn-xcframework-inputs.sh native)" >> "$GITHUB_OUTPUT"
+          echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
 
+      # 네이티브 입력이 같은 캐시를 찾으면 스크립트가 JS 번들만 교체
       - name: Cache XCFrameworks
         id: xcframework-cache
         uses: actions/cache@v4
         with:
           path: Plyst/Packages/PlystReactNative/Frameworks
-          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.hash }}
+          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.native }}-${{ steps.input-hash.outputs.hash }}
+          restore-keys: |
+            rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.native }}-
 
       # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
       # Xcode 컴파일 캐시
