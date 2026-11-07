@@ -344,6 +344,7 @@ jobs:
 
       # 두 산출물이 모두 올라오면 끝남
       # 만드는 잡이 산출물 없이 끝나면 실패로 끝남
+      # API 호출이 일시적으로 실패하면 다음 확인까지 기다림
       - name: Wait for frameworks
         timeout-minutes: 35
         env:
@@ -351,13 +352,19 @@ jobs:
         run: |
           run="repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           while :; do
-            names=$(gh api "$run/artifacts" --jq '.artifacts[].name')
+            if ! names=$(gh api "$run/artifacts" --jq '.artifacts[].name'); then
+              sleep 10
+              continue
+            fi
             if printf '%s\n' "$names" | grep -qx rn-xcframeworks \
               && printf '%s\n' "$names" | grep -qx plyst-core; then
               break
             fi
-            failed=$(gh api "$run/attempts/$GITHUB_RUN_ATTEMPT/jobs" --paginate \
-              --jq '.jobs[] | select((.name == "XCFramework" or .name == "Rust") and .status == "completed" and .conclusion != "success") | .name')
+            if ! failed=$(gh api "$run/attempts/$GITHUB_RUN_ATTEMPT/jobs" --paginate \
+              --jq '.jobs[] | select((.name == "XCFramework" or .name == "Rust") and .status == "completed" and .conclusion != "success") | .name'); then
+              sleep 10
+              continue
+            fi
             if [ -n "$failed" ]; then
               printf '::error title=산출물 대기::%s 잡이 산출물 없이 끝났습니다.\n' "$(printf '%s' "$failed" | tr '\n' ' ')"
               exit 1
