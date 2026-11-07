@@ -1,12 +1,14 @@
 //! 파일, 데이터베이스, 클립보드를 함께 쓰는 작업의 순서
 //! 잠금 순서는 플랫폼 클립보드 직렬화, `order`, `ClipStore` 연결 순서
 //! 외부 구현은 앞선 잠금을 다시 잡지 않음
+//! 내려받기 구현은 코어 잠금을 쥐지 않은 채 호출
 //! 취소는 판정 지점에서만 읽고 시작한 호출을 중단하지 않음
 
 mod clipboard;
 mod error;
 mod image;
 mod platform;
+mod share;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -18,10 +20,11 @@ pub use clipboard::{
 pub use error::ClipOperationError;
 pub use image::{ClipCleanupValue, ClipImageDraftValue, ClipImageOperations, ClipImageSavedValue};
 pub use platform::{
-    ClipCancellationSource, ClipCodecError, ClipImageCoder, ClipImagePropertiesValue,
-    ClipImageValue, ClipboardWriteError, ClipboardWriteOutcome, ClipboardWriteValue,
-    ClipboardWriter,
+    ClipCancellationSource, ClipCodecError, ClipDownloadError, ClipImageCoder, ClipImageDownloader,
+    ClipImagePropertiesValue, ClipImageValue, ClipboardWriteError, ClipboardWriteOutcome,
+    ClipboardWriteValue, ClipboardWriter,
 };
+pub use share::{ClipShareOperations, ClipShareSaveValue};
 
 /// 시스템 난수를 읽지 못해 식별자를 만들 수 없을 때의 쓰기 실패
 const NO_RANDOM: ClipStoreError = ClipStoreError::WriteFailed {

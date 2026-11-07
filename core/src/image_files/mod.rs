@@ -21,6 +21,7 @@ pub use error::ClipImageFilesError;
 const ORIGINAL: &str = "original";
 const PENDING: &str = "pending";
 const PREVIEW: &str = "preview";
+const DOWNLOAD: &str = "download";
 
 // 임시 파일 이름의 프로세스 내 순번
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
@@ -60,6 +61,53 @@ impl ClipImageFiles {
                 return Ok(file_id);
             }
         }
+    }
+
+    /// 내려받을 새 폴더를 정리 표시와 함께 만들고 식별자와 내려받기 파일 경로를 반환
+    /// 내려받기 파일은 호스트가 새로 만들어 씀
+    pub fn reserve(&self) -> Result<(String, String), ClipImageFilesError> {
+        self.validate_root()?;
+        loop {
+            let file_id = new_uuid().ok_or(ClipImageFilesError::WriteFailed)?;
+            let directory = self.path(&file_id)?;
+            if entry(&directory)?.is_some() {
+                continue;
+            }
+            match fs::create_dir(&directory) {
+                Err(error) if error.kind() == ErrorKind::AlreadyExists => continue,
+                Err(_) => return Err(ClipImageFilesError::WriteFailed),
+                Ok(()) => {}
+            }
+            if self.mark_pending(&file_id).is_err() {
+                let _ = self.delete(&file_id);
+                return Err(ClipImageFilesError::WriteFailed);
+            }
+            return Ok((file_id, text(&directory.join(DOWNLOAD))));
+        }
+    }
+
+    /// 호스트가 내려받은 파일을 원본으로 확정하고 크기를 반환
+    /// 일반 파일이 아니거나 상한을 넘으면 내용을 읽기 전에 거부
+    /// 정리 표시는 메타데이터 저장 확정 후 호출자가 해제
+    pub fn adopt(
+        &self,
+        file_id: &str,
+        maximum_byte_count: u64,
+    ) -> Result<i64, ClipImageFilesError> {
+        let directory = self.required_directory(file_id)?;
+        let download = directory.join(DOWNLOAD);
+        let Some(metadata) = entry(&download)? else {
+            return Err(not_found(file_id));
+        };
+        if !metadata.is_file() || maximum_byte_count < metadata.len() {
+            return Err(ClipImageFilesError::UnsafePath);
+        }
+        let file = File::open(&download).map_err(|_| ClipImageFilesError::ReadFailed)?;
+        sync(&file).map_err(|_| ClipImageFilesError::WriteFailed)?;
+        validate_file(&directory.join(ORIGINAL))?;
+        fs::rename(&download, directory.join(ORIGINAL))
+            .map_err(|_| ClipImageFilesError::WriteFailed)?;
+        i64::try_from(metadata.len()).map_err(|_| ClipImageFilesError::UnsafePath)
     }
 
     /// 기록된 크기와 다른 원본은 내용을 읽기 전에 거부

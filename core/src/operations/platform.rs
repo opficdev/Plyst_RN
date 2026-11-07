@@ -4,6 +4,7 @@
 //! 선언되지 않은 실패는 코어에서 패닉이 되므로 `Unexpected`로 받음
 
 use std::fmt;
+use std::sync::Arc;
 
 use uniffi::UnexpectedUniFFICallbackError;
 
@@ -102,4 +103,40 @@ pub trait ClipboardWriter: Send + Sync {
 #[uniffi::export(foreign)]
 pub trait ClipCancellationSource: Send + Sync {
     fn is_cancelled(&self) -> bool;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Error)]
+pub enum ClipDownloadError {
+    Cancelled,
+    Failed,
+    Unexpected,
+}
+
+impl fmt::Display for ClipDownloadError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(self, formatter)
+    }
+}
+
+impl std::error::Error for ClipDownloadError {}
+
+impl From<UnexpectedUniFFICallbackError> for ClipDownloadError {
+    fn from(_: UnexpectedUniFFICallbackError) -> Self {
+        Self::Unexpected
+    }
+}
+
+/// `url`의 응답 본문을 `path`에 새 파일로 쓰고 Content-Type 헤더 원문을 돌려줌
+/// 파일이 이미 있으면 덮어쓰지 않고 실패
+/// 상태 코드, 크기 상한, 시간 제한은 구현이 판정하고 응답 형식은 코어가 판정
+/// 폴더와 파일의 정리는 코어가 맡으며 구현은 파일을 지우거나 옮기지 않음
+/// 취소 상태를 읽으면 전송을 끊고 `Cancelled`를 던짐
+#[uniffi::export(foreign)]
+pub trait ClipImageDownloader: Send + Sync {
+    fn download(
+        &self,
+        url: String,
+        path: String,
+        cancellation: Arc<dyn ClipCancellationSource>,
+    ) -> Result<Option<String>, ClipDownloadError>;
 }
