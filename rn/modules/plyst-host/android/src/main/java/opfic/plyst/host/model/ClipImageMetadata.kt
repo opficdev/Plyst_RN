@@ -1,6 +1,7 @@
 package opfic.plyst.host.model
 
 import java.util.UUID
+import opfic.plyst.core.ClipImageValue
 
 data class ClipImageMetadata(
   // 이미지 파일 서비스에서 해석하는 불투명 식별자
@@ -12,3 +13,6 @@ data class ClipImageMetadata(
   val pixelHeight: Int,
   val byteCount: Int,
 )
+
+internal val ClipImageMetadata.coreValue: ClipImageValue
+  get() = ClipImageValue(fileID.toString().uppercase(), contentType, pixelWidth.toLong(), pixelHeight.toLong(), byteCount.toLong())

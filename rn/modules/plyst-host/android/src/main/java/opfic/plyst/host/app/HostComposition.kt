@@ -12,7 +12,6 @@ import opfic.plyst.host.service.clip.clipboard.ClipboardService
 import opfic.plyst.host.service.clip.clipboard.SystemClipboardReader
 import opfic.plyst.host.service.clip.clipboard.SystemClipboardWriter
 import opfic.plyst.host.service.clip.download.ClipImageDownloadService
-import opfic.plyst.host.service.clip.image.ClipImageFileStore
 import opfic.plyst.host.service.clip.image.ClipImageService
 import opfic.plyst.host.service.clip.photolibrary.ClipPhotoLibraryService
 import opfic.plyst.host.service.clip.photolibrary.SystemPhotoLibraryWriter
@@ -37,8 +36,8 @@ class HostComposition(
     // 백업에서 제외되는 위치
     val directory = File(context.noBackupFilesDir, "Plyst")
     storage = SQLiteClipStorageService(File(directory, "clips.sqlite"))
-    images = ClipImageService(storage, ClipImageFileStore(File(directory, "images")))
-    clipboard = ClipboardService(storage, images, SystemClipboardReader(context), SystemClipboardWriter(context))
+    images = ClipImageService(storage, File(directory, "images"))
+    clipboard = ClipboardService(images, SystemClipboardReader(context), SystemClipboardWriter(context))
     photos = ClipPhotoLibraryService(storage, images, SystemPhotoLibraryWriter(context, currentActivity))
     shares = ClipShareService(context, storage, images, ClipImageDownloadService())
   }
