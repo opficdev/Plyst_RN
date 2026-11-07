@@ -51,6 +51,13 @@ jobs:
         working-directory: rn
         run: mise exec -- npm ci
 
+      # rn/android는 prebuild가 만들므로 사용자 수준 설정으로 지정
+      # 기본값(힙 2GB, Metaspace 512MB)에서는 처음 빌드할 때 데몬이 Metaspace를 소진
+      - name: Configure Gradle
+        run: |
+          mkdir -p ~/.gradle
+          printf '%s\n' 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g' >> ~/.gradle/gradle.properties
+
       # 바인딩 생성기와 호스트용 core의 cargo 출력
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
       - name: Restore cargo output
