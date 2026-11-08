@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 # 시뮬레이터 x86_64 슬라이스는 CI에서 만들지 않음
-# Build와 Test는 arm64 시뮬레이터에서만 실행
+# iOS Build와 iOS Test는 arm64 시뮬레이터에서만 실행
 env:
   RN_XCFRAMEWORK_SIMULATOR_ARCHS: arm64
 
@@ -174,12 +174,12 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make rn-rust-test
 
-  # Build는 Rust를 기다리고 건너뛴 필수 체크는 통과로 처리됨
+  # iOS Build는 Rust를 기다리고 건너뛴 필수 체크는 통과로 처리됨
   # 선행 잡이 실패해도 실행해 이 필수 체크를 실패로 끝냄
   # develop 실행은 Pods와 컴파일 캐시를 저장하려고 함께 빌드
   build:
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
-    name: Build
+    name: iOS Build
     if: ${{ !cancelled() }}
     needs: [rust]
     runs-on: xcode-27
@@ -272,7 +272,7 @@ jobs:
   # 빌드는 다른 러너에서 진행되므로 이 러너에서는 부팅과 빌드가 겹치지 않음
   test:
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
-    name: Test
+    name: iOS Test
     if: github.event_name == 'pull_request'
     runs-on: xcode-27
     timeout-minutes: 70
