@@ -1,4 +1,4 @@
-// rust/src/lib.rs가 내보내는 C ABI
+// core/src/search/ffi.rs가 내보내는 C ABI
 // 포인터는 호출하는 동안만 유효
 
 #pragma once

@@ -1,7 +1,7 @@
 // UTF-16 글자 분할
 // UAX #29가 아니라 앱의 기존 검색 결과를 유지하는 손 작성 규칙
 
-use crate::mark_table::MARK_RANGES;
+use super::mark_table::MARK_RANGES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cluster {

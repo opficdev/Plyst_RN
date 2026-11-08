@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use plyst_search_core::{excerpt_start, fold_text, ranges, split_clusters, Field, Index};
+use plyst_core::search::{excerpt_start, fold_text, ranges, split_clusters, Field, Index};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -70,7 +70,7 @@ fn slice(text: &str, range: [u32; 2]) -> String {
 
 #[test]
 fn swift_original_cases() {
-    let cases: Cases = serde_json::from_str(include_str!("cases.json")).unwrap();
+    let cases: Cases = serde_json::from_str(include_str!("fixtures/search-cases.json")).unwrap();
     assert_eq!(cases.cases.len(), 23);
     for case in cases.cases {
         assert_eq!(

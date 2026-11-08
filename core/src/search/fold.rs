@@ -52,7 +52,7 @@ fn fold_with_lone_surrogates(text: &[u16]) -> Vec<u16> {
     let mut start = 0;
     let mut offset = 0;
     while offset < text.len() {
-        let (_, len) = crate::clusters::next_point(text, offset);
+        let (_, len) = super::clusters::next_point(text, offset);
         let unit = text[offset];
         if len == 1 && (0xd800..=0xdfff).contains(&unit) {
             if start < offset {

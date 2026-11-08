@@ -15,7 +15,7 @@ DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 MATCH_FORCE ?= false
 
-.PHONY: lint build test-build test-device-id test-without-building test verify plyst-core plyst-search pods android-resources android-resources-check rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
+.PHONY: lint build test-build test-device-id test-without-building test verify plyst-core pods android-resources android-resources-check rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
 
 lint:
 	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml ios/Plyst
@@ -68,11 +68,7 @@ verify: lint build test-build
 plyst-core:
 	scripts/build-plyst-core.sh
 
-plyst-search:
-	scripts/build-plyst-search.sh
-
-# plyst-search pod이 vendored_frameworks로 쓰는 Rust 라이브러리를 먼저 만듦
-pods: plyst-search
+pods:
 	cd ios && mise exec -- pod install
 
 android-resources:
@@ -92,16 +88,15 @@ rn-test:
 
 rn-verify: rn-typecheck rn-lint rn-test
 
-RUST_CRATES := modules/plyst-search/rust core
+RUST_CRATES := core
 
 rn-rust-test:
 	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo test --locked) || exit 1; done
 
+# Android 대상 컴파일은 core의 번들 SQLite에 NDK가 필요해 Android 잡의 CMake 빌드가 검사
 rn-rust-lint:
 	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo fmt --check) || exit 1; done
 	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo clippy --locked --all-targets -- -D warnings) || exit 1; done
-	# core의 번들 SQLite는 NDK가 필요해 Android 잡의 CMake 빌드가 검사
-	cd modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
 
 # 빌드 시간을 줄이려고 실기기 ABI 하나만 빌드
 rn-android-build:

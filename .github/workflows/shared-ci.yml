@@ -80,8 +80,7 @@ jobs:
           path: |
             core/target
             core/bindgen/target
-            modules/plyst-search/rust/target
-          key: cargo-shared-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock', 'modules/plyst-search/rust/Cargo.lock') }}
+          key: cargo-shared-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
 
       - name: Lint Rust
         env:
@@ -100,5 +99,4 @@ jobs:
           path: |
             core/target
             core/bindgen/target
-            modules/plyst-search/rust/target
-          key: cargo-shared-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock', 'modules/plyst-search/rust/Cargo.lock') }}
+          key: cargo-shared-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
