@@ -14,7 +14,7 @@ repository_root=$(CDPATH= cd "$script_directory/.." && pwd)
 crate=$repository_root/core
 output=$crate/build
 target_directory=$output/target
-package=$repository_root/Plyst/Packages/PlystCore
+package=$repository_root/ios/Packages/PlystCore
 frameworks=$package/Frameworks
 sources=$package/Sources/PlystCore
 marker=$frameworks/.inputs
@@ -33,7 +33,7 @@ case "$simulator_archs" in
 		;;
 esac
 
-inputs="$("$script_directory/rn-xcframework-inputs.sh" core) $(xcodebuild -version | tr '\n' ' ')simulator_archs=$simulator_archs"
+inputs="$("$script_directory/rust-inputs.sh" core) $(xcodebuild -version | tr '\n' ' ')simulator_archs=$simulator_archs"
 if [ -z "${RN_XCFRAMEWORK_CLEAN:-}" ] \
 	&& [ -f "$marker" ] && [ "$(cat "$marker")" = "$inputs" ] \
 	&& [ -d "$frameworks/PlystCoreFFI.xcframework" ] && [ -f "$sources/PlystCore.swift" ]; then

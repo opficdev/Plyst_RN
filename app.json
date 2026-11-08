@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "PlystRN",
+    "slug": "PlystRN",
+    "version": "1.0.0",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.PlystRN"
+    },
+    "android": {
+      "package": "opfic.plyst",
+      "version": "1.2",
+      "versionCode": 1,
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE"
+      ]
+    }
+  }
+}

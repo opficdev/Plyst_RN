@@ -1,7 +1,6 @@
-PROJECT := Plyst/Plyst.xcodeproj
+WORKSPACE := ios/Plyst.xcworkspace
 SCHEME := Plyst
 CONFIGURATION ?= Debug
-RN_CONFIGURATION ?= Release
 DESTINATION ?= generic/platform=iOS Simulator
 DEVICE_ID_PATTERN := [0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}
 # iPhone 18 Pro 우선 선택
@@ -16,18 +15,18 @@ DERIVED_DATA_PATH ?= /tmp/plyst-derived-data
 XCODEBUILD_FLAGS ?=
 MATCH_FORCE ?= false
 
-.PHONY: lint build test-build test-device-id test-without-building test verify plyst-core rn-xcframework rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
+.PHONY: lint build test-build test-device-id test-without-building test verify plyst-core plyst-search pods android-resources android-resources-check rn-typecheck rn-lint rn-test rn-verify rn-rust-test rn-rust-lint rn-android-build rn-start deploy-setup deploy-check testflight-build testflight appstore-build appstore signing-sync
 
 lint:
-	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Plyst
-	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/Common
-	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/ShareExtension
-	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml Plyst/WidgetExtension
-	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint-tests.yml Plyst/PlystTests
+	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml ios/Plyst
+	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml ios/Common
+	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml ios/ShareExtension
+	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint.yml ios/WidgetExtension
+	mise exec -- swiftlint lint --strict --no-cache --config .swiftlint-tests.yml ios/PlystTests
 
 build:
 	xcodebuild -quiet $(XCODEBUILD_FLAGS) \
-		-project "$(PROJECT)" \
+		-workspace "$(WORKSPACE)" \
 		-scheme "$(SCHEME)" \
 		-configuration "$(CONFIGURATION)" \
 		-destination "$(DESTINATION)" \
@@ -37,7 +36,7 @@ build:
 
 test-build:
 	xcodebuild -quiet $(XCODEBUILD_FLAGS) \
-		-project "$(PROJECT)" \
+		-workspace "$(WORKSPACE)" \
 		-scheme "$(SCHEME)" \
 		-configuration "$(CONFIGURATION)" \
 		-destination "$(DESTINATION)" \
@@ -51,7 +50,7 @@ test-device-id:
 test-without-building:
 	rm -rf "$(RESULT_BUNDLE_PATH)"
 	xcodebuild $(XCODEBUILD_FLAGS) $(TEST_FLAGS) \
-		-project "$(PROJECT)" \
+		-workspace "$(WORKSPACE)" \
 		-scheme "$(SCHEME)" \
 		-configuration "$(CONFIGURATION)" \
 		-destination "$(TEST_DESTINATION)" \
@@ -69,21 +68,31 @@ verify: lint build test-build
 plyst-core:
 	scripts/build-plyst-core.sh
 
-rn-xcframework: plyst-core
-	RN_CONFIGURATION="$(RN_CONFIGURATION)" scripts/build-rn-xcframework.sh
+plyst-search:
+	scripts/build-plyst-search.sh
+
+# plyst-search pod이 vendored_frameworks로 쓰는 Rust 라이브러리를 먼저 만듦
+pods: plyst-search
+	cd ios && mise exec -- pod install
+
+android-resources:
+	mise exec -- node scripts/sync-android-resources.js
+
+android-resources-check:
+	mise exec -- node scripts/sync-android-resources.js --check
 
 rn-typecheck:
-	cd rn && mise exec -- npm run typecheck
+	mise exec -- npm run typecheck
 
 rn-lint:
-	cd rn && mise exec -- npm run lint
+	mise exec -- npm run lint
 
 rn-test:
-	cd rn && mise exec -- npm test
+	mise exec -- npm test
 
 rn-verify: rn-typecheck rn-lint rn-test
 
-RUST_CRATES := rn/modules/plyst-search/rust core
+RUST_CRATES := modules/plyst-search/rust core
 
 rn-rust-test:
 	for crate in $(RUST_CRATES); do (cd $$crate && mise exec -- cargo test --locked) || exit 1; done
@@ -92,15 +101,14 @@ rn-rust-lint:
 	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo fmt --check) || exit 1; done
 	for crate in $(RUST_CRATES) core/bindgen; do (cd $$crate && mise exec -- cargo clippy --locked --all-targets -- -D warnings) || exit 1; done
 	# core의 번들 SQLite는 NDK가 필요해 Android 잡의 CMake 빌드가 검사
-	cd rn/modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
+	cd modules/plyst-search/rust && mise exec -- cargo check --locked --target aarch64-linux-android
 
 # 빌드 시간을 줄이려고 실기기 ABI 하나만 빌드
 rn-android-build:
-	cd rn && mise exec -- npx expo prebuild --platform android --no-install
-	cd rn/android && mise exec -- ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --console=plain
+	cd android && mise exec -- ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --console=plain
 
 rn-start:
-	cd rn && npx expo start
+	npx expo start
 
 deploy-setup:
 	mise trust

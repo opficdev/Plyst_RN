@@ -9,7 +9,7 @@ script_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repository_root=$(CDPATH= cd "$script_directory/.." && pwd)
 lane=${1:-}
 secrets_file=${SECRETS_FILE:-$repository_root/fastlane/secrets.json}
-project_file="$repository_root/Plyst/Plyst.xcodeproj/project.pbxproj"
+project_file="$repository_root/ios/Plyst.xcodeproj/project.pbxproj"
 secret_keys="APP_STORE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_CONTENT MATCH_GIT_URL MATCH_PASSWORD MATCH_GIT_BASIC_AUTHORIZATION"
 
 case "$lane" in
@@ -107,7 +107,7 @@ if [ "$lane" = check ]; then
 	exit 0
 fi
 
-# 오래 걸리는 XCFramework 빌드 전에 Fastlane 실행 환경을 확인
+# 오래 걸리는 Rust 빌드와 Pods 설치 전에 Fastlane 실행 환경을 확인
 if ! (cd "$repository_root" && bundle check >/dev/null 2>&1); then
 	printf '오류: Bundler gem이 설치되어 있지 않습니다. 저장소 루트에서 bundle install을 실행하세요.\n' >&2
 	exit 1
@@ -133,10 +133,11 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# 프로파일 동기화는 앱을 빌드하지 않으므로 XCFramework와 프로젝트 파일을 다루지 않음
+# 프로파일 동기화는 앱을 빌드하지 않으므로 Rust 산출물과 Pods와 프로젝트 파일을 다루지 않음
 if [ "$lane" != sync_appstore_profiles ]; then
-	# 배포 빌드는 입력 해시와 관계없이 처음부터 만듦
-	RN_XCFRAMEWORK_CLEAN=1 make -C "$repository_root" rn-xcframework RN_CONFIGURATION=Release
+	# 배포 빌드는 입력 해시와 관계없이 Rust 산출물을 처음부터 만들고 잠금 파일대로 의존성을 설치
+	(cd "$repository_root" && npm ci)
+	RN_XCFRAMEWORK_CLEAN=1 make -C "$repository_root" plyst-core pods
 
 	project_backup=$(mktemp)
 	cp "$project_file" "$project_backup"

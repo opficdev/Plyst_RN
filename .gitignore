@@ -33,19 +33,39 @@ Breakpoints_v2.xcbkptlist
 .tmp/
 
 # React Native
-rn/node_modules/
-rn/ios/
-rn/android/
-rn/.expo/
-rn/modules/plyst-search/rust/target/
-Plyst/Packages/PlystReactNative/Frameworks/
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.tsbuildinfo
+.env*.local
+modules/plyst-search/rust/target/
+
+# CocoaPods
+ios/Pods/
+ios/.xcode.env.local
+# Xcode 스크립트 단계의 공용 Node 경로라 인증 파일 규칙(*.env)에서 제외
+!ios/.xcode.env
+
+# Native
+.kotlin/
+.cxx/
+*.orig.*
+*.jks
+*.key
+*.mobileprovision
+*.pem
 
 # Rust 공통 코어
 core/target/
 core/bindgen/target/
-rn/modules/plyst-core/android/.cxx/
-Plyst/Packages/PlystCore/Frameworks/
-Plyst/Packages/PlystCore/Sources/PlystCore/PlystCore.swift
+ios/Packages/PlystCore/Frameworks/
+ios/Packages/PlystCore/Sources/PlystCore/PlystCore.swift
 
 # Fastlane
 .bundle/

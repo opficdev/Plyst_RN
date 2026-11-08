@@ -59,10 +59,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
-        working-directory: rn
         run: mise exec -- npm ci
 
       - name: Type check
@@ -80,7 +79,7 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make rn-test
 
-  # PlystCore를 먼저 만들어 올린 뒤 Rust 검사를 실행
+  # PlystCore와 PlystSearchCore를 먼저 만들어 올린 뒤 Rust 검사를 실행
   # Test 잡은 업로드만 기다리고 Build 잡은 검사 종료까지 기다림
   rust:
     name: Rust
@@ -100,18 +99,29 @@ jobs:
         id: xcode
         run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
 
-      - name: Hash Plyst core inputs
+      - name: Hash Rust inputs
         id: input-hash
-        run: echo "core=$(scripts/rn-xcframework-inputs.sh core)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "core=$(scripts/rust-inputs.sh core)" >> "$GITHUB_OUTPUT"
+          echo "search=$(scripts/rust-inputs.sh search)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Plyst core
         id: core-cache
         uses: actions/cache@v4
         with:
           path: |
-            Plyst/Packages/PlystCore/Frameworks
-            Plyst/Packages/PlystCore/Sources
+            ios/Packages/PlystCore/Frameworks
+            ios/Packages/PlystCore/Sources
           key: plyst-core-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.core }}
+
+      - name: Cache Plyst search
+        id: search-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            modules/plyst-search/build/PlystSearchCore.xcframework
+            modules/plyst-search/build/.inputs
+          key: plyst-search-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.search }}
 
       # core와 바인딩 생성기의 cargo 출력
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
@@ -129,15 +139,20 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make plyst-core
 
-      - name: Archive Plyst core
-        run: tar -C Plyst/Packages -cf plyst-core.tar PlystCore/Frameworks PlystCore/Sources
+      - name: Build Plyst search
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make plyst-search
+
+      - name: Archive Rust frameworks
+        run: tar -cf rust-frameworks.tar ios/Packages/PlystCore/Frameworks ios/Packages/PlystCore/Sources modules/plyst-search/build/PlystSearchCore.xcframework modules/plyst-search/build/.inputs
 
       # 잡 전체를 다시 실행하면 같은 이름의 앞 산출물을 덮음
-      - name: Upload Plyst core
+      - name: Upload Rust frameworks
         uses: actions/upload-artifact@v4
         with:
-          name: plyst-core
-          path: plyst-core.tar
+          name: rust-frameworks
+          path: rust-frameworks.tar
           overwrite: true
 
       - name: Save cargo output
@@ -159,128 +174,99 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make rn-rust-test
 
-  xcframework:
-    name: XCFramework
+  # Build는 Rust를 기다리고 건너뛴 필수 체크는 통과로 처리됨
+  # 선행 잡이 실패해도 실행해 이 필수 체크를 실패로 끝냄
+  # develop 실행은 Pods와 컴파일 캐시를 저장하려고 함께 빌드
+  build:
+    # 잡 이름은 필수 상태 체크 이름과 같아야 함
+    name: Build
+    if: ${{ !cancelled() }}
+    needs: [rust]
     runs-on: xcode-27
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
+      - name: Check required jobs
+        if: needs.rust.result != 'success'
+        env:
+          RUST_RESULT: ${{ needs.rust.result }}
+        run: |
+          printf '::error title=선행 잡::Rust=%s\n' "$RUST_RESULT"
+          exit 1
+
       - uses: actions/checkout@v5
 
-      - name: Set up tools
+      - name: Set up Node
         uses: jdx/mise-action@v4
         with:
           install: true
           cache: true
-          install_args: node rust
+          install_args: node
 
       - name: Cache npm
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: mise exec -- npm ci
+
+      - name: Download Rust frameworks
+        uses: actions/download-artifact@v4
+        with:
+          name: rust-frameworks
+          path: /tmp/rust-frameworks
+
+      - name: Extract Rust frameworks
+        run: tar -xf /tmp/rust-frameworks/rust-frameworks.tar
 
       - name: Read Xcode version
         id: xcode
         run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
 
-      - name: Hash XCFramework inputs
-        id: input-hash
-        run: |
-          echo "native=$(scripts/rn-xcframework-inputs.sh native)" >> "$GITHUB_OUTPUT"
-          echo "hash=$(scripts/rn-xcframework-inputs.sh)" >> "$GITHUB_OUTPUT"
-
-      # 네이티브 입력이 같은 캐시를 찾으면 스크립트가 JS 번들만 교체
-      - name: Cache XCFrameworks
-        id: xcframework-cache
-        uses: actions/cache@v4
+      # 내려받은 사전 빌드 React Native와 Pods 소스
+      # develop 실행은 처음부터 설치해 저장하고 PR은 읽기만 함
+      - name: Restore Pods
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
         with:
-          path: Plyst/Packages/PlystReactNative/Frameworks
-          key: rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.native }}-${{ steps.input-hash.outputs.hash }}
-          restore-keys: |
-            rn-xcframework-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.native }}-
+          path: ios/Pods
+          key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      # 네이티브 입력이 같은 프레임워크를 복원했으면 컴파일하지 않음
-      - name: Check restored frameworks
-        id: restored
-        run: |
-          if [ -f Plyst/Packages/PlystReactNative/Frameworks/.inputs ]; then
-            echo "found=true" >> "$GITHUB_OUTPUT"
-          fi
+      # PlystSearchCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
+      - name: Install Pods
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make -o plyst-search pods
 
       # Xcode 컴파일 캐시
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
       - name: Restore compilation cache
-        if: github.event_name == 'pull_request' && steps.restored.outputs.found != 'true'
+        if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/rn-compilation-cache
-          key: rn-compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('rn/package-lock.json') }}
+          path: ${{ runner.temp }}/compilation-cache
+          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      # PlystCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
-      - name: Build XCFrameworks
-        if: steps.xcframework-cache.outputs.cache-hit != 'true'
+      # Pods와 앱 컴파일 결과를 러너 임시 폴더의 CAS에 캐시
+      - name: Build
         env:
           MISE_AUTO_INSTALL: 0
-          RN_COMPILATION_CACHE: ${{ runner.temp }}/rn-compilation-cache
-        run: make -o plyst-core rn-xcframework
+        run: make build XCODEBUILD_FLAGS="ARCHS=${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }} COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=${{ runner.temp }}/compilation-cache COMPILER_INDEX_STORE_ENABLE=NO"
 
-      - name: Archive XCFrameworks
-        run: tar -C Plyst/Packages -cf rn-xcframeworks.tar PlystReactNative/Frameworks
-
-      - name: Upload XCFrameworks
-        uses: actions/upload-artifact@v4
-        with:
-          name: rn-xcframeworks
-          path: rn-xcframeworks.tar
-          overwrite: true
-
-      - name: Save compilation cache
-        if: github.event_name == 'push' && steps.xcframework-cache.outputs.cache-hit != 'true'
+      - name: Save Pods
+        if: github.event_name == 'push'
         uses: actions/cache/save@v4
         with:
-          path: ${{ runner.temp }}/rn-compilation-cache
-          key: rn-compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('rn/package-lock.json') }}
+          path: ios/Pods
+          key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-  # Rust는 필수 체크가 아니고 건너뛴 필수 체크는 통과로 처리됨
-  # 선행 잡이 실패해도 실행해 이 필수 체크를 실패로 끝냄
-  build:
-    # 잡 이름은 필수 상태 체크 이름과 같아야 함
-    name: Build
-    if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-    needs: [xcframework, rust]
-    runs-on: xcode-27
-    timeout-minutes: 20
-    steps:
-      - name: Check required jobs
-        if: needs.xcframework.result != 'success' || needs.rust.result != 'success'
-        env:
-          XCFRAMEWORK_RESULT: ${{ needs.xcframework.result }}
-          RUST_RESULT: ${{ needs.rust.result }}
-        run: |
-          printf '::error title=선행 잡::XCFramework=%s, Rust=%s\n' "$XCFRAMEWORK_RESULT" "$RUST_RESULT"
-          exit 1
-
-      - uses: actions/checkout@v5
-
-      - name: Download XCFrameworks
-        uses: actions/download-artifact@v4
+      - name: Save compilation cache
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
         with:
-          name: rn-xcframeworks
-          path: /tmp/rn-xcframeworks
-
-      - name: Download Plyst core
-        uses: actions/download-artifact@v4
-        with:
-          name: plyst-core
-          path: /tmp/plyst-core
-
-      - name: Extract frameworks
-        run: |
-          tar -C Plyst/Packages -xf /tmp/rn-xcframeworks/rn-xcframeworks.tar
-          tar -C Plyst/Packages -xf /tmp/plyst-core/plyst-core.tar
-
-      - name: Build
-        run: make build XCODEBUILD_FLAGS="ARCHS=${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}"
+          path: ${{ runner.temp }}/compilation-cache
+          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
   # 산출물을 기다리지 않고 시작해 시뮬레이터를 먼저 부팅
   # 빌드는 다른 러너에서 진행되므로 이 러너에서는 부팅과 빌드가 겹치지 않음
@@ -289,7 +275,7 @@ jobs:
     name: Test
     if: github.event_name == 'pull_request'
     runs-on: xcode-27
-    timeout-minutes: 50
+    timeout-minutes: 70
     permissions:
       contents: read
       actions: read
@@ -348,10 +334,10 @@ jobs:
           fi
           xcrun simctl bootstatus "$TEST_DEVICE_ID" -b
 
-      # 두 산출물이 모두 올라오면 끝남
-      # 만드는 잡이 산출물 없이 끝나면 실패로 끝남
+      # Rust 산출물이 올라오면 끝남
+      # Rust 잡이 산출물 없이 끝나면 실패로 끝남
       # API 호출이 일시적으로 실패하면 다음 확인까지 기다림
-      - name: Wait for frameworks
+      - name: Wait for Rust frameworks
         timeout-minutes: 35
         env:
           GH_TOKEN: ${{ github.token }}
@@ -362,49 +348,73 @@ jobs:
               sleep 10
               continue
             fi
-            if printf '%s\n' "$names" | grep -qx rn-xcframeworks \
-              && printf '%s\n' "$names" | grep -qx plyst-core; then
+            if printf '%s\n' "$names" | grep -qx rust-frameworks; then
               break
             fi
             if ! failed=$(gh api "$run/attempts/$GITHUB_RUN_ATTEMPT/jobs" --paginate \
-              --jq '.jobs[] | select((.name == "XCFramework" or .name == "Rust") and .status == "completed" and .conclusion != "success") | .name'); then
+              --jq '.jobs[] | select(.name == "Rust" and .status == "completed" and .conclusion != "success") | .name'); then
               sleep 10
               continue
             fi
-            # 산출물을 이미 올린 잡은 뒤 단계가 실패해도 대기에 영향 없음
-            if printf '%s\n' "$names" | grep -qx plyst-core; then
-              failed=$(printf '%s\n' "$failed" | grep -vx Rust || true)
-            fi
-            if printf '%s\n' "$names" | grep -qx rn-xcframeworks; then
-              failed=$(printf '%s\n' "$failed" | grep -vx XCFramework || true)
-            fi
             if [ -n "$failed" ]; then
-              printf '::error title=산출물 대기::%s 잡이 산출물 없이 끝났습니다.\n' "$(printf '%s' "$failed" | tr '\n' ' ')"
+              printf '::error title=산출물 대기::Rust 잡이 산출물 없이 끝났습니다.\n'
               exit 1
             fi
             sleep 10
           done
 
-      - name: Download XCFrameworks
+      - name: Set up Node
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+          install_args: node
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: mise exec -- npm ci
+
+      - name: Download Rust frameworks
         uses: actions/download-artifact@v4
         with:
-          name: rn-xcframeworks
-          path: /tmp/rn-xcframeworks
+          name: rust-frameworks
+          path: /tmp/rust-frameworks
 
-      - name: Download Plyst core
-        uses: actions/download-artifact@v4
+      - name: Extract Rust frameworks
+        run: tar -xf /tmp/rust-frameworks/rust-frameworks.tar
+
+      - name: Read Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Pods
+        uses: actions/cache/restore@v4
         with:
-          name: plyst-core
-          path: /tmp/plyst-core
+          path: ios/Pods
+          key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      - name: Extract frameworks
-        run: |
-          tar -C Plyst/Packages -xf /tmp/rn-xcframeworks/rn-xcframeworks.tar
-          tar -C Plyst/Packages -xf /tmp/plyst-core/plyst-core.tar
+      # PlystSearchCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
+      - name: Install Pods
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make -o plyst-search pods
+
+      - name: Restore compilation cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/compilation-cache
+          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
       - name: Build for testing
-        timeout-minutes: 12
-        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID"
+        timeout-minutes: 30
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make test-build DESTINATION="platform=iOS Simulator,id=$TEST_DEVICE_ID" XCODEBUILD_FLAGS="COMPILATION_CACHE_ENABLE_CACHING=YES SWIFT_ENABLE_EXPLICIT_MODULES=YES COMPILATION_CACHE_CAS_PATH=${{ runner.temp }}/compilation-cache COMPILER_INDEX_STORE_ENABLE=NO"
 
       # 병렬 테스트는 복제 시뮬레이터 부팅 지연과 멈춤의 원인으로 의심되어 CI에서만 끔
       - name: Test

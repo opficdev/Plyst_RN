@@ -1,4 +1,5 @@
-XCODE_PROJ = "Plyst/Plyst.xcodeproj"
+XCODE_PROJ = "ios/Plyst.xcodeproj"
+XCODE_WORKSPACE = "ios/Plyst.xcworkspace"
 SCHEME = "Plyst"
 CONFIGURATION = "Release"
 APP_IDENTIFIER = "opfic.Plyst"
@@ -9,18 +10,15 @@ EXTENSION_TARGETS = {
   "WidgetExtension" => "opfic.Plyst.WidgetExtension"
 }
 APP_IDENTIFIERS = [APP_IDENTIFIER, *EXTENSION_TARGETS.values]
+# Pods가 앱에 임베드하는 React Native 동적 프레임워크
+REACT_NATIVE_FRAMEWORKS = ["ExpoModulesJSI", "React", "ReactNativeDependencies", "hermesvm"].freeze
 TESTFLIGHT_BUILD_OUTPUT_DIRECTORY = File.expand_path("testflight_build", __dir__)
 TESTFLIGHT_IPA_OUTPUT_PATH = File.join(TESTFLIGHT_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
 APPSTORE_BUILD_OUTPUT_DIRECTORY = File.expand_path("appstore_build", __dir__)
 APPSTORE_IPA_OUTPUT_PATH = File.join(APPSTORE_BUILD_OUTPUT_DIRECTORY, "#{APP_PRODUCT_NAME}.ipa")
 
-# xcodeproj 1.27은 Xcode 27의 확장 복사 위치(dstSubfolder)를 모르면 프로젝트를 저장할 때 지움
-# 확장이 앱의 PlugIns가 아닌 아카이브 루트에 설치되므로 프로젝트를 여는 어떤 액션보다 먼저 속성을 등록
-require "xcodeproj"
-copy_phase = Xcodeproj::Project::Object::PBXCopyFilesBuildPhase
-unless copy_phase.method_defined?(:dst_subfolder)
-  copy_phase.class_eval { attribute :dst_subfolder, String }
-end
+# 프로젝트를 여는 어떤 액션보다 먼저 Xcode 27 프로젝트 형식을 등록
+require_relative "../scripts/xcodeproj_xcode27"
 
 # 앱 타깃의 MARKETING_VERSION을 읽고 App Store 버전 형식을 검증
 def marketing_version_from_project
@@ -175,34 +173,29 @@ platform :ios do
     end
   end
 
-  # ReactBrownfield와 PlystBridge는 정적으로 링크되므로 IPA 임베딩 대상에서 제외
+  # Pods가 임베드한 동적 프레임워크와 앱 번들의 main.jsbundle을 확인
+  # ReactBrownfield와 PlystBridge 등 정적 Pod는 앱 바이너리에 링크되어 임베딩 대상이 아님
   private_lane :verify_embedded_react_native do |options|
     require "shellwords"
 
-    manifest = File.read(File.expand_path("../Plyst/Packages/PlystReactNative/Package.swift", __dir__))
-    names = manifest.match(/let frameworkNames = \[(.*?)\]/m)[1].scan(/"([^"]+)"/).flatten
-    dynamic_names = names - ["ReactBrownfield", "PlystBridge"]
+    frameworks = Dir.glob(File.join(options[:app_path], "Frameworks", "*.framework")).sort
+    names = frameworks.map { |framework| File.basename(framework, ".framework") }
+    missing = REACT_NATIVE_FRAMEWORKS - names
+    UI.user_error!("Missing embedded RN frameworks: #{missing.join(", ")}") unless missing.empty?
 
-    dynamic_names.each do |name|
-      binary = File.join(options[:app_path], "Frameworks", "#{name}.framework", name)
-      UI.user_error!("Missing embedded RN framework binary: #{binary}") unless File.file?(binary)
+    frameworks.each do |framework|
+      name = File.basename(framework, ".framework")
+      binary = File.join(framework, name)
+      UI.user_error!("Missing embedded framework binary: #{binary}") unless File.file?(binary)
       header = sh("otool -hv #{Shellwords.escape(binary)}", log: false)
-      UI.user_error!("Expected an arm64 dynamic RN framework: #{name}") unless header.include?("ARM64") && header.include?("DYLIB")
+      UI.user_error!("Expected an arm64 dynamic framework: #{name}") unless header.include?("ARM64") && header.include?("DYLIB")
     end
 
-    bundle = File.join(options[:app_path], "Frameworks", "BrownfieldLib.framework", "main.jsbundle")
+    bundle = File.join(options[:app_path], "main.jsbundle")
     UI.user_error!("Missing or empty distribution main.jsbundle: #{bundle}") unless File.file?(bundle) && File.size?(bundle)
   end
 
-  private_lane :verify_release_xcframeworks do
-    directory = File.expand_path("../Plyst/Packages/PlystReactNative/Frameworks", __dir__)
-    marker = File.join(directory, ".configuration")
-    unless File.file?(marker) && File.read(marker).strip == CONFIGURATION
-      UI.user_error!("Run make rn-xcframework RN_CONFIGURATION=Release before distribution")
-    end
-  end
-
-  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 XCFramework를 서명
+  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 Pods의 XCFramework를 서명
   # 인증서 출처를 match 저장소 하나로 맞추려고 match가 설치한 프로파일에 들어 있는 인증서로만 서명
   private_lane :sign_xcframeworks do |options|
     require "openssl"
@@ -221,8 +214,8 @@ platform :ios do
     identity = identities.scan(/\h{40}/).find { |hash| profile_hashes.include?(hash.upcase) }
     UI.user_error!("The keychain has no signing identity for the match provisioning profile") if identity.nil?
 
-    directory = File.expand_path("../Plyst/Packages/PlystReactNative/Frameworks", __dir__)
-    Dir.glob(File.join(directory, "*.xcframework")).sort.each do |xcframework|
+    directory = File.expand_path("../ios/Pods", __dir__)
+    Dir.glob(File.join(directory, "**", "*.xcframework")).sort.each do |xcframework|
       sh("codesign --force --timestamp --sign #{identity} #{Shellwords.escape(xcframework)}")
     end
   end
@@ -237,8 +230,6 @@ platform :ios do
     if ENV["FASTLANE_XCODEBUILD_SETTINGS_RETRIES"].to_s.strip.empty?
       ENV["FASTLANE_XCODEBUILD_SETTINGS_RETRIES"] = "5"
     end
-
-    verify_release_xcframeworks
 
     api_key = asc_api_key
 
@@ -285,7 +276,7 @@ platform :ios do
     # 빌드 번호는 프로젝트 파일을 수정하지 않고 앱과 확장 타깃 전체에 빌드 설정으로 주입
     archive_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     build_app(
-      project: XCODE_PROJ,
+      workspace: XCODE_WORKSPACE,
       scheme: SCHEME,
       configuration: CONFIGURATION,
       export_method: "app-store",
