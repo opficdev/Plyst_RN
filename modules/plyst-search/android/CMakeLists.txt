@@ -42,6 +42,7 @@ set_target_properties(plyst_search_core PROPERTIES IMPORTED_LOCATION ${RUST_LIBR
 add_dependencies(plyst_search_core plyst_search_rust)
 
 add_library(plyst_search STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/PlystSearchModule.cpp)
-target_include_directories(plyst_search PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../cpp)
+# C ABI 헤더는 core 소유
+target_include_directories(plyst_search PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../cpp ${CMAKE_CURRENT_SOURCE_DIR}/../../../core/include)
 target_compile_features(plyst_search PRIVATE cxx_std_20)
 target_link_libraries(plyst_search jsi reactnative react_codegen_PlystSearchSpec plyst_search_core log dl m)
