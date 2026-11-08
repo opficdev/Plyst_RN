@@ -26,7 +26,7 @@
 	- 설치 후 라이선스 동의와 `sudo xcodebuild -runFirstLaunch` 필요
 	- `xcode-select`가 Xcode 27을 가리켜야 함
 - Homebrew, mise, Ruby, CocoaPods
-	- CocoaPods 버전은 저장소에 고정되어 있지 않음
+	- CocoaPods 버전은 저장소에 고정되어 있지 않고 설치에 쓴 버전이 `ios/Podfile.lock`에 기록됨
 - 시크릿 값
 	- 저장소 밖 경로로 안전하게 옮겨 와야 함
 	- 로그인 키체인이 잠금 해제된 GUI 세션에서 실행해야 함
@@ -142,7 +142,7 @@ make signing-sync
 - App Store 인증서와 세 프로파일을 `match`로 생성하거나 갱신
 	- `match` 저장소에 쓰므로 `readonly`를 끈 유일한 실행
 - 이미 있는 항목을 강제로 다시 만들려면 `make signing-sync MATCH_FORCE=true`
-- 앱을 빌드하지 않으므로 XCFramework 생성과 `project.pbxproj` 백업은 하지 않음
+- 앱을 빌드하지 않으므로 Rust 산출물 생성, Pods 설치, `project.pbxproj` 백업은 하지 않음
 
 이미 만든 IPA만 올리는 `make` 타깃은 없음
 
@@ -156,10 +156,10 @@ make signing-sync
 	- 파일이 없거나 JSON이 올바르지 않거나 키가 비어 있으면 키 이름을 알려 주고 종료
 3. `check` 모드는 환경 확인 후 종료
 4. `bundle check`로 Ruby gem 설치 여부 확인
-5. `make rn-xcframework RN_CONFIGURATION=Release`로 Release XCFramework 생성 (`sync_appstore_profiles` 제외)
-	- `make plyst-core`가 먼저 실행되어 Rust 공통 코어 `PlystCore`도 처음부터 생성
-	- `scripts/build-rn-xcframework.sh`가 프레임워크 `Info.plist` 키를 보충한 뒤 서명
-	- 배포 스크립트는 `RN_XCFRAMEWORK_CLEAN=1`을 지정해 입력 해시와 관계없이 처음부터 빌드하고 컴파일 캐시를 쓰지 않음
+5. 의존성 설치와 Rust 산출물 생성, Pods 설치 (`sync_appstore_profiles` 제외)
+	- `npm ci`로 `package-lock.json`에 적힌 의존성 설치
+	- `make plyst-core pods`로 `PlystCore`와 `PlystSearchCore`를 만든 뒤 `ios/`에서 `pod install` 실행
+	- 배포 스크립트는 `RN_XCFRAMEWORK_CLEAN=1`을 지정해 입력 해시와 관계없이 Rust 산출물을 처음부터 빌드
 6. `project.pbxproj` 백업 (`sync_appstore_profiles` 제외)
 7. `ASC_KEY_CONTENT`를 `fastlane/AuthKey.p8`로 복원
 8. `bundle exec fastlane`으로 레인 실행
@@ -168,16 +168,16 @@ make signing-sync
 
 Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_only`, `deploy_appstore`)이 하는 일
 
-- Release XCFramework 여부 확인
 - App Store Connect에서 최신 빌드 번호를 읽어 1을 더한 번호를 `CURRENT_PROJECT_VERSION`으로 주입
 - `match`로 App Store 인증서와 프로파일 가져오기
 - 앱, Share Extension, Widget Extension에 수동 서명 설정 적용
-- `Plyst/Packages/PlystReactNative/Frameworks`의 모든 XCFramework를 `match` 프로파일의 인증서로 서명
+- `ios/Pods`의 모든 XCFramework를 `match` 프로파일의 인증서로 서명
 	- `match`가 설치한 프로파일에 들어 있는 인증서와 같은 키체인 인증서만 사용
 	- 키체인에 다른 Apple Distribution 인증서가 있어도 인증서 출처는 `match` 저장소 하나로 유지
 	- App Store Connect가 널리 쓰이는 서드파티 SDK에 서명을 요구하기 때문
-- Archive 후 Export
-- IPA의 번들 ID, `ITSAppUsesNonExemptEncryption`, RN 프레임워크와 `main.jsbundle` 검증
+- `ios/Plyst.xcworkspace`로 Archive 후 Export
+- IPA의 번들 ID, `ITSAppUsesNonExemptEncryption`, RN 동적 프레임워크와 앱 번들의 `main.jsbundle` 검증
+	- RN 동적 프레임워크는 Pods가 임베드하는 `ExpoModulesJSI`, `React`, `ReactNativeDependencies`, `hermesvm`
 
 로컬 실행 강제
 
@@ -187,8 +187,9 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 
 관측한 소요 시간 (2026-10-13 로컬 실행, TestFlight)
 
-- Release XCFramework 생성: 약 5분
-- Archive와 Export: 약 7분
+- Release XCFramework 생성 약 5분, Archive와 Export 약 7분
+- 위 값은 RN을 XCFramework로 묶던 #130 이전 구조의 값
+	- #130 이후에는 Archive가 RN Pods를 함께 컴파일하며 배포 소요 시간은 아직 측정하지 않음
 
 ## 버전과 태그
 
@@ -217,34 +218,31 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 | `MATCH_GIT_URL 저장소에 접근할 수 없습니다` | 주소 오류 또는 인증 값 오류 | `MATCH_GIT_URL`과 `MATCH_GIT_BASIC_AUTHORIZATION` 확인 |
 | `The keychain has no signing identity ...` | 키체인에 `match` 프로파일의 인증서 없음 | `match` 설치가 끝났는지 확인하고 키 접근 허용 창에서 허용 |
 | `make: No rule to make target` | 저장소 루트가 아닌 곳에서 실행 | 저장소 루트로 이동 |
-| `exportArchive ... expected one {} but found app-store` | 서명 설정 저장 때 확장 임베드 위치(`dstSubfolder`)가 지워져 확장이 앱의 `PlugIns` 밖에 설치됨 | `fastlane/Fastfile` 최상단의 `dst_subfolder` 속성 등록 유지. 프로젝트를 여는 액션보다 앞에 있어야 함 |
-| 업로드 오류 90360, 90530 | 프레임워크 `Info.plist`에 `MinimumOSVersion` 없음 | `scripts/build-rn-xcframework.sh`가 보충. XCFramework를 다시 생성 |
-| 업로드 오류 90057 | `BrownfieldLib.framework`에 `CFBundleShortVersionString` 없음 | 위와 같음 |
-| ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
-| ITMS-90208 (처리 단계 거부) | `ReactBrownfield`와 `PlystBridge` 스텁의 최소 버전과 `Info.plist`의 `MinimumOSVersion`이 다름 | 스크립트가 앱의 `IPHONEOS_DEPLOYMENT_TARGET`으로 맞춤 |
+| `exportArchive ... expected one {} but found app-store` | 서명 설정이나 `pod install`이 프로젝트를 저장할 때 확장 임베드 위치(`dstSubfolder`)가 지워져 확장이 앱의 `PlugIns` 밖에 설치됨 | `scripts/xcodeproj_xcode27.rb`의 `dst_subfolder` 속성 등록 유지. `fastlane/Fastfile`과 `ios/Podfile`이 프로젝트를 열기 전에 불러야 함 |
+| `pod install`의 `Unable to find compatibility version string for object version 110` | xcodeproj 1.27이 Xcode 27 프로젝트 형식을 모름 (CocoaPods 이슈 12927) | `ios/Podfile` 맨 위의 `scripts/xcodeproj_xcode27.rb` 불러오기 유지 |
+| ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 `ios/Pods`의 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
 
-## 로컬 XCFramework 빌드
+## 로컬 빌드
 
-`make rn-xcframework`는 입력에 따라 실행 경로를 고름
+배포 전에 앱을 로컬에서 빌드할 때 필요한 준비
 
-- 입력 해시는 `scripts/rn-xcframework-inputs.sh`가 계산하고 CI 캐시 키도 같은 값을 씀
-	- `Plyst/Plyst/**` 같은 앱 소스는 입력이 아니므로 바뀌어도 다시 빌드하지 않음
-- 실행 경로는 마지막에 출력되는 `path=` 값으로 확인
-	- `skip`: 입력 해시가 지난 성공 빌드와 같아 아무것도 하지 않음
-	- `js`: JS 입력만 바뀌어 `main.jsbundle`만 다시 만들어 교체하고 다시 서명함
-	- `full`: 그 밖의 경우로 `rn/ios`를 다시 만들고 두 slice를 빌드함
-- `RN_XCFRAMEWORK_CLEAN=1`을 주면 항상 `full`로 실행하고 `npm ci`도 다시 실행함
-- `full` 빌드는 컴파일 결과를 `~/Library/Caches/Plyst/RNCompilationCache`에 캐시함
-	- 위치는 `RN_COMPILATION_CACHE`로 바꿀 수 있음
-	- CI는 `develop` 실행이 저장한 캐시를 복원해 씀
-	- `RN_XCFRAMEWORK_CLEAN=1`이면 캐시를 쓰지 않음
-- 단계별 소요 시간은 `[rn-xcframework] stage=...` 줄로 출력됨
+- 저장소 루트에서 `npm ci` 실행
+- `make plyst-core`로 `PlystCore` 생성
+- `make pods`로 `PlystSearchCore`를 만든 뒤 `pod install` 실행
+	- `plyst-search` pod이 `PlystSearchCore.xcframework`를 쓰므로 `pod install`보다 먼저 만들어야 함
+	- 두 Rust 산출물은 `scripts/rust-inputs.sh`의 입력 해시가 지난 성공 빌드와 같으면 다시 빌드하지 않음 (`path=skip` 출력)
+- Xcode에서는 `ios/Plyst.xcworkspace`를 열어야 함
+	- Debug 앱은 Metro가 떠 있으면 Metro의 번들을 읽고 없으면 앱에 넣은 Release 번들을 읽음
+- Android 로컬 빌드(`make rn-android-build`)는 Android SDK 위치가 필요함
+	- `ANDROID_HOME` 환경 변수나 추적하지 않는 `android/local.properties`의 `sdk.dir`로 지정
 
 ## 관련 파일
 
 - `Makefile`: `deploy-setup`, `deploy-check`, `testflight-build`, `testflight`, `appstore-build`, `appstore`, `signing-sync` 타깃
 - `scripts/deploy-local.sh`: 로컬 실행 스크립트
-- `scripts/build-rn-xcframework.sh`: Release XCFramework 생성과 `Info.plist` 보충
-- `scripts/rn-xcframework-inputs.sh`: XCFramework 빌드 입력 해시 계산
+- `scripts/build-plyst-core.sh`, `scripts/build-plyst-search.sh`: iOS용 Rust 산출물 생성
+- `scripts/rust-inputs.sh`: Rust 산출물 입력 해시 계산
+- `scripts/xcodeproj_xcode27.rb`: Fastlane과 CocoaPods가 Xcode 27 프로젝트를 다루도록 하는 xcodeproj 보완
+- `ios/Podfile`: 앱 타깃과 테스트 타깃의 Pods 구성
 - `fastlane/Fastfile`: 빌드와 업로드 레인
 - `fastlane/secrets.example.json`: 시크릿 파일 양식
