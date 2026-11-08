@@ -195,7 +195,7 @@ platform :ios do
     UI.user_error!("Missing or empty distribution main.jsbundle: #{bundle}") unless File.file?(bundle) && File.size?(bundle)
   end
 
-  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 Pods의 XCFramework를 서명
+  # App Store Connect는 널리 쓰이는 서드파티 SDK에 서명을 요구하므로 Pods가 앱에 넣는 XCFramework를 서명
   # 인증서 출처를 match 저장소 하나로 맞추려고 match가 설치한 프로파일에 들어 있는 인증서로만 서명
   private_lane :sign_xcframeworks do |options|
     require "openssl"
@@ -214,8 +214,21 @@ platform :ios do
     identity = identities.scan(/\h{40}/).find { |hash| profile_hashes.include?(hash.upcase) }
     UI.user_error!("The keychain has no signing identity for the match provisioning profile") if identity.nil?
 
-    directory = File.expand_path("../ios/Pods", __dir__)
-    Dir.glob(File.join(directory, "**", "*.xcframework")).sort.each do |xcframework|
+    pods_root = File.expand_path("../ios/Pods", __dir__)
+
+    # ExpoModulesJSI pod은 아카이브 중 빌드 단계에서 기기 슬라이스를 만들어 서명을 깨므로 서명 전에 미리 만듦
+    # 아카이브의 빌드 단계는 소스 해시가 같아 다시 만들지 않음
+    expo_jsi_script = File.expand_path("../node_modules/expo-modules-jsi/apple/scripts/build-xcframework.sh", __dir__)
+    if File.file?(expo_jsi_script)
+      sh("PODS_ROOT=#{Shellwords.escape(pods_root)} PLATFORM_NAME=iphoneos #{Shellwords.escape(expo_jsi_script)}")
+    end
+
+    # XCFramework는 ios/Pods 밖의 node_modules에도 있으므로 Pods가 만든 설치 스크립트에서 경로를 읽음
+    scripts = Dir.glob(File.join(pods_root, "Target Support Files", "*", "*-xcframeworks.sh"))
+    paths = scripts.flat_map { |script| File.read(script).scan(/install_xcframework "\$\{PODS_ROOT\}\/([^"]+\.xcframework)"/).flatten }
+    xcframeworks = paths.map { |path| File.expand_path(path, pods_root) }.uniq.sort
+    UI.user_error!("Run pod install before signing XCFrameworks") if xcframeworks.empty?
+    xcframeworks.each do |xcframework|
       sh("codesign --force --timestamp --sign #{identity} #{Shellwords.escape(xcframework)}")
     end
   end

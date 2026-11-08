@@ -171,7 +171,9 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 - App Store Connect에서 최신 빌드 번호를 읽어 1을 더한 번호를 `CURRENT_PROJECT_VERSION`으로 주입
 - `match`로 App Store 인증서와 프로파일 가져오기
 - 앱, Share Extension, Widget Extension에 수동 서명 설정 적용
-- `ios/Pods`의 모든 XCFramework를 `match` 프로파일의 인증서로 서명
+- Pods가 앱에 넣는 모든 XCFramework를 `match` 프로파일의 인증서로 서명
+	- 대상은 Pods가 만든 `*-xcframeworks.sh`에서 읽으며 `ios/Pods`와 `node_modules`의 XCFramework를 모두 포함
+	- `ExpoModulesJSI`는 아카이브 중 빌드 단계가 슬라이스를 다시 만들어 서명이 깨지므로 서명 전에 Expo 빌드 스크립트로 미리 만듦
 	- `match`가 설치한 프로파일에 들어 있는 인증서와 같은 키체인 인증서만 사용
 	- 키체인에 다른 Apple Distribution 인증서가 있어도 인증서 출처는 `match` 저장소 하나로 유지
 	- App Store Connect가 널리 쓰이는 서드파티 SDK에 서명을 요구하기 때문
@@ -220,7 +222,7 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 | `make: No rule to make target` | 저장소 루트가 아닌 곳에서 실행 | 저장소 루트로 이동 |
 | `exportArchive ... expected one {} but found app-store` | 서명 설정이나 `pod install`이 프로젝트를 저장할 때 확장 임베드 위치(`dstSubfolder`)가 지워져 확장이 앱의 `PlugIns` 밖에 설치됨 | `scripts/xcodeproj_xcode27.rb`의 `dst_subfolder` 속성 등록 유지. `fastlane/Fastfile`과 `ios/Podfile`이 프로젝트를 열기 전에 불러야 함 |
 | `pod install`의 `Unable to find compatibility version string for object version 110` | xcodeproj 1.27이 Xcode 27 프로젝트 형식을 모름 (CocoaPods 이슈 12927) | `ios/Podfile` 맨 위의 `scripts/xcodeproj_xcode27.rb` 불러오기 유지 |
-| ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 `ios/Pods`의 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
+| ITMS-91065 (처리 단계 거부) | 서명이 없는 서드파티 SDK가 앱에 포함됨 | `fastlane/Fastfile`의 `sign_xcframeworks`가 Pods가 앱에 넣는 XCFramework를 서명. `match` 프로파일의 인증서가 키체인에 없으면 실행이 중단됨 |
 
 ## 로컬 빌드
 
