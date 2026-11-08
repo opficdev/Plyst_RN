@@ -2,7 +2,7 @@
   "name": "plyst-search",
   "version": "1.0.0",
   "private": true,
-  "description": "Plyst 검색 계산 Rust 코어와 C++ TurboModule",
+  "description": "Plyst 검색 C++ TurboModule",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "react-native": "src/index.ts",

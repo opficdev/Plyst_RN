@@ -1,20 +1,12 @@
-// plyst_search.h의 C ABI
+// core/include/plyst_search.h의 C ABI
+// core에서 손으로 쓴 unsafe는 이 파일에만 둠
 // 모든 함수는 패닉을 catch_unwind로 막고 실패를 false나 NULL로 알림
 // 포인터는 호출하는 동안만 읽고 씀
 
-mod clusters;
-mod fold;
-mod index;
-mod mark_table;
-mod text;
-
 use std::ffi::c_void;
-use std::panic::{catch_unwind, AssertUnwindSafe};
 
-pub use crate::clusters::{clusters as split_clusters, Cluster};
-pub use crate::fold::fold as fold_text;
-pub use crate::index::Index;
-pub use crate::text::{excerpt_start, matches, ranges, Field};
+use super::{excerpt_start, fold_text, ranges, Field, Index};
+use crate::guard;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -31,10 +23,6 @@ impl PlystSearchText {
             std::slice::from_raw_parts(self.data, self.length)
         }
     }
-}
-
-fn guard<T>(fallback: T, body: impl FnOnce() -> T) -> T {
-    catch_unwind(AssertUnwindSafe(body)).unwrap_or(fallback)
 }
 
 #[no_mangle]

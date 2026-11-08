@@ -44,7 +44,6 @@ yarn-debug.*
 yarn-error.*
 *.tsbuildinfo
 .env*.local
-modules/plyst-search/rust/target/
 
 # CocoaPods
 ios/Pods/

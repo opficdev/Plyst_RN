@@ -12,8 +12,9 @@ Pod::Spec.new do |spec|
   spec.source = { :git => 'https://github.com/opficdev/Plyst_RN.git', :tag => spec.version.to_s }
   spec.platforms = min_supported_versions
   spec.source_files = 'ios/**/*.{h,mm}', 'cpp/**/*.{h,cpp}'
-  # scripts/build-plyst-search.sh가 pod install 전에 만드는 Rust 정적 라이브러리
-  spec.vendored_frameworks = 'build/PlystSearchCore.xcframework'
+  # C ABI 헤더는 core 소유
+  # 심볼은 앱 타깃이 링크하는 PlystCore가 제공
+  spec.pod_target_xcconfig = { 'HEADER_SEARCH_PATHS' => '"$(PODS_TARGET_SRCROOT)/../../core/include"' }
 
   install_modules_dependencies(spec)
 end

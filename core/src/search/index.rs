@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 
-use crate::fold::fold;
-use crate::text::{matches, Field};
+use super::fold::fold;
+use super::text::{matches, Field};
 
 pub const NAME: usize = 0;
 pub const BODY: usize = 1;

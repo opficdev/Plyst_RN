@@ -1,5 +1,5 @@
 // Jest에는 네이티브 모듈이 없어 Rust 코어 대신 쓰는 가짜
-// 일치는 대문자 부분 문자열만 보며 글자 경계, 접기, 발췌 규칙은 rust/tests가 검증
+// 일치는 대문자 부분 문자열만 보며 글자 경계, 접기, 발췌 규칙은 core/tests/search_cases.rs가 검증
 
 type Fields = (string | undefined)[];
 type Core = { entries: Fields[]; fields: Map<string, Fields> };

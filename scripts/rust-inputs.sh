@@ -3,9 +3,8 @@
 # iOS용 Rust 산출물을 만드는 입력의 해시를 한 곳에서 정의
 # 로컬 빌드 스크립트와 CI 캐시 키가 같은 파일 집합을 쓰도록 이 스크립트의 출력만 사용
 #
-# 사용법: rust-inputs.sh [core|search]
+# 사용법: rust-inputs.sh core
 #   core     PlystCore 패키지를 만드는 입력의 해시
-#   search   PlystSearchCore.xcframework를 만드는 입력의 해시
 
 set -eu
 
@@ -59,15 +58,6 @@ core_lines() {
 	deployment_target_line
 }
 
-# Rust 테스트는 라이브러리에 들어가지 않아 제외
-search_lines() {
-	content_lines \
-		':(exclude)modules/plyst-search/rust/tests' \
-		modules/plyst-search/rust \
-		scripts/build-plyst-search.sh
-	mise_line
-}
-
 # 파이프라인 안에서는 exit가 스크립트를 끝내지 못하므로 줄을 먼저 변수에 받아 실패를 전달
 hash_of() {
 	lines=$("$1")
@@ -76,9 +66,8 @@ hash_of() {
 
 case "${1:-}" in
 	core) hash_of core_lines ;;
-	search) hash_of search_lines ;;
 	*)
-		printf '사용법: %s [core|search]\n' "$0" >&2
+		printf '사용법: %s core\n' "$0" >&2
 		exit 1
 		;;
 esac

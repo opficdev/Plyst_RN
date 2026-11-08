@@ -3,6 +3,7 @@
 // 이미지 파일 트리 규칙은 image_files 모듈이 소유
 // 파일, 데이터베이스, 클립보드를 함께 쓰는 작업의 순서는 operations 모듈이 소유
 // 공유받은 텍스트의 이미지 주소 판정은 share_url 모듈이 소유
+// 검색 계산과 그 C ABI는 search 모듈이 소유
 // 호스트가 실패를 구분하지 않는 함수는 패닉을 catch_unwind로 막고 정해진 대체값을 돌려줌
 // 비던지기 UniFFI 함수의 패닉은 Swift 프로세스를 끝내므로 경계 밖으로 내보내지 않음
 // 호스트가 실패를 구분해야 하는 함수는 Result를 돌려주어 패닉을 오류로 전달
@@ -13,6 +14,7 @@ mod case_fold_table;
 mod content;
 pub mod image_files;
 pub mod operations;
+pub mod search;
 mod search_history;
 mod share_url;
 mod sort;

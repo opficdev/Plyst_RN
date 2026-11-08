@@ -4,8 +4,8 @@
 
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-use crate::clusters::clusters;
-use crate::fold::{fold_cluster, is_simple};
+use super::clusters::clusters;
+use super::fold::{fold_cluster, is_simple};
 
 // 위치마다 1비트
 struct Bits(Box<[u64]>);

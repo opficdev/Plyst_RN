@@ -40,7 +40,7 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make lint
 
-  # iOS Build와 iOS Test가 쓰는 PlystCore와 PlystSearchCore를 만들어 올림
+  # iOS Build와 iOS Test가 쓰는 PlystCore를 만들어 올림
   # 공통 Rust 검사는 Shared CI의 Rust 잡이 맡음
   core:
     name: iOS Core
@@ -64,7 +64,6 @@ jobs:
         id: input-hash
         run: |
           echo "core=$(scripts/rust-inputs.sh core)" >> "$GITHUB_OUTPUT"
-          echo "search=$(scripts/rust-inputs.sh search)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Plyst core
         id: core-cache
@@ -74,15 +73,6 @@ jobs:
             ios/Packages/PlystCore/Frameworks
             ios/Packages/PlystCore/Sources
           key: plyst-core-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.core }}
-
-      - name: Cache Plyst search
-        id: search-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            modules/plyst-search/build/PlystSearchCore.xcframework
-            modules/plyst-search/build/.inputs
-          key: plyst-search-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ steps.input-hash.outputs.search }}
 
       # core와 바인딩 생성기의 cargo 출력
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
@@ -100,13 +90,8 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make plyst-core
 
-      - name: Build Plyst search
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make plyst-search
-
       - name: Archive Rust frameworks
-        run: tar -cf rust-frameworks.tar ios/Packages/PlystCore/Frameworks ios/Packages/PlystCore/Sources modules/plyst-search/build/PlystSearchCore.xcframework modules/plyst-search/build/.inputs
+        run: tar -cf rust-frameworks.tar ios/Packages/PlystCore/Frameworks ios/Packages/PlystCore/Sources
 
       # 잡 전체를 다시 실행하면 같은 이름의 앞 산출물을 덮음
       - name: Upload Rust frameworks
@@ -184,11 +169,10 @@ jobs:
           path: ios/Pods
           key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      # PlystSearchCore는 iOS Core 잡이 만들므로 선행 타깃을 건너뜀
       - name: Install Pods
         env:
           MISE_AUTO_INSTALL: 0
-        run: make -o plyst-search pods
+        run: make pods
 
       # Xcode 컴파일 캐시
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
@@ -349,11 +333,10 @@ jobs:
           path: ios/Pods
           key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      # PlystSearchCore는 iOS Core 잡이 만들므로 선행 타깃을 건너뜀
       - name: Install Pods
         env:
           MISE_AUTO_INSTALL: 0
-        run: make -o plyst-search pods
+        run: make pods
 
       - name: Restore compilation cache
         uses: actions/cache/restore@v4

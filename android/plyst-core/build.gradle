@@ -22,10 +22,25 @@ android {
     ndk {
       abiFilters(*findProperty("reactNativeArchitectures").split(","))
     }
+    externalNativeBuild {
+      cmake {
+        // C 라이브러리라 Prefab의 STL 호환 검사에서 빠지도록 STL 없이 빌드
+        arguments "-DANDROID_STL=none"
+      }
+    }
   }
   externalNativeBuild {
     cmake {
       path "CMakeLists.txt"
+    }
+  }
+  // 검색 C++ 모듈이 같은 libplyst_core.so를 링크하도록 C ABI 헤더와 함께 공개
+  buildFeatures {
+    prefabPublishing true
+  }
+  prefab {
+    plyst_core {
+      headers new File(crate, "include").path
     }
   }
   sourceSets {
