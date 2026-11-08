@@ -40,49 +40,10 @@ jobs:
           MISE_AUTO_INSTALL: 0
         run: make lint
 
-  # macOS 동시 실행 수를 아끼려고 Linux에서 실행
-  js:
-    name: JS
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: jdx/mise-action@v4
-        with:
-          install: true
-          cache: true
-          install_args: node
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Install dependencies
-        run: mise exec -- npm ci
-
-      - name: Type check
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-typecheck
-
-      - name: Lint
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-lint
-
-      - name: Test
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-test
-
-  # PlystCore와 PlystSearchCore를 먼저 만들어 올린 뒤 Rust 검사를 실행
-  # Test 잡은 업로드만 기다리고 Build 잡은 검사 종료까지 기다림
-  rust:
-    name: Rust
+  # iOS Build와 iOS Test가 쓰는 PlystCore와 PlystSearchCore를 만들어 올림
+  # 공통 Rust 검사는 Shared CI의 Rust 잡이 맡음
+  core:
+    name: iOS Core
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
@@ -164,33 +125,23 @@ jobs:
             core/build/host
           key: cargo-ios-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ env.RN_XCFRAMEWORK_SIMULATOR_ARCHS }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
 
-      - name: Lint Rust core
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-rust-lint
-
-      - name: Test Rust core
-        env:
-          MISE_AUTO_INSTALL: 0
-        run: make rn-rust-test
-
-  # iOS Build는 Rust를 기다리고 건너뛴 필수 체크는 통과로 처리됨
+  # iOS Core는 필수 체크가 아니고 iOS Build는 iOS Core를 기다리며 건너뛴 필수 체크는 통과로 처리됨
   # 선행 잡이 실패해도 실행해 이 필수 체크를 실패로 끝냄
   # develop 실행은 Pods와 컴파일 캐시를 저장하려고 함께 빌드
   build:
     # 잡 이름은 필수 상태 체크 이름과 같아야 함
     name: iOS Build
     if: ${{ !cancelled() }}
-    needs: [rust]
+    needs: [core]
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - name: Check required jobs
-        if: needs.rust.result != 'success'
+        if: needs.core.result != 'success'
         env:
-          RUST_RESULT: ${{ needs.rust.result }}
+          CORE_RESULT: ${{ needs.core.result }}
         run: |
-          printf '::error title=선행 잡::Rust=%s\n' "$RUST_RESULT"
+          printf '::error title=선행 잡::iOS Core=%s\n' "$CORE_RESULT"
           exit 1
 
       - uses: actions/checkout@v5
@@ -233,7 +184,7 @@ jobs:
           path: ios/Pods
           key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      # PlystSearchCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
+      # PlystSearchCore는 iOS Core 잡이 만들므로 선행 타깃을 건너뜀
       - name: Install Pods
         env:
           MISE_AUTO_INSTALL: 0
@@ -334,8 +285,8 @@ jobs:
           fi
           xcrun simctl bootstatus "$TEST_DEVICE_ID" -b
 
-      # Rust 산출물이 올라오면 끝남
-      # Rust 잡이 산출물 없이 끝나면 실패로 끝남
+      # iOS Core 잡의 Rust 산출물이 올라오면 끝남
+      # iOS Core 잡이 산출물 없이 끝나면 실패로 끝남
       # API 호출이 일시적으로 실패하면 다음 확인까지 기다림
       - name: Wait for Rust frameworks
         timeout-minutes: 35
@@ -352,12 +303,12 @@ jobs:
               break
             fi
             if ! failed=$(gh api "$run/attempts/$GITHUB_RUN_ATTEMPT/jobs" --paginate \
-              --jq '.jobs[] | select(.name == "Rust" and .status == "completed" and .conclusion != "success") | .name'); then
+              --jq '.jobs[] | select(.name == "iOS Core" and .status == "completed" and .conclusion != "success") | .name'); then
               sleep 10
               continue
             fi
             if [ -n "$failed" ]; then
-              printf '::error title=산출물 대기::Rust 잡이 산출물 없이 끝났습니다.\n'
+              printf '::error title=산출물 대기::iOS Core 잡이 산출물 없이 끝났습니다.\n'
               exit 1
             fi
             sleep 10
@@ -398,7 +349,7 @@ jobs:
           path: ios/Pods
           key: pods-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/Podfile.lock', 'package-lock.json') }}
 
-      # PlystSearchCore는 Rust 잡이 만들므로 선행 타깃을 건너뜀
+      # PlystSearchCore는 iOS Core 잡이 만들므로 선행 타깃을 건너뜀
       - name: Install Pods
         env:
           MISE_AUTO_INSTALL: 0

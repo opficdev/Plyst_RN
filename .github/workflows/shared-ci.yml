@@ -1,0 +1,104 @@
+name: Shared CI
+
+# 두 플랫폼이 함께 쓰는 JS와 Rust 코드 검사
+# develop 푸시는 PR이 읽을 캐시를 만드는 실행
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+
+# 같은 PR이나 브랜치에 새 푸시가 오면 진행 중인 앞 실행 취소
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # macOS 동시 실행 수를 아끼려고 Linux에서 실행
+  js:
+    name: JS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+          install_args: node
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: mise exec -- npm ci
+
+      - name: Type check
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-typecheck
+
+      - name: Lint
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-lint
+
+      - name: Test
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-test
+
+  # Android도 같은 코어를 Linux 커널 위에서 쓰고 macOS 동시 실행 수를 아끼려고 Linux에서 실행
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+          install_args: rust
+
+      # 크레이트별 cargo 출력
+      # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
+      - name: Restore cargo output
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            core/target
+            core/bindgen/target
+            modules/plyst-search/rust/target
+          key: cargo-shared-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock', 'modules/plyst-search/rust/Cargo.lock') }}
+
+      - name: Lint Rust
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-rust-lint
+
+      - name: Test Rust
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make rn-rust-test
+
+      - name: Save cargo output
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            core/target
+            core/bindgen/target
+            modules/plyst-search/rust/target
+          key: cargo-shared-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock', 'modules/plyst-search/rust/Cargo.lock') }}
