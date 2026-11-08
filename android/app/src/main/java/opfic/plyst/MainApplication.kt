@@ -1,0 +1,47 @@
+package opfic.plyst
+
+import android.app.Application
+import android.content.res.Configuration
+
+import com.facebook.react.PackageList
+import com.facebook.react.ReactApplication
+import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
+import com.facebook.react.ReactPackage
+import com.facebook.react.ReactHost
+import com.facebook.react.common.ReleaseLevel
+import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
+
+import expo.modules.ApplicationLifecycleDispatcher
+import expo.modules.ExpoReactHostFactory
+import opfic.plyst.host.app.HostLifecycle
+
+class MainApplication : Application(), ReactApplication {
+
+  override val reactHost: ReactHost by lazy {
+    ExpoReactHostFactory.getDefaultReactHost(
+      context = applicationContext,
+      packageList =
+        PackageList(this).packages.apply {
+          // 자동 링크되지 않는 패키지만 여기에 직접 추가
+        }
+    )
+  }
+
+  override fun onCreate() {
+    super.onCreate()
+    DefaultNewArchitectureEntryPoint.releaseLevel = try {
+      ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
+    } catch (e: IllegalArgumentException) {
+      ReleaseLevel.STABLE
+    }
+    loadReactNative(this)
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    // 구성과 어댑터 등록은 프로세스마다 한 번
+    HostLifecycle.onApplicationCreate(this)
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    ApplicationLifecycleDispatcher.onConfigurationChanged(this, newConfig)
+  }
+}

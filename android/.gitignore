@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Android와 IntelliJ
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+
+# 생성된 인라인 모듈
+app/src/main/java/inline/
+
+# 번들 산출물
+*.jsbundle

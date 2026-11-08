@@ -32,7 +32,7 @@ jobs:
         id: release_version
         run: |
           version=$(bundle exec ruby -rxcodeproj -e '
-            project = Xcodeproj::Project.open("Plyst/Plyst.xcodeproj")
+            project = Xcodeproj::Project.open("ios/Plyst.xcodeproj")
             target = project.targets.find { |item| item.name == "Plyst" }
             configuration = target.build_configurations.find { |item| item.name == "Release" }
             version = configuration.build_settings.fetch("MARKETING_VERSION").to_s.strip

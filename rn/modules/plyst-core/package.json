@@ -1,6 +1,0 @@
-{
-  "name": "plyst-core",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Android에서 core 크레이트와 UniFFI 생성 Kotlin을 제공하는 패키지"
-}

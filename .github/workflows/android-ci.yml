@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: Android
+    name: Android Build
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -30,26 +30,33 @@ jobs:
           cache: true
           install_args: node rust
 
-      # rn/android는 저장소에 없어 Gradle 캐시 키에 잠금 파일 사용
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
-          cache-dependency-path: rn/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            android/**/*.gradle
+            android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Cache npm
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
-        working-directory: rn
         run: mise exec -- npm ci
 
-      # rn/android는 prebuild가 만들므로 사용자 수준 설정으로 지정
+      # 커밋된 색과 이미지 리소스가 iOS 에셋 카탈로그와 같은지 확인
+      - name: Check Android resources
+        env:
+          MISE_AUTO_INSTALL: 0
+        run: make android-resources-check
+
+      # CI 러너에만 필요한 값이라 android/gradle.properties가 아니라 사용자 수준 설정으로 지정
       # 기본값(힙 2GB, Metaspace 512MB)에서는 처음 빌드할 때 데몬이 Metaspace를 소진
       # 빌드 캐시를 켜서 바뀌지 않은 모듈의 작업 결과를 재사용
       - name: Configure Gradle
@@ -64,7 +71,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.gradle/caches/build-cache-1
-          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('package-lock.json', 'android/**/*.gradle') }}
 
       # 바인딩 생성기와 호스트용 core의 cargo 출력
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
@@ -85,7 +92,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/.gradle/caches/build-cache-1
-          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('rn/package-lock.json') }}
+          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('package-lock.json', 'android/**/*.gradle') }}
 
       - name: Save cargo output
         if: github.event_name == 'push'

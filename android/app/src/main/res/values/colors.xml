@@ -1,0 +1,27 @@
+<resources>
+  <color name="splashscreen_background">#FFFFFF</color>
+  <color name="iconBackground">#ffffff</color>
+  <color name="colorPrimary">#023c69</color>
+  <color name="HomeBottomBar">#FF17181B</color>
+  <color name="HomeBottomText">#FFFFFFFF</color>
+  <color name="HomeCanvas">#FFFAFAFA</color>
+  <color name="HomeCard">#FFFFFFFF</color>
+  <color name="HomeFeedbackFailure">#FFA5342E</color>
+  <color name="HomeFeedbackSuccess">#FF111112</color>
+  <color name="HomeImageBackground">#FFF0F0F0</color>
+  <color name="HomeMarkBackground">#FF17181B</color>
+  <color name="HomeNamedBodyText">#FF5B5E66</color>
+  <color name="HomeOutline">#FFE7E7E7</color>
+  <color name="HomePlaceholder">#FFABAEB5</color>
+  <color name="HomePrimaryText">#FF111112</color>
+  <color name="HomePrivacyText">#9E14161B</color>
+  <color name="HomeSecondaryText">#FF7C8089</color>
+  <color name="HomeShadow">#4717181B</color>
+  <color name="HomeShareSuccess">#FF34C759</color>
+  <color name="HomeSwitchOff">#FFCCCCCE</color>
+  <color name="HomeSwitchOn">#FF17181B</color>
+  <color name="HomeSwitchThumb">#FFFFFFFF</color>
+  <color name="HomeUnnamedText">#FF8A8D94</color>
+  <color name="HomeWidgetBackground">#FFF2F2F3</color>
+  <color name="SearchHighlight">#FFDDE2EA</color>
+</resources>

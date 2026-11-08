@@ -1,0 +1,1190 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3FD0B37CE0C41CD4AEDC47D1 /* libPods-Plyst.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6C8B4EF88AD42F50A3ED621 /* libPods-Plyst.a */; };
+		6AD683C96ED3EDA1F8BBCFDD /* libPods-PlystTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F3C2F91DAEABFC9C7D8CAB46 /* libPods-PlystTests.a */; };
+		81E076B0C248A2F8E4DFA151 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C3F22408E8F24B1542F26C6F /* PrivacyInfo.xcprivacy */; };
+		87F46850E9F0667330887DA3 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D29C3967E63D9575CEE8FF /* ExpoModulesProvider.swift */; };
+		D206D8DA5FB5E19EAFA099E9 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8B680F75283D87B909ECF0 /* ExpoModulesProvider.swift */; };
+		DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00018306A4A9700115D10 /* ReactorKit */; };
+		DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00019306A4A9700115D10 /* RxSwift */; };
+		DFA00032306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA0002F306A4A9700115D10 /* PlystCore */; };
+		DFA00033306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00030306A4A9700115D10 /* PlystCore */; };
+		DFA00034306A4A9700115D10 /* PlystCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFA00031306A4A9700115D10 /* PlystCore */; };
+		DFA00035306A4A9700115D10 /* PlystCore in Embed Frameworks */ = {isa = PBXBuildFile; productRef = DFA0002F306A4A9700115D10 /* PlystCore */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFC00002306A4A9700115D10 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFD00002306A4A9700115D10 /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DFC0000B306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFC00001306A4A9700115D10;
+			remoteInfo = ShareExtension;
+		};
+		DFD0000B306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFD00001306A4A9700115D10;
+			remoteInfo = WidgetExtension;
+		};
+		DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFEB0A19306A4A9500115D10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFEB0A20306A4A9500115D10;
+			remoteInfo = Plyst;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DFA0002D306A4A9700115D10 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = Frameworks;
+			files = (
+				DFA00035306A4A9700115D10 /* PlystCore in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+		};
+		DFC0000D306A4A9700115D10 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				DFC0000E306A4A9700115D10 /* ShareExtension.appex in Embed Foundation Extensions */,
+				DFD0000E306A4A9700115D10 /* WidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0E8B680F75283D87B909ECF0 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Plyst/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		5B7038772D5FAB6E8811E5B6 /* Pods-PlystTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PlystTests.release.xcconfig"; path = "Target Support Files/Pods-PlystTests/Pods-PlystTests.release.xcconfig"; sourceTree = "<group>"; };
+		81D29C3967E63D9575CEE8FF /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-PlystTests/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		96F89FAE54EE77E30A69FD72 /* Pods-PlystTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PlystTests.debug.xcconfig"; path = "Target Support Files/Pods-PlystTests/Pods-PlystTests.debug.xcconfig"; sourceTree = "<group>"; };
+		C3F22408E8F24B1542F26C6F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D4DCC5EF275B6220692E13C3 /* Pods-Plyst.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Plyst.debug.xcconfig"; path = "Target Support Files/Pods-Plyst/Pods-Plyst.debug.xcconfig"; sourceTree = "<group>"; };
+		DFC00002306A4A9700115D10 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFD00002306A4A9700115D10 /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFEB0A21306A4A9500115D10 /* Plyst.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plyst.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFEB0A37306A4A9700115D10 /* PlystTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlystTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7352F8E72F614DE76C35F8F /* Pods-Plyst.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Plyst.release.xcconfig"; path = "Target Support Files/Pods-Plyst/Pods-Plyst.release.xcconfig"; sourceTree = "<group>"; };
+		F3C2F91DAEABFC9C7D8CAB46 /* libPods-PlystTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PlystTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6C8B4EF88AD42F50A3ED621 /* libPods-Plyst.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Plyst.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DFC00004306A4A9700115D10 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DFC00001306A4A9700115D10 /* ShareExtension */;
+		};
+		DFD00004306A4A9700115D10 /* Exceptions for "WidgetExtension" folder in "WidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
+		};
+		DFE00002306A4A9700115D10 /* Exceptions for "Common" folder in "WidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Model/AppLink.swift,
+			);
+			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
+		};
+		DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DFEB0A20306A4A9500115D10 /* Plyst */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		DFC00003306A4A9700115D10 /* ShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFC00004306A4A9700115D10 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		DFD00003306A4A9700115D10 /* WidgetExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFD00004306A4A9700115D10 /* Exceptions for "WidgetExtension" folder in "WidgetExtension" target */,
+			);
+			path = WidgetExtension;
+			sourceTree = "<group>";
+		};
+		DFE00001306A4A9700115D10 /* Common */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFE00002306A4A9700115D10 /* Exceptions for "Common" folder in "WidgetExtension" target */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		DFEB0A23306A4A9500115D10 /* Plyst */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFEB0A47306A4A9700115D10 /* Exceptions for "Plyst" folder in "Plyst" target */,
+			);
+			path = Plyst;
+			sourceTree = "<group>";
+		};
+		DFEB0A3A306A4A9700115D10 /* PlystTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = PlystTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DFC00006306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA0001D306A4A9700115D10 /* ReactorKit in Frameworks */,
+				DFA0001E306A4A9700115D10 /* RxSwift in Frameworks */,
+				DFA00033306A4A9700115D10 /* PlystCore in Frameworks */,
+			);
+		};
+		DFD00006306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A1E306A4A9500115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA00032306A4A9700115D10 /* PlystCore in Frameworks */,
+				3FD0B37CE0C41CD4AEDC47D1 /* libPods-Plyst.a in Frameworks */,
+			);
+		};
+		DFEB0A34306A4A9700115D10 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				DFA00034306A4A9700115D10 /* PlystCore in Frameworks */,
+				6AD683C96ED3EDA1F8BBCFDD /* libPods-PlystTests.a in Frameworks */,
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		67092688AFA955E73F427887 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				F70FE59B34E3A7ABA2C8A7F1 /* Plyst */,
+				8CABF9A7AED41BE815CABF94 /* PlystTests */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		7F6646D6D08CC882C051982E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F6C8B4EF88AD42F50A3ED621 /* libPods-Plyst.a */,
+				F3C2F91DAEABFC9C7D8CAB46 /* libPods-PlystTests.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8CABF9A7AED41BE815CABF94 /* PlystTests */ = {
+			isa = PBXGroup;
+			children = (
+				81D29C3967E63D9575CEE8FF /* ExpoModulesProvider.swift */,
+			);
+			name = PlystTests;
+			sourceTree = "<group>";
+		};
+		DFEB0A18306A4A9500115D10 = {
+			isa = PBXGroup;
+			children = (
+				DFEB0A23306A4A9500115D10 /* Plyst */,
+				DFC00003306A4A9700115D10 /* ShareExtension */,
+				DFD00003306A4A9700115D10 /* WidgetExtension */,
+				DFEB0A3A306A4A9700115D10 /* PlystTests */,
+				DFE00001306A4A9700115D10 /* Common */,
+				DFEB0A22306A4A9500115D10 /* Products */,
+				C3F22408E8F24B1542F26C6F /* PrivacyInfo.xcprivacy */,
+				F9C6A05407C6C1000A972EC8 /* Pods */,
+				7F6646D6D08CC882C051982E /* Frameworks */,
+				67092688AFA955E73F427887 /* ExpoModulesProviders */,
+			);
+			sourceTree = "<group>";
+		};
+		DFEB0A22306A4A9500115D10 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DFEB0A21306A4A9500115D10 /* Plyst.app */,
+				DFEB0A37306A4A9700115D10 /* PlystTests.xctest */,
+				DFC00002306A4A9700115D10 /* ShareExtension.appex */,
+				DFD00002306A4A9700115D10 /* WidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F70FE59B34E3A7ABA2C8A7F1 /* Plyst */ = {
+			isa = PBXGroup;
+			children = (
+				0E8B680F75283D87B909ECF0 /* ExpoModulesProvider.swift */,
+			);
+			name = Plyst;
+			sourceTree = "<group>";
+		};
+		F9C6A05407C6C1000A972EC8 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D4DCC5EF275B6220692E13C3 /* Pods-Plyst.debug.xcconfig */,
+				E7352F8E72F614DE76C35F8F /* Pods-Plyst.release.xcconfig */,
+				96F89FAE54EE77E30A69FD72 /* Pods-PlystTests.debug.xcconfig */,
+				5B7038772D5FAB6E8811E5B6 /* Pods-PlystTests.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DFC00001306A4A9700115D10 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				DFC00005306A4A9700115D10 /* Sources */,
+				DFC00006306A4A9700115D10 /* Frameworks */,
+				DFC00007306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFC00003306A4A9700115D10 /* ShareExtension */,
+				DFE00001306A4A9700115D10 /* Common */,
+			);
+			name = ShareExtension;
+			packageProductDependencies = (
+				DFA00018306A4A9700115D10 /* ReactorKit */,
+				DFA00019306A4A9700115D10 /* RxSwift */,
+				DFA00030306A4A9700115D10 /* PlystCore */,
+			);
+			productName = ShareExtension;
+			productReference = DFC00002306A4A9700115D10 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DFD00001306A4A9700115D10 /* WidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */;
+			buildPhases = (
+				DFD00005306A4A9700115D10 /* Sources */,
+				DFD00006306A4A9700115D10 /* Frameworks */,
+				DFD00007306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFD00003306A4A9700115D10 /* WidgetExtension */,
+			);
+			name = WidgetExtension;
+			productName = WidgetExtension;
+			productReference = DFD00002306A4A9700115D10 /* WidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DFEB0A20306A4A9500115D10 /* Plyst */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFEB0A48306A4A9700115D10 /* Build configuration list for PBXNativeTarget "Plyst" */;
+			buildPhases = (
+				483E24332BCD077CED454198 /* [CP] Check Pods Manifest.lock */,
+				B665CF9E287211C6C3074D54 /* [Expo] Configure project */,
+				DFEB0A1D306A4A9500115D10 /* Sources */,
+				DFEB0A1E306A4A9500115D10 /* Frameworks */,
+				DFEB0A1F306A4A9500115D10 /* Resources */,
+				983ECABD15D8B2971C7E0A0F /* Bundle React Native code and images */,
+				DFA0002D306A4A9700115D10 /* Embed Frameworks */,
+				DFC0000D306A4A9700115D10 /* Embed Foundation Extensions */,
+				4BE638623F41B5B3BB457DF8 /* [CP] Embed Pods Frameworks */,
+				AAE4A461E4BFA821F2AF7835 /* Strip embedded React Native frameworks */,
+				E0BB3C4014E230E454EFF255 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DFC0000C306A4A9700115D10 /* PBXTargetDependency */,
+				DFD0000C306A4A9700115D10 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DFE00001306A4A9700115D10 /* Common */,
+				DFEB0A23306A4A9500115D10 /* Plyst */,
+			);
+			name = Plyst;
+			packageProductDependencies = (
+				DFA0002F306A4A9700115D10 /* PlystCore */,
+			);
+			productName = Plyst;
+			productReference = DFEB0A21306A4A9500115D10 /* Plyst.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DFEB0A36306A4A9700115D10 /* PlystTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFEB0A4D306A4A9700115D10 /* Build configuration list for PBXNativeTarget "PlystTests" */;
+			buildPhases = (
+				5045F934CA7385DD6B91C6CD /* [CP] Check Pods Manifest.lock */,
+				29AD6946D0AC354E1C1AFF20 /* [Expo] Configure project */,
+				DFEB0A33306A4A9700115D10 /* Sources */,
+				DFEB0A34306A4A9700115D10 /* Frameworks */,
+				DFEB0A35306A4A9700115D10 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DFEB0A39306A4A9700115D10 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DFEB0A3A306A4A9700115D10 /* PlystTests */,
+			);
+			name = PlystTests;
+			packageProductDependencies = (
+				DFA00031306A4A9700115D10 /* PlystCore */,
+			);
+			productName = PlystTests;
+			productReference = DFEB0A37306A4A9700115D10 /* PlystTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DFEB0A19306A4A9500115D10 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					DFC00001306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					DFD00001306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					DFEB0A20306A4A9500115D10 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					DFEB0A36306A4A9700115D10 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = DFEB0A20306A4A9500115D10;
+					};
+				};
+			};
+			buildConfigurationList = DFEB0A1C306A4A9500115D10 /* Build configuration list for PBXProject "Plyst" */;
+			developmentRegion = ko;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ko,
+				Base,
+			);
+			mainGroup = DFEB0A18306A4A9500115D10;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */,
+				DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */,
+				DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = DFEB0A22306A4A9500115D10 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DFEB0A20306A4A9500115D10 /* Plyst */,
+				DFEB0A36306A4A9700115D10 /* PlystTests */,
+				DFC00001306A4A9700115D10 /* ShareExtension */,
+				DFD00001306A4A9700115D10 /* WidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DFC00007306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		DFD00007306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A1F306A4A9500115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				81E076B0C248A2F8E4DFA151 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+		};
+		DFEB0A35306A4A9700115D10 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		29AD6946D0AC354E1C1AFF20 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-PlystTests/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-PlystTests/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-PlystTests/expo-configure-project.sh\"\n";
+		};
+		483E24332BCD077CED454198 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Plyst-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4BE638623F41B5B3BB457DF8 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Plyst/Pods-Plyst-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Plyst/Pods-Plyst-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Plyst/Pods-Plyst-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5045F934CA7385DD6B91C6CD /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-PlystTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		983ECABD15D8B2971C7E0A0F /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+			);
+			name = "Bundle React Native code and images";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# 저장소 루트가 React Native 프로젝트 루트\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\n# Debug에도 Release 번들을 넣어 Metro 없이 앱과 테스트 호스트가 시작\n# 앱에 넣은 개발 번들은 Metro의 개발 도구 연결을 요구해 시작하지 못함\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export CONFIGURATION=Release\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\nif [[ -z \"$CLI_PATH\" ]]; then\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n";
+		};
+		AAE4A461E4BFA821F2AF7835 /* Strip embedded React Native frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip embedded React Native frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Pods가 임베드한 동적 프레임워크는 Xcode가 스트립하지 않아 설치 크기가 커짐\n# Release 기기 빌드에서만 디버그 심볼과 로컬 심볼을 지움\n# PlystCore는 Xcode가 빌드하는 패키지라 대상이 아님\nif [[ \"$CONFIGURATION\" != Release || \"$PLATFORM_NAME\" != iphoneos ]]; then\n  exit 0\nfi\n\nfor framework in \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"/*.framework; do\n  name=$(basename \"$framework\" .framework)\n  [[ \"$name\" == PlystCore ]] && continue\n  binary=\"$framework/$name\"\n  file -b \"$binary\" | grep -q 'dynamically linked shared library' || continue\n  # strip이 서명 무효화 경고를 매번 출력하므로 실패했을 때만 출력을 보여 줌\n  if ! output=$(xcrun strip -S -x \"$binary\" 2>&1); then\n    echo \"error: $name 스트립 실패: $output\"\n    exit 1\n  fi\n  # 스트립으로 깨진 서명을 [CP] Embed Pods Frameworks와 같은 방식으로 다시 서명\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" && \"${CODE_SIGNING_REQUIRED:-}\" != NO && \"${CODE_SIGNING_ALLOWED}\" != NO ]]; then\n    /usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements \"$framework\"\n  fi\ndone\n";
+		};
+		B665CF9E287211C6C3074D54 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/Plyst/Plyst.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Plyst/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Plyst/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Plyst/expo-configure-project.sh\"\n";
+		};
+		E0BB3C4014E230E454EFF255 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Plyst/Pods-Plyst-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Plyst/Pods-Plyst-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Plyst/Pods-Plyst-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DFC00005306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		DFD00005306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		DFEB0A1D306A4A9500115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				D206D8DA5FB5E19EAFA099E9 /* ExpoModulesProvider.swift in Sources */,
+			);
+		};
+		DFEB0A33306A4A9700115D10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				87F46850E9F0667330887DA3 /* ExpoModulesProvider.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DFC0000C306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFC00001306A4A9700115D10 /* ShareExtension */;
+			targetProxy = DFC0000B306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
+		DFD0000C306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFD00001306A4A9700115D10 /* WidgetExtension */;
+			targetProxy = DFD0000B306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
+		DFEB0A39306A4A9700115D10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFEB0A20306A4A9500115D10 /* Plyst */;
+			targetProxy = DFEB0A38306A4A9700115D10 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		DFC00009306A4A9700115D10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFC0000A306A4A9700115D10 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_EXPORT_SYMBOLS = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DFD00009306A4A9700115D10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.WidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFD0000A306A4A9700115D10 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Plyst;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst.WidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DFEB0A49306A4A9700115D10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D4DCC5EF275B6220692E13C3 /* Pods-Plyst.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Plyst/Plyst.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Plyst/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "저장한 이미지를 사진 앱에 추가합니다.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DFEB0A4A306A4A9700115D10 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7352F8E72F614DE76C35F8F /* Pods-Plyst.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Plyst/Plyst.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Plyst/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "저장한 이미지를 사진 앱에 추가합니다.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_EXPORT_SYMBOLS = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.Plyst;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DFEB0A4B306A4A9700115D10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				PODFILE_DIR = "$(SRCROOT)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				USE_HERMES = true;
+			};
+			name = Debug;
+		};
+		DFEB0A4C306A4A9700115D10 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				PODFILE_DIR = "$(SRCROOT)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DFEB0A4E306A4A9700115D10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 96F89FAE54EE77E30A69FD72 /* Pods-PlystTests.debug.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plyst.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plyst";
+			};
+			name = Debug;
+		};
+		DFEB0A4F306A4A9700115D10 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5B7038772D5FAB6E8811E5B6 /* Pods-PlystTests.release.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4CPC6N38WA;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.3;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = opfic.PlystTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plyst.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plyst";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DFC00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFC00009306A4A9700115D10 /* Debug */,
+				DFC0000A306A4A9700115D10 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFD00008306A4A9700115D10 /* Build configuration list for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFD00009306A4A9700115D10 /* Debug */,
+				DFD0000A306A4A9700115D10 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFEB0A1C306A4A9500115D10 /* Build configuration list for PBXProject "Plyst" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFEB0A4B306A4A9700115D10 /* Debug */,
+				DFEB0A4C306A4A9700115D10 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFEB0A48306A4A9700115D10 /* Build configuration list for PBXNativeTarget "Plyst" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFEB0A49306A4A9700115D10 /* Debug */,
+				DFEB0A4A306A4A9700115D10 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		DFEB0A4D306A4A9700115D10 /* Build configuration list for PBXNativeTarget "PlystTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFEB0A4E306A4A9700115D10 /* Debug */,
+				DFEB0A4F306A4A9700115D10 /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/PlystCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactorKit/ReactorKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.2.0;
+			};
+		};
+		DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DFA00018306A4A9700115D10 /* ReactorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA00009306A4A9700115D10 /* XCRemoteSwiftPackageReference "ReactorKit" */;
+			productName = ReactorKit;
+		};
+		DFA00019306A4A9700115D10 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0000A306A4A9700115D10 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		DFA0002F306A4A9700115D10 /* PlystCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystCore" */;
+			productName = PlystCore;
+		};
+		DFA00030306A4A9700115D10 /* PlystCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystCore" */;
+			productName = PlystCore;
+		};
+		DFA00031306A4A9700115D10 /* PlystCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DFA0002E306A4A9700115D10 /* XCLocalSwiftPackageReference "PlystCore" */;
+			productName = PlystCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DFEB0A19306A4A9500115D10 /* Project object */;
+}
