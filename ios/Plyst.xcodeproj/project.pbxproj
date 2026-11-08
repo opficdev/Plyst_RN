@@ -323,6 +323,7 @@
 				DFA0002D306A4A9700115D10 /* Embed Frameworks */,
 				DFC0000D306A4A9700115D10 /* Embed Foundation Extensions */,
 				4BE638623F41B5B3BB457DF8 /* [CP] Embed Pods Frameworks */,
+				AAE4A461E4BFA821F2AF7835 /* Strip embedded React Native frameworks */,
 				E0BB3C4014E230E454EFF255 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -550,6 +551,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# 저장소 루트가 React Native 프로젝트 루트\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\n# Debug에도 Release 번들을 넣어 Metro 없이 앱과 테스트 호스트가 시작\n# 앱에 넣은 개발 번들은 Metro의 개발 도구 연결을 요구해 시작하지 못함\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export CONFIGURATION=Release\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\nif [[ -z \"$CLI_PATH\" ]]; then\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n";
+		};
+		AAE4A461E4BFA821F2AF7835 /* Strip embedded React Native frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip embedded React Native frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Pods가 임베드한 동적 프레임워크는 Xcode가 스트립하지 않아 설치 크기가 커짐\n# Release 기기 빌드에서만 디버그 심볼과 로컬 심볼을 지움\n# PlystCore는 Xcode가 빌드하는 패키지라 대상이 아님\nif [[ \"$CONFIGURATION\" != Release || \"$PLATFORM_NAME\" != iphoneos ]]; then\n  exit 0\nfi\n\nfor framework in \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"/*.framework; do\n  name=$(basename \"$framework\" .framework)\n  [[ \"$name\" == PlystCore ]] && continue\n  binary=\"$framework/$name\"\n  file -b \"$binary\" | grep -q 'dynamically linked shared library' || continue\n  # strip이 서명 무효화 경고를 매번 출력하므로 실패했을 때만 출력을 보여 줌\n  if ! output=$(xcrun strip -S -x \"$binary\" 2>&1); then\n    echo \"error: $name 스트립 실패: $output\"\n    exit 1\n  fi\n  # 스트립으로 깨진 서명을 [CP] Embed Pods Frameworks와 같은 방식으로 다시 서명\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" && \"${CODE_SIGNING_REQUIRED:-}\" != NO && \"${CODE_SIGNING_ALLOWED}\" != NO ]]; then\n    /usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements \"$framework\"\n  fi\ndone\n";
 		};
 		B665CF9E287211C6C3074D54 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
