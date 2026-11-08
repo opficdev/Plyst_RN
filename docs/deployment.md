@@ -158,7 +158,7 @@ make signing-sync
 4. `bundle check`로 Ruby gem 설치 여부 확인
 5. 의존성 설치와 Rust 산출물 생성, Pods 설치 (`sync_appstore_profiles` 제외)
 	- `npm ci`로 `package-lock.json`에 적힌 의존성 설치
-	- `make plyst-core pods`로 `PlystCore`와 `PlystSearchCore`를 만든 뒤 `ios/`에서 `pod install` 실행
+	- `make plyst-core pods`로 `PlystCore`를 만든 뒤 `ios/`에서 `pod install` 실행
 	- 배포 스크립트는 `RN_XCFRAMEWORK_CLEAN=1`을 지정해 입력 해시와 관계없이 Rust 산출물을 처음부터 빌드
 6. `project.pbxproj` 백업 (`sync_appstore_profiles` 제외)
 7. `ASC_KEY_CONTENT`를 `fastlane/AuthKey.p8`로 복원
@@ -230,9 +230,9 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 
 - 저장소 루트에서 `npm ci` 실행
 - `make plyst-core`로 `PlystCore` 생성
-- `make pods`로 `PlystSearchCore`를 만든 뒤 `pod install` 실행
-	- `plyst-search` pod이 `PlystSearchCore.xcframework`를 쓰므로 `pod install`보다 먼저 만들어야 함
-	- 두 Rust 산출물은 `scripts/rust-inputs.sh`의 입력 해시가 지난 성공 빌드와 같으면 다시 빌드하지 않음 (`path=skip` 출력)
+	- `scripts/rust-inputs.sh`의 입력 해시가 지난 성공 빌드와 같으면 다시 빌드하지 않음 (`path=skip` 출력)
+	- `plyst-search` pod의 검색 C ABI도 `PlystCore`가 제공
+- `make pods`로 `pod install` 실행
 - Xcode에서는 `ios/Plyst.xcworkspace`를 열어야 함
 	- Debug 앱은 Metro가 떠 있으면 Metro의 번들을 읽고 없으면 앱에 넣은 Release 번들을 읽음
 - Android 로컬 빌드(`make rn-android-build`)는 Android SDK 위치가 필요함
@@ -242,7 +242,7 @@ Fastlane 레인(`testflight_build_only`, `deploy_testflight`, `appstore_build_on
 
 - `Makefile`: `deploy-setup`, `deploy-check`, `testflight-build`, `testflight`, `appstore-build`, `appstore`, `signing-sync` 타깃
 - `scripts/deploy-local.sh`: 로컬 실행 스크립트
-- `scripts/build-plyst-core.sh`, `scripts/build-plyst-search.sh`: iOS용 Rust 산출물 생성
+- `scripts/build-plyst-core.sh`: iOS용 Rust 산출물 생성
 - `scripts/rust-inputs.sh`: Rust 산출물 입력 해시 계산
 - `scripts/xcodeproj_xcode27.rb`: Fastlane과 CocoaPods가 Xcode 27 프로젝트를 다루도록 하는 xcodeproj 보완
 - `ios/Podfile`: 앱 타깃과 테스트 타깃의 Pods 구성
