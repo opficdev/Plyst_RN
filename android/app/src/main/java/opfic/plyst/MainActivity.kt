@@ -14,9 +14,7 @@ import opfic.plyst.host.app.HostLifecycle
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Set the theme to AppTheme BEFORE onCreate to support
-    // coloring the background, status bar, and navigation bar.
-    // This is required for expo-splash-screen.
+    // 시작 화면 테마에서 배경과 시스템 바 색을 정하는 AppTheme으로 onCreate 전에 전환
     setTheme(R.style.AppTheme);
     if (savedInstanceState != null) intent = android.content.Intent(intent).setData(null)
     super.onCreate(null)
@@ -35,16 +33,10 @@ class MainActivity : ReactActivity() {
     super.onDestroy()
   }
 
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
+  // index.ts가 등록한 루트 이름이며 iOS SceneComposition이 여는 moduleName과 같음
   override fun getMainComponentName(): String = "AppRoot"
 
-  /**
-   * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
-   * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
-   */
+  // New Architecture 여부를 fabricEnabled 하나로 정하는 DefaultReactActivityDelegate를 Expo 래퍼로 감쌈
   override fun createReactActivityDelegate(): ReactActivityDelegate {
     return ReactActivityDelegateWrapper(
           this,
@@ -56,22 +48,17 @@ class MainActivity : ReactActivity() {
           ){})
   }
 
-  /**
-    * Align the back button behavior with Android S
-    * where moving root activities to background instead of finishing activities.
-    * @see <a href="https://developer.android.com/reference/android/app/Activity#onBackPressed()">onBackPressed</a>
-    */
+  // 루트 Activity의 뒤로 가기를 Android S처럼 종료 대신 백그라운드 이동으로 맞춤
   override fun invokeDefaultOnBackPressed() {
       if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
           if (!moveTaskToBack(false)) {
-              // For non-root activities, use the default implementation to finish them.
+              // 루트가 아닌 Activity는 기본 동작으로 종료
               super.invokeDefaultOnBackPressed()
           }
           return
       }
 
-      // Use the default back button implementation on Android S
-      // because it's doing more than [Activity.moveTaskToBack] in fact.
+      // Android S 이후의 기본 동작은 Activity.moveTaskToBack보다 하는 일이 많아 그대로 사용
       super.invokeDefaultOnBackPressed()
   }
 }

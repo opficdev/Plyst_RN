@@ -1,9 +1,7 @@
-# OSX
-#
+# macOS
 .DS_Store
 
-# Android/IntelliJ
-#
+# Android와 IntelliJ
 build/
 .idea
 .gradle
@@ -12,8 +10,8 @@ local.properties
 *.hprof
 .cxx/
 
-# generated inline modules
+# 생성된 인라인 모듈
 app/src/main/java/inline/
 
-# Bundle artifacts
+# 번들 산출물
 *.jsbundle
