@@ -35,11 +35,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: gradle
-          cache-dependency-path: |
-            package-lock.json
-            android/**/*.gradle
-            android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Cache npm
         uses: actions/cache@v4
@@ -70,6 +65,26 @@ jobs:
             'systemProp.org.gradle.internal.network.retry.max.attempts=6' \
             'systemProp.org.gradle.internal.network.retry.initial.backOff=2000' >> ~/.gradle/gradle.properties
 
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
+
+      # Gradle이 내려받은 의존성
+      # 키가 달라도 같은 Gradle 버전의 최근 develop 캐시에서 시작해 바뀐 의존성만 내려받음
+      # PR은 읽기만 함
+      - name: Restore Gradle dependencies
+        id: gradle-deps
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.gradle/caches/*
+            !~/.gradle/caches/build-cache-1
+          key: gradle-deps-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('package-lock.json', 'android/**/*.gradle') }}
+          restore-keys: |
+            gradle-deps-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}-
+
       # Gradle 빌드 캐시
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
       - name: Restore Gradle build cache
@@ -78,6 +93,8 @@ jobs:
         with:
           path: ~/.gradle/caches/build-cache-1
           key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('package-lock.json', 'android/**/*.gradle') }}
+          restore-keys: |
+            gradle-build-cache-${{ runner.os }}-
 
       # 바인딩 생성기와 호스트용 core의 cargo 출력
       # develop 실행은 처음부터 빌드해 저장하고 PR은 읽기만 함
@@ -87,11 +104,22 @@ jobs:
         with:
           path: core/build/host
           key: cargo-host-${{ runner.os }}-${{ hashFiles('.mise.toml', 'core/Cargo.lock', 'core/bindgen/Cargo.lock') }}
+          restore-keys: |
+            cargo-host-${{ runner.os }}-
 
       - name: Build
         env:
           MISE_AUTO_INSTALL: 0
         run: make rn-android-build
+
+      - name: Save Gradle dependencies
+        if: github.event_name == 'push' && steps.gradle-deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches/*
+            !~/.gradle/caches/build-cache-1
+          key: ${{ steps.gradle-deps.outputs.cache-primary-key }}
 
       - name: Save Gradle build cache
         if: github.event_name == 'push'
